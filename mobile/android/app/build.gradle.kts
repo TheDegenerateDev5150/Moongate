@@ -47,4 +47,6 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // WireGuard-Go tunnel — replaces Tailscale for Phase 2 VPN
+    implementation("com.wireguard.android:tunnel:1.0.20231018")
 }

@@ -10,16 +10,22 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * Platform channel handler for WireGuard VPN on Android.
+ * Flutter ↔ native bridge for Moongate's WireGuard VPN.
  *
- * The actual WireGuard tunnel implementation will be added in a follow-up
- * using the wireguard-android library (https://github.com/WireGuard/wireguard-android).
- * This file wires up the Flutter ↔ native bridge and handles VpnService permission.
+ * Flutter calls:
+ *   connect(config: String)   — WireGuard INI config text
+ *   disconnect()
+ *   isConnected() → Boolean
+ *
+ * Native → Flutter events (via invokeMethod):
+ *   onConnected
+ *   onDisconnected
  */
 class VpnPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware {
 
     private lateinit var channel: MethodChannel
     private var activity: Activity? = null
+    private var pendingConfig: String? = null
     private var pendingResult: MethodChannel.Result? = null
 
     companion object {
@@ -43,50 +49,71 @@ class VpnPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                     result.error("INVALID_ARG", "config is required", null)
                     return
                 }
-                requestVpnPermissionAndConnect(config, result)
+                requestVpnPermission(config, result)
             }
             "disconnect" -> {
-                // TODO: stop WireGuard tunnel service
+                stopVpnService()
                 channel.invokeMethod("onDisconnected", null)
                 result.success(null)
+            }
+            "isConnected" -> {
+                result.success(MoongateVpnService.isRunning)
             }
             else -> result.notImplemented()
         }
     }
 
-    private fun requestVpnPermissionAndConnect(config: String, result: MethodChannel.Result) {
-        val intent = VpnService.prepare(activity ?: run {
-            result.error("NO_ACTIVITY", "No activity available", null)
+    private fun requestVpnPermission(config: String, result: MethodChannel.Result) {
+        val act = activity ?: run {
+            result.error("NO_ACTIVITY", "No activity", null)
             return
-        })
+        }
+        val intent = VpnService.prepare(act)
         if (intent != null) {
+            pendingConfig = config
             pendingResult = result
-            activity?.startActivityForResult(intent, VPN_PERMISSION_REQUEST)
+            act.startActivityForResult(intent, VPN_PERMISSION_REQUEST)
         } else {
-            startTunnel(config, result)
+            startVpnService(config)
+            channel.invokeMethod("onConnected", null)
+            result.success(null)
         }
     }
 
-    private fun startTunnel(config: String, result: MethodChannel.Result) {
-        // TODO: parse WireGuard INI config and start WireGuard tunnel via
-        // com.wireguard.android.backend.GoBackend
-        channel.invokeMethod("onConnected", null)
-        result.success(null)
+    private fun startVpnService(config: String) {
+        val ctx = activity ?: return
+        val intent = Intent(ctx, MoongateVpnService::class.java).apply {
+            action = MoongateVpnService.ACTION_CONNECT
+            putExtra(MoongateVpnService.EXTRA_WG_CONFIG, config)
+        }
+        ctx.startForegroundService(intent)
     }
 
-    // ActivityAware — needed to call startActivityForResult for VPN permission
+    private fun stopVpnService() {
+        val ctx = activity ?: return
+        val intent = Intent(ctx, MoongateVpnService::class.java).apply {
+            action = MoongateVpnService.ACTION_DISCONNECT
+        }
+        ctx.startService(intent)
+    }
+
+    // ActivityAware ───────────────────────────────────────────────────────────
+
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity
         binding.addActivityResultListener { requestCode, resultCode, _ ->
             if (requestCode == VPN_PERMISSION_REQUEST) {
-                if (resultCode == Activity.RESULT_OK) {
-                    // Permission granted — re-trigger (config lost; real impl stores it)
-                    channel.invokeMethod("onConnected", null)
-                    pendingResult?.success(null)
-                } else {
-                    pendingResult?.error("PERMISSION_DENIED", "VPN permission denied", null)
-                }
+                val cfg = pendingConfig
+                val res = pendingResult
+                pendingConfig = null
                 pendingResult = null
+                if (resultCode == Activity.RESULT_OK && cfg != null) {
+                    startVpnService(cfg)
+                    channel.invokeMethod("onConnected", null)
+                    res?.success(null)
+                } else {
+                    res?.error("PERMISSION_DENIED", "VPN permission denied", null)
+                }
                 true
             } else false
         }
