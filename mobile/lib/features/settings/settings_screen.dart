@@ -1,96 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../services/auth_service.dart';
 import '../../services/vpn_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/printer_registry.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  int _ttlDays = 30;
-  bool _disconnectOnBackground = true;
-
-  static const _ttlOptions = [1, 7, 30, 0]; // 0 = never
-  static const _ttlLabels = ['1 day', '7 days', '30 days', 'Never'];
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _ttlDays = prefs.getInt('ttl_days') ?? 30;
-      _disconnectOnBackground =
-          prefs.getBool('disconnect_on_background') ?? true;
-    });
-  }
-
-  Future<void> _saveTtl(int days) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('ttl_days', days);
-    setState(() => _ttlDays = days);
-  }
-
-  Future<void> _saveDisconnectPref(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('disconnect_on_background', value);
-    setState(() => _disconnectOnBackground = value);
-  }
-
-  Future<void> _signOut() async {
-    await VpnService.instance.disconnect();
-    await AuthService.instance.signOut();
-    if (!mounted) return;
-    context.go('/pair');
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
-          const ListTile(
-            title: Text('Session token expiry',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(
-                'How long before you need to re-pair the app with your printer.'),
-          ),
-          RadioGroup<int>(
-            groupValue: _ttlDays,
-            onChanged: (v) { if (v != null) _saveTtl(v); },
-            child: Column(
-              children: _ttlOptions.asMap().entries.map((e) {
-                return RadioListTile<int>(
-                  title: Text(_ttlLabels[e.key]),
-                  value: e.value,
-                );
-              }).toList(),
-            ),
-          ),
-          const Divider(),
-          SwitchListTile(
-            title: const Text('Disconnect VPN when app is minimised'),
-            subtitle: const Text(
-                'Recommended — prevents background battery drain.'),
-            value: _disconnectOnBackground,
-            onChanged: _saveDisconnectPref,
-          ),
-          const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.redAccent),
-            title: const Text('Remove printer & sign out',
+            title: const Text('Sign out of all printers',
                 style: TextStyle(color: Colors.redAccent)),
-            onTap: _signOut,
+            subtitle: const Text('Removes all paired printers from this device.'),
+            onTap: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Sign out?'),
+                  content: const Text(
+                      'All paired printers will be removed from this device.'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancel')),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                          backgroundColor: Colors.redAccent),
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Sign out'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true && context.mounted) {
+                await VpnService.instance.disconnect();
+                await AuthService.instance.signOut();
+                for (final p in List.of(PrinterRegistry.instance.printers)) {
+                  await PrinterRegistry.instance.remove(p.id);
+                }
+                context.go('/pair');
+              }
+            },
           ),
         ],
       ),

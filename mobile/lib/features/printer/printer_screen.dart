@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../services/auth_service.dart';
+import '../../models/printer_config.dart';
 import '../../services/vpn_service.dart';
 
 /// Phase 1: WebView pointing at the local Mainsail/Fluidd instance.
 /// Phase 2 (planned): replace with native Flutter widgets consuming
 /// MoonrakerService directly.
 class PrinterScreen extends StatefulWidget {
-  const PrinterScreen({super.key});
+  final PrinterConfig printer;
+
+  const PrinterScreen({super.key, required this.printer});
 
   @override
   State<PrinterScreen> createState() => _PrinterScreenState();
@@ -18,13 +20,13 @@ class PrinterScreen extends StatefulWidget {
 class _PrinterScreenState extends State<PrinterScreen>
     with WidgetsBindingObserver {
   late final WebViewController _webController;
-  bool _vpnConnecting = true;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _startAndLoad();
+    _load();
   }
 
   @override
@@ -36,43 +38,49 @@ class _PrinterScreenState extends State<PrinterScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.detached ||
-        state == AppLifecycleState.paused) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       VpnService.instance.disconnect();
     } else if (state == AppLifecycleState.resumed) {
-      _startAndLoad();
+      _load();
     }
   }
 
-  Future<void> _startAndLoad() async {
-    // TODO: load WireGuard config from stored Tailscale auth key
-    // await VpnService.instance.connect(wireGuardConfig);
-    setState(() => _vpnConnecting = false);
-
-    final host = AuthService.instance.host ?? '';
+  Future<void> _load() async {
     _webController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse('http://$host'));
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageFinished: (_) {
+          if (mounted) setState(() => _loading = false);
+        },
+      ))
+      ..loadRequest(Uri.parse('http://${widget.printer.host}'));
+    setState(() => _loading = true);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_vpnConnecting) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Moongate'),
+        title: Text(widget.printer.name),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.push('/settings'),
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _webController.reload(),
           ),
         ],
       ),
-      body: WebViewWidget(controller: _webController),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _webController),
+          if (_loading)
+            const Center(child: CircularProgressIndicator()),
+        ],
+      ),
     );
   }
 }

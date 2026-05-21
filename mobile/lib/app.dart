@@ -3,18 +3,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'features/auth/pairing_screen.dart';
+import 'features/dashboard/dashboard_screen.dart';
 import 'features/printer/printer_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'providers/settings_provider.dart';
+import 'services/printer_registry.dart';
 
 final _router = GoRouter(
-  initialLocation: '/pair',
-  redirect: (context, state) {
-    // TODO: redirect to /printer if a valid token already exists
-    return null;
-  },
+  initialLocation: '/',
   routes: [
+    GoRoute(
+      path: '/',
+      redirect: (_, __) => PrinterRegistry.instance.printers.isEmpty
+          ? '/pair'
+          : '/dashboard',
+    ),
     GoRoute(path: '/pair', builder: (_, __) => const PairingScreen()),
-    GoRoute(path: '/printer', builder: (_, __) => const PrinterScreen()),
+    GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
+    GoRoute(
+      path: '/printer/:id',
+      builder: (_, state) {
+        final id = state.pathParameters['id']!;
+        final printer = PrinterRegistry.instance.printers
+            .firstWhere((p) => p.id == id);
+        return PrinterScreen(printer: printer);
+      },
+    ),
     GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
   ],
 );
@@ -24,16 +38,30 @@ class MoongateApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp.router(
-      title: 'Moongate',
-      theme: ThemeData.dark(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6C63FF),
-          brightness: Brightness.dark,
-        ),
+    final themeMode = ref.watch(themeModeProvider);
+    final fontScale = ref.watch(fontScaleProvider);
+
+    return MediaQuery(
+      data: MediaQueryData(textScaler: TextScaler.linear(fontScale)),
+      child: MaterialApp.router(
+        title: 'Moongate',
+        themeMode: themeMode,
+        theme: _buildTheme(Brightness.light),
+        darkTheme: _buildTheme(Brightness.dark),
+        routerConfig: _router,
+        debugShowCheckedModeBanner: false,
       ),
-      routerConfig: _router,
-      debugShowCheckedModeBanner: false,
+    );
+  }
+
+  ThemeData _buildTheme(Brightness brightness) {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: brightness,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF6C63FF),
+        brightness: brightness,
+      ),
     );
   }
 }
