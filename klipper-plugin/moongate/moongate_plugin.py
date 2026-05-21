@@ -17,6 +17,12 @@ from typing import Any
 from .auth_manager import AuthManager
 from .wireguard_manager import WireGuardManager
 
+# Moonraker internal — available in all versions
+try:
+    from moonraker.utils import WebRequest  # type: ignore
+except ImportError:
+    WebRequest = None  # type: ignore
+
 logger = logging.getLogger("moonraker.moongate")
 
 
@@ -40,8 +46,42 @@ class MoongatePlugin:
         app.register_route("/moongate/tokens", ["GET"],  self._handle_list_tokens)
         app.register_route("/moongate/revoke", ["POST"], self._handle_revoke)
 
+        # Register the remote method called by the MOONGATE_PAIR Klipper macro.
+        # action_call_remote_method("moongate_generate_pair_code") in the macro
+        # routes here; we reply via a RESPOND G-code so the code appears in the
+        # Klipper console.
+        self.server.register_remote_method(
+            "moongate_generate_pair_code",
+            self._klipper_generate_pair_code,
+        )
+
         logger.info("Moongate plugin loaded (WireGuard: %s)",
                     "ready" if self.wg.server_public_key() else "not configured")
+
+    # ── Klipper remote method (called by MOONGATE_PAIR macro) ────────────────
+
+    async def _klipper_generate_pair_code(self) -> None:
+        """
+        Invoked when the user runs MOONGATE_PAIR in the Klipper console.
+        Generates a one-time code and echoes it back to the console via RESPOND.
+        """
+        display_code, _qr = self.auth.generate_pair_code()
+        logger.info("Pair code generated via Klipper macro: %s", display_code)
+
+        # Echo to the Klipper console so the user can see the code
+        msg = (
+            f"MOONGATE pairing code: {display_code}\\n"
+            f"Open the Moongate app and tap 'Add Printer' to complete pairing.\\n"
+            f"Code expires in 10 minutes."
+        )
+        script = f'RESPOND TYPE=echo MSG="{msg}"'
+        try:
+            klippy: Any = self.server.lookup_component("klippy_connection")
+            await klippy.request(
+                WebRequest("printer/gcode/script", {"script": script}, "POST")
+            )
+        except Exception as exc:
+            logger.warning("Could not send RESPOND to console: %s", exc)
 
     # ── Route handlers ────────────────────────────────────────────────────────
 

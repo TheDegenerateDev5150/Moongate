@@ -133,8 +133,16 @@ else
     echo "WARN: printer.cfg not found at $PRINTER_CFG"
 fi
 
-# ── 10. Restart Moonraker ────────────────────────────────────────────────────
-echo "==> Restarting Moonraker..."
+# ── 10. Restart Klipper + Moonraker ─────────────────────────────────────────
+echo "==> Restarting Klipper (picks up new MOONGATE_PAIR macro)..."
+if systemctl is-active --quiet klipper; then
+    sudo systemctl restart klipper
+    echo "    Klipper restarted."
+else
+    echo "    Klipper service not found — restart it manually."
+fi
+
+echo "==> Restarting Moonraker (loads moongate plugin)..."
 if systemctl is-active --quiet moonraker; then
     sudo systemctl restart moonraker
     echo "    Moonraker restarted."
