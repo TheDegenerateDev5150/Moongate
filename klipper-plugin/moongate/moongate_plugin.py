@@ -17,12 +17,6 @@ from typing import Any
 from .auth_manager import AuthManager
 from .wireguard_manager import WireGuardManager
 
-# Moonraker internal — available in all versions
-try:
-    from moonraker.utils import WebRequest  # type: ignore
-except ImportError:
-    WebRequest = None  # type: ignore
-
 logger = logging.getLogger("moonraker.moongate")
 
 
@@ -63,25 +57,26 @@ class MoongatePlugin:
     async def _klipper_generate_pair_code(self) -> None:
         """
         Invoked when the user runs MOONGATE_PAIR in the Klipper console.
-        Generates a one-time code and echoes it back to the console via RESPOND.
+        Generates a one-time code and echoes it back via RESPOND so it
+        appears in the Klipper console / Mainsail terminal.
         """
         display_code, _qr = self.auth.generate_pair_code()
         logger.info("Pair code generated via Klipper macro: %s", display_code)
 
-        # Echo to the Klipper console so the user can see the code
-        msg = (
-            f"MOONGATE pairing code: {display_code}\\n"
-            f"Open the Moongate app and tap 'Add Printer' to complete pairing.\\n"
-            f"Code expires in 10 minutes."
-        )
-        script = f'RESPOND TYPE=echo MSG="{msg}"'
+        lines = [
+            f"RESPOND TYPE=echo MSG='=== MOONGATE PAIRING CODE ==='",
+            f"RESPOND TYPE=echo MSG='Code: {display_code}'",
+            f"RESPOND TYPE=echo MSG='Open Moongate app > Add Printer and enter this code.'",
+            f"RESPOND TYPE=echo MSG='Expires in 10 minutes.'",
+            f"RESPOND TYPE=echo MSG='============================='",
+        ]
         try:
-            klippy: Any = self.server.lookup_component("klippy_connection")
-            await klippy.request(
-                WebRequest("printer/gcode/script", {"script": script}, "POST")
-            )
+            # klippy_apis is the standard Moonraker component for running G-code
+            klippy_apis: Any = self.server.lookup_component("klippy_apis")
+            for line in lines:
+                await klippy_apis.run_gcode(line)
         except Exception as exc:
-            logger.warning("Could not send RESPOND to console: %s", exc)
+            logger.error("Could not send pairing code to console: %s", exc)
 
     # ── Route handlers ────────────────────────────────────────────────────────
 
