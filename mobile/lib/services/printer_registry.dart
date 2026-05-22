@@ -43,9 +43,22 @@ class PrinterRegistry {
   Future<void> updateRemoteHost(String printerId, String newRemoteHost) async {
     final idx = _printers.indexWhere((p) => p.id == printerId);
     if (idx == -1) return;
-    if (_printers[idx].remoteHost == newRemoteHost) return; // already current
+    if (_printers[idx].remoteHost == newRemoteHost) return;
     _printers = List.of(_printers)
       ..[idx] = _printers[idx].copyWith(remoteHost: newRemoteHost);
+    await _save();
+  }
+
+  /// Persist which connection path worked last for this printer.
+  /// Called by [PrinterStatusService] after each successful poll so the
+  /// next app launch tries the right path first without wasting time on
+  /// a guaranteed timeout (e.g. a remote-only printer's local IP).
+  Future<void> updatePreferRemote(String printerId, {required bool preferRemote}) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    if (_printers[idx].preferRemote == preferRemote) return;
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(preferRemote: preferRemote);
     await _save();
   }
 

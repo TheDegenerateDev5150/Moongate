@@ -15,20 +15,32 @@ class PrinterConfig {
   /// is set up on the Pi (cloudflared service running).
   final String? remoteHost;
 
+  /// Whether the tunnel should be tried before the local IP.
+  ///
+  /// Automatically updated by [PrinterStatusService] after each successful
+  /// poll — so a printer that only works via tunnel (different network, the
+  /// local IP is unreachable) stops wasting time on a 2-second local timeout
+  /// every 4 seconds. Reverts to false (local-first) the moment a local
+  /// connection succeeds again (e.g. user comes home).
+  final bool preferRemote;
+
   const PrinterConfig({
     required this.id,
     required this.name,
     required this.host,
     required this.token,
     this.remoteHost,
+    this.preferRemote = false,
   });
 
-  PrinterConfig copyWith({String? name, String? remoteHost}) => PrinterConfig(
+  PrinterConfig copyWith({String? name, String? remoteHost, bool? preferRemote}) =>
+      PrinterConfig(
         id: id,
         name: name ?? this.name,
         host: host,
         token: token,
         remoteHost: remoteHost ?? this.remoteHost,
+        preferRemote: preferRemote ?? this.preferRemote,
       );
 
   Map<String, dynamic> toJson() => {
@@ -37,6 +49,7 @@ class PrinterConfig {
         'host': host,
         'token': token,
         if (remoteHost != null) 'remoteHost': remoteHost,
+        'preferRemote': preferRemote,
       };
 
   factory PrinterConfig.fromJson(Map<String, dynamic> j) => PrinterConfig(
@@ -45,6 +58,7 @@ class PrinterConfig {
         host: j['host'] as String,
         token: j['token'] as String,
         remoteHost: j['remoteHost'] as String?,
+        preferRemote: j['preferRemote'] as bool? ?? false,
       );
 
   static List<PrinterConfig> listFromJson(String raw) {

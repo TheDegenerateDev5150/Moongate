@@ -26,7 +26,12 @@ class PrinterStatusService {
   bool _disposed = false;
   bool _polling  = false; // guard: skip tick if previous poll still running
 
-  PrinterStatusService(this.config);
+  /// Mutable local copy of the connection preference — updated immediately
+  /// on success so the very next poll uses the right order, and persisted
+  /// to [PrinterRegistry] so the preference survives app restarts.
+  bool _preferRemote;
+
+  PrinterStatusService(this.config) : _preferRemote = config.preferRemote;
 
   Stream<PrinterStatus> get stream => _controller.stream;
 
@@ -58,18 +63,31 @@ class PrinterStatusService {
   }
 
   Future<void> _doPoll() async {
-    // Try local first, then the Cloudflare tunnel.
-    // config.host      = full local URL:  "http://192.168.x.x"
-    // config.remoteHost = tunnel URL:     "https://xxxx.trycloudflare.com"
-    final candidates = [
-      config.host,
-      if (config.remoteHost != null) config.remoteHost!,
-    ];
+    // ── Candidate ordering ────────────────────────────────────────────────
+    //
+    // Each printer remembers which path worked last (_preferRemote).
+    // A printer on a completely different network (e.g. work printer)
+    // has an unreachable local IP — without this, every 4-second poll
+    // wastes a 2-second timeout on it before falling back to tunnel.
+    //
+    // Preference is updated automatically after each successful poll:
+    //   • tunnel succeeds → _preferRemote = true  → tunnel tried first next time
+    //   • local  succeeds → _preferRemote = false → local  tried first next time
+    //
+    // This means coming home automatically flips back to local-first as soon
+    // as the local connection wins for the first time.
+    final local  = config.host;
+    final remote = config.remoteHost;
+
+    final candidates = (_preferRemote && remote != null)
+        ? [remote, local]            // remote-preferred: skip local timeout
+        : [local, if (remote != null) remote]; // local-first default
 
     for (final baseUrl in candidates) {
       // ── 1. Moongate plugin endpoint (preferred) ──────────────────────────
       final moongate = await _tryMoongateEndpoint(baseUrl);
       if (moongate != null) {
+        _onSuccess(baseUrl);
         if (!_disposed) _controller.add(moongate);
         return;
       }
@@ -80,6 +98,7 @@ class PrinterStatusService {
       //   other optional Klipper objects.
       final native = await _tryNativeEndpoint(baseUrl);
       if (native != null) {
+        _onSuccess(baseUrl);
         if (!_disposed) _controller.add(native);
         return;
       }
@@ -87,6 +106,17 @@ class PrinterStatusService {
 
     // All candidates failed — printer is unreachable.
     if (!_disposed) _controller.add(PrinterStatus.offline);
+  }
+
+  /// Called after every successful poll.  Updates the connection preference
+  /// immediately (for the next poll) and persists it (for the next app launch).
+  void _onSuccess(String baseUrl) {
+    final isRemote = baseUrl != config.host;
+    if (isRemote == _preferRemote) return; // no change
+    _preferRemote = isRemote;
+    PrinterRegistry.instance
+        .updatePreferRemote(config.id, preferRemote: isRemote)
+        .ignore();
   }
 
   // ── Moongate plugin endpoint ───────────────────────────────────────────────
