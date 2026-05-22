@@ -13,15 +13,18 @@ import 'printer_registry.dart';
 ///      Returns rich data: tunnel URL, webcam path, full print stats.
 ///   2. Fall back to the native Moonraker object query API.
 ///      Works even without the Moongate plugin installed.
+///      Tries progressively simpler object sets to handle printers where
+///      optional objects (heater_bed, display_status) are not configured.
 ///
-/// This means tiles always show real status even if the plugin is missing,
-/// and each tile is fully independent — it probes its own IPs/tokens.
+/// A _polling guard prevents concurrent polls from stacking up when the
+/// previous poll is still timing out on an unreachable host.
 class PrinterStatusService {
   final PrinterConfig config;
   final _controller          = StreamController<PrinterStatus>.broadcast();
   final _tunnelUrlController = StreamController<String>.broadcast();
   Timer? _timer;
   bool _disposed = false;
+  bool _polling  = false; // guard: skip tick if previous poll still running
 
   PrinterStatusService(this.config);
 
@@ -45,11 +48,19 @@ class PrinterStatusService {
   }
 
   Future<void> _poll() async {
-    if (_disposed) return;
+    if (_disposed || _polling) return;
+    _polling = true;
+    try {
+      await _doPoll();
+    } finally {
+      _polling = false;
+    }
+  }
 
+  Future<void> _doPoll() async {
     // Try local first, then the Cloudflare tunnel.
-    // config.host  = full local URL:  "http://192.168.x.x:80"
-    // config.remoteHost = tunnel URL: "https://xxxx.trycloudflare.com"
+    // config.host      = full local URL:  "http://192.168.x.x"
+    // config.remoteHost = tunnel URL:     "https://xxxx.trycloudflare.com"
     final candidates = [
       config.host,
       if (config.remoteHost != null) config.remoteHost!,
@@ -64,8 +75,9 @@ class PrinterStatusService {
       }
 
       // ── 2. Native Moonraker API fallback ─────────────────────────────────
-      //   Works without the Moongate plugin so users still see real status
-      //   even on printers where the plugin isn't installed or pairing failed.
+      //   Works even without the Moongate plugin.  Tries progressively
+      //   simpler object sets to handle printers without a heated bed or
+      //   other optional Klipper objects.
       final native = await _tryNativeEndpoint(baseUrl);
       if (native != null) {
         if (!_disposed) _controller.add(native);
@@ -73,7 +85,7 @@ class PrinterStatusService {
       }
     }
 
-    // All candidates (both endpoints) failed — printer is unreachable.
+    // All candidates failed — printer is unreachable.
     if (!_disposed) _controller.add(PrinterStatus.offline);
   }
 
@@ -84,7 +96,7 @@ class PrinterStatusService {
       final uri = Uri.parse(
         '$baseUrl/server/moongate/status?mg_token=${Uri.encodeComponent(config.token)}',
       );
-      final response = await http.get(uri).timeout(const Duration(seconds: 3));
+      final response = await http.get(uri).timeout(const Duration(seconds: 2));
       if (response.statusCode != 200) return null;
 
       final body   = jsonDecode(response.body) as Map<String, dynamic>;
@@ -98,42 +110,63 @@ class PrinterStatusService {
   }
 
   // ── Native Moonraker object query ──────────────────────────────────────────
+  //
+  // Moonraker returns HTTP 400 when you query an object that isn't registered
+  // in the Klipper config (e.g. `heater_bed` on a printer without a heated
+  // bed, or `display_status` on a printer without a display).  We try
+  // progressively simpler object sets and stop at the first 200 response.
+  // A timeout or any non-400 error causes an immediate bail-out.
+
+  static const _nativeQueries = [
+    'print_stats&extruder&heater_bed', // most Mainsail setups
+    'print_stats&extruder',            // no heated bed
+    'print_stats',                     // absolute minimum
+  ];
 
   Future<PrinterStatus?> _tryNativeEndpoint(String baseUrl) async {
-    try {
-      final uri = Uri.parse(
-        '$baseUrl/printer/objects/query'
-        '?print_stats&extruder&heater_bed&display_status',
-      );
-      final response = await http.get(uri).timeout(const Duration(seconds: 3));
-      if (response.statusCode != 200) return null;
+    for (final q in _nativeQueries) {
+      try {
+        final uri = Uri.parse('$baseUrl/printer/objects/query?$q');
+        final response = await http.get(uri).timeout(const Duration(seconds: 2));
 
-      final body   = jsonDecode(response.body) as Map<String, dynamic>;
-      final result = body['result'] as Map<String, dynamic>;
-      final status = result['status'] as Map<String, dynamic>;
+        if (response.statusCode == 200) {
+          final body   = jsonDecode(response.body) as Map<String, dynamic>;
+          final result = body['result'] as Map<String, dynamic>;
+          final status = result['status'] as Map<String, dynamic>;
+          return _parseStatus(status: status, moongateResult: null, baseUrl: baseUrl);
+        }
 
-      // No tunnel URL or webcam path available from native endpoint.
-      return _parseStatus(status: status, moongateResult: null, baseUrl: baseUrl);
-    } catch (_) {
-      return null;
+        // 400 = object not found → try a simpler query set
+        if (response.statusCode == 400) continue;
+
+        // Any other non-200 (401, 403, 5xx …) → give up on this host
+        return null;
+      } catch (_) {
+        // Timeout or network error → give up on this host immediately
+        // (don't bother retrying simpler queries — the host is unreachable)
+        return null;
+      }
     }
+    return null;
   }
 
-  // ── Shared parser ──────────────────────────────────────────────────────────
+  // ── Shared status parser ───────────────────────────────────────────────────
 
   PrinterStatus _parseStatus({
     required Map<String, dynamic> status,
     required Map<String, dynamic>? moongateResult,
     required String baseUrl,
   }) {
-    final printStats    = status['print_stats']    as Map<String, dynamic>? ?? {};
-    final extruder      = status['extruder']       as Map<String, dynamic>? ?? {};
-    final heaterBed     = status['heater_bed']     as Map<String, dynamic>? ?? {};
+    final printStats = status['print_stats'] as Map<String, dynamic>? ?? {};
+    final extruder   = status['extruder']    as Map<String, dynamic>? ?? {};
+    final heaterBed  = status['heater_bed']  as Map<String, dynamic>? ?? {};
+
+    // display_status.progress is the real slicer %; only available from the
+    // Moongate endpoint (which includes the full Moonraker status object).
     final displayStatus = status['display_status'] as Map<String, dynamic>? ?? {};
 
     final state = (printStats['state'] as String?) ?? 'offline';
 
-    // Prefer display_status.progress (the real slicer %) over duration ratio.
     final double progress;
     if (displayStatus['progress'] != null) {
       progress = (displayStatus['progress'] as num).toDouble().clamp(0.0, 1.0);
@@ -148,7 +181,7 @@ class PrinterStatusService {
       progress = 0.0;
     }
 
-    // Detect tunnel URL rotation — only the Moongate endpoint reports this.
+    // Detect tunnel URL rotation — only available from the Moongate endpoint.
     if (moongateResult != null && !_disposed) {
       final liveTunnelUrl = moongateResult['tunnel_url'] as String?;
       if (liveTunnelUrl != null &&

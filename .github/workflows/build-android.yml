@@ -10,13 +10,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push the APK back to the repo
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
 
       - name: Set up Flutter
@@ -28,13 +33,28 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
-      - name: Build debug APK
+      - name: Build release APK (debug-signed)
         working-directory: mobile
-        run: flutter build apk --debug
+        run: flutter build apk --release
 
-      - name: Upload APK
+      - name: Copy APK to APK folder
+        run: |
+          mkdir -p APK
+          cp mobile/build/app/outputs/flutter-apk/app-release.apk APK/Moongate-latest.apk
+
+      - name: Commit and push updated APK
+        # Only commit on direct pushes to master (not PRs — they can't push back)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add APK/Moongate-latest.apk
+          git diff --staged --quiet && echo "APK unchanged, nothing to commit" || \
+            git commit -m "Update Moongate-latest.apk [skip ci]" && git push
+
+      - name: Upload APK as workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: moongate-debug
-          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
-          retention-days: 7
+          name: Moongate-release
+          path: APK/Moongate-latest.apk
+          retention-days: 30
