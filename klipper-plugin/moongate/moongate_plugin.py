@@ -57,26 +57,41 @@ class MoongatePlugin:
     async def _klipper_generate_pair_code(self) -> None:
         """
         Invoked when the user runs MOONGATE_PAIR in the Klipper console.
-        Generates a one-time code and echoes it back via RESPOND so it
-        appears in the Klipper console / Mainsail terminal.
+        Sends the pairing code back to the Klipper terminal via M118,
+        and also pushes a WebSocket notification so Mainsail shows it.
         """
-        display_code, _qr = self.auth.generate_pair_code()
-        logger.info("Pair code generated via Klipper macro: %s", display_code)
+        import asyncio
 
-        lines = [
-            f"RESPOND TYPE=echo MSG='=== MOONGATE PAIRING CODE ==='",
-            f"RESPOND TYPE=echo MSG='Code: {display_code}'",
-            f"RESPOND TYPE=echo MSG='Open Moongate app > Add Printer and enter this code.'",
-            f"RESPOND TYPE=echo MSG='Expires in 10 minutes.'",
-            f"RESPOND TYPE=echo MSG='============================='",
-        ]
+        display_code, _qr = self.auth.generate_pair_code()
+        logger.info("MOONGATE PAIR CODE GENERATED: %s", display_code)
+
+        # Small yield so the remote-method handshake completes before we
+        # try to push G-code back into the same klippy event loop.
+        await asyncio.sleep(0.3)
+
+        # Try M118 first — it sends directly to the host without going
+        # through Klipper's gcode queue in the same call context.
+        script = (
+            f"M118 *** MOONGATE CODE: {display_code} ***\n"
+            f"M118 Open Moongate app, tap Add Printer, enter the code.\n"
+            f"M118 Expires in 10 minutes."
+        )
         try:
-            # klippy_apis is the standard Moonraker component for running G-code
             klippy_apis: Any = self.server.lookup_component("klippy_apis")
-            for line in lines:
-                await klippy_apis.run_gcode(line)
+            await klippy_apis.run_gcode(script)
+            logger.info("Pair code sent to console successfully.")
         except Exception as exc:
-            logger.error("Could not send pairing code to console: %s", exc)
+            logger.error("run_gcode failed (%s) — code is: %s", exc, display_code)
+
+        # Also push via Moonraker's WebSocket so Mainsail receives it
+        # even if the G-code path fails.
+        try:
+            self.server.send_event(
+                "server:gcode_response",
+                f"// MOONGATE CODE: {display_code} (expires 10 min)",
+            )
+        except Exception:
+            pass
 
     # ── Route handlers ────────────────────────────────────────────────────────
 

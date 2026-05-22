@@ -19,7 +19,12 @@ class MoonrakerService {
   Stream<Map<String, dynamic>> get events => _events.stream;
 
   Future<void> connect(String host, String token) async {
-    final uri = Uri.parse('ws://$host/websocket?token=$token');
+    // host may be a full URL ("http://192.x.x.x:80" or "https://x.trycloudflare.com").
+    // Convert http → ws and https → wss so the WebSocket scheme is correct.
+    final wsBase = host
+        .replaceFirst('https://', 'wss://')
+        .replaceFirst('http://', 'ws://');
+    final uri = Uri.parse('$wsBase/websocket?token=$token');
     _channel = WebSocketChannel.connect(uri);
     _channel!.stream.listen(
       _onMessage,
