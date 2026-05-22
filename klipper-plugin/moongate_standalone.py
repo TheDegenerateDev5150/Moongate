@@ -670,6 +670,11 @@ class MoongatePlugin:
             )
         data   = _json.loads(resp.body)
         result = data.get("result", data)
+
+        # Inject the Pi's current tunnel URL so the app can detect staleness
+        # and update its stored remoteHost without the user re-scanning the QR.
+        result["tunnel_url"] = _get_tunnel_url()
+
         return result
 
     async def _handle_control(self, webrequest: Any) -> dict:

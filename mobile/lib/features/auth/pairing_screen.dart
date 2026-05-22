@@ -80,6 +80,7 @@ class _PairingScreenState extends State<PairingScreen> {
         token: AuthService.instance.token!,
       );
       await PrinterRegistry.instance.add(printer);
+      if (!mounted) return;
       context.go('/dashboard');
     } else {
       setState(() {

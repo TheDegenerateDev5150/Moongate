@@ -52,10 +52,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // fontScale is now applied globally via MaterialApp.builder in app.dart.
-    // We still watch it here only to pass to _fontScaleLabel() in the drawer.
-    final fontScale = ref.watch(fontScaleProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Moongate'),

@@ -46,7 +46,7 @@ class SettingsScreen extends ConsumerWidget {
                 for (final p in List.of(PrinterRegistry.instance.printers)) {
                   await PrinterRegistry.instance.remove(p.id);
                 }
-                context.go('/pair');
+                if (context.mounted) context.go('/pair');
               }
             },
           ),

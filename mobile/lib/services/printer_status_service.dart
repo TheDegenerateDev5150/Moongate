@@ -3,18 +3,25 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/printer_config.dart';
+import 'printer_registry.dart';
 
 /// Polls Moonraker's REST API to get current printer status.
 /// One instance per printer tile; disposed when the tile leaves the tree.
 class PrinterStatusService {
   final PrinterConfig config;
-  final _controller = StreamController<PrinterStatus>.broadcast();
+  final _controller        = StreamController<PrinterStatus>.broadcast();
+  final _tunnelUrlController = StreamController<String>.broadcast();
   Timer? _timer;
   bool _disposed = false;
 
   PrinterStatusService(this.config);
 
   Stream<PrinterStatus> get stream => _controller.stream;
+
+  /// Emits the updated tunnel URL whenever the Pi reports a URL that differs
+  /// from what is stored in the config.  Subscribe in the webcam widget to
+  /// immediately start using the fresh URL within the same session.
+  Stream<String> get tunnelUrlUpdates => _tunnelUrlController.stream;
 
   void start({Duration interval = const Duration(seconds: 4)}) {
     _poll();
@@ -25,6 +32,7 @@ class PrinterStatusService {
     _disposed = true;
     _timer?.cancel();
     _controller.close();
+    _tunnelUrlController.close();
   }
 
   Future<void> _poll() async {
@@ -68,6 +76,21 @@ class PrinterStatusService {
             : 0.0;
 
         if (_disposed) return;
+
+        // If the Pi reports a tunnel URL that differs from what we have stored,
+        // push it immediately so the webcam widget can switch to the fresh URL
+        // within this session, and persist it so future launches are correct.
+        final liveTunnelUrl = result['tunnel_url'] as String?;
+        if (liveTunnelUrl != null &&
+            liveTunnelUrl.isNotEmpty &&
+            liveTunnelUrl != config.remoteHost) {
+          _tunnelUrlController.add(liveTunnelUrl);
+          // Fire-and-forget: persist so next launch uses the correct URL.
+          PrinterRegistry.instance
+              .updateRemoteHost(config.id, liveTunnelUrl)
+              .ignore();
+        }
+
         _controller.add(PrinterStatus(
           state:        state,
           progress:     progress.toDouble(),

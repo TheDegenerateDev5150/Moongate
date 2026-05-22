@@ -37,6 +37,18 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Silently update the Cloudflare tunnel URL for a printer.
+  /// Called automatically when the status poll returns a fresher URL
+  /// than the one stored (Quick Tunnels rotate when cloudflared restarts).
+  Future<void> updateRemoteHost(String printerId, String newRemoteHost) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    if (_printers[idx].remoteHost == newRemoteHost) return; // already current
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(remoteHost: newRemoteHost);
+    await _save();
+  }
+
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, PrinterConfig.listToJson(_printers));

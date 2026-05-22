@@ -60,9 +60,12 @@ class _PrinterScreenState extends State<PrinterScreen>
           if (mounted) setState(() => _loading = false);
           _fallbackTimer?.cancel(); // local loaded — no need to fall back
         },
-        onWebResourceError: (_) {
-          _tryRemote();
-        },
+        // NOTE: onWebResourceError is intentionally NOT wired to _tryRemote().
+        // Sub-resources inside Mainsail (e.g. the webcam stream URL which
+        // points at localhost/...) will always fail when loaded on the phone,
+        // but that must not flip the whole WebView into remote/tunnel mode.
+        // The 3-second fallback timer in _startLoad() is the only mechanism
+        // that switches to remote, and only when the *main page* doesn't load.
       ));
   }
 

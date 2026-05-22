@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../../models/printer_config.dart';
 import '../../services/print_control_service.dart';
@@ -119,7 +120,10 @@ class _PrinterTileState extends State<PrinterTile> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _WebcamSnapshot(printer: widget.printer),
+                  _WebcamSnapshot(
+                    printer: widget.printer,
+                    tunnelUrlUpdates: _statusService.tunnelUrlUpdates,
+                  ),
                   Positioned(
                     top: 8,
                     left: 8,
@@ -358,21 +362,71 @@ class _Btn extends StatelessWidget {
 }
 
 // ── Webcam snapshot ───────────────────────────────────────────────────────────
+//
+// Network strategy:
+//   • Always tries the local IP first (fast, zero latency at home).
+//   • After _kLocalErrorThreshold consecutive failures switches to the
+//     Cloudflare tunnel URL (remote / away from home).
+//   • On app-resume (foreground from background) resets to local — this
+//     handles the "just got home" case without user interaction.
+//   • Subscribes to PrinterStatusService.tunnelUrlUpdates so a rotated
+//     Quick Tunnel URL is picked up immediately within the same session.
 
 class _WebcamSnapshot extends StatefulWidget {
-  final PrinterConfig printer;
-  const _WebcamSnapshot({required this.printer});
+  final PrinterConfig    printer;
+  final Stream<String>?  tunnelUrlUpdates;
+
+  const _WebcamSnapshot({
+    required this.printer,
+    this.tunnelUrlUpdates,
+  });
 
   @override
   State<_WebcamSnapshot> createState() => _WebcamSnapshotState();
 }
 
-class _WebcamSnapshotState extends State<_WebcamSnapshot> {
-  int _tick = 0;
+class _WebcamSnapshotState extends State<_WebcamSnapshot>
+    with WidgetsBindingObserver {
+  int     _tick         = 0;
+  bool    _useRemote    = false;
+  int     _localErrors  = 0;
+  String? _liveRemoteHost;          // kept up-to-date via tunnelUrlUpdates
+  StreamSubscription<String>? _tunnelSub;
+
+  // Switch to remote after this many consecutive local failures.
+  static const _kLocalErrorThreshold = 3;
 
   @override
   void initState() {
     super.initState();
+    _liveRemoteHost = widget.printer.remoteHost;
+    WidgetsBinding.instance.addObserver(this);
+    _tunnelSub = widget.tunnelUrlUpdates?.listen((freshUrl) {
+      if (mounted) setState(() => _liveRemoteHost = freshUrl);
+    });
+    _startTicker();
+  }
+
+  @override
+  void dispose() {
+    _tunnelSub?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      // Network may have changed (user just got home / left home).
+      // Reset to local so the app picks up the faster local connection.
+      setState(() {
+        _useRemote   = false;
+        _localErrors = 0;
+      });
+    }
+  }
+
+  void _startTicker() {
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return false;
@@ -381,24 +435,41 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
     });
   }
 
+  String get _snapshotUrl {
+    final base = (_useRemote && _liveRemoteHost != null)
+        ? _liveRemoteHost!
+        : widget.printer.host;
+    return '$base/webcam/?action=snapshot&_t=$_tick';
+  }
+
+  void _onImageError() {
+    if (_useRemote || _liveRemoteHost == null) return; // already remote or no fallback
+    _localErrors++;
+    if (_localErrors >= _kLocalErrorThreshold) {
+      setState(() => _useRemote = true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final base = widget.printer.remoteHost ?? widget.printer.host;
-    final url  = '$base/webcam/?action=snapshot&_t=$_tick';
     return Image.network(
-      url,
+      _snapshotUrl,
       fit: BoxFit.cover,
       gaplessPlayback: true,
-      errorBuilder: (_, __, ___) => Container(
-        color: Colors.black54,
-        child: const Center(
-          child: Icon(Icons.videocam_off, color: Colors.white30, size: 40),
-        ),
-      ),
-      // No loadingBuilder — let gaplessPlayback hold the previous frame
-      // silently while the next snapshot downloads. A loadingBuilder that
-      // returns anything other than `child` overrides gapless behaviour and
-      // causes the one-second flash we want to eliminate.
+      // No loadingBuilder — it overrides gaplessPlayback and causes the
+      // one-second white flash.  Let gapless hold the previous frame silently.
+      errorBuilder: (_, __, ___) {
+        // Schedule after the frame to avoid calling setState during build.
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _onImageError();
+        });
+        return Container(
+          color: Colors.black54,
+          child: const Center(
+            child: Icon(Icons.videocam_off, color: Colors.white30, size: 40),
+          ),
+        );
+      },
     );
   }
 }
