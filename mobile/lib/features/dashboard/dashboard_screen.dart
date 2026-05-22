@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../models/printer_config.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/version_provider.dart';
 import '../../services/printer_registry.dart';
 import 'printer_tile.dart';
 
@@ -206,6 +207,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Navigator.pop(context);
                 context.push('/settings');
               },
+            ),
+
+            // Version info
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+              child: ref.watch(appVersionProvider).when(
+                data: (v) => Text(
+                  'Moongate v$v',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
             ),
           ],
         ),
