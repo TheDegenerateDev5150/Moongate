@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -135,6 +136,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
             const Divider(),
 
+            // Export config (backup before reinstall)
+            if (_printers.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.upload_outlined),
+                title: const Text('Export config'),
+                subtitle: const Text('Copy to clipboard before reinstalling'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _exportConfig(context);
+                },
+              ),
+
+            // Import config (restore after reinstall)
+            ListTile(
+              leading: const Icon(Icons.download_outlined),
+              title: const Text('Import config'),
+              subtitle: const Text('Restore from exported text'),
+              onTap: () {
+                Navigator.pop(context);
+                _importConfig(context);
+              },
+            ),
+
+            const Divider(),
+
             // Theme
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -227,6 +253,76 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  /// Copies the printer list JSON to the clipboard so the user can paste it
+  /// somewhere safe before uninstalling, then restore via Import after reinstall.
+  Future<void> _exportConfig(BuildContext context) async {
+    final json = PrinterConfig.listToJson(_printers);
+    await Clipboard.setData(ClipboardData(text: json));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Printer config copied to clipboard — paste it somewhere safe!'),
+        duration: Duration(seconds: 4),
+      ),
+    );
+  }
+
+  /// Shows a dialog where the user can paste a previously exported JSON string
+  /// to restore their printer list after a reinstall.
+  Future<void> _importConfig(BuildContext context) async {
+    final controller = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Import printer config'),
+        content: TextField(
+          controller: controller,
+          maxLines: 6,
+          decoration: const InputDecoration(
+            hintText: 'Paste your exported JSON here…',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Import'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final printers = PrinterConfig.listFromJson(controller.text.trim());
+      // Merge: add only printers not already in registry (match by id).
+      final existing = PrinterRegistry.instance.printers.map((p) => p.id).toSet();
+      for (final p in printers) {
+        if (!existing.contains(p.id)) {
+          await PrinterRegistry.instance.add(p);
+        }
+      }
+      _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${printers.length} printer(s) imported.')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid config — make sure you pasted the full exported text.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   void _showRemoveSheet(BuildContext context) {

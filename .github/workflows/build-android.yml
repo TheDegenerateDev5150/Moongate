@@ -33,7 +33,24 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
-      - name: Build release APK (debug-signed)
+      - name: Set up release signing
+        # Decodes the keystore from the GitHub secret and writes key.properties
+        # so every CI APK is signed with the same consistent key.
+        # Without this, each Ubuntu runner generates a fresh debug keystore,
+        # meaning every APK download would conflict with the previous install.
+        if: secrets.RELEASE_KEYSTORE != ''
+        env:
+          RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          echo "$RELEASE_KEYSTORE" | base64 --decode > mobile/android/app/moongate-release.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=moongate-release.jks\n' \
+            "$RELEASE_STORE_PASSWORD" "$RELEASE_KEY_PASSWORD" "$RELEASE_KEY_ALIAS" \
+            > mobile/android/key.properties
+
+      - name: Build release APK
         working-directory: mobile
         run: flutter build apk --release
 
