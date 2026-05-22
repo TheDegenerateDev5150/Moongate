@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -133,6 +134,9 @@ class _PrinterTileState extends State<PrinterTile> {
                     printer: widget.printer,
                     connection: _status.connection,
                     webcamSnapshotPath: _status.webcamSnapshotPath,
+                    webcamFlipH:    _status.webcamFlipH,
+                    webcamFlipV:    _status.webcamFlipV,
+                    webcamRotation: _status.webcamRotation,
                     tunnelUrlUpdates: _statusService.tunnelUrlUpdates,
                   ),
                   Positioned(
@@ -411,15 +415,21 @@ class _Btn extends StatelessWidget {
 //   within the same session without requiring a re-pair.
 
 class _WebcamSnapshot extends StatefulWidget {
-  final PrinterConfig       printer;
-  final PrinterConnection   connection;
-  final String?             webcamSnapshotPath;
-  final Stream<String>?     tunnelUrlUpdates;
+  final PrinterConfig     printer;
+  final PrinterConnection connection;
+  final String?           webcamSnapshotPath;
+  final bool              webcamFlipH;
+  final bool              webcamFlipV;
+  final int               webcamRotation; // 0 | 90 | 180 | 270
+  final Stream<String>?   tunnelUrlUpdates;
 
   const _WebcamSnapshot({
     required this.printer,
     required this.connection,
     this.webcamSnapshotPath,
+    this.webcamFlipH    = false,
+    this.webcamFlipV    = false,
+    this.webcamRotation = 0,
     this.tunnelUrlUpdates,
   });
 
@@ -474,7 +484,7 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
+    Widget image = Image.network(
       _snapshotUrl,
       fit: BoxFit.cover,
       gaplessPlayback: true,
@@ -487,6 +497,32 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
         ),
       ),
     );
+
+    // Apply the webcam display transforms that Mainsail has configured.
+    // This makes the tile image match the orientation shown in the web UI,
+    // so an upside-down or mirrored camera looks correct in both places.
+    final needsRotate = widget.webcamRotation != 0;
+    final needsFlip   = widget.webcamFlipH || widget.webcamFlipV;
+
+    if (needsRotate) {
+      image = Transform.rotate(
+        angle: widget.webcamRotation * math.pi / 180,
+        child: image,
+      );
+    }
+    if (needsFlip) {
+      image = Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.diagonal3Values(
+          widget.webcamFlipH ? -1.0 : 1.0,
+          widget.webcamFlipV ? -1.0 : 1.0,
+          1.0,
+        ),
+        child: image,
+      );
+    }
+
+    return image;
   }
 }
 

@@ -90,6 +90,12 @@ class PrinterStatus {
   /// Null until first successful poll; fall back to the mjpeg-streamer default.
   final String? webcamSnapshotPath;
 
+  /// Webcam display-transform settings from Mainsail's webcam configuration.
+  /// The app applies the same transforms so the tile image matches the web UI.
+  final bool   webcamFlipH;    // mirror horizontally
+  final bool   webcamFlipV;    // mirror vertically
+  final int    webcamRotation; // clockwise degrees: 0 | 90 | 180 | 270
+
   const PrinterStatus({
     required this.state,
     required this.progress,
@@ -100,6 +106,9 @@ class PrinterStatus {
     this.filename,
     this.connection = PrinterConnection.offline,
     this.webcamSnapshotPath,
+    this.webcamFlipH    = false,
+    this.webcamFlipV    = false,
+    this.webcamRotation = 0,
   });
 
   bool get isPrinting => state == 'printing' || state == 'paused';

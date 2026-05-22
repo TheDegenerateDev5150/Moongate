@@ -235,9 +235,14 @@ class PrinterStatusService {
       hotendTarget:       (extruder['target']      as num?)?.toDouble() ?? 0,
       bedTemp:            (heaterBed['temperature'] as num?)?.toDouble() ?? 0,
       bedTarget:          (heaterBed['target']      as num?)?.toDouble() ?? 0,
-      filename:           printStats['filename']             as String?,
+      filename:           printStats['filename']    as String?,
       connection:         connection,
       webcamSnapshotPath: moongateResult?['webcam_snapshot_path'] as String?,
+      // Webcam display transforms — match whatever Mainsail has configured.
+      // Only available via the Moongate endpoint; fall back to no-transform.
+      webcamFlipH:    (moongateResult?['webcam_flip_horizontal'] as bool?) ?? false,
+      webcamFlipV:    (moongateResult?['webcam_flip_vertical']   as bool?) ?? false,
+      webcamRotation: (moongateResult?['webcam_rotation'] as num?)?.toInt() ?? 0,
     );
   }
 }

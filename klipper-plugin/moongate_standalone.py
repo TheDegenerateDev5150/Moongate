@@ -802,18 +802,27 @@ class MoongatePlugin:
         return response
 
     @staticmethod
-    async def _get_webcam_snapshot_path(client: Any) -> str:
+    async def _get_webcam_info(client: Any) -> dict:
         """
         Ask Moonraker for its webcam configuration and return the snapshot path
-        that the app should use.  Normalises away localhost/127.0.0.1 prefixes
-        so the returned value is always a plain path like:
-          /webcam/?action=snapshot   (mjpeg-streamer default)
-          /webcam/snapshot           (Crowsnest / uStreamer)
-        Falls back to the mjpeg-streamer default if the API is unavailable.
+        plus the display-transform settings (rotation, flip_horizontal,
+        flip_vertical) that Mainsail/Fluidd apply client-side.
+
+        The app must apply the same transforms when rendering the snapshot so
+        the tile image matches the orientation shown in the full web UI.
+
+        Falls back to safe defaults if the webcam API is unavailable.
         """
         import re as _re
         from tornado.httpclient import HTTPRequest
-        _default = "/webcam/?action=snapshot"
+
+        _default_path = "/webcam/?action=snapshot"
+        _defaults = {
+            "snapshot_path":   _default_path,
+            "flip_horizontal": False,
+            "flip_vertical":   False,
+            "rotation":        0,
+        }
         try:
             req = HTTPRequest(
                 "http://127.0.0.1:7125/server/webcams/list",
@@ -821,19 +830,26 @@ class MoongatePlugin:
             )
             resp = await client.fetch(req, raise_error=False)
             if resp.code != 200:
-                return _default
+                return _defaults
             data    = __import__("json").loads(resp.body)
             webcams = data.get("result", {}).get("webcams", [])
             if not webcams:
-                return _default
-            snap = (webcams[0].get("snapshot_url") or "").strip()
+                return _defaults
+            cam  = webcams[0]
+            snap = (cam.get("snapshot_url") or "").strip()
             if not snap:
-                return _default
-            # Strip any localhost/127.0.0.1 prefix so only the path survives.
+                return _defaults
+            # Strip localhost prefix so only the path survives.
             snap = _re.sub(r'^https?://(localhost|127\.0\.0\.1)(:\d+)?', '', snap)
-            return snap or _default
+            return {
+                "snapshot_path":   snap or _default_path,
+                # Mainsail stores these as booleans; default False / 0 if absent.
+                "flip_horizontal": bool(cam.get("flip_horizontal", False)),
+                "flip_vertical":   bool(cam.get("flip_vertical",   False)),
+                "rotation":        int(cam.get("rotation", 0)),
+            }
         except Exception:
-            return _default
+            return _defaults
 
     async def _handle_status(self, webrequest: Any) -> dict:
         """
@@ -871,11 +887,13 @@ class MoongatePlugin:
         # and update its stored remoteHost without the user re-scanning the QR.
         result["tunnel_url"] = _get_tunnel_url()
 
-        # Inject the webcam snapshot path as Moonraker has it configured.
-        # This lets the app use the correct path regardless of whether the Pi
-        # is running mjpeg-streamer (/webcam/?action=snapshot) or
-        # Crowsnest/uStreamer (/webcam/snapshot), or any custom setup.
-        result["webcam_snapshot_path"] = await self._get_webcam_snapshot_path(client)
+        # Inject webcam snapshot path AND display-transform settings so the app
+        # can apply the same rotation/flip that Mainsail shows in the browser.
+        webcam = await self._get_webcam_info(client)
+        result["webcam_snapshot_path"]   = webcam["snapshot_path"]
+        result["webcam_flip_horizontal"] = webcam["flip_horizontal"]
+        result["webcam_flip_vertical"]   = webcam["flip_vertical"]
+        result["webcam_rotation"]        = webcam["rotation"]
 
         return result
 
