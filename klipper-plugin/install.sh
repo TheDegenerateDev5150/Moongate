@@ -50,9 +50,31 @@ fi
 # ── 2. Add MOONGATE_PAIR macro to Klipper config ──────────────────────────────
 info "Adding MOONGATE_PAIR macro to Klipper config..."
 
+# Search for printer.cfg in the most common locations.
+PRINTER_CFG=""
+for candidate in \
+    "$PRINTER_DATA/config/printer.cfg" \
+    "$HOME/klipper_config/printer.cfg" \
+    "$HOME/printer_data/config/printer.cfg"; do
+    if [[ -f "$candidate" ]]; then
+        PRINTER_CFG="$candidate"
+        break
+    fi
+done
+
+if [[ -z "$PRINTER_CFG" ]]; then
+    die "Cannot find printer.cfg — tried:
+  $PRINTER_DATA/config/printer.cfg
+  $HOME/klipper_config/printer.cfg
+  $HOME/printer_data/config/printer.cfg
+Set PRINTER_DATA=/path/to/printer_data and re-run."
+fi
+
+info "Found printer.cfg at $PRINTER_CFG"
+KLIPPER_CFG_DIR="$(dirname "$PRINTER_CFG")"
 MOONGATE_CFG="$KLIPPER_CFG_DIR/moongate.cfg"
 
-# Always overwrite so re-running the installer updates the macro.
+# Always overwrite moongate.cfg so re-running the installer picks up changes.
 cat > "$MOONGATE_CFG" << 'MACROEOF'
 # ── Moongate ──────────────────────────────────────────────────────────────────
 # Managed by the Moongate installer — do not edit manually.
@@ -66,22 +88,17 @@ MACROEOF
 
 success "Macro written to $MOONGATE_CFG"
 
-# Add [include moongate.cfg] to printer.cfg if it isn't already there.
-PRINTER_CFG="$KLIPPER_CFG_DIR/printer.cfg"
-if [[ -f "$PRINTER_CFG" ]]; then
-    if grep -q '\[include moongate\.cfg\]' "$PRINTER_CFG"; then
-        info "[include moongate.cfg] already in printer.cfg"
-    else
-        # Insert at the top so Klipper loads the macro before anything else.
-        { printf '[include moongate.cfg]\n\n'; cat "$PRINTER_CFG"; } > "${PRINTER_CFG}.tmp" \
-            && mv "${PRINTER_CFG}.tmp" "$PRINTER_CFG"
-        success "[include moongate.cfg] added to top of printer.cfg"
-    fi
+# Add [include moongate.cfg] at the very top of printer.cfg.
+if grep -q '\[include moongate\.cfg\]' "$PRINTER_CFG"; then
+    info "[include moongate.cfg] already present in printer.cfg"
 else
-    warn "printer.cfg not found at $PRINTER_CFG"
-    warn "Add the following line to your printer.cfg manually:"
-    warn "  [include moongate.cfg]"
+    { printf '[include moongate.cfg]\n\n'; cat "$PRINTER_CFG"; } > "${PRINTER_CFG}.tmp" \
+        && mv "${PRINTER_CFG}.tmp" "$PRINTER_CFG"
+    success "[include moongate.cfg] added to top of printer.cfg"
 fi
+
+# Confirm the include is now visible at the top.
+info "printer.cfg first line: $(head -1 "$PRINTER_CFG")"
 
 # ── 3. Deploy QR pairing page to Mainsail ────────────────────────────────────
 if [[ -d "$MAINSAIL_DIR" ]]; then
@@ -150,12 +167,21 @@ done
 
 if [[ -n "$KLIPPER_SVC" ]]; then
     sudo systemctl restart "$KLIPPER_SVC"
-    sleep 2
-    systemctl is-active "$KLIPPER_SVC" > /dev/null \
-        && success "Klipper restarted — MOONGATE_PAIR macro is ready" \
-        || warn "Check Klipper: sudo systemctl status $KLIPPER_SVC"
+    sleep 3
+    if systemctl is-active --quiet "$KLIPPER_SVC"; then
+        success "Klipper restarted — MOONGATE_PAIR macro is ready"
+    else
+        warn "Klipper restart may have failed. Check with:"
+        warn "  sudo systemctl status $KLIPPER_SVC"
+        warn "Then do a Firmware Restart in Mainsail to reload the config."
+    fi
 else
-    warn "Klipper service not found — do a Firmware Restart in Mainsail to load the macro"
+    warn "──────────────────────────────────────────────────────"
+    warn "Could not find Klipper service to restart automatically."
+    warn "Please do ONE of the following to load the MOONGATE_PAIR macro:"
+    warn "  1. Click 'Firmware Restart' in Mainsail"
+    warn "  2. Or run:  sudo systemctl restart klipper"
+    warn "──────────────────────────────────────────────────────"
 fi
 
 # ── 7. Show tunnel URL ────────────────────────────────────────────────────────
