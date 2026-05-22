@@ -2,7 +2,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Moongate installer
 # Run on your Klipper Pi:
-#   curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/main/klipper-plugin/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh | bash
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -35,7 +35,7 @@ info "Architecture: $ARCH → cloudflared: $CF_ARCH"
 # ── 1. Install Moongate Klipper plugin ───────────────────────────────────────
 info "Installing Moongate plugin..."
 
-PLUGIN_URL="https://raw.githubusercontent.com/PEEKYPAUL/moongate/main/klipper-plugin/moongate_standalone.py"
+PLUGIN_URL="https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/moongate_standalone.py"
 curl -fsSL "$PLUGIN_URL" -o "$COMPONENTS_DIR/moongate.py"
 success "Plugin installed at $COMPONENTS_DIR/moongate.py"
 
@@ -48,7 +48,7 @@ fi
 
 # ── 2. Deploy QR pairing page to Mainsail ────────────────────────────────────
 if [[ -d "$MAINSAIL_DIR" ]]; then
-    HTML_URL="https://raw.githubusercontent.com/PEEKYPAUL/moongate/main/klipper-plugin/moongate-pair.html"
+    HTML_URL="https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/moongate-pair.html"
     curl -fsSL "$HTML_URL" -o "$MAINSAIL_DIR/moongate-pair.html"
     success "QR page deployed to $MAINSAIL_DIR/moongate-pair.html"
 else

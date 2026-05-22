@@ -8,9 +8,10 @@ Moongate is a free, open-source Android app that gives you a **full remote contr
 
 ## Download
 
-**[⬇ Download latest APK](https://github.com/PEEKYPAUL/moongate/releases/latest)**
+**[⬇ Download latest APK](https://github.com/PEEKYPAUL/moongate/tree/master/APK)**
 
-> Android only for now. Enable **Install from unknown sources** for your browser or file manager before installing.
+> Android only for now. Open the `APK` folder, click the `.apk` file, then click **View raw** to download.  
+> Enable **Install from unknown sources** for your browser or file manager before installing.
 
 ---
 
@@ -49,7 +50,7 @@ The Moongate plugin runs inside Moonraker on your Pi. It handles pairing, token 
 SSH into your Pi and run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/main/klipper-plugin/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh | bash
 ```
 
 This will:
