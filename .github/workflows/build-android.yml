@@ -84,15 +84,29 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Save the freshly built files before touching the git tree
+          cp APK/Moongate-latest.apk /tmp/Moongate-latest.apk
+          cp APK/latest_version.json /tmp/latest_version.json
+
+          # Sync to the current remote HEAD (handles concurrent CI runs that may
+          # have already pushed an APK while this build was running).
+          # We then overlay our fresh build on top so the latest build always wins.
+          # A plain rebase fails on binary files when two runs commit the APK at
+          # the same time, so we hard-reset instead.
+          git fetch origin master
+          git reset --hard origin/master
+
+          # Restore our freshly built outputs
+          cp /tmp/Moongate-latest.apk APK/Moongate-latest.apk
+          cp /tmp/latest_version.json APK/latest_version.json
+
           git add APK/Moongate-latest.apk APK/latest_version.json
           if git diff --staged --quiet; then
-            echo "APK unchanged, nothing to commit"
+            echo "APK unchanged after sync, nothing to commit"
           else
             git commit -m "Update Moongate-latest.apk [skip ci]"
-            # Pull and rebase in case another concurrent CI run pushed first.
-            # --autostash handles any unstaged files (e.g. the decoded JKS).
-            git pull --rebase --autostash origin master
-            git push
+            git push origin master
           fi
 
       - name: Upload APK as workflow artifact
