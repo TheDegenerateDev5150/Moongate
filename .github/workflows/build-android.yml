@@ -74,8 +74,9 @@ jobs:
             echo "APK unchanged, nothing to commit"
           else
             git commit -m "Update Moongate-latest.apk [skip ci]"
-            # Pull and rebase in case another concurrent CI run pushed first
-            git pull --rebase origin master
+            # Pull and rebase in case another concurrent CI run pushed first.
+            # --autostash handles any unstaged files (e.g. the decoded JKS).
+            git pull --rebase --autostash origin master
             git push
           fi
 
