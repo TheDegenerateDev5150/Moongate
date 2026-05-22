@@ -563,11 +563,40 @@ class MoongatePlugin:
     # Raise self.server.error("msg", status_code) for HTTP errors.
 
     async def _handle_pair(self, webrequest: Any) -> dict:
-        display_code, qr_payload = self.auth.generate_pair_code()
+        """
+        Generate a pairing session and return both formats:
+
+          • code / GATE code  — for manual entry; requires phone→Pi network to
+                                exchange for a token (/server/moongate/auth)
+          • qr_payload        — moongate://pair?local=…&remote=…&token=JWT
+                                Phone stores the pre-issued token directly;
+                                no network request needed at scan time, so QR
+                                pairing works even over WiFi AP-isolated networks
+                                or from a completely different network via tunnel.
+        """
+        import urllib.parse
+        display_code, _ = self.auth.generate_pair_code()
+
+        # Pre-issue a token for the QR path
+        direct_jwt, tid  = self.auth.issue_direct_token(device_name="Paired via QR")
+        local_ip         = _get_local_ip()
+        tunnel_url       = _get_tunnel_url()
+
+        params: dict = {"local": f"{local_ip}:80", "token": direct_jwt}
+        if tunnel_url:
+            params["remote"] = tunnel_url
+        qr_payload = "moongate://pair?" + urllib.parse.urlencode(params)
+
+        # Cache for the /server/moongate/qr endpoint (used by the QR web page)
+        self._last_qr_url      = qr_payload
+        self._last_qr_token_id = tid
+
         logger.info("Pair code requested via HTTP: %s", display_code)
         return {
             "code":               display_code,
             "qr_payload":         qr_payload,
+            "local_url":          f"http://{local_ip}:80",
+            "tunnel_url":         tunnel_url,
             "expires_in_seconds": 600,
         }
 

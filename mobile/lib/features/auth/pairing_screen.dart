@@ -23,8 +23,10 @@ class _PairingScreenState extends State<PairingScreen> {
   final _code1Focus      = FocusNode();
   final _code2Focus      = FocusNode();
 
-  final _hostController = TextEditingController();
-  final _nameController = TextEditingController();
+  // Separate fields for local IP and tunnel URL so both can be stored
+  final _localController  = TextEditingController();
+  final _tunnelController = TextEditingController();
+  final _nameController   = TextEditingController();
 
   bool _scanning = false;
   bool _loading  = false;
@@ -36,7 +38,8 @@ class _PairingScreenState extends State<PairingScreen> {
     _code2Controller.dispose();
     _code1Focus.dispose();
     _code2Focus.dispose();
-    _hostController.dispose();
+    _localController.dispose();
+    _tunnelController.dispose();
     _nameController.dispose();
     super.dispose();
   }
@@ -46,15 +49,16 @@ class _PairingScreenState extends State<PairingScreen> {
       'GATE-${_code1Controller.text.trim()}-${_code2Controller.text.trim()}';
 
   Future<void> _pair() async {
-    final host = _hostController.text.trim();
-    final name = _nameController.text.trim().isEmpty
-        ? 'My Printer'
-        : _nameController.text.trim();
+    final localRaw  = _localController.text.trim();
+    final tunnelRaw = _tunnelController.text.trim();
+    final name      = _nameController.text.trim().isEmpty
+        ? 'My Printer' : _nameController.text.trim();
     final part1 = _code1Controller.text.trim();
     final part2 = _code2Controller.text.trim();
 
-    if (host.isEmpty) {
-      setState(() => _error = 'Enter or scan your printer address first.');
+    if (localRaw.isEmpty && tunnelRaw.isEmpty) {
+      setState(() => _error =
+          'Enter a local IP, a tunnel URL, or both.');
       return;
     }
     if (part1.length != 4 || part2.length != 4) {
@@ -64,47 +68,70 @@ class _PairingScreenState extends State<PairingScreen> {
 
     setState(() { _loading = true; _error = null; });
 
-    final result = await AuthService.instance.exchangeCode(
-      host:       host,
-      code:       _fullCode,
-      deviceName: name,
-    );
+    // Try local first (if provided), then fall back to tunnel.
+    // This lets the user be on either network and still pair.
+    String? successHost;
+    AuthResult? result;
+
+    if (localRaw.isNotEmpty) {
+      result = await AuthService.instance.exchangeCode(
+        host: localRaw, code: _fullCode, deviceName: name,
+      );
+      if (result.success) successHost = localRaw;
+    }
+
+    if (successHost == null && tunnelRaw.isNotEmpty) {
+      result = await AuthService.instance.exchangeCode(
+        host: tunnelRaw, code: _fullCode, deviceName: name,
+      );
+      if (result.success) successHost = tunnelRaw;
+    }
 
     if (!mounted) return;
 
-    if (result.success) {
+    if (successHost != null && result!.success) {
+      // Determine the stored local host and optional remote host.
+      // If the user only provided the tunnel URL, use it as the local host
+      // but mark preferRemote=true so we always go via tunnel.
+      final storedLocal = localRaw.isNotEmpty
+          ? AuthService.buildBaseUrl(localRaw)
+          : AuthService.buildBaseUrl(tunnelRaw);
+      final storedRemote = tunnelRaw.isNotEmpty ? tunnelRaw : null;
+      final preferRemote = localRaw.isEmpty && tunnelRaw.isNotEmpty;
+
       final printer = PrinterConfig(
-        id:    const Uuid().v4(),
-        name:  name,
-        host:  AuthService.instance.host!,
-        token: AuthService.instance.token!,
+        id:           const Uuid().v4(),
+        name:         name,
+        host:         storedLocal,
+        token:        AuthService.instance.token!,
+        remoteHost:   storedRemote,
+        preferRemote: preferRemote,
       );
       await PrinterRegistry.instance.add(printer);
       if (!mounted) return;
-      context.go('/dashboard');
+      if (context.canPop()) context.pop(); else context.go('/dashboard');
     } else {
       setState(() {
-        _error   = result.error ?? 'Pairing failed.';
+        _error   = result?.error ?? 'Could not reach printer on local or tunnel.';
         _loading = false;
       });
     }
   }
 
-  /// Handles any scanned QR value.
+  /// Handles any scanned QR value. Three formats:
   ///
-  /// Two formats are supported:
+  ///   1. moongate://pair?local=IP:80&remote=https://x.trycloudflare.com&token=JWT
+  ///      Rich QR — pre-issued token, works with no network at scan time.
   ///
-  ///   1. moongate://pair?host=192.168.1.x:80&token=JWT
-  ///      Pre-issued token — no network request needed. Works even when the
-  ///      phone can't reach the Pi directly (WiFi AP isolation etc.).
+  ///   2. moongate://pair?code=GATE-XXXX-XXXX
+  ///      Code-only QR — fills the code boxes; user still needs to tap Connect.
   ///
-  ///   2. GATE-XXXX-XXXX (or a URL containing that pattern)
-  ///      Manual code — fills the digit boxes so the user taps Connect.
+  ///   3. Bare GATE-XXXX-XXXX (or text containing that pattern)
+  ///      Same as above, fills code boxes.
   void _applyScannedCode(String raw) {
-    // ── Format 1: direct JWT token in QR ─────────────────────────────────────
-    // moongate://pair?local=IP:80&remote=https://x.trycloudflare.com&token=JWT
     final uri = Uri.tryParse(raw);
     if (uri != null && uri.scheme == 'moongate') {
+      // ── Format 1: full token QR ────────────────────────────────────────────
       final local  = uri.queryParameters['local'];
       final remote = uri.queryParameters['remote'];
       final token  = uri.queryParameters['token'];
@@ -113,10 +140,24 @@ class _PairingScreenState extends State<PairingScreen> {
         _pairWithDirectToken(local: local, remote: remote, token: token);
         return;
       }
+
+      // ── Format 2: code-only QR (moongate://pair?code=GATE-XXXX-XXXX) ──────
+      final code = uri.queryParameters['code'];
+      if (code != null) {
+        final m = RegExp(r'GATE-([A-Z0-9]{4})-([A-Z0-9]{4})')
+            .firstMatch(code.toUpperCase());
+        if (m != null) {
+          _code1Controller.text = m.group(1)!;
+          _code2Controller.text = m.group(2)!;
+          setState(() => _scanning = false);
+          return;
+        }
+      }
     }
 
-    // ── Format 2: GATE-XXXX-XXXX code ────────────────────────────────────────
-    final match = RegExp(r'GATE-(\d{4})-(\d{4})').firstMatch(raw.toUpperCase());
+    // ── Format 3: bare GATE code anywhere in the raw string ──────────────────
+    final match = RegExp(r'GATE-([A-Z0-9]{4})-([A-Z0-9]{4})')
+        .firstMatch(raw.toUpperCase());
     if (match != null) {
       _code1Controller.text = match.group(1)!;
       _code2Controller.text = match.group(2)!;
@@ -124,49 +165,43 @@ class _PairingScreenState extends State<PairingScreen> {
     }
   }
 
-  /// Called when the QR contained a pre-issued JWT token.
+  /// Called when the QR contained a pre-issued JWT token (rich QR format).
   /// Stores token + both host addresses directly — no HTTP request needed,
-  /// so works even when the phone can't reach the Pi directly.
+  /// so works even when the phone can't reach the Pi (AP isolation, remote).
   Future<void> _pairWithDirectToken({
     required String local,
     String? remote,
     required String token,
   }) async {
     final name = _nameController.text.trim().isEmpty
-        ? 'My Printer'
-        : _nameController.text.trim();
+        ? 'My Printer' : _nameController.text.trim();
 
     setState(() { _loading = true; _error = null; });
 
     try {
-      // Persist the local host + token (remote URL stored separately in config).
       await AuthService.instance.persistDirect(host: local, token: token);
-
       if (!mounted) return;
+
+      // If no local URL in the QR (edge case), fall back to using tunnel as host
+      final localHost = local.isNotEmpty
+          ? AuthService.instance.host!
+          : (remote ?? AuthService.instance.host!);
 
       final printer = PrinterConfig(
-        id:         const Uuid().v4(),
-        name:       name,
-        host:       AuthService.instance.host!,   // normalised local URL
-        token:      AuthService.instance.token!,
-        remoteHost: remote,                        // Cloudflare HTTPS URL or null
+        id:           const Uuid().v4(),
+        name:         name,
+        host:         localHost,
+        token:        AuthService.instance.token!,
+        remoteHost:   remote,
+        // Prefer remote if there's a tunnel URL and no meaningful local address
+        preferRemote: remote != null && local.startsWith('localhost'),
       );
       await PrinterRegistry.instance.add(printer);
-
       if (!mounted) return;
-      // Pop back to dashboard — this resolves the `await context.push('/pair')`
-      // in DashboardScreen, which then calls _load() and picks up the new printer.
-      if (context.canPop()) {
-        context.pop();
-      } else {
-        context.go('/dashboard');
-      }
+      if (context.canPop()) context.pop(); else context.go('/dashboard');
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _error   = 'Pairing failed: $e';
-      });
+      setState(() { _loading = false; _error = 'Pairing failed: $e'; });
     }
   }
 
@@ -190,7 +225,7 @@ class _PairingScreenState extends State<PairingScreen> {
       ),
       builder: (_) => const _NetworkPickerSheet(),
     );
-    if (selected != null) _hostController.text = selected;
+    if (selected != null) _localController.text = selected;
   }
 
   @override
@@ -212,10 +247,11 @@ class _PairingScreenState extends State<PairingScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Run MOONGATE_PAIR in your Klipper console to get a code.',
-              style: TextStyle(color: cs.onSurface.withValues(alpha:0.6)),
+              'Run MOONGATE_PAIR in your Klipper console, then scan the QR '
+              'or enter the code below.',
+              style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6)),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // ── Printer name ───────────────────────────────────────────────
             TextField(
@@ -228,17 +264,18 @@ class _PairingScreenState extends State<PairingScreen> {
             ),
             const SizedBox(height: 14),
 
-            // ── Printer address + find button ──────────────────────────────
+            // ── Local IP + find button ─────────────────────────────────────
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _hostController,
+                    controller: _localController,
                     decoration: const InputDecoration(
-                      labelText: 'Printer address',
-                      hintText: '192.168.1.x',
+                      labelText: 'Local IP (same network)',
+                      hintText: '192.168.1.50',
                       border: OutlineInputBorder(),
+                      helperText: 'Leave blank if adding remotely',
                     ),
                     keyboardType: TextInputType.url,
                   ),
@@ -256,6 +293,48 @@ class _PairingScreenState extends State<PairingScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 14),
+
+            // ── Tunnel URL ─────────────────────────────────────────────────
+            TextField(
+              controller: _tunnelController,
+              decoration: const InputDecoration(
+                labelText: 'Tunnel URL (remote access)',
+                hintText: 'https://xxxx.trycloudflare.com',
+                border: OutlineInputBorder(),
+                helperText: 'Optional — enables access outside your home network',
+              ),
+              keyboardType: TextInputType.url,
+            ),
+            const SizedBox(height: 8),
+
+            // ── Tip ────────────────────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: cs.primaryContainer.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline,
+                      size: 16, color: cs.onPrimaryContainer),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Adding from a different network? Enter the tunnel URL '
+                      'and leave local IP blank — the code exchange goes via '
+                      'the tunnel. You can add the local IP later.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
 
