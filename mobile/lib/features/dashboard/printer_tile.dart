@@ -20,7 +20,7 @@ class PrinterTile extends StatefulWidget {
 class _PrinterTileState extends State<PrinterTile> {
   late final PrinterStatusService _statusService;
   late final PrintControlService _controlService;
-  PrinterStatus _status = PrinterStatus.offline;
+  late PrinterStatus _status;
 
   bool _stopConfirmPending = false;
   Timer? _stopConfirmTimer;
@@ -28,6 +28,20 @@ class _PrinterTileState extends State<PrinterTile> {
   @override
   void initState() {
     super.initState();
+    // Seed the initial status with persisted webcam transform settings so the
+    // first frame already shows the correct orientation — before any poll.
+    _status = PrinterStatus(
+      state:          'offline',
+      progress:       0,
+      hotendTemp:     0,
+      hotendTarget:   0,
+      bedTemp:        0,
+      bedTarget:      0,
+      connection:     PrinterConnection.offline,
+      webcamFlipH:    widget.printer.webcamFlipH,
+      webcamFlipV:    widget.printer.webcamFlipV,
+      webcamRotation: widget.printer.webcamRotation,
+    );
     _statusService = PrinterStatusService(widget.printer);
     _controlService = PrintControlService(widget.printer);
     _statusService.stream.listen((s) {

@@ -222,6 +222,15 @@ class PrinterStatusService {
             .updateRemoteHost(config.id, liveTunnelUrl)
             .ignore();
       }
+
+      // Persist webcam transform settings so the tile is correct from the
+      // very first frame on the next launch — before any poll completes.
+      final flipH    = (moongateResult['webcam_flip_horizontal'] as bool?) ?? false;
+      final flipV    = (moongateResult['webcam_flip_vertical']   as bool?) ?? false;
+      final rotation = (moongateResult['webcam_rotation'] as num?)?.toInt() ?? 0;
+      PrinterRegistry.instance.updateWebcamInfo(
+        config.id, flipH: flipH, flipV: flipV, rotation: rotation,
+      ).ignore();
     }
 
     final connection = (baseUrl == config.host)

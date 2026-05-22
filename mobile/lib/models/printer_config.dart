@@ -24,41 +24,70 @@ class PrinterConfig {
   /// connection succeeds again (e.g. user comes home).
   final bool preferRemote;
 
+  /// Cached webcam display-transform settings, read from Moonraker and updated
+  /// by [PrinterRegistry.updateWebcamInfo] after each successful status poll.
+  /// Stored here so the tile renders at the correct orientation from the very
+  /// first frame — before any network poll has completed.
+  final bool webcamFlipH;
+  final bool webcamFlipV;
+  final int  webcamRotation; // 0 | 90 | 180 | 270
+
   const PrinterConfig({
     required this.id,
     required this.name,
     required this.host,
     required this.token,
     this.remoteHost,
-    this.preferRemote = false,
+    this.preferRemote    = false,
+    this.webcamFlipH     = false,
+    this.webcamFlipV     = false,
+    this.webcamRotation  = 0,
   });
 
-  PrinterConfig copyWith({String? name, String? remoteHost, bool? preferRemote}) =>
+  PrinterConfig copyWith({
+    String? name,
+    String? remoteHost,
+    bool?   preferRemote,
+    bool?   webcamFlipH,
+    bool?   webcamFlipV,
+    int?    webcamRotation,
+  }) =>
       PrinterConfig(
-        id: id,
-        name: name ?? this.name,
-        host: host,
-        token: token,
-        remoteHost: remoteHost ?? this.remoteHost,
-        preferRemote: preferRemote ?? this.preferRemote,
+        id:             id,
+        name:           name           ?? this.name,
+        host:           host,
+        token:          token,
+        remoteHost:     remoteHost     ?? this.remoteHost,
+        preferRemote:   preferRemote   ?? this.preferRemote,
+        webcamFlipH:    webcamFlipH    ?? this.webcamFlipH,
+        webcamFlipV:    webcamFlipV    ?? this.webcamFlipV,
+        webcamRotation: webcamRotation ?? this.webcamRotation,
       );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'host': host,
-        'token': token,
+        'id':             id,
+        'name':           name,
+        'host':           host,
+        'token':          token,
         if (remoteHost != null) 'remoteHost': remoteHost,
-        'preferRemote': preferRemote,
+        'preferRemote':   preferRemote,
+        'webcamFlipH':    webcamFlipH,
+        'webcamFlipV':    webcamFlipV,
+        'webcamRotation': webcamRotation,
       };
 
   factory PrinterConfig.fromJson(Map<String, dynamic> j) => PrinterConfig(
-        id: j['id'] as String,
-        name: j['name'] as String,
-        host: j['host'] as String,
-        token: j['token'] as String,
-        remoteHost: j['remoteHost'] as String?,
-        preferRemote: j['preferRemote'] as bool? ?? false,
+        id:             j['id']           as String,
+        name:           j['name']         as String,
+        host:           j['host']         as String,
+        token:          j['token']        as String,
+        remoteHost:     j['remoteHost']   as String?,
+        preferRemote:   j['preferRemote'] as bool? ?? false,
+        // Webcam fields added in v0.1.7 — default to no transform so old
+        // saved configs (without these keys) still load correctly.
+        webcamFlipH:    j['webcamFlipH']    as bool? ?? false,
+        webcamFlipV:    j['webcamFlipV']    as bool? ?? false,
+        webcamRotation: j['webcamRotation'] as int?  ?? 0,
       );
 
   static List<PrinterConfig> listFromJson(String raw) {

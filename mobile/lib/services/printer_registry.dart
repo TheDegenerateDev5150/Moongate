@@ -62,6 +62,28 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Persist the webcam display-transform settings for a printer.
+  /// Called by [PrinterStatusService] whenever the Moongate status endpoint
+  /// returns webcam info — so the cached values stay current and are applied
+  /// from the first frame on the next app launch (before any poll completes).
+  Future<void> updateWebcamInfo(
+    String printerId, {
+    required bool flipH,
+    required bool flipV,
+    required int  rotation,
+  }) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    final p = _printers[idx];
+    if (p.webcamFlipH == flipH &&
+        p.webcamFlipV == flipV &&
+        p.webcamRotation == rotation) return; // nothing changed
+    _printers = List.of(_printers)
+      ..[idx] = p.copyWith(
+          webcamFlipH: flipH, webcamFlipV: flipV, webcamRotation: rotation);
+    await _save();
+  }
+
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, PrinterConfig.listToJson(_printers));
