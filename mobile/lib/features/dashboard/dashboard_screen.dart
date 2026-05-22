@@ -144,7 +144,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 subtitle: const Text('Copy to clipboard before reinstalling'),
                 onTap: () {
                   Navigator.pop(context);
-                  _exportConfig(context);
+                  _exportConfig();
                 },
               ),
 
@@ -155,7 +155,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               subtitle: const Text('Restore from exported text'),
               onTap: () {
                 Navigator.pop(context);
-                _importConfig(context);
+                _importConfig();
               },
             ),
 
@@ -257,7 +257,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   /// Copies the printer list JSON to the clipboard so the user can paste it
   /// somewhere safe before uninstalling, then restore via Import after reinstall.
-  Future<void> _exportConfig(BuildContext context) async {
+  Future<void> _exportConfig() async {
     final json = PrinterConfig.listToJson(_printers);
     await Clipboard.setData(ClipboardData(text: json));
     if (!mounted) return;
@@ -271,7 +271,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   /// Shows a dialog where the user can paste a previously exported JSON string
   /// to restore their printer list after a reinstall.
-  Future<void> _importConfig(BuildContext context) async {
+  Future<void> _importConfig() async {
     final controller = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
