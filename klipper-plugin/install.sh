@@ -3,6 +3,8 @@
 # Moongate installer
 # Run on your Klipper Pi:
 #   curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh | bash
+#
+# Re-running is safe — existing tokens, config, and cloudflared are untouched.
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -13,6 +15,8 @@ warn()    { echo -e "${YELLOW}[moongate]${NC} $*"; }
 die()     { echo -e "${RED}[moongate] ERROR:${NC} $*" >&2; exit 1; }
 
 # ── Detect environment ────────────────────────────────────────────────────────
+MOONGATE_REPO="https://github.com/PEEKYPAUL/moongate.git"
+MOONGATE_DIR="${MOONGATE_DIR:-$HOME/moongate}"
 MOONRAKER_DIR="${MOONRAKER_DIR:-$HOME/moonraker}"
 MAINSAIL_DIR="${MAINSAIL_DIR:-$HOME/mainsail}"
 PRINTER_DATA="${PRINTER_DATA:-$HOME/printer_data}"
@@ -33,12 +37,29 @@ esac
 
 info "Architecture: $ARCH → cloudflared: $CF_ARCH"
 
-# ── 1. Install Moongate Moonraker plugin ──────────────────────────────────────
-info "Installing Moongate plugin..."
+# ── 1. Clone or update the Moongate repo ─────────────────────────────────────
+# Cloning to ~/moongate lets Moonraker's update manager track the repo and
+# show updates in Mainsail's update panel — just like Klipper/Mainsail itself.
+info "Setting up Moongate repository at $MOONGATE_DIR..."
 
-PLUGIN_URL="https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/moongate_standalone.py"
-curl -fsSL "$PLUGIN_URL" -o "$COMPONENTS_DIR/moongate.py"
-success "Plugin installed at $COMPONENTS_DIR/moongate.py"
+if [[ -d "$MOONGATE_DIR/.git" ]]; then
+    info "Repo already cloned — pulling latest..."
+    git -C "$MOONGATE_DIR" pull --ff-only
+    success "Repository updated."
+else
+    git clone --depth=1 "$MOONGATE_REPO" "$MOONGATE_DIR"
+    success "Repository cloned to $MOONGATE_DIR"
+fi
+
+PLUGIN_SRC="$MOONGATE_DIR/klipper-plugin/moongate_standalone.py"
+
+# ── 2. Install Moongate Moonraker plugin (symlink) ───────────────────────────
+# Using a symlink means git pull automatically gives you the new plugin —
+# no manual file copy needed. Moonraker's update manager restarts Moonraker
+# after each pull so the new version loads cleanly.
+info "Linking plugin into Moonraker components..."
+ln -sf "$PLUGIN_SRC" "$COMPONENTS_DIR/moongate.py"
+success "Plugin linked: $COMPONENTS_DIR/moongate.py → $PLUGIN_SRC"
 
 if grep -q '^\[moongate\]' "$MOONRAKER_CONF"; then
     info "[moongate] already in moonraker.conf"
@@ -47,10 +68,30 @@ else
     success "[moongate] added to moonraker.conf"
 fi
 
-# ── 2. Add MOONGATE_PAIR macro to Klipper config ──────────────────────────────
+# ── 3. Register with Moonraker's update manager ───────────────────────────────
+# This adds Moongate to the Software Updates panel in Mainsail — same as
+# Klipper, Mainsail, etc. One-click updates from the web UI from now on.
+info "Registering with Moonraker update manager..."
+
+if grep -q '^\[update_manager moongate\]' "$MOONRAKER_CONF"; then
+    info "[update_manager moongate] already in moonraker.conf"
+else
+    cat >> "$MOONRAKER_CONF" << EOF
+
+[update_manager moongate]
+type: git_repo
+path: $MOONGATE_DIR
+origin: $MOONGATE_REPO
+primary_branch: master
+managed_services: moonraker
+install_script: klipper-plugin/update.sh
+EOF
+    success "[update_manager moongate] added to moonraker.conf"
+fi
+
+# ── 4. Add MOONGATE_PAIR macro to Klipper config ─────────────────────────────
 info "Adding MOONGATE_PAIR macro to Klipper config..."
 
-# Search for printer.cfg in the most common locations.
 PRINTER_CFG=""
 for candidate in \
     "$PRINTER_DATA/config/printer.cfg" \
@@ -74,11 +115,10 @@ info "Found printer.cfg at $PRINTER_CFG"
 KLIPPER_CFG_DIR="$(dirname "$PRINTER_CFG")"
 MOONGATE_CFG="$KLIPPER_CFG_DIR/moongate.cfg"
 
-# Always overwrite moongate.cfg so re-running the installer picks up changes.
 cat > "$MOONGATE_CFG" << 'MACROEOF'
 # ── Moongate ──────────────────────────────────────────────────────────────────
 # Managed by the Moongate installer — do not edit manually.
-# Re-run install.sh to update.
+# Updates are handled automatically via Moonraker's update manager.
 
 [gcode_macro MOONGATE_PAIR]
 description: Generate a Moongate pairing code for the mobile app
@@ -88,7 +128,6 @@ MACROEOF
 
 success "Macro written to $MOONGATE_CFG"
 
-# Add [include moongate.cfg] at the very top of printer.cfg.
 if grep -q '\[include moongate\.cfg\]' "$PRINTER_CFG"; then
     info "[include moongate.cfg] already present in printer.cfg"
 else
@@ -97,34 +136,38 @@ else
     success "[include moongate.cfg] added to top of printer.cfg"
 fi
 
-# Confirm the include is now visible at the top.
-info "printer.cfg first line: $(head -1 "$PRINTER_CFG")"
+# ── 5. Deploy QR pairing page to web root ────────────────────────────────────
+HTML_SRC="$MOONGATE_DIR/klipper-plugin/moongate-pair.html"
+DEPLOYED=0
+for webroot in "$MAINSAIL_DIR" "$HOME/printer_data/www" "$HOME/fluidd"; do
+    if [[ -d "$webroot" ]]; then
+        cp "$HTML_SRC" "$webroot/moongate-pair.html"
+        success "QR page deployed to $webroot/moongate-pair.html"
+        DEPLOYED=1
+    fi
+done
+[[ $DEPLOYED -eq 0 ]] && warn "No web-root found — skipping QR page"
 
-# ── 3. Deploy QR pairing page to Mainsail ────────────────────────────────────
-if [[ -d "$MAINSAIL_DIR" ]]; then
-    HTML_URL="https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/moongate-pair.html"
-    curl -fsSL "$HTML_URL" -o "$MAINSAIL_DIR/moongate-pair.html"
-    success "QR page deployed to $MAINSAIL_DIR/moongate-pair.html"
+# ── 6. Install cloudflared (skip if already installed) ───────────────────────
+if command -v cloudflared &>/dev/null; then
+    info "cloudflared already installed — skipping."
 else
-    warn "Mainsail not found at $MAINSAIL_DIR — skipping QR page"
+    info "Installing cloudflared..."
+    CF_DEB="cloudflared-linux-${CF_ARCH}.deb"
+    CF_URL="https://github.com/cloudflare/cloudflared/releases/latest/download/$CF_DEB"
+    TMP_DEB="/tmp/$CF_DEB"
+    curl -fsSL "$CF_URL" -o "$TMP_DEB"
+    sudo dpkg -i "$TMP_DEB"
+    rm -f "$TMP_DEB"
+    success "cloudflared installed"
 fi
 
-# ── 4. Install cloudflared ────────────────────────────────────────────────────
-info "Installing cloudflared..."
-
-CF_DEB="cloudflared-linux-${CF_ARCH}.deb"
-CF_URL="https://github.com/cloudflare/cloudflared/releases/latest/download/$CF_DEB"
-TMP_DEB="/tmp/$CF_DEB"
-
-curl -fsSL "$CF_URL" -o "$TMP_DEB"
-sudo dpkg -i "$TMP_DEB"
-rm -f "$TMP_DEB"
-success "cloudflared installed"
-
-# ── 5. Create moongate-tunnel systemd service ─────────────────────────────────
-info "Creating moongate-tunnel systemd service..."
-
-sudo tee /etc/systemd/system/moongate-tunnel.service > /dev/null << UNIT
+# ── 7. Create moongate-tunnel systemd service (skip if already active) ────────
+if systemctl is-enabled --quiet moongate-tunnel 2>/dev/null; then
+    info "moongate-tunnel service already enabled — skipping."
+else
+    info "Creating moongate-tunnel systemd service..."
+    sudo tee /etc/systemd/system/moongate-tunnel.service > /dev/null << UNIT
 [Unit]
 Description=Moongate Cloudflare Tunnel
 After=network-online.target
@@ -140,22 +183,21 @@ RestartSec=10
 [Install]
 WantedBy=multi-user.target
 UNIT
+    sudo systemctl daemon-reload
+    sudo systemctl enable moongate-tunnel
+    sudo systemctl restart moongate-tunnel
+    success "moongate-tunnel service started"
+fi
 
-sudo systemctl daemon-reload
-sudo systemctl enable moongate-tunnel
-sudo systemctl restart moongate-tunnel
-success "moongate-tunnel service started"
-
-# ── 6. Restart Moonraker then Klipper ────────────────────────────────────────
+# ── 8. Restart Moonraker then Klipper ────────────────────────────────────────
 info "Restarting Moonraker..."
 sudo systemctl restart moonraker
 sleep 3
-systemctl is-active moonraker > /dev/null \
+systemctl is-active --quiet moonraker \
     && success "Moonraker running" \
     || warn "Check Moonraker: sudo systemctl status moonraker"
 
 info "Restarting Klipper to load MOONGATE_PAIR macro..."
-# Try common Klipper service names.
 KLIPPER_SVC=""
 for svc in klipper klipper-1; do
     if systemctl is-active --quiet "$svc" 2>/dev/null || \
@@ -171,20 +213,14 @@ if [[ -n "$KLIPPER_SVC" ]]; then
     if systemctl is-active --quiet "$KLIPPER_SVC"; then
         success "Klipper restarted — MOONGATE_PAIR macro is ready"
     else
-        warn "Klipper restart may have failed. Check with:"
-        warn "  sudo systemctl status $KLIPPER_SVC"
-        warn "Then do a Firmware Restart in Mainsail to reload the config."
+        warn "Klipper restart may have failed. Check: sudo systemctl status $KLIPPER_SVC"
+        warn "Then do a Firmware Restart in Mainsail."
     fi
 else
-    warn "──────────────────────────────────────────────────────"
-    warn "Could not find Klipper service to restart automatically."
-    warn "Please do ONE of the following to load the MOONGATE_PAIR macro:"
-    warn "  1. Click 'Firmware Restart' in Mainsail"
-    warn "  2. Or run:  sudo systemctl restart klipper"
-    warn "──────────────────────────────────────────────────────"
+    warn "Could not find Klipper service — please do a Firmware Restart in Mainsail."
 fi
 
-# ── 7. Show tunnel URL ────────────────────────────────────────────────────────
+# ── 9. Show tunnel URL ────────────────────────────────────────────────────────
 echo ""
 info "Waiting for Cloudflare tunnel (~20s)..."
 sleep 20
@@ -197,14 +233,17 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo -e "${GREEN}  Moongate installed!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo -e "  Pairing page : ${BLUE}http://$LOCAL_IP/moongate-pair.html${NC}"
+echo -e "  Updates   : ${BLUE}Mainsail → Software Updates → Moongate${NC}"
+echo -e "  Pairing   : ${BLUE}http://$LOCAL_IP/moongate-pair.html${NC}"
 if [[ -n "$TUNNEL_URL" ]]; then
-    echo -e "  Remote access: ${GREEN}$TUNNEL_URL${NC} ✓"
+    SUBDOMAIN="${TUNNEL_URL#https://}"
+    SUBDOMAIN="${SUBDOMAIN%.trycloudflare.com}"
+    echo -e "  Tunnel    : ${GREEN}$TUNNEL_URL${NC} ✓"
+    echo -e "  Subdomain : ${GREEN}$SUBDOMAIN${NC} (paste into app tunnel field)"
 else
-    echo -e "  Remote access: ${YELLOW}tunnel starting — check in 30s:${NC}"
+    echo -e "  Tunnel    : ${YELLOW}still starting — check in 30s:${NC}"
     echo -e "    grep -o 'https://.*trycloudflare.com' /run/moongate-tunnel.log"
 fi
 echo ""
-echo -e "  Next step: run ${YELLOW}MOONGATE_PAIR${NC} in Klipper console,"
-echo -e "  open the pairing page above on your PC, and scan with the app."
+echo -e "  Run ${YELLOW}MOONGATE_PAIR${NC} in Klipper console to pair."
 echo ""
