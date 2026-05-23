@@ -78,7 +78,7 @@ jobs:
           {
             "version": "$VERSION",
             "build_number": $BUILD,
-            "apk_url": "https://github.com/PEEKYPAUL/moongate/raw/master/APK/${VERSIONED_NAME}",
+            "apk_url": "https://github.com/PEEKYPAUL/Moongate/raw/master/APK/${VERSIONED_NAME}",
             "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
           EOF
