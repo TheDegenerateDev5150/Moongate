@@ -279,6 +279,16 @@ class PrinterStatusService {
         await _supplementaryChamberQuery(baseUrl, status, timeout: timeout);
       }
 
+      // Supplementary progress query — most Moongate plugin builds don't
+      // include display_status or virtual_sdcard in their status response.
+      // Without these, progress always shows 0 % even mid-print because
+      // display_status.progress defaults to 0.0 until M73 is sent, and
+      // virtual_sdcard.progress is simply absent.  Fetch both in one call
+      // whenever either is missing from the plugin response.
+      if (status['display_status'] == null || status['virtual_sdcard'] == null) {
+        await _supplementaryProgressQuery(baseUrl, status, timeout: timeout);
+      }
+
       return _parseStatus(status: status, moongateResult: result, baseUrl: baseUrl);
     } catch (_) {
       return null;
@@ -307,6 +317,35 @@ class PrinterStatusService {
       }
     } catch (_) {
       // Supplementary query failed — chamberTemp stays 0, not critical.
+    }
+  }
+
+  /// Queries display_status and virtual_sdcard directly and injects them into
+  /// [status] in-place.  Called when the Moongate endpoint response is missing
+  /// these objects (all plugin builds prior to the progress-aware version).
+  Future<void> _supplementaryProgressQuery(
+      String baseUrl,
+      Map<String, dynamic> status, {
+      required Duration timeout,
+  }) async {
+    try {
+      final uri = Uri.parse(
+          '$baseUrl/printer/objects/query?display_status&virtual_sdcard');
+      final response = await http.get(uri).timeout(timeout);
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final s    = (body['result']?['status']) as Map<String, dynamic>?;
+        if (s != null) {
+          if (status['display_status'] == null && s['display_status'] != null) {
+            status['display_status'] = s['display_status'];
+          }
+          if (status['virtual_sdcard'] == null && s['virtual_sdcard'] != null) {
+            status['virtual_sdcard'] = s['virtual_sdcard'];
+          }
+        }
+      }
+    } catch (_) {
+      // Supplementary query failed — progress stays 0, not critical.
     }
   }
 
