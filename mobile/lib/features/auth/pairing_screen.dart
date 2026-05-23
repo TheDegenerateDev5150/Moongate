@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../models/printer_config.dart';
@@ -83,14 +84,33 @@ class _PairingScreenState extends State<PairingScreen>
 
   /// Open the QR scanner with a fresh controller.
   ///
-  /// If a previous controller exists it is disposed first and we wait 600 ms
+  /// Always requests camera permission first.  This separates the permission
+  /// request from camera hardware initialisation, eliminating the race
+  /// condition where mobile_scanner fires genericError because the OS
+  /// permission dialog and the Camera2 open call overlap.
+  ///
+  /// If a previous controller exists it is disposed first and we wait 700 ms
   /// for the Android Camera2 layer to fully release the hardware before
-  /// acquiring it again.  Skipping this delay is the most common cause of
-  /// "Camera unavailable" errors on Android.
+  /// acquiring it again.
   Future<void> _openScanner() async {
     if (_scannerOpening) return;
     _scannerOpening = true;
 
+    // ── Permission gate ───────────────────────────────────────────────────
+    final status = await Permission.camera.request();
+
+    if (!mounted) { _scannerOpening = false; return; }
+
+    if (!status.isGranted) {
+      _scannerOpening = false;
+      if (status.isPermanentlyDenied) {
+        _showPermissionDeniedDialog();
+      }
+      // If just denied (not permanently), user can tap the button again.
+      return;
+    }
+
+    // ── Camera lifecycle ──────────────────────────────────────────────────
     if (_scannerController != null) {
       _scannerController!.dispose();
       _scannerController = null;
@@ -107,6 +127,35 @@ class _PairingScreenState extends State<PairingScreen>
     );
     _scannerOpening = false;
     setState(() => _scanning = true);
+  }
+
+  /// Shown when camera permission has been permanently denied via the system
+  /// dialog ("Don't ask again").  The only path back is the app settings page.
+  void _showPermissionDeniedDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Camera permission required'),
+        content: const Text(
+          'Moongate needs camera access to scan QR codes.\n\n'
+          'Open Settings → Apps → Moongate → Permissions '
+          'and enable Camera, then come back and try again.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              openAppSettings(); // opens the app's system settings page
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Close the scanner and release the camera.
@@ -570,6 +619,9 @@ class _PairingScreenState extends State<PairingScreen>
                       _applyScannedCode(raw);
                     },
                     errorBuilder: (context, error, child) {
+                      // Permission is now handled before opening the camera,
+                      // so errors here are genuine hardware/driver issues.
+                      // We still handle permissionDenied as a safety net.
                       final isDenied = error.errorCode ==
                           MobileScannerErrorCode.permissionDenied;
                       return Container(
@@ -594,39 +646,47 @@ class _PairingScreenState extends State<PairingScreen>
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold),
                             ),
-                            const SizedBox(height: 4),
-                            // Show the actual error code — helps diagnose
-                            // generic errors vs permission issues.
-                            Text(
-                              error.errorCode.name,
-                              style: const TextStyle(
-                                  color: Colors.orange,
-                                  fontSize: 11),
-                            ),
                             const SizedBox(height: 10),
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 20),
                               child: Text(
                                 isDenied
-                                    ? 'Go to Settings → Apps → Moongate → Permissions and enable Camera, then tap Retry.'
-                                    : 'The camera could not be opened.\nWait a moment and tap Retry.',
+                                    ? 'Go to Settings and enable Camera permission for Moongate.'
+                                    : 'The camera could not be opened.\nTap Retry or restart the app.',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                     color: Colors.white70, fontSize: 12),
                               ),
                             ),
                             const SizedBox(height: 14),
-                            OutlinedButton.icon(
-                              onPressed: _restartScanner,
-                              icon: const Icon(Icons.refresh,
-                                  color: Colors.white70),
-                              label: const Text('Retry',
-                                  style: TextStyle(color: Colors.white70)),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(
-                                    color: Colors.white30),
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (isDenied)
+                                  OutlinedButton.icon(
+                                    onPressed: () {
+                                      _closeScanner();
+                                      openAppSettings();
+                                    },
+                                    icon: const Icon(Icons.settings,
+                                        color: Colors.white70),
+                                    label: const Text('Settings',
+                                        style: TextStyle(color: Colors.white70)),
+                                    style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(color: Colors.white30)),
+                                  ),
+                                if (isDenied) const SizedBox(width: 8),
+                                OutlinedButton.icon(
+                                  onPressed: _restartScanner,
+                                  icon: const Icon(Icons.refresh,
+                                      color: Colors.white70),
+                                  label: const Text('Retry',
+                                      style: TextStyle(color: Colors.white70)),
+                                  style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(color: Colors.white30)),
+                                ),
+                              ],
                             ),
                           ],
                         ),
