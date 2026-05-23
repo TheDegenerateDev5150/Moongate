@@ -49,6 +49,15 @@ class PrinterStatusService {
   /// was found) so we don't call /printer/objects/list on every poll.
   bool _chamberDiscovered = false;
 
+  /// Which web UI the printer is running — 'mainsail', 'fluidd', or null if
+  /// not yet detected / unrecognised.  Detected once on the first reachable
+  /// connection by fetching the root page and checking the HTML title.
+  String? _uiType;
+  bool    _uiTypeChecked = false;
+
+  /// Exposes the detected UI type so tiles can show the right logo.
+  String? get uiType => _uiType;
+
   // Always start local-first — preferRemote is a session-only optimisation.
   // Persisting it caused both printers to show "Tunnel" on every app launch
   // even when on the same LAN as the printer.
@@ -215,8 +224,34 @@ class PrinterStatusService {
   /// first when you're back home on the same LAN.
   void _onSuccess(String baseUrl) {
     final isRemote = baseUrl != config.host;
-    if (isRemote == _preferRemote) return; // no change
-    _preferRemote = isRemote;
+    if (isRemote != _preferRemote) _preferRemote = isRemote;
+    // Fire-and-forget UI-type detection on the first successful connection.
+    if (!_uiTypeChecked) _detectUiType(baseUrl);
+  }
+
+  // ── Web UI detection (Mainsail / Fluidd) ──────────────────────────────────
+  //
+  // Fetches the printer's root page once and sniffs the HTML <title> for
+  // "Mainsail" or "Fluidd".  Result is cached for the session.
+  // Called asynchronously — does not block polling.
+
+  Future<void> _detectUiType(String baseUrl) async {
+    _uiTypeChecked = true; // prevent concurrent calls
+    try {
+      final uri      = Uri.parse('$baseUrl/');
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final body = response.body.toLowerCase();
+        if (body.contains('mainsail')) {
+          _uiType = 'mainsail';
+        } else if (body.contains('fluidd')) {
+          _uiType = 'fluidd';
+        }
+      }
+    } catch (_) {
+      // Detection failed — retry on next successful poll.
+      _uiTypeChecked = false;
+    }
   }
 
   // ── Moongate plugin endpoint ───────────────────────────────────────────────

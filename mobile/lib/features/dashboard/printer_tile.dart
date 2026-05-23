@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../models/printer_config.dart';
 import '../../services/print_control_service.dart';
@@ -31,6 +32,15 @@ class _PrinterTileState extends State<PrinterTile> {
   String _probePhase = 'local'; // 'local' | 'tunnel' | 'offline'
   StreamSubscription<String>? _probeSub;
 
+  /// Once the first full probe cycle reaches 'offline', this flips to true
+  /// and subsequent retries show a static "Offline" state — no more cycling
+  /// through "Loading Local…" / "Loading Tunnel…" on every retry.
+  bool _probedOnce = false;
+
+  /// Web UI type detected by the service — 'mainsail', 'fluidd', or null.
+  /// Used to show the right logo when the webcam image fails to load.
+  String? _uiType;
+
   @override
   void initState() {
     super.initState();
@@ -54,7 +64,13 @@ class _PrinterTileState extends State<PrinterTile> {
     _controlService = PrintControlService(widget.printer);
     // Subscribe to probe phase BEFORE start() so we catch the very first emit.
     _probeSub = _statusService.probePhase.listen((phase) {
-      if (mounted) setState(() => _probePhase = phase);
+      if (!mounted) return;
+      setState(() {
+        _probePhase = phase;
+        // Lock in "Offline" display after the first full probe cycle so
+        // subsequent retries are silent — no more cycling through labels.
+        if (phase == 'offline') _probedOnce = true;
+      });
     });
     _statusService.stream.listen((s) {
       if (!mounted) return;
@@ -66,7 +82,12 @@ class _PrinterTileState extends State<PrinterTile> {
         _stopConfirmTimer?.cancel();
         _stopConfirmPending = false;
       }
-      setState(() => _status = s);
+      setState(() {
+        _status = s;
+        // Pick up UI type as soon as the service detects it.
+        final detected = _statusService.uiType;
+        if (detected != null && detected != _uiType) _uiType = detected;
+      });
     });
     _statusService.start();
   }
@@ -165,15 +186,19 @@ class _PrinterTileState extends State<PrinterTile> {
                     webcamFlipV:    _status.webcamFlipV,
                     webcamRotation: _status.webcamRotation,
                     tunnelUrlUpdates: _statusService.tunnelUrlUpdates,
+                    uiType: _uiType,
                   ),
                   // ── Connection probe overlay ───────────────────────────────
-                  // Covers the webcam area while searching for the printer and
-                  // when it is unreachable — shows "Loading Local…",
-                  // "Loading Tunnel…", or "Offline" with a spinner or icon so
-                  // the app never looks stalled.
+                  // First attempt: cycles through "Loading Local…" →
+                  // "Loading Tunnel…" → "Offline" so the user knows what's
+                  // happening.  After that first cycle (_probedOnce = true),
+                  // retries are silent — the overlay stays on "Offline" and
+                  // the polling continues in the background.
                   if (_status.state == 'connecting' ||
                       _status.connection == PrinterConnection.offline)
-                    _ConnectionProbe(phase: _probePhase),
+                    _ConnectionProbe(
+                      phase: _probedOnce ? 'offline' : _probePhase,
+                    ),
                   // ── Status badge ───────────────────────────────────────────
                   // Only shown when connected — the probe overlay provides the
                   // status context while offline/connecting.
@@ -477,6 +502,8 @@ class _WebcamSnapshot extends StatefulWidget {
   final bool              webcamFlipV;
   final int               webcamRotation; // 0 | 90 | 180 | 270
   final Stream<String>?   tunnelUrlUpdates;
+  /// 'mainsail' | 'fluidd' | null — shown as logo when webcam unavailable.
+  final String?           uiType;
 
   const _WebcamSnapshot({
     required this.printer,
@@ -486,6 +513,7 @@ class _WebcamSnapshot extends StatefulWidget {
     this.webcamFlipV    = false,
     this.webcamRotation = 0,
     this.tunnelUrlUpdates,
+    this.uiType,
   });
 
   @override
@@ -547,9 +575,7 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
       // one-second white flash.  Gapless holds the last frame silently.
       errorBuilder: (_, __, ___) => Container(
         color: Colors.black54,
-        child: const Center(
-          child: Icon(Icons.videocam_off, color: Colors.white30, size: 40),
-        ),
+        child: Center(child: _WebcamPlaceholder(uiType: widget.uiType)),
       ),
     );
 
@@ -578,6 +604,43 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
     }
 
     return image;
+  }
+}
+
+// ── Webcam placeholder ────────────────────────────────────────────────────────
+//
+// Shown inside the webcam area when the snapshot image fails to load (no
+// webcam configured, or camera service not running).  Displays the Mainsail
+// or Fluidd logo if the UI type has been detected, otherwise a generic icon.
+
+class _WebcamPlaceholder extends StatelessWidget {
+  final String? uiType; // 'mainsail' | 'fluidd' | null
+
+  const _WebcamPlaceholder({this.uiType});
+
+  @override
+  Widget build(BuildContext context) {
+    if (uiType == 'mainsail') {
+      return Opacity(
+        opacity: 0.35,
+        child: SvgPicture.asset(
+          'assets/icons/mainsail_logo.svg',
+          width: 130,
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+    if (uiType == 'fluidd') {
+      return Opacity(
+        opacity: 0.35,
+        child: SvgPicture.asset(
+          'assets/icons/fluidd_logo.svg',
+          width: 130,
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+    return const Icon(Icons.videocam_off, color: Colors.white30, size: 40);
   }
 }
 

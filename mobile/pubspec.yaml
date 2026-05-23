@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.2.10+20
+version: 0.2.11+21
 publish_to: none
 
 environment:
@@ -39,6 +39,9 @@ dependencies:
 
   # Open URLs in the browser (used for the in-app update download prompt)
   url_launcher: ^6.3.0
+
+  # SVG rendering (Mainsail / Fluidd logos in webcam placeholder)
+  flutter_svg: ^2.0.0
 
   # Explicit camera permission check before opening the QR scanner.
   # Separates permission request from camera initialisation so mobile_scanner
