@@ -97,6 +97,18 @@ jobs:
           git fetch origin master
           git reset --hard origin/master
 
+          # Only overwrite if our build number is >= what's already on remote.
+          # Without this check, a slow CI run for an *older* commit (lower build
+          # number) can finish after a newer run and silently downgrade the APK.
+          REMOTE_BUILD=$(grep -o '"build_number":[^,}]*' APK/latest_version.json | grep -o '[0-9]*' || echo 0)
+          LOCAL_BUILD=$(grep -o '"build_number":[^,}]*' /tmp/latest_version.json | grep -o '[0-9]*' || echo 0)
+          echo "Remote build: $REMOTE_BUILD  |  Our build: $LOCAL_BUILD"
+
+          if [ "$LOCAL_BUILD" -lt "$REMOTE_BUILD" ]; then
+            echo "Remote already has a newer build ($REMOTE_BUILD > $LOCAL_BUILD) — skipping push."
+            exit 0
+          fi
+
           # Restore our freshly built outputs
           cp /tmp/Moongate-latest.apk APK/Moongate-latest.apk
           cp /tmp/latest_version.json APK/latest_version.json
