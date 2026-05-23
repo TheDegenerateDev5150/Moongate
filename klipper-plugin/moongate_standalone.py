@@ -584,6 +584,12 @@ class MoongatePlugin:
         self._last_qr_url:      Optional[str] = None
         self._last_qr_token_id: Optional[str] = None
 
+        # Chamber sensor — discovered once from /printer/objects/list so the
+        # status endpoint can include it regardless of capitalisation:
+        # [temperature_sensor chamber], [temperature_sensor CHAMBER], etc.
+        self._chamber_key:         Optional[str] = None
+        self._chamber_key_checked: bool          = False
+
         # Register HTTP endpoints using Moonraker's correct API.
         # Moonraker requires paths to start with /server, /printer, /machine, etc.
         self.server.register_endpoint(
@@ -878,6 +884,37 @@ class MoongatePlugin:
         except Exception:
             return _defaults
 
+    async def _discover_chamber_sensor(self, client: Any) -> Optional[str]:
+        """
+        Call /printer/objects/list and return the first temperature_sensor or
+        heater_generic key whose name contains 'chamber' (case-insensitive).
+
+        Handles any capitalisation the user chose in printer.cfg:
+          [temperature_sensor chamber]       → "temperature_sensor chamber"
+          [temperature_sensor CHAMBER]       → "temperature_sensor CHAMBER"
+          [temperature_sensor Chamber_Temp]  → "temperature_sensor Chamber_Temp"
+          [heater_generic CHAMBER]           → "heater_generic CHAMBER"
+        """
+        from tornado.httpclient import HTTPRequest
+        try:
+            req  = HTTPRequest(
+                "http://127.0.0.1:7125/printer/objects/list",
+                method="GET", request_timeout=2.0,
+            )
+            resp = await client.fetch(req, raise_error=False)
+            if resp.code != 200:
+                return None
+            import json as _j
+            objects = _j.loads(resp.body).get("result", {}).get("objects", [])
+            for obj in objects:
+                if ("temperature_sensor" in obj or "heater_generic" in obj) \
+                        and "chamber" in obj.lower():
+                    logger.info("Moongate: chamber sensor detected: '%s'", obj)
+                    return obj
+        except Exception:
+            pass
+        return None
+
     async def _handle_status(self, webrequest: Any) -> dict:
         """
         Authenticated proxy for Moonraker printer status.
@@ -887,12 +924,24 @@ class MoongatePlugin:
         """
         self._authenticate(webrequest)
         import json as _json
+        import urllib.parse
         from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
         client = AsyncHTTPClient()
+
+        # Discover which temperature_sensor/heater_generic key is the chamber
+        # sensor (once per plugin lifetime — handles any user capitalisation).
+        if not self._chamber_key_checked:
+            self._chamber_key         = await self._discover_chamber_sensor(client)
+            self._chamber_key_checked = True
+
+        # Build query: always include core objects; add chamber sensor if found.
+        query = "print_stats&heater_bed&extruder"
+        if self._chamber_key:
+            query += "&" + urllib.parse.quote(self._chamber_key, safe="")
+
         req = HTTPRequest(
-            "http://127.0.0.1:7125/printer/objects/query"
-            "?print_stats&heater_bed&extruder",
+            f"http://127.0.0.1:7125/printer/objects/query?{query}",
             method="GET",
             request_timeout=5.0,
         )

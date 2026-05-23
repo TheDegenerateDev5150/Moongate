@@ -16,6 +16,14 @@ import 'printer_registry.dart';
 ///      Tries progressively simpler object sets to handle printers where
 ///      optional objects (heater_bed, display_status) are not configured.
 ///
+/// Chamber sensor discovery:
+///   On the first reachable connection, calls /printer/objects/list and
+///   finds any temperature_sensor or heater_generic whose name contains
+///   "chamber" (case-insensitive).  This handles every naming convention:
+///   [temperature_sensor chamber], [temperature_sensor CHAMBER],
+///   [temperature_sensor Chamber_Temp], [heater_generic CHAMBER], etc.
+///   The discovered key is cached for the lifetime of this service instance.
+///
 /// A _polling guard prevents concurrent polls from stacking up when the
 /// previous poll is still timing out on an unreachable host.
 class PrinterStatusService {
@@ -30,6 +38,15 @@ class PrinterStatusService {
   /// on success so the very next poll uses the right order, and persisted
   /// to [PrinterRegistry] so the preference survives app restarts.
   bool _preferRemote;
+
+  /// The Moonraker object key for the chamber temperature sensor, e.g.
+  /// "temperature_sensor CHAMBER".  Null until discovery runs or when no
+  /// chamber sensor is found.  Populated by [_discoverChamberSensor].
+  String? _chamberKey;
+
+  /// Set to true once discovery has been attempted (whether or not a sensor
+  /// was found) so we don't call /printer/objects/list on every poll.
+  bool _chamberDiscovered = false;
 
   PrinterStatusService(this.config) : _preferRemote = config.preferRemote;
 
@@ -94,6 +111,12 @@ class PrinterStatusService {
           ? const Duration(seconds: 8)  // tunnel: allow for cold-start latency
           : const Duration(seconds: 3); // local LAN: fast or not reachable
 
+      // Discover the chamber sensor key on the first reachable host.
+      // One extra HTTP call on the very first poll, zero overhead after that.
+      if (!_chamberDiscovered) {
+        await _discoverChamberSensor(baseUrl, timeout: timeout);
+      }
+
       // ── 1. Moongate plugin endpoint (preferred) ──────────────────────────
       final moongate = await _tryMoongateEndpoint(baseUrl, timeout: timeout);
       if (moongate != null) {
@@ -116,6 +139,48 @@ class PrinterStatusService {
 
     // All candidates failed — printer is unreachable.
     if (!_disposed) _controller.add(PrinterStatus.offline);
+  }
+
+  // ── Chamber sensor discovery ───────────────────────────────────────────────
+  //
+  // Calls /printer/objects/list once and scans for any temperature_sensor or
+  // heater_generic whose name contains "chamber" (case-insensitive).
+  //
+  // Examples this handles:
+  //   [temperature_sensor chamber]      → key: "temperature_sensor chamber"
+  //   [temperature_sensor CHAMBER]      → key: "temperature_sensor CHAMBER"
+  //   [temperature_sensor Chamber_Temp] → key: "temperature_sensor Chamber_Temp"
+  //   [heater_generic CHAMBER]          → key: "heater_generic CHAMBER"
+  //
+  // Sets _chamberDiscovered = true even if no sensor is found, so we don't
+  // call /printer/objects/list on every subsequent poll.
+
+  Future<void> _discoverChamberSensor(
+      String baseUrl, {required Duration timeout}) async {
+    try {
+      final uri      = Uri.parse('$baseUrl/printer/objects/list');
+      final response = await http.get(uri).timeout(timeout);
+      if (response.statusCode == 200) {
+        final body    = jsonDecode(response.body) as Map<String, dynamic>;
+        final objects =
+            ((body['result']?['objects']) as List<dynamic>?) ?? [];
+        for (final obj in objects) {
+          final key = obj.toString();
+          if ((key.startsWith('temperature_sensor ') ||
+               key.startsWith('heater_generic ')) &&
+              key.toLowerCase().contains('chamber')) {
+            _chamberKey = key; // e.g. "temperature_sensor CHAMBER"
+            break;
+          }
+        }
+      }
+      // Mark done regardless — avoids calling /printer/objects/list every poll
+      // when the host is reachable but has no chamber sensor.
+      _chamberDiscovered = true;
+    } catch (_) {
+      // Network error — leave _chamberDiscovered = false so we retry next poll
+      // (the host may not have been reachable yet).
+    }
   }
 
   /// Called after every successful poll.  Updates the connection preference
@@ -158,15 +223,23 @@ class PrinterStatusService {
   // progressively simpler object sets and stop at the first 200 response.
   // A timeout or any non-400 error causes an immediate bail-out.
 
-  static const _nativeQueries = [
-    'print_stats&extruder&heater_bed', // most Mainsail setups
-    'print_stats&extruder',            // no heated bed
-    'print_stats',                     // absolute minimum
-  ];
-
   Future<PrinterStatus?> _tryNativeEndpoint(
       String baseUrl, {required Duration timeout}) async {
-    for (final q in _nativeQueries) {
+    // Build the query list dynamically.  If we've discovered the chamber sensor
+    // key, prepend a query that includes it — the app will try that first and
+    // only fall back to the no-chamber queries if it returns 400.
+    final chamberParam = _chamberKey != null
+        ? '&${Uri.encodeComponent(_chamberKey!)}'
+        : '';
+    final queries = [
+      if (chamberParam.isNotEmpty)
+        'print_stats&extruder&heater_bed$chamberParam', // with chamber sensor
+      'print_stats&extruder&heater_bed', // most Mainsail setups (no chamber)
+      'print_stats&extruder',            // no heated bed
+      'print_stats',                     // absolute minimum
+    ];
+
+    for (final q in queries) {
       try {
         final uri = Uri.parse('$baseUrl/printer/objects/query?$q');
         final response = await http.get(uri).timeout(timeout);
@@ -175,7 +248,8 @@ class PrinterStatusService {
           final body   = jsonDecode(response.body) as Map<String, dynamic>;
           final result = body['result'] as Map<String, dynamic>;
           final status = result['status'] as Map<String, dynamic>;
-          return _parseStatus(status: status, moongateResult: null, baseUrl: baseUrl);
+          return _parseStatus(
+              status: status, moongateResult: null, baseUrl: baseUrl);
         }
 
         // 400 = object not found → try a simpler query set
@@ -202,6 +276,22 @@ class PrinterStatusService {
     final printStats = status['print_stats'] as Map<String, dynamic>? ?? {};
     final extruder   = status['extruder']    as Map<String, dynamic>? ?? {};
     final heaterBed  = status['heater_bed']  as Map<String, dynamic>? ?? {};
+
+    // Chamber temperature — look up by discovered key first, then fall back to
+    // common hardcoded names.  The fallback covers:
+    //   • Printers using the Moongate plugin before it also started querying
+    //     the chamber sensor server-side.
+    //   • Edge cases where discovery hasn't completed yet on the first frame.
+    Map<String, dynamic>? chamberSensor = _chamberKey != null
+        ? status[_chamberKey!] as Map<String, dynamic>?
+        : null;
+    chamberSensor ??=
+        (status['temperature_sensor chamber'] ??
+         status['temperature_sensor CHAMBER'] ??
+         status['temperature_sensor chamber_temp'] ??
+         status['temperature_sensor CHAMBER_TEMP'] ??
+         status['heater_generic chamber'] ??
+         status['heater_generic CHAMBER']) as Map<String, dynamic>?;
 
     // display_status.progress is the real slicer %; only available from the
     // Moongate endpoint (which includes the full Moonraker status object).
@@ -256,11 +346,13 @@ class PrinterStatusService {
     return PrinterStatus(
       state:              state,
       progress:           progress,
-      hotendTemp:         (extruder['temperature'] as num?)?.toDouble() ?? 0,
-      hotendTarget:       (extruder['target']      as num?)?.toDouble() ?? 0,
-      bedTemp:            (heaterBed['temperature'] as num?)?.toDouble() ?? 0,
-      bedTarget:          (heaterBed['target']      as num?)?.toDouble() ?? 0,
-      filename:           printStats['filename']    as String?,
+      hotendTemp:         (extruder['temperature']       as num?)?.toDouble() ?? 0,
+      hotendTarget:       (extruder['target']            as num?)?.toDouble() ?? 0,
+      bedTemp:            (heaterBed['temperature']      as num?)?.toDouble() ?? 0,
+      bedTarget:          (heaterBed['target']           as num?)?.toDouble() ?? 0,
+      chamberTemp:        (chamberSensor?['temperature'] as num?)?.toDouble() ?? 0,
+      chamberTarget:      (chamberSensor?['target']      as num?)?.toDouble() ?? 0,
+      filename:           printStats['filename']         as String?,
       connection:         connection,
       webcamSnapshotPath: moongateResult?['webcam_snapshot_path'] as String?,
       // Webcam display transforms — match whatever Mainsail has configured.
