@@ -214,11 +214,46 @@ class PrinterStatusService {
 
       final body   = jsonDecode(response.body) as Map<String, dynamic>;
       final result = body['result'] as Map<String, dynamic>;
-      final status = result['status'] as Map<String, dynamic>;
+      // status is a plain Map — we may mutate it below to inject chamber data.
+      final status = Map<String, dynamic>.from(
+          result['status'] as Map<String, dynamic>);
+
+      // Supplementary chamber query — for older plugin builds (e.g. v0.0.0-48
+      // on the Micron+) that don't include the chamber sensor in their status
+      // response.  If we discovered a chamber key but the plugin didn't return
+      // data for it, fire one extra native call to fill it in.
+      if (_chamberKey != null && status[_chamberKey!] == null) {
+        await _supplementaryChamberQuery(baseUrl, status, timeout: timeout);
+      }
 
       return _parseStatus(status: status, moongateResult: result, baseUrl: baseUrl);
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Queries the chamber sensor directly via the native Moonraker API and
+  /// injects the result into [status] in-place.
+  ///
+  /// Called when the Moongate endpoint succeeded but returned no data for the
+  /// chamber key (older plugin builds that predate the chamber-sensor feature).
+  Future<void> _supplementaryChamberQuery(
+      String baseUrl,
+      Map<String, dynamic> status, {
+      required Duration timeout,
+  }) async {
+    try {
+      final encoded  = Uri.encodeComponent(_chamberKey!);
+      final uri      = Uri.parse('$baseUrl/printer/objects/query?$encoded');
+      final response = await http.get(uri).timeout(timeout);
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final s    = (body['result']?['status']) as Map<String, dynamic>?;
+        final data = s?[_chamberKey!];
+        if (data != null) status[_chamberKey!] = data;
+      }
+    } catch (_) {
+      // Supplementary query failed — chamberTemp stays 0, not critical.
     }
   }
 

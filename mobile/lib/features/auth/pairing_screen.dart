@@ -86,6 +86,10 @@ class _PairingScreenState extends State<PairingScreen> {
       if (!mounted) return;
     }
 
+    // Dismiss the keyboard before showing the scanner so the camera preview
+    // is fully visible even if the user was typing in an IP address field.
+    FocusManager.instance.primaryFocus?.unfocus();
+
     // Fresh controller each open — autoStart=false so we control the moment
     // the camera session is created.
     _scannerController?.dispose();

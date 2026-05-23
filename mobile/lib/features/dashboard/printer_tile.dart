@@ -236,6 +236,15 @@ class _PrinterTileState extends State<PrinterTile> {
                         temp: _status.bedTemp,
                         target: _status.bedTarget,
                       ),
+                      if (_status.chamberTemp > 0) ...[
+                        const SizedBox(width: 8),
+                        _TempChip(
+                          icon: Icons.sensor_window,
+                          color: Colors.teal,
+                          temp: _status.chamberTemp,
+                          target: _status.chamberTarget,
+                        ),
+                      ],
                     ],
                   ),
                   if (_status.filename != null && _status.isPrinting)

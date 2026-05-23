@@ -114,6 +114,8 @@ class PrinterStatus {
   final double hotendTarget;
   final double bedTemp;
   final double bedTarget;
+  final double chamberTemp;   // 0 when no chamber sensor is configured
+  final double chamberTarget; // 0 for plain temperature_sensor (no setpoint)
   final String? filename;
 
   /// Which network path was used to reach the printer.
@@ -137,6 +139,8 @@ class PrinterStatus {
     required this.hotendTarget,
     required this.bedTemp,
     required this.bedTarget,
+    this.chamberTemp   = 0,
+    this.chamberTarget = 0,
     this.filename,
     this.connection = PrinterConnection.offline,
     this.webcamSnapshotPath,
