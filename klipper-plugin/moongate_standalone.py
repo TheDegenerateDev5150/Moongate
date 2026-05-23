@@ -158,39 +158,59 @@ def _write_pair_page() -> Optional[Path]:
 def _get_tunnel_url() -> Optional[str]:
     """
     Return the active Cloudflare quick-tunnel URL, or None if cloudflared
-    is not running / not yet ready.  Checks the tunnel log file first,
-    then falls back to journalctl.
+    is not running / not yet ready.
+
+    Detection order (most-reliable first):
+      1. cloudflared local REST API (/quicktunnel on port 20241 or 2000)
+         — always returns the live URL, immune to log rotation or staleness.
+      2. Log file (stdout captured by systemd) — uses LAST match so URL
+         rotation after a cloudflared reconnect gives the current URL, not
+         the original one.
+      3. journalctl — last match, tries moongate-tunnel then cloudflared.
     """
-    import re
     import subprocess
+    import urllib.request
 
     pattern = re.compile(r'https://[a-z0-9-]+\.trycloudflare\.com')
 
-    # Primary: log file written by the moongate-tunnel systemd service
-    log_paths = [
-        Path("/run/moongate-tunnel.log"),
-        Path("/tmp/moongate-tunnel.log"),
-    ]
-    for p in log_paths:
-        if p.exists():
+    # Strategy 1: cloudflared local REST API — live URL, no staleness risk.
+    # cloudflared v2023+ exposes GET /quicktunnel → {"hostname":"…","port":…}
+    # The metrics server listens on 20241 (recent) or 2000 (older builds).
+    for port in (20241, 2000):
+        for path in ('/quicktunnel', '/metrics', '/'):
             try:
-                m = pattern.search(p.read_text())
-                if m:
-                    return m.group(0)
+                with urllib.request.urlopen(
+                    f'http://localhost:{port}{path}', timeout=2
+                ) as resp:
+                    body = resp.read().decode(errors='replace')
+                    m = pattern.search(body)
+                    if m:
+                        return m.group(0)
             except Exception:
                 pass
 
-    # Fallback: scan journalctl output for the service
-    try:
-        result = subprocess.run(
-            ["journalctl", "-u", "moongate-tunnel", "--no-pager", "-n", "200"],
-            capture_output=True, text=True, timeout=5,
-        )
-        m = pattern.search(result.stdout)
-        if m:
-            return m.group(0)
-    except Exception:
-        pass
+    # Strategy 2: log file — LAST match handles URL rotation after reconnects.
+    for p in (Path('/run/moongate-tunnel.log'), Path('/tmp/moongate-tunnel.log')):
+        if p.exists():
+            try:
+                matches = pattern.findall(p.read_text())
+                if matches:
+                    return matches[-1]
+            except Exception:
+                pass
+
+    # Strategy 3: journalctl — last match, try both known unit names.
+    for unit in ('moongate-tunnel', 'cloudflared'):
+        try:
+            result = subprocess.run(
+                ['journalctl', '-u', unit, '--no-pager', '-n', '500'],
+                capture_output=True, text=True, timeout=5,
+            )
+            matches = pattern.findall(result.stdout)
+            if matches:
+                return matches[-1]
+        except Exception:
+            pass
 
     return None
 

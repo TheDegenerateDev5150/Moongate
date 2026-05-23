@@ -162,12 +162,13 @@ else
     success "cloudflared installed"
 fi
 
-# ── 7. Create moongate-tunnel systemd service (skip if already active) ────────
-if systemctl is-enabled --quiet moongate-tunnel 2>/dev/null; then
-    info "moongate-tunnel service already enabled — skipping."
-else
-    info "Creating moongate-tunnel systemd service..."
-    sudo tee /etc/systemd/system/moongate-tunnel.service > /dev/null << UNIT
+# ── 7. Create moongate-tunnel systemd service ────────────────────────────────
+# Always (re)write the unit file so fixes to it are applied on re-runs.
+# Use StandardOutput/StandardError instead of cloudflared's --logfile flag:
+# cloudflared prints the tunnel URL banner to stdout; systemd captures it
+# and appends it to /run/moongate-tunnel.log where the plugin can read it.
+info "Installing moongate-tunnel systemd service..."
+sudo tee /etc/systemd/system/moongate-tunnel.service > /dev/null << UNIT
 [Unit]
 Description=Moongate Cloudflare Tunnel
 After=network-online.target
@@ -176,18 +177,22 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=$USER
-ExecStart=/usr/bin/cloudflared tunnel --url http://localhost:80 --no-autoupdate --logfile /run/moongate-tunnel.log
+ExecStart=/usr/bin/cloudflared tunnel --url http://localhost:80 --no-autoupdate
 Restart=on-failure
 RestartSec=10
+StandardOutput=append:/run/moongate-tunnel.log
+StandardError=append:/run/moongate-tunnel.log
 
 [Install]
 WantedBy=multi-user.target
 UNIT
-    sudo systemctl daemon-reload
-    sudo systemctl enable moongate-tunnel
-    sudo systemctl restart moongate-tunnel
-    success "moongate-tunnel service started"
-fi
+sudo systemctl daemon-reload
+sudo systemctl enable moongate-tunnel
+# Stop any orphan cloudflared process before starting the managed service
+pkill -f "cloudflared tunnel" 2>/dev/null || true
+sleep 1
+sudo systemctl restart moongate-tunnel
+success "moongate-tunnel service started"
 
 # ── 8. Restart Moonraker then Klipper ────────────────────────────────────────
 info "Restarting Moonraker..."
