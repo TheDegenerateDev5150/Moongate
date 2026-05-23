@@ -31,8 +31,12 @@ class VpnService {
   }
 
   /// Disconnect and tear down the tunnel immediately.
+  /// Silently ignores PlatformException — the VPN may not be active or the
+  /// native service may be unavailable (e.g. Cloudflare-only builds).
   Future<void> disconnect() async {
-    await _channel.invokeMethod('disconnect');
+    try {
+      await _channel.invokeMethod('disconnect');
+    } catch (_) {}
     _connected = false;
   }
 

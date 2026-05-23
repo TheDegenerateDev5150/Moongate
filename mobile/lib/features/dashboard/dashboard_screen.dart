@@ -317,11 +317,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
     );
+    // Capture text BEFORE disposing — reading .text after dispose is unsafe.
+    final importText = controller.text.trim();
     controller.dispose();
     if (confirmed != true || !mounted) return;
 
     try {
-      final printers = PrinterConfig.listFromJson(controller.text.trim());
+      final printers = PrinterConfig.listFromJson(importText);
       // Merge: add only printers not already in registry (match by id).
       final existing = PrinterRegistry.instance.printers.map((p) => p.id).toSet();
       for (final p in printers) {

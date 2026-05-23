@@ -18,10 +18,12 @@ class PrintControlService {
   /// [action] must be: `pause`, `resume`, `cancel`, or `firmware_restart`.
   /// Returns `true` if the command was accepted by any candidate.
   Future<bool> sendAction(String action) async {
-    final candidates = [
-      config.host,
-      if (config.remoteHost != null) config.remoteHost!,
-    ];
+    // Mirror the same candidate ordering used by PrinterStatusService so that
+    // remote-first printers (preferRemote=true) don't waste a 10-second local
+    // timeout before falling back to the tunnel for every control command.
+    final candidates = (config.preferRemote && config.remoteHost != null)
+        ? [config.remoteHost!, config.host]
+        : [config.host, if (config.remoteHost != null) config.remoteHost!];
 
     for (final baseUrl in candidates) {
       if (await _tryMoongateControl(baseUrl, action)) return true;

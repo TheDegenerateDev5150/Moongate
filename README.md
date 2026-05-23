@@ -8,10 +8,14 @@ Moongate is a free, open-source Android app that gives you a **full remote contr
 
 ## Download
 
-**[⬇ Download latest APK](https://github.com/PEEKYPAUL/moongate/raw/master/APK/Moongate-latest.apk)**
+**Current version: v0.2.5**
 
-> Android only for now. Tap the link above to download directly.  
+**[⬇ Download Moongate-v0.2.5.apk](https://github.com/PEEKYPAUL/moongate/raw/master/APK/Moongate-v0.2.5.apk)**
+
+> Android only for now. Tap the link above to download directly to your phone.  
 > Enable **Install from unknown sources** for your browser or file manager before installing.
+
+All releases are in the [APK folder](https://github.com/PEEKYPAUL/moongate/tree/master/APK).
 
 ---
 
@@ -25,6 +29,7 @@ Moongate is a free, open-source Android app that gives you a **full remote contr
 | **Full Mainsail UI** | Tap any tile to open the complete Mainsail/Fluidd interface in an embedded browser |
 | **Auto local/remote** | Connects over your home WiFi first; if unreachable, automatically falls back to the Cloudflare tunnel within 3 seconds |
 | **Secure pairing** | One Klipper console command generates a time-limited QR + code. No port forwarding, no static IP |
+| **In-app updates** | The app checks for new versions on launch and offers a one-tap download when one is available |
 
 ---
 
@@ -71,13 +76,13 @@ At the end you'll see output like:
 
 > **Requirements:** Raspberry Pi running Klipper + Moonraker + Mainsail (standard Kiauh/MainsailOS setup). Tested on aarch64 (Pi 4/5) and armv7l (Pi 3).
 
-> **Keeping it updated:** After the initial install, future updates appear automatically in **Mainsail → Software Updates → Moongate** — no SSH needed.
+> **Keeping it updated:** After the initial install, future plugin updates appear automatically in **Mainsail → Software Updates → Moongate** — no SSH needed.
 
 ---
 
 ### Step 2 — Install the app
 
-[Download the APK](https://github.com/PEEKYPAUL/moongate/raw/master/APK/Moongate-latest.apk) and install it on your Android phone.
+[Download Moongate-v0.2.5.apk](https://github.com/PEEKYPAUL/moongate/raw/master/APK/Moongate-v0.2.5.apk) and install it on your Android phone.
 
 On first launch the app will ask you to add a printer.
 
@@ -91,6 +96,29 @@ On first launch the app will ask you to add a printer.
 4. Done — your printer appears in the dashboard
 
 **No PC handy?** You can also type the code shown in the Klipper console (`GATE-XXXX-XXXX`) directly into the app.
+
+---
+
+### Step 4 — Uninstall Module
+
+To completely remove Moongate from your Pi, SSH in and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/uninstall.sh | bash
+```
+
+This removes:
+- The `moongate-tunnel` systemd service
+- The Moongate Moonraker plugin
+- The `~/moongate` repository clone
+- `~/.config/moongate` (tokens and secret key)
+- The `[moongate]` and `[update_manager moongate]` entries from `moonraker.conf`
+- The `MOONGATE_PAIR` macro from your Klipper config
+- The `moongate-pair.html` page from Mainsail
+
+`cloudflared` itself is left in place as it may be used by other services. To remove it too: `sudo apt remove cloudflared`
+
+Don't forget to uninstall the Moongate app from your phone as well.
 
 ---
 
@@ -114,17 +142,20 @@ If you installed before the remote URL was available, re-run `MOONGATE_PAIR` and
 
 ```
 moongate/
-├── mobile/             # Flutter app (Android)
+├── APK/                    # Pre-built release APKs + version manifest
+│   ├── Moongate-v0.2.5.apk
+│   └── latest_version.json
+├── mobile/                 # Flutter app (Android)
 │   ├── lib/
-│   │   ├── features/   # UI screens (dashboard, printer, pairing, settings)
-│   │   ├── models/     # Data models (PrinterConfig, etc.)
-│   │   └── services/   # Status polling, print control, auth, registry
-│   └── android/        # Android platform code
+│   │   ├── features/       # UI screens (dashboard, printer, pairing, settings)
+│   │   ├── models/         # Data models (PrinterConfig, etc.)
+│   │   └── services/       # Status polling, print control, auth, registry
+│   └── android/            # Android platform code
 └── klipper-plugin/
     ├── moongate_standalone.py   # Moonraker plugin
     ├── install.sh               # One-line installer for the Pi
     ├── update.sh                # Post-pull hook called by Moonraker update manager
-    ├── uninstall.sh             # Complete uninstaller
+    ├── uninstall.sh             # Complete uninstaller (Step 4)
     └── moongate-pair.html       # QR pairing page (deployed to Mainsail)
 ```
 
@@ -164,28 +195,22 @@ flutter build apk --release
 - Check your phone's WiFi when on home network
 - Check the tunnel status when remote
 
+**Camera not opening in the pairing screen**
+- Grant camera permission when prompted, or go to Settings → Apps → Moongate → Permissions and enable Camera
+- The QR scanner requires Android with CameraX support (Android 5.0+)
+
 ---
 
-## Uninstalling
+## Changelog
 
-To completely remove Moongate from your Pi, SSH in and run:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/uninstall.sh | bash
-```
-
-This removes:
-- The `moongate-tunnel` systemd service
-- The Moongate Moonraker plugin
-- The `~/moongate` repository clone
-- `~/.config/moongate` (tokens and secret key)
-- The `[moongate]` and `[update_manager moongate]` entries from `moonraker.conf`
-- The `MOONGATE_PAIR` macro from your Klipper config
-- The `moongate-pair.html` page from Mainsail
-
-`cloudflared` itself is left in place as it may be used by other services. To remove it too: `sudo apt remove cloudflared`
-
-Don't forget to uninstall the Moongate app from your phone as well.
+| Version | Changes |
+|---|---|
+| **v0.2.5** | Fix 5 bugs: app name capitalisation, import config crash, print controls now respect remote-first preference, router crash guard on missing printer, VPN disconnect safe on sign-out |
+| **v0.2.4** | Fix camera `genericError` — switch `MainActivity` to `FlutterFragmentActivity` (required by CameraX / MobileScanner v5) |
+| **v0.2.3** | Remove explicit `MobileScannerController` — let MobileScanner manage its own CameraX lifecycle |
+| **v0.2.2** | Consistent release signing; fix update conflict on install; longer tunnel timeout (8 s); `startup` badge state |
+| **v0.2.1** | In-app update banner; version bump process established |
+| **v0.2.0** | Cloudflare Quick Tunnel remote access; auto local/remote fallback |
 
 ---
 

@@ -24,8 +24,11 @@ final _router = GoRouter(
       path: '/printer/:id',
       builder: (_, state) {
         final id = state.pathParameters['id']!;
+        // Guard against stale IDs (printer removed while screen was open).
         final printer = PrinterRegistry.instance.printers
-            .firstWhere((p) => p.id == id);
+            .where((p) => p.id == id)
+            .firstOrNull;
+        if (printer == null) return const DashboardScreen();
         return PrinterScreen(printer: printer);
       },
     ),
