@@ -16,7 +16,8 @@ class PairingScreen extends StatefulWidget {
   State<PairingScreen> createState() => _PairingScreenState();
 }
 
-class _PairingScreenState extends State<PairingScreen> {
+class _PairingScreenState extends State<PairingScreen>
+    with WidgetsBindingObserver {
   // Two 4-digit code boxes
   final _code1Controller = TextEditingController();
   final _code2Controller = TextEditingController();
@@ -28,12 +29,25 @@ class _PairingScreenState extends State<PairingScreen> {
   final _tunnelController = TextEditingController();
   final _nameController   = TextEditingController();
 
+  // Explicit controller gives us start/stop control over the camera resource.
+  // Created fresh each time the scanner is opened; disposed when closed or
+  // when the app goes to background so the camera is properly released.
+  MobileScannerController? _scannerController;
+
   bool _scanning = false;
   bool _loading  = false;
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _scannerController?.dispose();
     _code1Controller.dispose();
     _code2Controller.dispose();
     _code1Focus.dispose();
@@ -42,6 +56,56 @@ class _PairingScreenState extends State<PairingScreen> {
     _tunnelController.dispose();
     _nameController.dispose();
     super.dispose();
+  }
+
+  // ── Scanner lifecycle ───────────────────────────────────────────────────────
+
+  /// Stop or restart the camera when the app is backgrounded / foregrounded.
+  /// Without this, coming back from the permission dialog or from another
+  /// app often leaves the scanner in a broken state.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_scanning) return;
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        _scannerController?.stop();
+      case AppLifecycleState.resumed:
+        // Give the OS a frame to release the camera before we re-open it.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _scanning) _scannerController?.start();
+        });
+      default:
+        break;
+    }
+  }
+
+  /// Open the QR scanner with a fresh controller.
+  void _openScanner() {
+    _scannerController?.dispose();
+    _scannerController = MobileScannerController(
+      autoStart: true,
+      detectionSpeed: DetectionSpeed.normal,
+    );
+    setState(() => _scanning = true);
+  }
+
+  /// Close the scanner and release the camera.
+  void _closeScanner() {
+    _scannerController?.dispose();
+    _scannerController = null;
+    setState(() => _scanning = false);
+  }
+
+  /// Restart after an error: dispose the broken controller, wait one frame,
+  /// then create a fresh one so the camera re-initialises cleanly.
+  void _restartScanner() {
+    _scannerController?.dispose();
+    _scannerController = null;
+    setState(() => _scanning = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _openScanner();
+    });
   }
 
   /// Full code string assembled from both boxes: GATE-1234-5678
@@ -155,7 +219,7 @@ class _PairingScreenState extends State<PairingScreen> {
       final remote = uri.queryParameters['remote'];
       final token  = uri.queryParameters['token'];
       if (local != null && token != null) {
-        setState(() => _scanning = false);
+        _closeScanner();
         _pairWithDirectToken(local: local, remote: remote, token: token);
         return;
       }
@@ -168,7 +232,7 @@ class _PairingScreenState extends State<PairingScreen> {
         if (m != null) {
           _code1Controller.text = m.group(1)!;
           _code2Controller.text = m.group(2)!;
-          setState(() => _scanning = false);
+          _closeScanner();
           return;
         }
       }
@@ -180,7 +244,7 @@ class _PairingScreenState extends State<PairingScreen> {
     if (match != null) {
       _code1Controller.text = match.group(1)!;
       _code2Controller.text = match.group(2)!;
-      setState(() => _scanning = false);
+      _closeScanner();
     }
   }
 
@@ -475,7 +539,7 @@ class _PairingScreenState extends State<PairingScreen> {
                 IconButton.filled(
                   icon: const Icon(Icons.qr_code_scanner),
                   tooltip: 'Scan QR',
-                  onPressed: () => setState(() => _scanning = !_scanning),
+                  onPressed: _scanning ? _closeScanner : _openScanner,
                 ),
               ],
             ),
@@ -488,10 +552,12 @@ class _PairingScreenState extends State<PairingScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: MobileScanner(
+                    controller: _scannerController!,
                     onDetect: (capture) {
                       if (capture.barcodes.isEmpty) return;
                       final raw = capture.barcodes.first.rawValue ?? '';
                       if (raw.isEmpty) return;
+                      _closeScanner(); // release camera before processing
                       _applyScannedCode(raw);
                     },
                     errorBuilder: (context, error, child) {
