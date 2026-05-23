@@ -598,9 +598,15 @@ class _PairingScreenState extends State<PairingScreen> {
                           MobileScannerErrorCode.permissionDenied;
                       // Show the exact error code and any native exception
                       // details so we can diagnose device-specific failures.
-                      final diagText =
-                          '${error.errorCode}'
-                          '${error.errorDetails != null ? "\n${error.errorDetails}" : ""}';
+                      // MobileScannerErrorDetails has no toString() override,
+                      // so we must expand each field individually.
+                      final det = error.errorDetails;
+                      final diagText = [
+                        'errorCode: ${error.errorCode.name}',
+                        if (det?.code    != null) 'code: ${det!.code}',
+                        if (det?.message != null) 'message: ${det!.message}',
+                        if (det?.details != null) 'details: ${det!.details}',
+                      ].join('\n');
                       return Container(
                         decoration: BoxDecoration(
                           color: Colors.black87,

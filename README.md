@@ -8,9 +8,9 @@ Moongate is a free, open-source Android app that gives you a **full remote contr
 
 ## Download
 
-**Current version: v0.2.5**
+**Current version: v0.2.7**
 
-**[⬇ Download Moongate-v0.2.5.apk](https://github.com/PEEKYPAUL/moongate/raw/master/APK/Moongate-v0.2.5.apk)**
+**[⬇ Download Moongate-v0.2.7.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.7.apk)**
 
 > Android only for now. Tap the link above to download directly to your phone.  
 > Enable **Install from unknown sources** for your browser or file manager before installing.
@@ -82,7 +82,7 @@ At the end you'll see output like:
 
 ### Step 2 — Install the app
 
-[Download Moongate-v0.2.5.apk](https://github.com/PEEKYPAUL/moongate/raw/master/APK/Moongate-v0.2.5.apk) and install it on your Android phone.
+[Download Moongate-v0.2.7.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.7.apk) and install it on your Android phone.
 
 On first launch the app will ask you to add a printer.
 
@@ -143,7 +143,7 @@ If you installed before the remote URL was available, re-run `MOONGATE_PAIR` and
 ```
 moongate/
 ├── APK/                    # Pre-built release APKs + version manifest
-│   ├── Moongate-v0.2.5.apk
+│   ├── Moongate-v0.2.7.apk
 │   └── latest_version.json
 ├── mobile/                 # Flutter app (Android)
 │   ├── lib/
@@ -205,6 +205,8 @@ flutter build apk --release
 
 | Version | Changes |
 |---|---|
+| **v0.2.7** | Camera error diagnostic: show actual native error code/message so device-specific failures are readable |
+| **v0.2.6** | Camera: explicit controller with autoStart=false + post-frame start; 700 ms delay on first permission grant |
 | **v0.2.5** | Fix 5 bugs: app name capitalisation, import config crash, print controls now respect remote-first preference, router crash guard on missing printer, VPN disconnect safe on sign-out |
 | **v0.2.4** | Fix camera `genericError` — switch `MainActivity` to `FlutterFragmentActivity` (required by CameraX / MobileScanner v5) |
 | **v0.2.3** | Remove explicit `MobileScannerController` — let MobileScanner manage its own CameraX lifecycle |
