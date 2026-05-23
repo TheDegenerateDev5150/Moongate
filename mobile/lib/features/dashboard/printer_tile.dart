@@ -30,8 +30,10 @@ class _PrinterTileState extends State<PrinterTile> {
     super.initState();
     // Seed the initial status with persisted webcam transform settings so the
     // first frame already shows the correct orientation — before any poll.
+    // Use 'connecting' rather than 'offline' so the badge says "Connecting"
+    // during the first poll instead of immediately flashing "Offline".
     _status = PrinterStatus(
-      state:          'offline',
+      state:          'connecting',
       progress:       0,
       hotendTemp:     0,
       hotendTarget:   0,
@@ -163,7 +165,11 @@ class _PrinterTileState extends State<PrinterTile> {
             ),
 
             // ── Progress + buttons in ONE row ────────────────────────────
-            if (_status.state != 'offline')
+            // Hide action row while we haven't connected yet ('connecting')
+            // or Klipper is still starting ('startup') — no actions available.
+            if (_status.state != 'offline' &&
+                _status.state != 'connecting' &&
+                _status.state != 'startup')
               GestureDetector(
                 onTap: () {}, // absorb — don't navigate when tapping controls
                 behavior: HitTestBehavior.opaque,
@@ -368,9 +374,11 @@ class _IdleLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final (label, icon, color) = switch (status.state) {
-      'complete' => ('Print complete', Icons.check_circle_outline, Colors.teal),
-      'error'    => ('Printer error',  Icons.error_outline,        Colors.red),
-      _          => ('Ready',          Icons.check_circle_outline,  Colors.blueGrey),
+      'complete'  => ('Print complete', Icons.check_circle_outline,  Colors.teal),
+      'cancelled' => ('Print cancelled', Icons.cancel_outlined,      Colors.blueGrey),
+      'error'     => ('Printer error',   Icons.error_outline,        Colors.red),
+      'startup'   => ('Klipper starting', Icons.hourglass_empty,     Colors.blueGrey),
+      _           => ('Ready',            Icons.check_circle_outline, Colors.blueGrey),
     };
     return Row(
       children: [
@@ -549,12 +557,17 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status.state) {
-      'printing' => ('Printing', Colors.green),
-      'paused'   => ('Paused',   Colors.orange),
-      'standby'  => ('Idle',     Colors.blueGrey),
-      'complete' => ('Done',     Colors.teal),
-      'error'    => ('Error',    Colors.red),
-      _          => ('Offline',  Colors.black54),
+      'printing'   => ('Printing',   Colors.green),
+      'paused'     => ('Paused',     Colors.orange),
+      'standby'    => ('Idle',       Colors.blueGrey),
+      'complete'   => ('Done',       Colors.teal),
+      'cancelled'  => ('Cancelled',  Colors.blueGrey),
+      'error'      => ('Error',      Colors.red),
+      // Klipper is reachable but hasn't finished initialising yet
+      'startup'    => ('Starting',   Colors.blueGrey),
+      // Before the first poll completes
+      'connecting' => ('Connecting', Colors.blueGrey),
+      _            => ('Offline',    Colors.black54),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

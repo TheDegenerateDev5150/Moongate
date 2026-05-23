@@ -84,8 +84,18 @@ class PrinterStatusService {
         : [local, if (remote != null) remote]; // local-first default
 
     for (final baseUrl in candidates) {
+      // Use a longer timeout for remote/tunnel connections: Cloudflare Quick
+      // Tunnels can take 1-3 s to warm up after being idle, and general WAN
+      // latency is higher than LAN.  A 2-second timeout fires before the
+      // tunnel has a chance to respond, making the printer look "Offline"
+      // even when the tunnel is working fine.
+      final isRemote = remote != null && baseUrl == remote;
+      final timeout  = isRemote
+          ? const Duration(seconds: 8)  // tunnel: allow for cold-start latency
+          : const Duration(seconds: 3); // local LAN: fast or not reachable
+
       // ── 1. Moongate plugin endpoint (preferred) ──────────────────────────
-      final moongate = await _tryMoongateEndpoint(baseUrl);
+      final moongate = await _tryMoongateEndpoint(baseUrl, timeout: timeout);
       if (moongate != null) {
         _onSuccess(baseUrl);
         if (!_disposed) _controller.add(moongate);
@@ -96,7 +106,7 @@ class PrinterStatusService {
       //   Works even without the Moongate plugin.  Tries progressively
       //   simpler object sets to handle printers without a heated bed or
       //   other optional Klipper objects.
-      final native = await _tryNativeEndpoint(baseUrl);
+      final native = await _tryNativeEndpoint(baseUrl, timeout: timeout);
       if (native != null) {
         _onSuccess(baseUrl);
         if (!_disposed) _controller.add(native);
@@ -121,12 +131,13 @@ class PrinterStatusService {
 
   // ── Moongate plugin endpoint ───────────────────────────────────────────────
 
-  Future<PrinterStatus?> _tryMoongateEndpoint(String baseUrl) async {
+  Future<PrinterStatus?> _tryMoongateEndpoint(
+      String baseUrl, {required Duration timeout}) async {
     try {
       final uri = Uri.parse(
         '$baseUrl/server/moongate/status?mg_token=${Uri.encodeComponent(config.token)}',
       );
-      final response = await http.get(uri).timeout(const Duration(seconds: 2));
+      final response = await http.get(uri).timeout(timeout);
       if (response.statusCode != 200) return null;
 
       final body   = jsonDecode(response.body) as Map<String, dynamic>;
@@ -153,11 +164,12 @@ class PrinterStatusService {
     'print_stats',                     // absolute minimum
   ];
 
-  Future<PrinterStatus?> _tryNativeEndpoint(String baseUrl) async {
+  Future<PrinterStatus?> _tryNativeEndpoint(
+      String baseUrl, {required Duration timeout}) async {
     for (final q in _nativeQueries) {
       try {
         final uri = Uri.parse('$baseUrl/printer/objects/query?$q');
-        final response = await http.get(uri).timeout(const Duration(seconds: 2));
+        final response = await http.get(uri).timeout(timeout);
 
         if (response.statusCode == 200) {
           final body   = jsonDecode(response.body) as Map<String, dynamic>;
@@ -195,7 +207,11 @@ class PrinterStatusService {
     // Moongate endpoint (which includes the full Moonraker status object).
     final displayStatus = status['display_status'] as Map<String, dynamic>? ?? {};
 
-    final state = (printStats['state'] as String?) ?? 'offline';
+    // When Klipper is still initialising, print_stats is present in the
+    // Moonraker response but its 'state' field is null/absent.  Return
+    // 'startup' rather than 'offline' so the badge says "Starting" instead of
+    // "Offline" — the connection is working, Klipper just isn't ready yet.
+    final state = (printStats['state'] as String?) ?? 'startup';
 
     final double progress;
     if (displayStatus['progress'] != null) {

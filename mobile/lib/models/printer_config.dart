@@ -103,7 +103,12 @@ class PrinterConfig {
 enum PrinterConnection { local, remote, offline }
 
 class PrinterStatus {
-  final String state; // 'printing' | 'paused' | 'standby' | 'error' | 'offline'
+  /// Klipper print_stats state, or one of our synthetic states:
+  ///   Klipper:   'printing' | 'paused' | 'standby' | 'complete' | 'cancelled' | 'error'
+  ///   Synthetic: 'startup'    — Klipper reachable but still initialising
+  ///              'connecting' — before the first status poll completes
+  ///              'offline'    — all network candidates timed out / failed
+  final String state;
   final double progress; // 0.0 – 1.0
   final double hotendTemp;
   final double hotendTarget;
