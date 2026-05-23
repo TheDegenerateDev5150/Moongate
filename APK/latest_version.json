@@ -1,6 +1,5 @@
-{
-  "version": "0.2.7",
-  "build_number": 17,
-  "apk_url": "https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.7.apk",
-  "published_at": "2026-05-23T15:25:38Z"
+﻿{
+    "date":  "2026-05-23",
+    "version":  "0.2.8",
+    "notes":  "Dynamic chamber sensor discovery — finds [temperature_sensor CHAMBER/chamber/etc] automatically"
 }
