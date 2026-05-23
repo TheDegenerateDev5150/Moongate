@@ -17,8 +17,7 @@ class PairingScreen extends StatefulWidget {
   State<PairingScreen> createState() => _PairingScreenState();
 }
 
-class _PairingScreenState extends State<PairingScreen>
-    with WidgetsBindingObserver {
+class _PairingScreenState extends State<PairingScreen> {
   // Two 4-digit code boxes
   final _code1Controller = TextEditingController();
   final _code2Controller = TextEditingController();
@@ -30,26 +29,12 @@ class _PairingScreenState extends State<PairingScreen>
   final _tunnelController = TextEditingController();
   final _nameController   = TextEditingController();
 
-  // Explicit controller gives us start/stop control over the camera resource.
-  // Created fresh each time the scanner is opened; disposed when closed or
-  // when the app goes to background so the camera is properly released.
-  MobileScannerController? _scannerController;
-
-  bool _scanning        = false;
-  bool _scannerOpening  = false; // guard against overlapping open calls
-  bool _loading         = false;
+  bool _scanning = false;
+  bool _loading  = false;
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _scannerController?.dispose();
     _code1Controller.dispose();
     _code2Controller.dispose();
     _code1Focus.dispose();
@@ -61,76 +46,48 @@ class _PairingScreenState extends State<PairingScreen>
   }
 
   // ── Scanner lifecycle ───────────────────────────────────────────────────────
+  //
+  // We do NOT use an explicit MobileScannerController or WidgetsBindingObserver.
+  // MobileScanner v5 manages its own camera lifecycle internally — it starts
+  // when the widget is mounted and stops when it is removed from the tree.
+  // Having a second observer calling stop()/start() alongside the widget's own
+  // observer caused them to fight each other, resulting in genericError.
+  //
+  // Camera start/stop is therefore controlled purely by adding/removing the
+  // MobileScanner widget via the _scanning flag.
 
-  /// Stop or restart the camera when the app is backgrounded / foregrounded.
-  /// Without this, coming back from the permission dialog or from another
-  /// app often leaves the scanner in a broken state.
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!_scanning) return;
-    switch (state) {
-      case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
-        _scannerController?.stop();
-      case AppLifecycleState.resumed:
-        // Re-open with a fresh controller rather than restarting the old one.
-        // Calling start() on a stopped controller can fail on some Android OEMs;
-        // a fresh controller + 600 ms delay is more reliable.
-        _restartScanner();
-      default:
-        break;
-    }
-  }
-
-  /// Open the QR scanner with a fresh controller.
-  ///
-  /// Always requests camera permission first.  This separates the permission
-  /// request from camera hardware initialisation, eliminating the race
-  /// condition where mobile_scanner fires genericError because the OS
-  /// permission dialog and the Camera2 open call overlap.
-  ///
-  /// If a previous controller exists it is disposed first and we wait 700 ms
-  /// for the Android Camera2 layer to fully release the hardware before
-  /// acquiring it again.
+  /// Request camera permission, then show the scanner.
   Future<void> _openScanner() async {
-    if (_scannerOpening) return;
-    _scannerOpening = true;
-
-    // ── Permission gate ───────────────────────────────────────────────────
+    // Always check permission before mounting the MobileScanner widget.
+    // This avoids the race where the camera hardware open and the OS permission
+    // dialog are triggered simultaneously, causing a genericError.
     final status = await Permission.camera.request();
+    if (!mounted) return;
 
-    if (!mounted) { _scannerOpening = false; return; }
-
-    if (!status.isGranted) {
-      _scannerOpening = false;
-      if (status.isPermanentlyDenied) {
-        _showPermissionDeniedDialog();
-      }
-      // If just denied (not permanently), user can tap the button again.
+    if (status.isPermanentlyDenied) {
+      _showPermissionDeniedDialog();
       return;
     }
+    if (!status.isGranted) return; // denied but not permanently — tap again
 
-    // ── Camera lifecycle ──────────────────────────────────────────────────
-    if (_scannerController != null) {
-      _scannerController!.dispose();
-      _scannerController = null;
-      if (mounted) setState(() => _scanning = false);
-      // Android Camera2 is asynchronous — the hardware isn't released
-      // until the native session fully closes, which can take 400-800 ms.
-      await Future.delayed(const Duration(milliseconds: 700));
-    }
-
-    if (!mounted) { _scannerOpening = false; return; }
-
-    _scannerController = MobileScannerController(
-      detectionSpeed: DetectionSpeed.normal,
-    );
-    _scannerOpening = false;
     setState(() => _scanning = true);
   }
 
-  /// Shown when camera permission has been permanently denied via the system
-  /// dialog ("Don't ask again").  The only path back is the app settings page.
+  /// Hide the scanner widget — MobileScanner releases the camera automatically
+  /// when it is removed from the widget tree.
+  void _closeScanner() => setState(() => _scanning = false);
+
+  /// Hide then re-show the scanner so it reinitialises with a fresh camera session.
+  void _restartScanner() {
+    setState(() => _scanning = false);
+    // One post-frame gap lets the widget fully unmount (camera released) before
+    // we ask for it again.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _openScanner();
+    });
+  }
+
+  /// Shown when camera permission has been permanently denied.
   void _showPermissionDeniedDialog() {
     showDialog<void>(
       context: context,
@@ -149,32 +106,13 @@ class _PairingScreenState extends State<PairingScreen>
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
-              openAppSettings(); // opens the app's system settings page
+              openAppSettings();
             },
             child: const Text('Open Settings'),
           ),
         ],
       ),
     );
-  }
-
-  /// Close the scanner and release the camera.
-  void _closeScanner() {
-    _scannerController?.dispose();
-    _scannerController = null;
-    _scannerOpening = false;
-    setState(() => _scanning = false);
-  }
-
-  /// Restart after an error: dispose the broken controller, wait for the
-  /// hardware to release, then open a fresh one.
-  Future<void> _restartScanner() async {
-    _scannerController?.dispose();
-    _scannerController = null;
-    _scannerOpening = false;
-    if (mounted) setState(() => _scanning = false);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (mounted) _openScanner();
   }
 
   /// Full code string assembled from both boxes: GATE-1234-5678
@@ -610,7 +548,6 @@ class _PairingScreenState extends State<PairingScreen>
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: MobileScanner(
-                    controller: _scannerController!,
                     onDetect: (capture) {
                       if (capture.barcodes.isEmpty) return;
                       final raw = capture.barcodes.first.rawValue ?? '';
