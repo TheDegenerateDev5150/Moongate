@@ -61,21 +61,28 @@ jobs:
       - name: Copy APK and generate version manifest
         run: |
           mkdir -p APK
-          cp mobile/build/app/outputs/flutter-apk/app-release.apk APK/Moongate-latest.apk
 
           # Parse version and build number from pubspec.yaml
-          # e.g. "version: 0.1.3+3" → VERSION=0.1.3  BUILD=3
+          # e.g. "version: 0.2.3+13" → VERSION=0.2.3  BUILD=13
           VERSION=$(grep '^version:' mobile/pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f1)
           BUILD=$(grep '^version:' mobile/pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f2)
+          VERSIONED_NAME="Moongate-v${VERSION}.apk"
 
+          # Write both a versioned copy and the always-current Moongate-latest.apk
+          cp mobile/build/app/outputs/flutter-apk/app-release.apk "APK/${VERSIONED_NAME}"
+          cp mobile/build/app/outputs/flutter-apk/app-release.apk APK/Moongate-latest.apk
+
+          # Point the manifest at the versioned file so the GitHub folder makes it
+          # immediately obvious which APK is which version.
           cat > APK/latest_version.json <<EOF
           {
             "version": "$VERSION",
             "build_number": $BUILD,
-            "apk_url": "https://github.com/PEEKYPAUL/moongate/raw/master/APK/Moongate-latest.apk",
+            "apk_url": "https://github.com/PEEKYPAUL/moongate/raw/master/APK/${VERSIONED_NAME}",
             "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
           EOF
+          echo "Versioned APK: ${VERSIONED_NAME}"
           echo "Version manifest: $(cat APK/latest_version.json)"
 
       - name: Commit and push APK + version manifest
@@ -86,7 +93,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Save the freshly built files before touching the git tree
+          VERSION=$(grep '^version:' mobile/pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f1)
+          VERSIONED_NAME="Moongate-v${VERSION}.apk"
           cp APK/Moongate-latest.apk /tmp/Moongate-latest.apk
+          cp "APK/${VERSIONED_NAME}" "/tmp/${VERSIONED_NAME}"
           cp APK/latest_version.json /tmp/latest_version.json
 
           # Sync to the current remote HEAD (handles concurrent CI runs that may
@@ -110,14 +120,17 @@ jobs:
           fi
 
           # Restore our freshly built outputs
+          VERSION=$(grep '^version:' mobile/pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f1)
+          VERSIONED_NAME="Moongate-v${VERSION}.apk"
           cp /tmp/Moongate-latest.apk APK/Moongate-latest.apk
+          cp "/tmp/${VERSIONED_NAME}" "APK/${VERSIONED_NAME}" 2>/dev/null || true
           cp /tmp/latest_version.json APK/latest_version.json
 
-          git add APK/Moongate-latest.apk APK/latest_version.json
+          git add APK/Moongate-latest.apk "APK/${VERSIONED_NAME}" APK/latest_version.json
           if git diff --staged --quiet; then
             echo "APK unchanged after sync, nothing to commit"
           else
-            git commit -m "Update Moongate-latest.apk [skip ci]"
+            git commit -m "Release Moongate-v${VERSION} [skip ci]"
             git push origin master
           fi
 
