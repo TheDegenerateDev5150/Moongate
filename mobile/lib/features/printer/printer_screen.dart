@@ -36,10 +36,11 @@ class _PrinterScreenState extends State<PrinterScreen>
     with WidgetsBindingObserver {
   late final WebViewController _webController;
 
-  bool    _loading     = true;
-  bool    _usingRemote = false;
-  bool    _didFallback = false; // prevent double-fallback in one load cycle
-  String? _errorType;           // 'tunnel' | 'local' | null (no error)
+  bool    _loading      = true;
+  bool    _usingRemote  = false;
+  bool    _didFallback  = false; // prevent double-fallback in one load cycle
+  String? _errorType;            // 'tunnel' | 'local' | null (no error)
+  String? _currentHost;          // host of the URL we most recently loaded
   Timer?  _fallbackTimer;
 
   @override
@@ -78,12 +79,15 @@ class _PrinterScreenState extends State<PrinterScreen>
         },
 
         // ── Main-frame HTTP errors (Cloudflare 530, nginx 502, etc.) ──────
-        // Sub-resource errors are ignored — Mainsail loads webcam URLs that
-        // point at localhost and will always 404/fail on the phone.
+        // WebResourceRequest lacks isForMainFrame in webview_flutter 4.7.x,
+        // so we filter by host: only act when the failing request comes from
+        // the same host we navigated to (not webcam/API sub-resources).
         onHttpError: (HttpResponseError error) {
-          if (error.request?.isForMainFrame != true) return;
-          final code = error.response?.statusCode ?? 0;
-          if (code >= 400 && mounted) {
+          final code    = error.response?.statusCode ?? 0;
+          if (code < 400) return;
+          final errHost = error.request?.uri.host ?? '';
+          if (_currentHost != null && errHost != _currentHost) return;
+          if (mounted) {
             _fallbackTimer?.cancel();
             setState(() {
               _loading   = false;
@@ -156,6 +160,7 @@ class _PrinterScreenState extends State<PrinterScreen>
   }
 
   Future<void> _loadUrl(String url) async {
+    _currentHost = Uri.tryParse(url)?.host;
     await _webController.loadRequest(Uri.parse(url));
   }
 
