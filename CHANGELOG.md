@@ -1,0 +1,35 @@
+# Changelog
+
+All notable changes to Moongate, newest first. Versions follow `vMAJOR.MINOR.PATCH+BUILD` where `BUILD` is a monotonic integer used by the in-app update banner.
+
+| Version | Changes |
+|---|---|
+| **v0.2.28** | Licence switched from **MIT** to **PolyForm Noncommercial 1.0.0**. Personal, hobby, educational, and non-commercial-organisation use stays free and unrestricted; commercial use now requires a separate written licence. Releases up to and including v0.2.27 remain MIT for anyone who already has them. No code changes |
+| **v0.2.27** | More reliable in-app update banner: (1) cache-buster on the `latest_version.json` fetch so GitHub's raw CDN can't serve a stale "no update" body, (2) re-run the update check every time the app comes back to the foreground so a user who had the app open before CI published a new release sees the banner appear without needing to force-close. Previously the FutureProvider's autoDispose cache could mask a freshly-published release for the entire session |
+| **v0.2.26** | Auto-recover from "stuck on tunnel": once a printer's status service flipped to tunnel-first (e.g. one transient local-poll failure at startup), it would stay there for the rest of the session even after the user returned home and was sitting on the printer's LAN. The dashboard would keep saying "Tunnel" until the app was killed and reopened. Now every 20 seconds, if the phone's subnet matches the printer's, the service retries local-first for one cycle. If local succeeds it switches back; if not, the backoff prevents repeated 3 s timeouts |
+| **v0.2.25** | Dashboard webcam refresh rate now mirrors the **Target FPS** you set in Crowsnest / Mainsail's webcam config. The plugin reads `target_fps` from `/server/webcams/list` and the tile derives its snapshot poll interval as `1000 / fps` ms — set Crowsnest to 15 fps, the tile ticks at 15 fps; set 30 fps, the tile ticks at 30 fps. Clamped server- and client-side to [1, 60]. Defaults to 15 fps when not configured (matches stock Crowsnest / mjpg-streamer). Persisted in `PrinterConfig` so the very first frame after cold-launch already uses the right cadence |
+| **v0.2.24** | Dashboard webcam tiles bumped to 20 fps (now superseded by v0.2.25's server-driven rate) |
+| **v0.2.23** | Custom-theme colour picker: the **Done** button now respects the system navigation / gesture bar at the bottom of the modal sheet. Previously the button could overlap the phone's 3-button nav row on devices using on-screen buttons |
+| **v0.2.22** | Configurable HTTP port: `install.sh --port N` (also `MOONGATE_PORT` env var for piped installs); plugin reads the port from `~/.config/moongate/config.json` and embeds it in the QR + pair-page URLs; app's pair screen gains an optional **Port** field next to the IP for users with non-standard nginx setups. Plus: clarify in [SECURITY.md](SECURITY.md) and the README that the tunnel exposes Mainsail / Moonraker themselves, not just Moongate's JWT-protected endpoints — and how to mitigate (Cloudflare Access, tightened `trusted_clients`, or staying LAN-only) |
+| **v0.2.21** | Custom theme: new fourth radio option in the drawer (System / Dark / Light / **Custom**) opens a full-screen colour editor. Five slots — Accent, Page background, Cards & tiles, Text, Error — each tappable to a modal sheet with HEX input + 24-colour preset palette. Live preview tile inside the editor, instant theme application across the app, reset-to-defaults action |
+| **v0.2.20** | Camera scanner fix #2: add ProGuard rules for ML Kit + mobile_scanner so R8 doesn't strip the bundled barcode scanner classes (the mobile_scanner consumer rule had a single-dot wildcard bug that only matched the root package) |
+| **v0.2.19** | Upgrade `mobile_scanner` 5.2.3 → 7.x — fixes the Samsung One UI `analysis.resolutionInfo!!` NPE. CameraX bumped to 1.5.3 |
+| **v0.2.18** | Network-aware connection: subnet check at cold launch & on app resume pre-decides "use tunnel" for any printer whose LAN isn't reachable from the current WiFi. Symmetric `onHttpError` handling in the printer WebView so a 4xx from an unrelated device on a stranger LAN doesn't trigger the error overlay |
+| **v0.2.17** | Printer screen now reads the dashboard tile's live network-path decision so tapping a tile on a foreign network jumps straight to the tunnel — no more "Printer unreachable" overlay |
+| **v0.2.16** | Print progress now uses `print_duration / estimated_time` from `/server/files/metadata`, matching Mainsail/Fluidd exactly. Falls back to `display_status.progress` then `virtual_sdcard.progress` when slicer estimate is unavailable |
+| **v0.2.15** | Supplementary progress query when the plugin endpoint omits `display_status` or `virtual_sdcard` |
+| **v0.2.14** | QR scanner refactor: explicit `StreamSubscription` to `controller.barcodes` instead of `onDetect`, avoiding the `WidgetsBindingObserver` leak in `mobile_scanner` 5.x |
+| **v0.2.13** | Force CameraX 1.4.0 to dodge a Samsung-specific NPE in `mobile_scanner` 5.x's CameraX 1.3.3 (later superseded by v0.2.19's package bump) |
+| **v0.2.12** | Supplementary progress query, chamber sensor support refinements |
+| **v0.2.11** | Chamber temperature on tile, supplementary chamber query for older plugin builds |
+| **v0.2.10** | Silent offline retries + Mainsail/Fluidd webcam placeholder logo + grid column picker + Loading Local / Loading Tunnel / Offline labels in webcam area |
+| **v0.2.9** | Always start local-first on launch; expand chamber discovery to include `temperature_fan` and `heater_generic` |
+| **v0.2.8** | Dynamic chamber sensor discovery for any capitalisation / suffix |
+| **v0.2.7** | Camera error diagnostic: show actual native error code/message so device-specific failures are readable |
+| **v0.2.6** | Camera: explicit controller with autoStart=false + post-frame start; 700 ms delay on first permission grant |
+| **v0.2.5** | Fix 5 bugs: app name capitalisation, import config crash, print controls now respect remote-first preference, router crash guard on missing printer, VPN disconnect safe on sign-out |
+| **v0.2.4** | Fix camera `genericError` — switch `MainActivity` to `FlutterFragmentActivity` (required by CameraX / MobileScanner v5) |
+| **v0.2.3** | Remove explicit `MobileScannerController` — let MobileScanner manage its own CameraX lifecycle |
+| **v0.2.2** | Consistent release signing; fix update conflict on install; longer tunnel timeout (8 s); `startup` badge state |
+| **v0.2.1** | In-app update banner; version bump process established |
+| **v0.2.0** | Cloudflare Quick Tunnel remote access; auto local/remote fallback |
