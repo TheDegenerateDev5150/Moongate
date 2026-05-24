@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/printer_config.dart';
+import 'network_discovery_service.dart';
 import 'printer_registry.dart';
 
 /// Polls Moonraker's REST API to get current printer status.
@@ -60,6 +61,19 @@ class PrinterStatusService {
   /// Cleared when the filename changes so a new print gets fresh metadata.
   double? _estimatedPrintSeconds;
   String? _metadataFilename;
+
+  /// When was the last time we (re)tried the local IP after having flipped
+  /// to tunnel-first?  Used to throttle the "stuck on tunnel" recovery path
+  /// in [_doPoll] — see the comment there.  Null = never tried (i.e. we've
+  /// either always been on local, or we just flipped to tunnel-first and
+  /// haven't given local a fresh chance yet).
+  DateTime? _lastLocalRetry;
+
+  /// How often to retry local when we're currently tunnel-first AND the
+  /// phone's subnet matches the printer's.  20 s caps the worst-case cost
+  /// at one 3-second local timeout per 5 poll cycles when the Pi is
+  /// genuinely unreachable on LAN — barely noticeable.
+  static const _localRetryInterval = Duration(seconds: 20);
 
   /// Exposes the detected UI type so tiles can show the right logo.
   String? get uiType => _uiType;
@@ -138,7 +152,39 @@ class PrinterStatusService {
     final local  = config.host;
     final remote = config.remoteHost;
 
-    final candidates = (_preferRemote && remote != null)
+    // ── Periodic local retry ──────────────────────────────────────────────
+    //
+    // Once `_preferRemote` flips to `true` (e.g. one transient local-poll
+    // failure at startup), the candidate order below would keep us on the
+    // tunnel for the rest of the session — even after the user returns home
+    // and is sitting on the printer's LAN.  The dashboard would show
+    // "Tunnel" forever until the app is killed and reopened.
+    //
+    // To recover, periodically re-check the subnet relationship: if the
+    // phone IS on the printer's LAN right now, try local first for this
+    // one cycle.  Status-service's own `_onSuccess` will set `_preferRemote
+    // = false` if local works, or `true` again if it doesn't (in which
+    // case we wait `_localRetryInterval` before retrying).
+    //
+    // Worst-case cost on home WiFi with Pi unreachable: one extra 3 s
+    // local timeout every 20 s (5 poll cycles) — barely noticeable, and
+    // worth it to recover from "stuck on tunnel" automatically.
+    bool retryingLocal = false;
+    if (_preferRemote && remote != null) {
+      final now = DateTime.now();
+      final dueForRetry = _lastLocalRetry == null ||
+          now.difference(_lastLocalRetry!) >= _localRetryInterval;
+      if (dueForRetry) {
+        final sameSubnet = await NetworkDiscoveryService.instance
+            .isOnSameSubnetAs(local);
+        if (sameSubnet) {
+          retryingLocal   = true;
+          _lastLocalRetry = now;
+        }
+      }
+    }
+
+    final candidates = (_preferRemote && remote != null && !retryingLocal)
         ? [remote, local]            // remote-preferred: skip local timeout
         : [local, if (remote != null) remote]; // local-first default
 
