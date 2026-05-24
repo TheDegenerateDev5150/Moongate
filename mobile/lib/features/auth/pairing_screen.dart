@@ -28,6 +28,9 @@ class _PairingScreenState extends State<PairingScreen> {
 
   // Separate fields for local IP and tunnel URL so both can be stored
   final _localController  = TextEditingController();
+  // Optional — left blank for the standard port 80 setup.  See the comment
+  // on _composeLocalHost() below for how we combine this with _localController.
+  final _portController   = TextEditingController();
   final _tunnelController = TextEditingController();
   final _nameController   = TextEditingController();
 
@@ -71,9 +74,24 @@ class _PairingScreenState extends State<PairingScreen> {
     _code1Focus.dispose();
     _code2Focus.dispose();
     _localController.dispose();
+    _portController.dispose();
     _tunnelController.dispose();
     _nameController.dispose();
     super.dispose();
+  }
+
+  /// Combine the IP field and the optional port field into a single host
+  /// string that [AuthService.buildBaseUrl] understands.
+  ///
+  ///   "192.168.1.50" + port ""    → "192.168.1.50"          (defaults to :80)
+  ///   "192.168.1.50" + port "8080" → "192.168.1.50:8080"
+  ///   "192.168.1.50:7125" + any   → "192.168.1.50:7125"     (already explicit)
+  ///   "" + anything                → ""                      (no local pairing)
+  String _composeLocalHost(String ip, String port) {
+    if (ip.isEmpty) return '';
+    if (ip.contains(':')) return ip;
+    if (port.isEmpty) return ip;
+    return '$ip:$port';
   }
 
   /// Request camera permission, then open the scanner.
@@ -209,7 +227,10 @@ class _PairingScreenState extends State<PairingScreen> {
   }
 
   Future<void> _pair() async {
-    final localRaw  = _localController.text.trim();
+    final localRaw  = _composeLocalHost(
+      _localController.text.trim(),
+      _portController.text.trim(),
+    );
     final tunnelRaw = _normalizeTunnelUrl(_tunnelController.text.trim());
     final name      = _nameController.text.trim().isEmpty
         ? 'My Printer' : _nameController.text.trim();
@@ -413,20 +434,43 @@ class _PairingScreenState extends State<PairingScreen> {
             ),
             const SizedBox(height: 14),
 
-            // ── Local IP + find button ─────────────────────────────────────
+            // ── Local IP + optional port + find button ──────────────────────
+            // The port field is for non-standard setups (port 80 in use, KIAUH
+            // configured Moonraker behind a different nginx port, etc.).  Most
+            // users leave it blank — _composeLocalHost() falls through to :80
+            // via AuthService.buildBaseUrl in that case.
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
+                  flex: 3,
                   child: TextField(
                     controller: _localController,
                     decoration: const InputDecoration(
-                      labelText: 'Local IP (same network)',
+                      labelText: 'Local IP',
                       hintText: '192.168.1.50',
                       border: OutlineInputBorder(),
-                      helperText: 'Leave blank if adding remotely',
+                      helperText: 'Blank = adding remotely',
                     ),
                     keyboardType: TextInputType.url,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: _portController,
+                    decoration: const InputDecoration(
+                      labelText: 'Port (optional)',
+                      hintText: '80',
+                      border: OutlineInputBorder(),
+                      helperText: 'Leave blank',
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(5),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8),

@@ -96,7 +96,8 @@ The Moongate plugin runs inside Moonraker on your Pi. It handles pairing, token 
 
 - HTTPS via **Cloudflare Quick Tunnel** — `cloudflared` runs on your Pi as a systemd service (`moongate-tunnel`) and connects outbound to Cloudflare's edge over QUIC/HTTP3
 - TLS is terminated at Cloudflare; the connection from Cloudflare to your Pi is also encrypted (cloudflared's outbound TLS)
-- The tunnel URL is a random unguessable subdomain like `racing-partly-mouse-surprised.trycloudflare.com`. **But even if the URL leaks, every Moongate endpoint still requires a valid JWT** — the URL alone gets you nothing
+- The tunnel URL is a random unguessable subdomain like `racing-partly-mouse-surprised.trycloudflare.com`
+- ⚠️ **Important nuance**: the JWT protects Moongate's own endpoints (`/server/moongate/*`). The same tunnel **also** carries the full Mainsail UI and the rest of the Moonraker API, which are open by default. **If the tunnel URL leaks, anyone with it can drive your printer through Mainsail without needing a JWT.** Bounded to the printer (no LAN pivot, no SSH), but on the printer it's effectively full control. See [SECURITY.md → URL leakage](SECURITY.md#what-does-url-leakage-actually-expose) for the full breakdown and the mitigations (Cloudflare Access is the recommended one — free, edge-side auth)
 - Cloudflare can see the request metadata (it's their tunnel). Moongate makes no claim to hide your traffic *from Cloudflare*; you're trusting them the same way you'd trust your ISP. If that's not acceptable for your threat model, run a self-hosted tunnel instead (the install script's `cloudflared` step is the only piece that needs swapping)
 
 ### About the "VPN"
@@ -107,7 +108,7 @@ The repo does contain a partially-implemented **WireGuard** mode (Phase 2) — t
 
 ### What this defends against
 
-- ✅ A stranger guessing your tunnel URL → still blocked by JWT
+- ✅ A stranger guessing the tunnel URL and trying Moongate's endpoints → blocked by JWT (but they can still hit Mainsail underneath — see the ⚠️ above)
 - ✅ A pairing code being seen briefly on a screen → 10 min, 5 attempts, single-use
 - ✅ Another app on your phone reading the JWT → Android Keystore
 - ✅ Lost or stolen phone → revoke its specific token, every other device keeps working
@@ -142,6 +143,19 @@ SSH into your Pi and run:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh | bash
 ```
+
+> **Non-standard HTTP port?** Stock KIAUH / MainsailOS serves Moonraker on port 80 — the installer's default. If your nginx is on a different port (e.g. port 80 is taken by another service, or you're running Moonraker on `8080`), tell the installer:
+>
+> ```bash
+> # Piped install
+> MOONGATE_PORT=8080 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh)"
+>
+> # Or locally:
+> curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh -o install.sh
+> bash install.sh --port 8080
+> ```
+>
+> The cloudflared tunnel and the QR pair URL will both use that port. In the app's pair screen, the **Port** field next to the IP is the matching control — leave it blank for 80, fill it in if you used something else here.
 
 This will:
 - Clone the Moongate repo to `~/moongate` and symlink the plugin into Moonraker
@@ -319,6 +333,7 @@ For a tour of the codebase — Riverpod providers, the service layer, data flows
 
 | Version | Changes |
 |---|---|
+| **v0.2.22** | Configurable HTTP port: `install.sh --port N` (also `MOONGATE_PORT` env var for piped installs); plugin reads the port from `~/.config/moongate/config.json` and embeds it in the QR + pair-page URLs; app's pair screen gains an optional **Port** field next to the IP for users with non-standard nginx setups. Plus: clarify in [SECURITY.md](SECURITY.md) and the README that the tunnel exposes Mainsail / Moonraker themselves, not just Moongate's JWT-protected endpoints — and how to mitigate (Cloudflare Access, tightened `trusted_clients`, or staying LAN-only) |
 | **v0.2.21** | Custom theme: new fourth radio option in the drawer (System / Dark / Light / **Custom**) opens a full-screen colour editor. Five slots — Accent, Page background, Cards & tiles, Text, Error — each tappable to a modal sheet with HEX input + 24-colour preset palette. Live preview tile inside the editor, instant theme application across the app, reset-to-defaults action |
 | **v0.2.20** | Camera scanner fix #2: add ProGuard rules for ML Kit + mobile_scanner so R8 doesn't strip the bundled barcode scanner classes (the mobile_scanner consumer rule had a single-dot wildcard bug that only matched the root package) |
 | **v0.2.19** | Upgrade `mobile_scanner` 5.2.3 → 7.x — fixes the Samsung One UI `analysis.resolutionInfo!!` NPE. CameraX bumped to 1.5.3 |

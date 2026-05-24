@@ -43,6 +43,11 @@ DEFAULT_CONFIG = {
     "allow_app_override":    True,
     "pair_code_ttl_seconds": 600,
     "max_pair_attempts":     5,
+    # HTTP port nginx (Moonraker's front-door) listens on.  The cloudflared
+    # tunnel forwards to this port and the QR / pair-page URLs include it.
+    # Default 80 matches stock KIAUH / MainsailOS; install.sh writes this
+    # value when `--port N` or MOONGATE_PORT env var is used at install time.
+    "http_port":             80,
 }
 
 CODE_CHARS = string.digits   # digits only → GATE-1234-5678, easy to type on phone
@@ -264,6 +269,15 @@ class AuthManager:
         self._tokens:        dict[str, DeviceToken] = {}
         self._pending_codes: dict[str, PairingCode] = {}
         self._load_tokens()
+
+    @property
+    def http_port(self) -> int:
+        """The HTTP port nginx serves on (default 80; install.sh writes the
+        configured value when `--port N` was used)."""
+        try:
+            return int(self._config.get("http_port", 80))
+        except (TypeError, ValueError):
+            return 80
 
     def generate_pair_code(self) -> tuple[str, str]:
         """Return (display_code, qr_payload). Format: GATE-XXXX-XXXX."""
@@ -653,14 +667,19 @@ class MoongatePlugin:
         tunnel_url      = _get_tunnel_url()   # None if cloudflared not running
         direct_jwt, tid = self.auth.issue_direct_token(device_name="Paired via QR")
 
-        # Build the QR URL — always includes local, adds remote if tunnel is up
-        qr_params = f"local={local_ip}:80&token={direct_jwt}"
+        # Build the QR URL — always includes local, adds remote if tunnel is up.
+        # The configured HTTP port (default 80) ends up in both the embedded
+        # `local=` field (which the app stores verbatim) and the pair-page
+        # URL we print to the Klipper console.
+        port             = self.auth.http_port
+        port_suffix      = "" if port == 80 else f":{port}"
+        qr_params = f"local={local_ip}:{port}&token={direct_jwt}"
         if tunnel_url:
             qr_params += f"&remote={tunnel_url}"
         self._last_qr_url      = f"moongate://pair?{qr_params}"
         self._last_qr_token_id = tid
 
-        local_pair_page  = f"http://{local_ip}/moongate-pair.html"
+        local_pair_page  = f"http://{local_ip}{port_suffix}/moongate-pair.html"
         subdomain        = _get_tunnel_subdomain(tunnel_url)
         tunnel_pair_page = (
             f"{tunnel_url}/moongate-pair.html" if tunnel_url else None
@@ -747,8 +766,9 @@ class MoongatePlugin:
         direct_jwt, tid  = self.auth.issue_direct_token(device_name="Paired via QR")
         local_ip         = _get_local_ip()
         tunnel_url       = _get_tunnel_url()
+        port             = self.auth.http_port
 
-        params: dict = {"local": f"{local_ip}:80", "token": direct_jwt}
+        params: dict = {"local": f"{local_ip}:{port}", "token": direct_jwt}
         if tunnel_url:
             params["remote"] = tunnel_url
         qr_payload = "moongate://pair?" + urllib.parse.urlencode(params)
@@ -761,7 +781,7 @@ class MoongatePlugin:
         return {
             "code":               display_code,
             "qr_payload":         qr_payload,
-            "local_url":          f"http://{local_ip}:80",
+            "local_url":          f"http://{local_ip}:{port}",
             "tunnel_url":         tunnel_url,
             "expires_in_seconds": 600,
         }

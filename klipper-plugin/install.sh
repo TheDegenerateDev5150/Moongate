@@ -14,6 +14,30 @@ success() { echo -e "${GREEN}[moongate]${NC} $*"; }
 warn()    { echo -e "${YELLOW}[moongate]${NC} $*"; }
 die()     { echo -e "${RED}[moongate] ERROR:${NC} $*" >&2; exit 1; }
 
+# ── HTTP port (defaults to 80) ───────────────────────────────────────────────
+# Tell the installer that Moonraker / Mainsail is reachable on a non-standard
+# port.  Stock KIAUH / MainsailOS use port 80, which is the default here.
+# Override one of two ways:
+#
+#   Locally:  bash install.sh --port 8080
+#   Piped:    MOONGATE_PORT=8080 bash -c "$(curl -fsSL <url>)"
+#
+# The cloudflared tunnel will forward to this port and the plugin will embed
+# it in the QR URL and the pair-page link.
+MOONGATE_PORT="${MOONGATE_PORT:-80}"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --port)      [[ -n "${2-}" ]] || die "--port needs a value"; MOONGATE_PORT="$2"; shift 2;;
+        --port=*)    MOONGATE_PORT="${1#*=}"; shift;;
+        *)           shift;;
+    esac
+done
+[[ "$MOONGATE_PORT" =~ ^[0-9]+$ ]] \
+    || die "Port must be numeric — got: $MOONGATE_PORT"
+[[ "$MOONGATE_PORT" -ge 1 && "$MOONGATE_PORT" -le 65535 ]] \
+    || die "Port out of range (1-65535): $MOONGATE_PORT"
+info "HTTP port: $MOONGATE_PORT"
+
 # ── Detect environment ────────────────────────────────────────────────────────
 MOONGATE_REPO="https://github.com/PEEKYPAUL/moongate.git"
 MOONGATE_DIR="${MOONGATE_DIR:-$HOME/moongate}"
@@ -148,6 +172,39 @@ for webroot in "$MAINSAIL_DIR" "$HOME/printer_data/www" "$HOME/fluidd"; do
 done
 [[ $DEPLOYED -eq 0 ]] && warn "No web-root found — skipping QR page"
 
+# ── 5b. Persist HTTP port to the plugin config ────────────────────────────────
+# The plugin reads this file on each Moonraker start and embeds the port in
+# the QR URL and pair-page link.  We merge with any existing config so other
+# settings (TTL, attempts cap, etc.) survive a re-install.
+PLUGIN_CFG_DIR="$HOME/.config/moongate"
+PLUGIN_CFG_FILE="$PLUGIN_CFG_DIR/config.json"
+mkdir -p "$PLUGIN_CFG_DIR"
+
+if command -v python3 &>/dev/null; then
+    python3 - "$PLUGIN_CFG_FILE" "$MOONGATE_PORT" << 'PY'
+import json, sys
+path, port = sys.argv[1], int(sys.argv[2])
+try:
+    with open(path) as f:
+        data = json.load(f)
+        if not isinstance(data, dict):
+            data = {}
+except (FileNotFoundError, ValueError):
+    data = {}
+data["http_port"] = port
+with open(path, "w") as f:
+    json.dump(data, f, indent=2)
+PY
+else
+    # Best-effort fallback when python3 isn't on PATH — overwrites other keys
+    cat > "$PLUGIN_CFG_FILE" << EOF
+{
+  "http_port": $MOONGATE_PORT
+}
+EOF
+fi
+success "Plugin HTTP port saved to $PLUGIN_CFG_FILE"
+
 # ── 6. Install cloudflared (skip if already installed) ───────────────────────
 if command -v cloudflared &>/dev/null; then
     info "cloudflared already installed — skipping."
@@ -177,7 +234,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=$USER
-ExecStart=/usr/bin/cloudflared tunnel --url http://localhost:80 --no-autoupdate
+ExecStart=/usr/bin/cloudflared tunnel --url http://localhost:$MOONGATE_PORT --no-autoupdate
 Restart=on-failure
 RestartSec=10
 StandardOutput=append:/run/moongate-tunnel.log
@@ -233,13 +290,17 @@ sleep 20
 LOCAL_IP=$(hostname -I | awk '{print $1}')
 TUNNEL_URL=$(grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' /run/moongate-tunnel.log 2>/dev/null || true)
 
+# Only show ":port" in the pair-page URL when it isn't the HTTP default
+PORT_SUFFIX=""
+[[ "$MOONGATE_PORT" -ne 80 ]] && PORT_SUFFIX=":$MOONGATE_PORT"
+
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  Moongate installed!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "  Updates   : ${BLUE}Mainsail → Software Updates → Moongate${NC}"
-echo -e "  Pairing   : ${BLUE}http://$LOCAL_IP/moongate-pair.html${NC}"
+echo -e "  Pairing   : ${BLUE}http://$LOCAL_IP$PORT_SUFFIX/moongate-pair.html${NC}"
 if [[ -n "$TUNNEL_URL" ]]; then
     SUBDOMAIN="${TUNNEL_URL#https://}"
     SUBDOMAIN="${SUBDOMAIN%.trycloudflare.com}"
