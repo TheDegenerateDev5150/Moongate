@@ -4,12 +4,14 @@
 
 Moongate is a free, open-source Android app that gives you a **full remote control interface for your Klipper 3D printer** — live webcam, print controls, temperatures, and the complete Mainsail/Fluidd UI — over your local network and automatically over the internet when you're away from home. No Tailscale. No VPN setup. No subscriptions.
 
-<p align="center">
-  <img src="docs/screenshots/dashboard.png" width="220" alt="Dashboard with multiple printers"/>
-  <img src="docs/screenshots/printer-mainsail.png" width="220" alt="Full Mainsail UI in-app"/>
-  <img src="docs/screenshots/pairing.png" width="220" alt="Pairing screen"/>
-  <img src="docs/screenshots/drawer.png" width="220" alt="Settings drawer"/>
-</p>
+<table align="center">
+  <tr>
+    <td><img src="docs/screenshots/dashboard.png" width="190" alt="Dashboard with multiple printers"/></td>
+    <td><img src="docs/screenshots/printer-mainsail.png" width="190" alt="Full Mainsail UI in-app"/></td>
+    <td><img src="docs/screenshots/pairing.png" width="190" alt="Pairing screen"/></td>
+    <td><img src="docs/screenshots/drawer.png" width="190" alt="Settings drawer"/></td>
+  </tr>
+</table>
 
 ---
 
