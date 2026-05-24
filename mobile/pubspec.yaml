@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.2.15+25
+version: 0.2.20+30
 publish_to: none
 
 environment:
@@ -18,8 +18,10 @@ dependencies:
   # Secure storage (token / pairing data)
   flutter_secure_storage: ^9.0.0
 
-  # QR code scanning (pairing screen)
-  mobile_scanner: ^5.0.0
+  # QR code scanning (pairing screen).
+  # 7.x rewrites the Android start path — fixes the `analysis.resolutionInfo!!`
+  # NPE in 5.x that fired on Samsung One UI as `genericError / NPE getClass()`.
+  mobile_scanner: ^7.0.0
 
   # State management + navigation
   flutter_riverpod: ^2.5.0

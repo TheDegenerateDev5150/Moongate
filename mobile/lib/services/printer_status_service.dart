@@ -55,13 +55,33 @@ class PrinterStatusService {
   String? _uiType;
   bool    _uiTypeChecked = false;
 
+  /// Slicer-estimated print time in seconds, from /server/files/metadata.
+  /// Cached per-filename so we only fire one extra HTTP call per print file.
+  /// Cleared when the filename changes so a new print gets fresh metadata.
+  double? _estimatedPrintSeconds;
+  String? _metadataFilename;
+
   /// Exposes the detected UI type so tiles can show the right logo.
   String? get uiType => _uiType;
 
-  // Always start local-first — preferRemote is a session-only optimisation.
-  // Persisting it caused both printers to show "Tunnel" on every app launch
-  // even when on the same LAN as the printer.
-  PrinterStatusService(this.config) : _preferRemote = false;
+  // Seed [_preferRemote] from the registry's live (in-session, non-persisted)
+  // preference.  Two paths feed that map BEFORE this constructor runs:
+  //
+  //   1. main.dart's [PrinterRegistry.refreshNetworkLocality] — pre-decides
+  //      "tunnel-first" for any printer whose local IP isn't on the phone's
+  //      current LAN, so the very first poll on a foreign network skips the
+  //      doomed local probe.
+  //   2. Previous polls in this same session — when the user navigates
+  //      around and a new tile/service is created for an already-known
+  //      printer, the last-known good path is reused.
+  //
+  // Falls back to local-first when there's no signal yet (a brand-new
+  // printer, or no network info at app start).  We deliberately don't read
+  // the *persisted* preferRemote here — that caused the "Tunnel" badge bug
+  // on launch when the user was actually on the same LAN as the printer.
+  PrinterStatusService(this.config)
+      : _preferRemote =
+            PrinterRegistry.instance.livePreferRemote(config.id) ?? false;
 
   Stream<PrinterStatus> get stream => _controller.stream;
 
@@ -225,6 +245,11 @@ class PrinterStatusService {
   void _onSuccess(String baseUrl) {
     final isRemote = baseUrl != config.host;
     if (isRemote != _preferRemote) _preferRemote = isRemote;
+    // Publish the live decision so the printer screen (and anyone else who
+    // needs to make a network-path choice for this printer) doesn't repeat
+    // the local-first probe and time out on a guaranteed-unreachable IP —
+    // e.g. when the phone is on a different LAN to the printer.
+    PrinterRegistry.instance.setLivePreferRemote(config.id, isRemote);
     // Fire-and-forget UI-type detection on the first successful connection.
     if (!_uiTypeChecked) _detectUiType(baseUrl);
   }
@@ -251,6 +276,41 @@ class PrinterStatusService {
     } catch (_) {
       // Detection failed — retry on next successful poll.
       _uiTypeChecked = false;
+    }
+  }
+
+  // ── File metadata fetch (accurate progress) ───────────────────────────────
+  //
+  // Fetches estimated_time from /server/files/metadata for the file currently
+  // being printed.  This is the same value Mainsail and Fluidd use:
+  //   progress = print_duration / estimated_time
+  //
+  // Cached by filename — at most one HTTP call per print file.  Stale metadata
+  // from the previous file is cleared immediately when the filename changes so
+  // a new print never inherits the wrong estimate.  If the fetch fails, the
+  // cache remains empty and progress falls back to display_status / virtual_sdcard.
+
+  Future<void> _fetchFileMetadata(
+      String baseUrl, String? filename, {required Duration timeout}) async {
+    if (filename == null || filename.isEmpty) return;
+    if (filename == _metadataFilename) return; // cache hit — same file
+    // Clear stale metadata so a failed fetch falls back cleanly.
+    _estimatedPrintSeconds = null;
+    _metadataFilename      = null;
+    try {
+      final encoded  = Uri.encodeComponent(filename);
+      final uri      = Uri.parse('$baseUrl/server/files/metadata?filename=$encoded');
+      final response = await http.get(uri).timeout(timeout);
+      if (response.statusCode == 200) {
+        final body      = jsonDecode(response.body) as Map<String, dynamic>;
+        final estimated = (body['result']?['estimated_time'] as num?)?.toDouble();
+        if (estimated != null && estimated > 0) {
+          _estimatedPrintSeconds = estimated;
+          _metadataFilename      = filename;
+        }
+      }
+    } catch (_) {
+      // Metadata fetch failed — progress falls back to display_status / virtual_sdcard.
     }
   }
 
@@ -289,6 +349,13 @@ class PrinterStatusService {
         await _supplementaryProgressQuery(baseUrl, status, timeout: timeout);
       }
 
+      // Fetch slicer-estimated print time for accurate progress calculation
+      // (print_duration / estimated_time — the same formula Mainsail uses).
+      final statsForMeta = status['print_stats'] as Map<String, dynamic>? ?? {};
+      if (statsForMeta['state'] == 'printing') {
+        await _fetchFileMetadata(
+            baseUrl, statsForMeta['filename'] as String?, timeout: timeout);
+      }
       return _parseStatus(status: status, moongateResult: result, baseUrl: baseUrl);
     } catch (_) {
       return null;
@@ -383,6 +450,12 @@ class PrinterStatusService {
           final body   = jsonDecode(response.body) as Map<String, dynamic>;
           final result = body['result'] as Map<String, dynamic>;
           final status = result['status'] as Map<String, dynamic>;
+          // Fetch slicer-estimated print time for accurate progress.
+          final statsForMeta = status['print_stats'] as Map<String, dynamic>? ?? {};
+          if (statsForMeta['state'] == 'printing') {
+            await _fetchFileMetadata(
+                baseUrl, statsForMeta['filename'] as String?, timeout: timeout);
+          }
           return _parseStatus(
               status: status, moongateResult: null, baseUrl: baseUrl);
         }
@@ -445,22 +518,31 @@ class PrinterStatusService {
     // "Offline" — the connection is working, Klipper just isn't ready yet.
     final state = (printStats['state'] as String?) ?? 'startup';
 
-    // Progress logic mirrors Mainsail/Fluidd:
-    //   1. display_status.progress  — set by M73 from the slicer (preferred).
-    //      Klipper initialises this to 0.0 and only updates it when the slicer
-    //      sends M73 commands.  Treat 0.0 as "not yet set" and fall through,
-    //      otherwise a printer whose slicer never emits M73 shows 0% forever.
-    //   2. virtual_sdcard.progress  — file-read position (0→1).
-    //      Reads slightly ahead of the toolhead due to look-ahead buffering,
-    //      but is always non-zero once printing has started and matches what
-    //      Mainsail shows when no M73 is present.
+    // Progress — mirrors Mainsail/Fluidd exactly:
+    //   1. print_duration / estimated_time  — the formula Mainsail and Fluidd
+    //      use.  estimated_time comes from slicer-generated file metadata
+    //      fetched via /server/files/metadata once per file and cached.
+    //      Only active while printing and when the slicer embeds an estimate.
+    //   2. display_status.progress          — set by M73 gcode from the slicer.
+    //      Klipper initialises this to 0.0; treat 0.0 as "not yet set" and
+    //      fall through, otherwise a printer with no M73 shows 0% forever.
+    //   3. virtual_sdcard.progress          — file-read position (0→1).
+    //      Reads slightly ahead due to look-ahead buffering but is non-zero
+    //      once printing starts; last resort when metadata is unavailable.
+    final double printDuration =
+        (printStats['print_duration'] as num?)?.toDouble() ?? 0.0;
     final double displayProg =
         (displayStatus['progress'] as num?)?.toDouble() ?? 0.0;
     final double sdcardProg =
         (virtualSdcard['progress'] as num?)?.toDouble() ?? 0.0;
 
     final double progress;
-    if (displayProg > 0.0) {
+    if (_estimatedPrintSeconds != null &&
+        _estimatedPrintSeconds! > 0 &&
+        printDuration > 0 &&
+        state == 'printing') {
+      progress = (printDuration / _estimatedPrintSeconds!).clamp(0.0, 1.0);
+    } else if (displayProg > 0.0) {
       progress = displayProg.clamp(0.0, 1.0);
     } else if (sdcardProg > 0.0) {
       progress = sdcardProg.clamp(0.0, 1.0);

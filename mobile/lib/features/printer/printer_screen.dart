@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../models/printer_config.dart';
+import '../../services/printer_registry.dart';
 
 /// Full-screen WebView showing the local Mainsail/Fluidd instance.
 ///
@@ -82,11 +83,23 @@ class _PrinterScreenState extends State<PrinterScreen>
         // WebResourceRequest lacks isForMainFrame in webview_flutter 4.7.x,
         // so we filter by host: only act when the failing request comes from
         // the same host we navigated to (not webcam/API sub-resources).
+        //
+        // Mirror onWebResourceError's logic: if we're still on the LOCAL
+        // attempt and a tunnel fallback is queued, swallow the error and let
+        // the fallback timer switch us to the tunnel.  Otherwise a stranger
+        // LAN where 192.168.x.x answers with a router-admin 4xx would
+        // surface "Printer unreachable" instead of falling through.
         onHttpError: (HttpResponseError error) {
           final code    = error.response?.statusCode ?? 0;
           if (code < 400) return;
           final errHost = error.request?.uri.host ?? '';
           if (_currentHost != null && errHost != _currentHost) return;
+          final noFallback = widget.printer.remoteHost == null;
+          if (!_usingRemote && !noFallback) {
+            // Local attempt produced a 4xx/5xx and we still have a tunnel
+            // queued — let _tryRemote (3 s fallback timer) take over.
+            return;
+          }
           if (mounted) {
             _fallbackTimer?.cancel();
             setState(() {
@@ -116,16 +129,33 @@ class _PrinterScreenState extends State<PrinterScreen>
 
   /// Load the correct starting URL.
   ///
-  /// Remote-first printers (preferRemote=true) skip straight to the tunnel
-  /// so there's no 3-second wasted local timeout for a printer that's on a
-  /// completely different network.
+  /// Connection-path decision (in priority order):
+  ///   1. Live in-session preference from [PrinterRegistry] — updated by the
+  ///      dashboard tile's status service every time a poll succeeds.  If the
+  ///      tile already discovered that this printer is only reachable via the
+  ///      tunnel (e.g. phone on a different network), we skip the local
+  ///      attempt entirely so the WebView doesn't waste 3 s timing out — or
+  ///      worse, latch onto a 4xx/5xx from some unrelated device on the
+  ///      stranger LAN that happens to answer on the same IP.
+  ///   2. Persisted [PrinterConfig.preferRemote] — set at pair time when only
+  ///      a tunnel URL was provided.  Fallback when no poll has succeeded
+  ///      yet this session (e.g. user opens the printer screen before the
+  ///      dashboard tile has had a chance to probe).
+  ///   3. Default: try local first, fall back to tunnel after 3 s if local
+  ///      doesn't finish loading.
   void _startLoad() {
     _fallbackTimer?.cancel();
     _didFallback = false;
     _errorType   = null;
 
-    final remote     = widget.printer.remoteHost;
-    final goRemote   = widget.printer.preferRemote && remote != null;
+    final remote = widget.printer.remoteHost;
+
+    // Live decision wins over the persisted flag — the dashboard knows what
+    // actually works on this network right now.
+    final livePref =
+        PrinterRegistry.instance.livePreferRemote(widget.printer.id);
+    final goRemote =
+        (livePref ?? widget.printer.preferRemote) && remote != null;
 
     if (goRemote) {
       // Remote-first: straight to tunnel, no local attempt

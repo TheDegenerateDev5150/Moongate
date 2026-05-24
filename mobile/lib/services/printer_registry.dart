@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/printer_config.dart';
+import 'network_discovery_service.dart';
 
 /// Persists the list of paired printers to SharedPreferences.
 class PrinterRegistry {
@@ -11,7 +12,69 @@ class PrinterRegistry {
 
   List<PrinterConfig> _printers = [];
 
+  /// In-session map of which connection path won most recently for each
+  /// printer.  Updated by [PrinterStatusService] after every successful poll,
+  /// read by [PrinterScreen] when deciding which URL to load in the WebView.
+  ///
+  /// NOT persisted: on every cold start every printer begins with no live
+  /// preference so the next session tries local first (same reason we don't
+  /// persist [PrinterConfig.preferRemote] — see comment in the status service).
+  final Map<String, bool> _livePreferRemote = {};
+
   List<PrinterConfig> get printers => List.unmodifiable(_printers);
+
+  /// Returns the last-known live decision for [printerId], or null if no
+  /// poll has succeeded yet this session.
+  bool? livePreferRemote(String printerId) => _livePreferRemote[printerId];
+
+  /// Called by [PrinterStatusService] each time a poll succeeds, so the
+  /// printer-screen WebView and any other consumer can avoid wasting a
+  /// 3-second timeout on a guaranteed-unreachable local IP.
+  void setLivePreferRemote(String printerId, bool preferRemote) {
+    _livePreferRemote[printerId] = preferRemote;
+  }
+
+  /// Pre-populate [_livePreferRemote] for every printer based on a cheap
+  /// subnet comparison between the phone's current LAN and each printer's
+  /// configured local IP.
+  ///
+  /// Why this exists:
+  ///   The status service already discovers the right network path by
+  ///   probing — but its first poll takes a 3 s local timeout before
+  ///   falling back to the tunnel.  If the user cold-launches the app on
+  ///   an unrelated network (e.g. visiting a friend) and taps a tile
+  ///   *immediately*, the WebView would try the printer's local IP first,
+  ///   either timing out or — worse — latching onto a 4xx/5xx from some
+  ///   other device on the stranger's LAN that happens to answer at the
+  ///   same IP.
+  ///
+  ///   By pre-checking subnets at app launch and on resume, the live
+  ///   preference is already correct before any tile is even tapped, so
+  ///   the WebView jumps straight to the tunnel with no flicker.
+  ///
+  /// Called from [main] on cold start and from the root app widget on
+  /// every [AppLifecycleState.resumed] (in case the phone changed
+  /// networks while the app was backgrounded).
+  Future<void> refreshNetworkLocality() async {
+    for (final printer in _printers) {
+      // Tunnel-only printers (no remote host) can't be improved by this
+      // check — there's nothing to fall back to.  Skip them.
+      if (printer.remoteHost == null) continue;
+
+      final sameSubnet = await NetworkDiscoveryService.instance
+          .isOnSameSubnetAs(printer.host);
+
+      // sameSubnet == false means the printer's LAN is unreachable from
+      // here, regardless of what the host string looks like — prefer the
+      // tunnel until a real poll says otherwise.  When subnets match, we
+      // do NOT eagerly set _livePreferRemote = false: the status service
+      // is still authoritative for actual reachability (think AP isolation,
+      // printer powered off, etc.).
+      if (!sameSubnet) {
+        _livePreferRemote[printer.id] = true;
+      }
+    }
+  }
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -77,7 +140,9 @@ class PrinterRegistry {
     final p = _printers[idx];
     if (p.webcamFlipH == flipH &&
         p.webcamFlipV == flipV &&
-        p.webcamRotation == rotation) return; // nothing changed
+        p.webcamRotation == rotation) {
+      return; // nothing changed
+    }
     _printers = List.of(_printers)
       ..[idx] = p.copyWith(
           webcamFlipH: flipH, webcamFlipV: flipV, webcamRotation: rotation);

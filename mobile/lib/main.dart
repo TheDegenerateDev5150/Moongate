@@ -10,6 +10,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await VpnService.instance.initialize();
   await PrinterRegistry.instance.load();
+  // Decide per printer whether the phone's current LAN can plausibly reach
+  // its local IP, BEFORE the dashboard is drawn.  Without this, cold-launching
+  // on an unrelated network and tapping a tile immediately would wedge the
+  // WebView on a doomed local URL until the 3 s fallback kicks in.
+  await PrinterRegistry.instance.refreshNetworkLocality();
 
   final container = ProviderContainer();
   await container.read(themeModeProvider.notifier).load();

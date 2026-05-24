@@ -47,13 +47,11 @@ class _PairingScreenState extends State<PairingScreen> {
   //     camera.open() immediately after the dialog closes races this update
   //     and can produce a genericError even though permission is "granted".
   //
-  //  3. We do NOT pass onDetect to the MobileScanner widget.  When onDetect
-  //     is provided, _MobileScannerState adds a WidgetsBindingObserver in
-  //     initState() but NEVER removes it when widget.controller != null
-  //     (a bug in mobile_scanner 5.x).  Each open/close would accumulate
-  //     one leaked observer permanently, eventually interfering with camera
-  //     lifecycle management.  Instead, we subscribe to controller.barcodes
-  //     directly — no observer is added, no leak.
+  //  3. We do NOT pass onDetect to the MobileScanner widget.  We subscribe
+  //     to controller.barcodes directly so the scan-handling code lives
+  //     next to _openScanner() / _closeScanner() instead of being buried
+  //     in the widget tree.  (Historically this also avoided a leaked
+  //     WidgetsBindingObserver in mobile_scanner 5.x, fixed in 7.x.)
   //
   //  4. The controller is re-created fresh each open so there is no stale
   //     CameraX lifecycle state from a previous session.
@@ -622,9 +620,11 @@ class _PairingScreenState extends State<PairingScreen> {
                   child: MobileScanner(
                     controller: _scannerController!,
                     // onDetect intentionally omitted — we subscribe to
-                    // controller.barcodes directly to avoid the observer
-                    // leak in mobile_scanner 5.x (see _openScanner).
-                    errorBuilder: (context, error, child) {
+                    // controller.barcodes directly.  In mobile_scanner 5.x
+                    // this also avoided a WidgetsBindingObserver leak;
+                    // 7.x has fixed that but the direct-subscription
+                    // pattern is still cleaner so we keep it.
+                    errorBuilder: (context, error) {
                       final isDenied = error.errorCode ==
                           MobileScannerErrorCode.permissionDenied;
                       // Show the exact error code and any native exception

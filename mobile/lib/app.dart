@@ -36,11 +36,41 @@ final _router = GoRouter(
   ],
 );
 
-class MoongateApp extends ConsumerWidget {
+class MoongateApp extends ConsumerStatefulWidget {
   const MoongateApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MoongateApp> createState() => _MoongateAppState();
+}
+
+class _MoongateAppState extends ConsumerState<MoongateApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Re-run the subnet locality check whenever the app comes back to the
+    // foreground.  The phone may have moved to a different WiFi network
+    // while we were backgrounded — without this refresh, the live
+    // preferences we computed at cold-start would be stale and the printer
+    // screen could try a now-unreachable local IP.
+    if (state == AppLifecycleState.resumed) {
+      PrinterRegistry.instance.refreshNetworkLocality();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final fontScale = ref.watch(fontScaleProvider);
 

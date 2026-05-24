@@ -33,6 +33,68 @@ class NetworkDiscoveryService {
     return null;
   }
 
+  /// Returns `true` if the phone's current WiFi/LAN subnet matches the
+  /// subnet of [hostOrUrl] — i.e. the printer's local IP is *plausibly*
+  /// reachable on the current network.
+  ///
+  /// This is intentionally a cheap, conservative check, not a guarantee:
+  ///   • Same subnet  → local is probably reachable.  Try it first; if it
+  ///                    actually fails, the status poll's 3 s timeout
+  ///                    surfaces the truth and we fall through to the tunnel.
+  ///   • Diff subnet  → local CANNOT be on this LAN.  Skip local entirely
+  ///                    and go straight to the tunnel; no 3 s wasted timeout,
+  ///                    no chance of latching onto an unrelated device that
+  ///                    happens to answer at the same IP on a stranger's
+  ///                    network.
+  ///
+  /// Returns `false` for any input that isn't a parseable IPv4 host (e.g.
+  /// the printer was paired tunnel-only, so `host` is the tunnel URL).
+  /// Returns `false` when the phone has no local IPv4 (cellular-only).
+  Future<bool> isOnSameSubnetAs(String hostOrUrl) async {
+    final printerIp = _extractIp(hostOrUrl);
+    if (printerIp == null) return false;
+
+    final myIp = await myLocalIp();
+    if (myIp == null) return false;
+
+    return _subnet(printerIp) == _subnet(myIp);
+  }
+
+  /// First three octets of an IPv4 — what we treat as the /24 subnet.
+  /// "192.168.1.50" → "192.168.1".
+  String _subnet(String ip) {
+    final parts = ip.split('.');
+    if (parts.length < 4) return '';
+    return '${parts[0]}.${parts[1]}.${parts[2]}';
+  }
+
+  /// Pulls the host out of a string that may be:
+  ///   • a bare IP                "192.168.1.50"
+  ///   • an IP + port             "192.168.1.50:80"
+  ///   • a full URL with scheme   "http://192.168.1.50:80"
+  /// Returns null when the host is not a dotted-quad IPv4 (e.g. a tunnel
+  /// hostname or an mDNS name).
+  String? _extractIp(String hostOrUrl) {
+    var s = hostOrUrl.trim();
+    if (s.isEmpty) return null;
+    // Strip scheme
+    s = s.replaceFirst(RegExp(r'^https?://'), '');
+    // Strip path
+    final slash = s.indexOf('/');
+    if (slash != -1) s = s.substring(0, slash);
+    // Strip port
+    final colon = s.indexOf(':');
+    if (colon != -1) s = s.substring(0, colon);
+    // Must be dotted-quad
+    final parts = s.split('.');
+    if (parts.length != 4) return null;
+    for (final p in parts) {
+      final n = int.tryParse(p);
+      if (n == null || n < 0 || n > 255) return null;
+    }
+    return s;
+  }
+
   bool _isLocalPrivate(String ip) {
     final p = ip.split('.');
     if (p.length != 4) return false;

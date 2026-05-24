@@ -1,17 +1,8 @@
 import java.util.Properties
 
-// ─── Force CameraX 1.4.0 across all submodules ──────────────────────────────
-// mobile_scanner 5.x ships CameraX 1.3.3, which has a Samsung-specific
-// NullPointerException in Camera2CameraImpl.attachUseCases() — calling
-// .getClass() on a transiently-null object during lifecycle binding.
-// CameraX 1.4.0 fixes this.  The 1.3.x → 1.4.x API is fully compatible.
-configurations.all {
-    resolutionStrategy {
-        force("androidx.camera:camera-core:1.4.0")
-        force("androidx.camera:camera-camera2:1.4.0")
-        force("androidx.camera:camera-lifecycle:1.4.0")
-    }
-}
+// (mobile_scanner 7.x pins its own CameraX 1.5.x — no manual force needed.
+// We previously forced 1.4.0 to dodge a Samsung-specific NPE in mobile_scanner
+// 5.x's CameraX 1.3.3, but the 7.x rewrite + 1.5.x supersedes that fix.)
 
 plugins {
     id("com.android.application")
@@ -68,6 +59,19 @@ android {
                 signingConfigs.getByName("release")
             else
                 signingConfigs.getByName("debug")
+
+            // Keep R8 enabled (it shrinks the APK by tens of MB) but apply
+            // our own ProGuard rules on top of the default Android optimize
+            // set.  Without proguard-rules.pro, R8 strips ML Kit's barcode
+            // scanner internals (mobile_scanner 7.x's consumer rule uses a
+            // single-dot wildcard that only matches the root package), and
+            // the QR scanner crashes at first use with an obfuscated NPE.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
