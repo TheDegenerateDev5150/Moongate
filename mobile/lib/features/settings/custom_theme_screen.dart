@@ -275,12 +275,16 @@ class _ColourPickerSheetState extends State<_ColourPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final mq = MediaQuery.of(context);
+    // `viewInsets.bottom`  → on-screen keyboard height (when open)
+    // `padding.bottom`     → system navigation / gesture bar height
+    // Add both so the Done button never sits under either.  The system nav
+    // bar matters on phones with 3-button navigation where the bottom row of
+    // the modal would otherwise be obscured.
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + mq.padding.bottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

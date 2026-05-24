@@ -75,9 +75,9 @@ At the end you'll see output like:
 
 ### Step 2 — Install the app
 
-**Current version: v0.2.22**
+**Current version: v0.2.23**
 
-**[⬇ Download Moongate-v0.2.22.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.22.apk)** and install it on your Android phone.
+**[⬇ Download Moongate-v0.2.23.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.23.apk)** and install it on your Android phone.
 
 > Android only for now. Tap the link above to download directly to your phone.
 > Enable **Install from unknown sources** for your browser or file manager before installing.
@@ -249,7 +249,7 @@ If you want to verify any of the above:
 ```
 moongate/
 ├── APK/                    # Pre-built release APKs + version manifest
-│   ├── Moongate-v0.2.22.apk
+│   ├── Moongate-v0.2.23.apk
 │   ├── Moongate-latest.apk
 │   └── latest_version.json
 ├── docs/
@@ -321,6 +321,7 @@ For a tour of the codebase — Riverpod providers, the service layer, data flows
 
 | Version | Changes |
 |---|---|
+| **v0.2.23** | Custom-theme colour picker: the **Done** button now respects the system navigation / gesture bar at the bottom of the modal sheet. Previously the button could overlap the phone's 3-button nav row on devices using on-screen buttons |
 | **v0.2.22** | Configurable HTTP port: `install.sh --port N` (also `MOONGATE_PORT` env var for piped installs); plugin reads the port from `~/.config/moongate/config.json` and embeds it in the QR + pair-page URLs; app's pair screen gains an optional **Port** field next to the IP for users with non-standard nginx setups. Plus: clarify in [SECURITY.md](SECURITY.md) and the README that the tunnel exposes Mainsail / Moonraker themselves, not just Moongate's JWT-protected endpoints — and how to mitigate (Cloudflare Access, tightened `trusted_clients`, or staying LAN-only) |
 | **v0.2.21** | Custom theme: new fourth radio option in the drawer (System / Dark / Light / **Custom**) opens a full-screen colour editor. Five slots — Accent, Page background, Cards & tiles, Text, Error — each tappable to a modal sheet with HEX input + 24-colour preset palette. Live preview tile inside the editor, instant theme application across the app, reset-to-defaults action |
 | **v0.2.20** | Camera scanner fix #2: add ProGuard rules for ML Kit + mobile_scanner so R8 doesn't strip the bundled barcode scanner classes (the mobile_scanner consumer rule had a single-dot wildcard bug that only matched the root package) |

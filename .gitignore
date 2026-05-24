@@ -1,3 +1,8 @@
+# Local development notes & IDE state — not for the public repo
+CLAUDE.md
+.claude/
+logcat*.txt
+
 # Flutter / Dart
 mobile/.dart_tool/
 mobile/.packages
