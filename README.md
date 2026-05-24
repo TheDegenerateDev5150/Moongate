@@ -13,36 +13,6 @@ Moongate is a free, open-source Android app that gives you a **full remote contr
 
 ---
 
-## Download
-
-**Current version: v0.2.21**
-
-**[⬇ Download Moongate-v0.2.21.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.21.apk)**
-
-> Android only for now. Tap the link above to download directly to your phone.
-> Enable **Install from unknown sources** for your browser or file manager before installing.
-
-All releases are in the [APK folder](https://github.com/PEEKYPAUL/Moongate/tree/master/APK).
-
----
-
-## What it does
-
-| Feature | Detail |
-|---|---|
-| **Dashboard** | See all your printers at a glance — live webcam thumbnails refreshing every second, print progress (matched to Mainsail's slicer-time calculation), temperatures, chamber sensor, and status |
-| **Print controls** | Pause, resume, and stop prints directly from the dashboard tile. Stop requires a second press to confirm. Idle / errored printers get a one-tap firmware-restart button |
-| **Full Mainsail / Fluidd UI** | Tap any tile to open the complete web UI in an embedded browser. Auto-detects whichever you run |
-| **Auto local / remote** | Connects over your home WiFi first; if unreachable, automatically falls back to the Cloudflare tunnel within 3 seconds. Remembers which path works per session |
-| **Network-aware** | At cold launch and on every resume, the app checks the phone's subnet against each printer's. On a different network it skips the local probe entirely — no 3-second timeout, no chance of latching onto an unrelated device on a stranger LAN |
-| **Secure pairing** | One Klipper console command generates a time-limited QR + code. JWT-based auth, no port forwarding, no static IP |
-| **Auto-discovery** | Chamber temperature sensors are auto-detected regardless of how they're named in `printer.cfg` (`[temperature_sensor chamber]`, `[heater_generic CHAMBER]`, `[temperature_fan Chamber_Temp]`, etc.) |
-| **In-app updates** | The app checks for new versions on launch and offers a one-tap download when one is available |
-| **Customisable** | System / Light / Dark / **Custom** themes (the Custom mode lets you pick HEX values for accent, page background, cards, text and error from a colour editor with a 24-swatch palette), 1–3 column dashboard grid, font scale slider, optional landscape rotation |
-| **Import / export** | One-tap config backup to clipboard; restore after a reinstall |
-
----
-
 ## How it works
 
 ```
@@ -55,6 +25,129 @@ All releases are in the [APK folder](https://github.com/PEEKYPAUL/Moongate/tree/
 ```
 
 The Moongate plugin runs inside Moonraker on your Pi. It handles pairing, token auth, status polling, and print control — proxying commands to Klipper on your behalf. A Cloudflare Quick Tunnel is started automatically on the Pi so you can reach it from anywhere without opening ports on your router.
+
+---
+
+## Setup
+
+### Step 1 — Install the plugin on your Raspberry Pi
+
+SSH into your Pi and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh | bash
+```
+
+> **Non-standard HTTP port?** Stock KIAUH / MainsailOS serves Moonraker on port 80 — the installer's default. If your nginx is on a different port (e.g. port 80 is taken by another service, or you're running Moonraker on `8080`), tell the installer:
+>
+> ```bash
+> # Piped install
+> MOONGATE_PORT=8080 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh)"
+>
+> # Or locally:
+> curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh -o install.sh
+> bash install.sh --port 8080
+> ```
+>
+> The cloudflared tunnel and the QR pair URL will both use that port. In the app's pair screen, the **Port** field next to the IP is the matching control — leave it blank for 80, fill it in if you used something else here.
+
+This will:
+- Clone the Moongate repo to `~/moongate` and symlink the plugin into Moonraker
+- Register Moongate with Moonraker's update manager (visible in Mainsail → Software Updates)
+- Deploy the QR pairing page to Mainsail
+- Install `cloudflared` and start the remote-access tunnel as a systemd service
+- Restart Moonraker and Klipper
+
+At the end you'll see output like:
+
+```
+  Updates   : Mainsail → Software Updates → Moongate
+  Pairing   : http://192.168.1.x/moongate-pair.html
+  Tunnel    : https://racing-partly-mouse.trycloudflare.com ✓
+  Subdomain : racing-partly-mouse  (paste into app tunnel field)
+```
+
+> **Requirements:** Raspberry Pi running Klipper + Moonraker + Mainsail or Fluidd (standard KIAUH / MainsailOS / FluiddPI setup). Tested on aarch64 (Pi 4/5) and armv7l (Pi 3).
+
+> **Keeping it updated:** After the initial install, future plugin updates appear automatically in **Mainsail → Software Updates → Moongate** — no SSH needed.
+
+---
+
+### Step 2 — Install the app
+
+**Current version: v0.2.22**
+
+**[⬇ Download Moongate-v0.2.22.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.22.apk)** and install it on your Android phone.
+
+> Android only for now. Tap the link above to download directly to your phone.
+> Enable **Install from unknown sources** for your browser or file manager before installing.
+
+All releases are in the [APK folder](https://github.com/PEEKYPAUL/Moongate/tree/master/APK).
+
+On first launch the app will ask you to add a printer.
+
+---
+
+### Step 3 — Pair
+
+1. In Klipper/Mainsail, run the macro `MOONGATE_PAIR` in the console
+2. Open `http://<your-pi-ip>/moongate-pair.html` on your PC — a QR code will appear
+3. In the Moongate app, tap **+** → **Scan QR** and point your camera at the QR code
+4. Done — your printer appears in the dashboard
+
+**No PC handy?** You can also type the code shown in the Klipper console (`GATE-XXXX-XXXX`) directly into the app.
+
+> The QR code automatically includes both your local IP and the Cloudflare tunnel URL. The app stores both — it uses local when you're home and the tunnel when you're away. If you installed before the remote URL was available, re-run `MOONGATE_PAIR` and re-scan to pick it up.
+
+---
+
+### Step 4 — Uninstall
+
+To completely remove Moongate from your Pi, SSH in and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/uninstall.sh | bash
+```
+
+This removes:
+- The `moongate-tunnel` systemd service
+- The Moongate Moonraker plugin
+- The `~/moongate` repository clone
+- `~/.config/moongate` (tokens and secret key)
+- The `[moongate]` and `[update_manager moongate]` entries from `moonraker.conf`
+- The `MOONGATE_PAIR` macro from your Klipper config
+- The `moongate-pair.html` page from Mainsail
+
+`cloudflared` itself is left in place as it may be used by other services. To remove it too: `sudo apt remove cloudflared`
+
+Don't forget to uninstall the Moongate app from your phone as well.
+
+---
+
+## Screenshots
+
+### Dashboard & printer view
+
+| Dashboard | Mainsail in-app | Pairing |
+|---|---|---|
+| <img src="docs/screenshots/dashboard.png" alt="Dashboard"/> | <img src="docs/screenshots/printer-mainsail.png" alt="Mainsail UI"/> | <img src="docs/screenshots/pairing.png" alt="Pairing screen"/> |
+| Live webcam tiles, real-time progress, temperatures, chamber sensor, connection badge per printer | Tap any tile to open the full Mainsail / Fluidd web UI inside the app, with auto local/remote switching | Scan the QR from `moongate-pair.html`, or type the `GATE-XXXX-XXXX` code by hand |
+
+### Make it yours — Custom theme
+
+| Colour editor | Picker sheet |
+|---|---|
+| <img src="docs/screenshots/custom-theme.png" alt="Custom theme editor"/> | <img src="docs/screenshots/custom-theme-picker.png" alt="Colour picker"/> |
+| Five slots: Accent, Page background, Cards & tiles, Text, Error. Live preview tile at the top updates as you tweak | HEX input (validated as you type) plus a 24-colour palette of curated presets. Tap a swatch and the whole app re-themes instantly |
+
+### Settings drawer
+
+The drawer scrolls — two captures to show everything.
+
+| Top of menu | Bottom of menu |
+|---|---|
+| <img src="docs/screenshots/drawer.png" alt="Drawer — top"/> | <img src="docs/screenshots/drawer-bottom.png" alt="Drawer — bottom"/> |
+| Printer management, config import/export, theme selector (incl. the new **Custom** option which jumps straight into the colour editor) | Font scale slider, 1/2/3-column dashboard layout, landscape rotation toggle, Settings shortcut, current version |
 
 ---
 
@@ -134,125 +227,20 @@ If you want to verify any of the above:
 
 ---
 
-## Setup
+## What it does
 
-### Step 1 — Install the plugin on your Raspberry Pi
-
-SSH into your Pi and run:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh | bash
-```
-
-> **Non-standard HTTP port?** Stock KIAUH / MainsailOS serves Moonraker on port 80 — the installer's default. If your nginx is on a different port (e.g. port 80 is taken by another service, or you're running Moonraker on `8080`), tell the installer:
->
-> ```bash
-> # Piped install
-> MOONGATE_PORT=8080 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh)"
->
-> # Or locally:
-> curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh -o install.sh
-> bash install.sh --port 8080
-> ```
->
-> The cloudflared tunnel and the QR pair URL will both use that port. In the app's pair screen, the **Port** field next to the IP is the matching control — leave it blank for 80, fill it in if you used something else here.
-
-This will:
-- Clone the Moongate repo to `~/moongate` and symlink the plugin into Moonraker
-- Register Moongate with Moonraker's update manager (visible in Mainsail → Software Updates)
-- Deploy the QR pairing page to Mainsail
-- Install `cloudflared` and start the remote-access tunnel as a systemd service
-- Restart Moonraker and Klipper
-
-At the end you'll see output like:
-
-```
-  Updates   : Mainsail → Software Updates → Moongate
-  Pairing   : http://192.168.1.x/moongate-pair.html
-  Tunnel    : https://racing-partly-mouse.trycloudflare.com ✓
-  Subdomain : racing-partly-mouse  (paste into app tunnel field)
-```
-
-> **Requirements:** Raspberry Pi running Klipper + Moonraker + Mainsail or Fluidd (standard KIAUH / MainsailOS / FluiddPI setup). Tested on aarch64 (Pi 4/5) and armv7l (Pi 3).
-
-> **Keeping it updated:** After the initial install, future plugin updates appear automatically in **Mainsail → Software Updates → Moongate** — no SSH needed.
-
----
-
-### Step 2 — Install the app
-
-[Download Moongate-v0.2.21.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.21.apk) and install it on your Android phone.
-
-On first launch the app will ask you to add a printer.
-
----
-
-### Step 3 — Pair
-
-1. In Klipper/Mainsail, run the macro `MOONGATE_PAIR` in the console
-2. Open `http://<your-pi-ip>/moongate-pair.html` on your PC — a QR code will appear
-3. In the Moongate app, tap **+** → **Scan QR** and point your camera at the QR code
-4. Done — your printer appears in the dashboard
-
-**No PC handy?** You can also type the code shown in the Klipper console (`GATE-XXXX-XXXX`) directly into the app.
-
----
-
-### Step 4 — Uninstall
-
-To completely remove Moongate from your Pi, SSH in and run:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/uninstall.sh | bash
-```
-
-This removes:
-- The `moongate-tunnel` systemd service
-- The Moongate Moonraker plugin
-- The `~/moongate` repository clone
-- `~/.config/moongate` (tokens and secret key)
-- The `[moongate]` and `[update_manager moongate]` entries from `moonraker.conf`
-- The `MOONGATE_PAIR` macro from your Klipper config
-- The `moongate-pair.html` page from Mainsail
-
-`cloudflared` itself is left in place as it may be used by other services. To remove it too: `sudo apt remove cloudflared`
-
-Don't forget to uninstall the Moongate app from your phone as well.
-
----
-
-## Pairing the remote (Cloudflare) URL
-
-The QR code from `moongate-pair.html` automatically includes both your local IP and the Cloudflare tunnel URL. When you scan it, the app stores both — it uses local when you're home and the tunnel when you're away.
-
-If you installed before the remote URL was available, re-run `MOONGATE_PAIR` and re-scan to pick it up.
-
----
-
-## Screenshots
-
-### Dashboard & printer view
-
-| Dashboard | Mainsail in-app | Pairing |
-|---|---|---|
-| <img src="docs/screenshots/dashboard.png" alt="Dashboard"/> | <img src="docs/screenshots/printer-mainsail.png" alt="Mainsail UI"/> | <img src="docs/screenshots/pairing.png" alt="Pairing screen"/> |
-| Live webcam tiles, real-time progress, temperatures, chamber sensor, connection badge per printer | Tap any tile to open the full Mainsail / Fluidd web UI inside the app, with auto local/remote switching | Scan the QR from `moongate-pair.html`, or type the `GATE-XXXX-XXXX` code by hand |
-
-### Make it yours — Custom theme
-
-| Colour editor | Picker sheet |
+| Feature | Detail |
 |---|---|
-| <img src="docs/screenshots/custom-theme.png" alt="Custom theme editor"/> | <img src="docs/screenshots/custom-theme-picker.png" alt="Colour picker"/> |
-| Five slots: Accent, Page background, Cards & tiles, Text, Error. Live preview tile at the top updates as you tweak | HEX input (validated as you type) plus a 24-colour palette of curated presets. Tap a swatch and the whole app re-themes instantly |
-
-### Settings drawer
-
-The drawer scrolls — two captures to show everything.
-
-| Top of menu | Bottom of menu |
-|---|---|
-| <img src="docs/screenshots/drawer.png" alt="Drawer — top"/> | <img src="docs/screenshots/drawer-bottom.png" alt="Drawer — bottom"/> |
-| Printer management, config import/export, theme selector (incl. the new **Custom** option which jumps straight into the colour editor) | Font scale slider, 1/2/3-column dashboard layout, landscape rotation toggle, Settings shortcut, current version |
+| **Dashboard** | See all your printers at a glance — live webcam thumbnails refreshing every second, print progress (matched to Mainsail's slicer-time calculation), temperatures, chamber sensor, and status |
+| **Print controls** | Pause, resume, and stop prints directly from the dashboard tile. Stop requires a second press to confirm. Idle / errored printers get a one-tap firmware-restart button |
+| **Full Mainsail / Fluidd UI** | Tap any tile to open the complete web UI in an embedded browser. Auto-detects whichever you run |
+| **Auto local / remote** | Connects over your home WiFi first; if unreachable, automatically falls back to the Cloudflare tunnel within 3 seconds. Remembers which path works per session |
+| **Network-aware** | At cold launch and on every resume, the app checks the phone's subnet against each printer's. On a different network it skips the local probe entirely — no 3-second timeout, no chance of latching onto an unrelated device on a stranger LAN |
+| **Secure pairing** | One Klipper console command generates a time-limited QR + code. JWT-based auth, no port forwarding, no static IP |
+| **Auto-discovery** | Chamber temperature sensors are auto-detected regardless of how they're named in `printer.cfg` (`[temperature_sensor chamber]`, `[heater_generic CHAMBER]`, `[temperature_fan Chamber_Temp]`, etc.) |
+| **In-app updates** | The app checks for new versions on launch and offers a one-tap download when one is available |
+| **Customisable** | System / Light / Dark / **Custom** themes (the Custom mode lets you pick HEX values for accent, page background, cards, text and error from a colour editor with a 24-swatch palette), 1–3 column dashboard grid, font scale slider, optional landscape rotation |
+| **Import / export** | One-tap config backup to clipboard; restore after a reinstall |
 
 ---
 
@@ -261,7 +249,7 @@ The drawer scrolls — two captures to show everything.
 ```
 moongate/
 ├── APK/                    # Pre-built release APKs + version manifest
-│   ├── Moongate-v0.2.21.apk
+│   ├── Moongate-v0.2.22.apk
 │   ├── Moongate-latest.apk
 │   └── latest_version.json
 ├── docs/
