@@ -201,33 +201,58 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               .labelMedium
                               ?.copyWith(color: Colors.white54)),
                     ),
-                    RadioGroup<ThemeMode>(
+                    RadioGroup<AppThemeMode>(
                       groupValue: themeMode,
                       onChanged: (v) {
-                        if (v != null) {
-                          ref.read(themeModeProvider.notifier).set(v);
+                        if (v == null) return;
+                        ref.read(themeModeProvider.notifier).set(v);
+                        // Selecting "Custom" should jump straight into the
+                        // colour editor — saves the user a second tap and
+                        // makes the option discoverable in one click.
+                        if (v == AppThemeMode.custom) {
+                          Navigator.pop(context);
+                          context.push('/theme/custom');
                         }
                       },
                       child: const Column(
                         children: [
                           RadioListTile(
-                            value: ThemeMode.system,
+                            value: AppThemeMode.system,
                             title: Text('System default'),
                             secondary: Icon(Icons.brightness_auto),
                           ),
                           RadioListTile(
-                            value: ThemeMode.dark,
+                            value: AppThemeMode.dark,
                             title: Text('Dark'),
                             secondary: Icon(Icons.dark_mode),
                           ),
                           RadioListTile(
-                            value: ThemeMode.light,
+                            value: AppThemeMode.light,
                             title: Text('Light'),
                             secondary: Icon(Icons.light_mode),
+                          ),
+                          RadioListTile(
+                            value: AppThemeMode.custom,
+                            title: Text('Custom'),
+                            secondary: Icon(Icons.palette_outlined),
                           ),
                         ],
                       ),
                     ),
+                    // Always offer a way back into the editor — handy when
+                    // Custom is already selected and the user just wants to
+                    // tweak a colour without re-tapping the radio.
+                    if (themeMode == AppThemeMode.custom)
+                      ListTile(
+                        leading: const Icon(Icons.tune),
+                        title: const Text('Customise colours'),
+                        subtitle: const Text(
+                            'Edit the five theme slots — HEX or palette'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/theme/custom');
+                        },
+                      ),
 
                     const Divider(),
 

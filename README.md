@@ -15,9 +15,9 @@ Moongate is a free, open-source Android app that gives you a **full remote contr
 
 ## Download
 
-**Current version: v0.2.20**
+**Current version: v0.2.21**
 
-**[⬇ Download Moongate-v0.2.20.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.20.apk)**
+**[⬇ Download Moongate-v0.2.21.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.21.apk)**
 
 > Android only for now. Tap the link above to download directly to your phone.
 > Enable **Install from unknown sources** for your browser or file manager before installing.
@@ -38,7 +38,7 @@ All releases are in the [APK folder](https://github.com/PEEKYPAUL/Moongate/tree/
 | **Secure pairing** | One Klipper console command generates a time-limited QR + code. JWT-based auth, no port forwarding, no static IP |
 | **Auto-discovery** | Chamber temperature sensors are auto-detected regardless of how they're named in `printer.cfg` (`[temperature_sensor chamber]`, `[heater_generic CHAMBER]`, `[temperature_fan Chamber_Temp]`, etc.) |
 | **In-app updates** | The app checks for new versions on launch and offers a one-tap download when one is available |
-| **Customisable** | Light / dark / system theme, 1–3 column dashboard grid, font scale slider, optional landscape rotation |
+| **Customisable** | System / Light / Dark / **Custom** themes (the Custom mode lets you pick HEX values for accent, page background, cards, text and error from a colour editor with a 24-swatch palette), 1–3 column dashboard grid, font scale slider, optional landscape rotation |
 | **Import / export** | One-tap config backup to clipboard; restore after a reinstall |
 
 ---
@@ -92,7 +92,7 @@ At the end you'll see output like:
 
 ### Step 2 — Install the app
 
-[Download Moongate-v0.2.20.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.20.apk) and install it on your Android phone.
+[Download Moongate-v0.2.21.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.2.21.apk) and install it on your Android phone.
 
 On first launch the app will ask you to add a printer.
 
@@ -142,10 +142,28 @@ If you installed before the remote URL was available, re-run `MOONGATE_PAIR` and
 
 ## Screenshots
 
-| Dashboard | Mainsail in-app | Pairing | Settings drawer |
-|---|---|---|---|
-| <img src="docs/screenshots/dashboard.png" alt="Dashboard"/> | <img src="docs/screenshots/printer-mainsail.png" alt="Mainsail UI"/> | <img src="docs/screenshots/pairing.png" alt="Pairing screen"/> | <img src="docs/screenshots/drawer.png" alt="Settings drawer"/> |
-| Live webcam tiles, real-time progress, temperatures, chamber sensor, connection badge per printer | Tap any tile to open the full Mainsail / Fluidd web UI inside the app, with auto local/remote switching | Scan the QR from `moongate-pair.html`, or type the `GATE-XXXX-XXXX` code by hand | Theme, font scale, dashboard column count, landscape rotation, config import/export |
+### Dashboard & printer view
+
+| Dashboard | Mainsail in-app | Pairing |
+|---|---|---|
+| <img src="docs/screenshots/dashboard.png" alt="Dashboard"/> | <img src="docs/screenshots/printer-mainsail.png" alt="Mainsail UI"/> | <img src="docs/screenshots/pairing.png" alt="Pairing screen"/> |
+| Live webcam tiles, real-time progress, temperatures, chamber sensor, connection badge per printer | Tap any tile to open the full Mainsail / Fluidd web UI inside the app, with auto local/remote switching | Scan the QR from `moongate-pair.html`, or type the `GATE-XXXX-XXXX` code by hand |
+
+### Make it yours — Custom theme
+
+| Colour editor | Picker sheet |
+|---|---|
+| <img src="docs/screenshots/custom-theme.png" alt="Custom theme editor"/> | <img src="docs/screenshots/custom-theme-picker.png" alt="Colour picker"/> |
+| Five slots: Accent, Page background, Cards & tiles, Text, Error. Live preview tile at the top updates as you tweak | HEX input (validated as you type) plus a 24-colour palette of curated presets. Tap a swatch and the whole app re-themes instantly |
+
+### Settings drawer
+
+The drawer scrolls — two captures to show everything.
+
+| Top of menu | Bottom of menu |
+|---|---|
+| <img src="docs/screenshots/drawer.png" alt="Drawer — top"/> | <img src="docs/screenshots/drawer-bottom.png" alt="Drawer — bottom"/> |
+| Printer management, config import/export, theme selector (incl. the new **Custom** option which jumps straight into the colour editor) | Font scale slider, 1/2/3-column dashboard layout, landscape rotation toggle, Settings shortcut, current version |
 
 ---
 
@@ -154,7 +172,7 @@ If you installed before the remote URL was available, re-run `MOONGATE_PAIR` and
 ```
 moongate/
 ├── APK/                    # Pre-built release APKs + version manifest
-│   ├── Moongate-v0.2.20.apk
+│   ├── Moongate-v0.2.21.apk
 │   ├── Moongate-latest.apk
 │   └── latest_version.json
 ├── docs/
@@ -222,6 +240,7 @@ flutter build apk --release
 
 | Version | Changes |
 |---|---|
+| **v0.2.21** | Custom theme: new fourth radio option in the drawer (System / Dark / Light / **Custom**) opens a full-screen colour editor. Five slots — Accent, Page background, Cards & tiles, Text, Error — each tappable to a modal sheet with HEX input + 24-colour preset palette. Live preview tile inside the editor, instant theme application across the app, reset-to-defaults action |
 | **v0.2.20** | Camera scanner fix #2: add ProGuard rules for ML Kit + mobile_scanner so R8 doesn't strip the bundled barcode scanner classes (the mobile_scanner consumer rule had a single-dot wildcard bug that only matched the root package) |
 | **v0.2.19** | Upgrade `mobile_scanner` 5.2.3 → 7.x — fixes the Samsung One UI `analysis.resolutionInfo!!` NPE. CameraX bumped to 1.5.3 |
 | **v0.2.18** | Network-aware connection: subnet check at cold launch & on app resume pre-decides "use tunnel" for any printer whose LAN isn't reachable from the current WiFi. Symmetric `onHttpError` handling in the printer WebView so a 4xx from an unrelated device on a stranger LAN doesn't trigger the error overlay |

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'providers/custom_theme_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/printer_registry.dart';
 import 'services/vpn_service.dart';
@@ -18,6 +19,7 @@ void main() async {
 
   final container = ProviderContainer();
   await container.read(themeModeProvider.notifier).load();
+  await container.read(customThemeProvider.notifier).load();
   await container.read(fontScaleProvider.notifier).load();
   await container.read(gridColumnsProvider.notifier).load();
   await container.read(allowRotationProvider.notifier).load();

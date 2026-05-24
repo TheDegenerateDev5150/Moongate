@@ -1,0 +1,534 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../providers/custom_theme_provider.dart';
+
+/// Full-screen colour editor for the Custom theme.
+///
+/// Five slots cover every meaningful surface in the app — see
+/// [CustomTheme] for the full breakdown.  Each row is a tappable swatch
+/// that opens a modal bottom sheet containing:
+///
+///   • a live-preview swatch
+///   • a HEX input field (case-insensitive, optional leading `#`)
+///   • a grid of 24 hand-picked preset colours
+///
+/// Changes apply instantly via Riverpod — no save button, no preview-vs-
+/// apply mode.  A "Reset to defaults" action in the app bar reverts all
+/// five slots to the seeded-purple-dark palette.
+class CustomThemeScreen extends ConsumerWidget {
+  const CustomThemeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme  = ref.watch(customThemeProvider);
+    final notifier = ref.read(customThemeProvider.notifier);
+    final cs = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Custom theme'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.restart_alt),
+            tooltip: 'Reset to defaults',
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Reset custom theme?'),
+                  content: const Text(
+                      'All five colour slots will be reverted to the default '
+                      'purple-on-dark palette.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Reset'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true) await notifier.reset();
+            },
+          ),
+        ],
+      ),
+      body: ListView(
+        children: [
+          // ── Live preview ────────────────────────────────────────────────
+          // Shows a stylised dashboard tile rendered with the *current*
+          // theme so users can see how their picks interact before they
+          // back out to the actual dashboard.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(
+              'Preview',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: cs.onSurface.withValues(alpha: 0.55),
+                  ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: _PreviewTile(theme: theme),
+          ),
+
+          const Divider(height: 1),
+
+          // ── Colour slots ────────────────────────────────────────────────
+          _ColourRow(
+            label: 'Accent',
+            description: 'Buttons, FAB, progress bars, links',
+            colour: theme.accent,
+            onPick: (c) => notifier.setAccent(c),
+          ),
+          _ColourRow(
+            label: 'Page background',
+            description: 'Behind every screen',
+            colour: theme.background,
+            onPick: (c) => notifier.setBackground(c),
+          ),
+          _ColourRow(
+            label: 'Cards & tiles',
+            description: 'Dashboard tiles, sheets, drawer',
+            colour: theme.surface,
+            onPick: (c) => notifier.setSurface(c),
+          ),
+          _ColourRow(
+            label: 'Text',
+            description: 'Body and heading text on surfaces',
+            colour: theme.text,
+            onPick: (c) => notifier.setText(c),
+          ),
+          _ColourRow(
+            label: 'Error / Stop',
+            description: 'Destructive actions, error overlays',
+            colour: theme.error,
+            onPick: (c) => notifier.setError(c),
+          ),
+
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── A single colour-slot row ────────────────────────────────────────────────
+
+class _ColourRow extends StatelessWidget {
+  final String         label;
+  final String         description;
+  final Color          colour;
+  final ValueChanged<Color> onPick;
+
+  const _ColourRow({
+    required this.label,
+    required this.description,
+    required this.colour,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => _openPicker(context),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Row(
+          children: [
+            // Big swatch
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: colour,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: cs.onSurface.withValues(alpha: 0.15),
+                  width: 1,
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cs.onSurface.withValues(alpha: 0.55),
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    CustomTheme.hexOf(colour),
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                      color: cs.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right,
+                color: cs.onSurface.withValues(alpha: 0.4)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openPicker(BuildContext context) async {
+    final picked = await showModalBottomSheet<Color>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _ColourPickerSheet(initial: colour, label: label),
+    );
+    if (picked != null) onPick(picked);
+  }
+}
+
+// ─── Bottom-sheet colour picker ──────────────────────────────────────────────
+
+class _ColourPickerSheet extends StatefulWidget {
+  final Color  initial;
+  final String label;
+
+  const _ColourPickerSheet({required this.initial, required this.label});
+
+  @override
+  State<_ColourPickerSheet> createState() => _ColourPickerSheetState();
+}
+
+class _ColourPickerSheetState extends State<_ColourPickerSheet> {
+  late Color _current = widget.initial;
+  late final TextEditingController _hexController =
+      TextEditingController(text: CustomTheme.hexOf(widget.initial).substring(1));
+  String? _hexError;
+
+  // A curated palette covering greys, accents and bright colours.
+  // Two rows of greys, then warm/cool spectrum, then a couple of brights.
+  static const List<Color> _presets = [
+    // Greys / neutrals
+    Color(0xFF000000), Color(0xFF121212), Color(0xFF1E1E1E),
+    Color(0xFF424242), Color(0xFF757575), Color(0xFFBDBDBD),
+    Color(0xFFEEEEEE), Color(0xFFFFFFFF),
+    // Reds, oranges, yellows
+    Color(0xFFE53935), Color(0xFFCF6679), Color(0xFFFF7043),
+    Color(0xFFFFA726), Color(0xFFFFCA28), Color(0xFFD4AF37),
+    // Greens
+    Color(0xFF66BB6A), Color(0xFF26A69A), Color(0xFF00897B),
+    // Blues
+    Color(0xFF42A5F5), Color(0xFF1E88E5), Color(0xFF1A237E),
+    // Purples / pinks
+    Color(0xFF6C63FF), Color(0xFF7E57C2), Color(0xFFAB47BC),
+    Color(0xFFEC407A),
+  ];
+
+  @override
+  void dispose() {
+    _hexController.dispose();
+    super.dispose();
+  }
+
+  void _apply(Color c) {
+    setState(() {
+      _current = c;
+      _hexController.text = CustomTheme.hexOf(c).substring(1);
+      _hexError = null;
+    });
+  }
+
+  void _onHexChanged(String raw) {
+    final parsed = CustomTheme.parseHex(raw);
+    setState(() {
+      if (parsed == null) {
+        _hexError = raw.replaceFirst('#', '').length == 6
+            ? 'Not a valid hex colour'
+            : null; // don't yell while user is still typing
+      } else {
+        _current = parsed;
+        _hexError = null;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: cs.onSurface.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(widget.label, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+
+            // Big live-preview swatch
+            Center(
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: _current,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: cs.onSurface.withValues(alpha: 0.2),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _current.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // HEX input
+            Row(
+              children: [
+                Text(
+                  '#',
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 22,
+                    color: cs.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: TextField(
+                    controller: _hexController,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 18,
+                      letterSpacing: 2,
+                    ),
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      hintText: 'RRGGBB',
+                      hintStyle: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.3),
+                        letterSpacing: 2,
+                      ),
+                      errorText: _hexError,
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                          RegExp(r'[0-9a-fA-F#]')),
+                      LengthLimitingTextInputFormatter(7),
+                    ],
+                    onChanged: _onHexChanged,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Preset palette grid
+            Text(
+              'Presets',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: cs.onSurface.withValues(alpha: 0.55),
+                  ),
+            ),
+            const SizedBox(height: 8),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 8,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              children: _presets.map((p) {
+                final selected = p.toARGB32() == _current.toARGB32();
+                return InkWell(
+                  onTap: () => _apply(p),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: p,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: selected
+                            ? cs.primary
+                            : cs.onSurface.withValues(alpha: 0.15),
+                        width: selected ? 3 : 1,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Done
+            FilledButton(
+              onPressed: _hexError != null
+                  ? null
+                  : () => Navigator.pop(context, _current),
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Mini preview tile ───────────────────────────────────────────────────────
+//
+// Renders a stylised dashboard tile so the user sees how the colour choices
+// actually interact: accent on a progress bar, surface as the card body,
+// text on top, accent again on the FAB-style chip, and the error/stop button.
+
+class _PreviewTile extends StatelessWidget {
+  final CustomTheme theme;
+
+  const _PreviewTile({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.text.withValues(alpha: 0.15)),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.surface,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: theme.accent,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Sample printer',
+                  style: TextStyle(
+                    color: theme.text,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                const Spacer(),
+                Icon(Icons.wifi, color: theme.accent, size: 14),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Printing',
+                              style: TextStyle(
+                                  color: theme.accent, fontSize: 11)),
+                          Text('42.0%',
+                              style: TextStyle(
+                                  color: theme.accent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: LinearProgressIndicator(
+                          value: 0.42,
+                          minHeight: 6,
+                          backgroundColor:
+                              theme.text.withValues(alpha: 0.15),
+                          color: theme.accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: theme.error.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(Icons.stop_rounded,
+                      size: 18, color: theme.error),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '200°C / 60°C',
+              style: TextStyle(
+                color: theme.text.withValues(alpha: 0.55),
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
