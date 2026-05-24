@@ -566,9 +566,14 @@ class PrinterStatusService {
       // very first frame on the next launch — before any poll completes.
       final flipH    = (moongateResult['webcam_flip_horizontal'] as bool?) ?? false;
       final flipV    = (moongateResult['webcam_flip_vertical']   as bool?) ?? false;
-      final rotation = (moongateResult['webcam_rotation'] as num?)?.toInt() ?? 0;
+      final rotation = (moongateResult['webcam_rotation']    as num?)?.toInt() ?? 0;
+      final fps      = (moongateResult['webcam_target_fps']  as num?)?.toInt() ?? 15;
       PrinterRegistry.instance.updateWebcamInfo(
-        config.id, flipH: flipH, flipV: flipV, rotation: rotation,
+        config.id,
+        flipH:     flipH,
+        flipV:     flipV,
+        rotation:  rotation,
+        targetFps: fps,
       ).ignore();
     }
 
@@ -590,9 +595,12 @@ class PrinterStatusService {
       webcamSnapshotPath: moongateResult?['webcam_snapshot_path'] as String?,
       // Webcam display transforms — match whatever Mainsail has configured.
       // Only available via the Moongate endpoint; fall back to no-transform.
-      webcamFlipH:    (moongateResult?['webcam_flip_horizontal'] as bool?) ?? false,
-      webcamFlipV:    (moongateResult?['webcam_flip_vertical']   as bool?) ?? false,
-      webcamRotation: (moongateResult?['webcam_rotation'] as num?)?.toInt() ?? 0,
+      webcamFlipH:     (moongateResult?['webcam_flip_horizontal'] as bool?) ?? false,
+      webcamFlipV:     (moongateResult?['webcam_flip_vertical']   as bool?) ?? false,
+      webcamRotation:  (moongateResult?['webcam_rotation']  as num?)?.toInt() ?? 0,
+      // Crowsnest / Mainsail target FPS — drives the tile's snapshot poll
+      // interval.  Default 15 if absent (stock Crowsnest setup).
+      webcamTargetFps: (moongateResult?['webcam_target_fps'] as num?)?.toInt() ?? 15,
     );
   }
 }

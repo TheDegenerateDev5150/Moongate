@@ -49,16 +49,17 @@ class _PrinterTileState extends State<PrinterTile> {
     // Use 'connecting' rather than 'offline' so the badge says "Connecting"
     // during the first poll instead of immediately flashing "Offline".
     _status = PrinterStatus(
-      state:          'connecting',
-      progress:       0,
-      hotendTemp:     0,
-      hotendTarget:   0,
-      bedTemp:        0,
-      bedTarget:      0,
-      connection:     PrinterConnection.offline,
-      webcamFlipH:    widget.printer.webcamFlipH,
-      webcamFlipV:    widget.printer.webcamFlipV,
-      webcamRotation: widget.printer.webcamRotation,
+      state:           'connecting',
+      progress:        0,
+      hotendTemp:      0,
+      hotendTarget:    0,
+      bedTemp:         0,
+      bedTarget:       0,
+      connection:      PrinterConnection.offline,
+      webcamFlipH:     widget.printer.webcamFlipH,
+      webcamFlipV:     widget.printer.webcamFlipV,
+      webcamRotation:  widget.printer.webcamRotation,
+      webcamTargetFps: widget.printer.webcamTargetFps,
     );
     _statusService = PrinterStatusService(widget.printer);
     _controlService = PrintControlService(widget.printer);
@@ -182,9 +183,10 @@ class _PrinterTileState extends State<PrinterTile> {
                     printer: widget.printer,
                     connection: _status.connection,
                     webcamSnapshotPath: _status.webcamSnapshotPath,
-                    webcamFlipH:    _status.webcamFlipH,
-                    webcamFlipV:    _status.webcamFlipV,
-                    webcamRotation: _status.webcamRotation,
+                    webcamFlipH:     _status.webcamFlipH,
+                    webcamFlipV:     _status.webcamFlipV,
+                    webcamRotation:  _status.webcamRotation,
+                    webcamTargetFps: _status.webcamTargetFps,
                     tunnelUrlUpdates: _statusService.tunnelUrlUpdates,
                     uiType: _uiType,
                   ),
@@ -501,6 +503,8 @@ class _WebcamSnapshot extends StatefulWidget {
   final bool              webcamFlipH;
   final bool              webcamFlipV;
   final int               webcamRotation; // 0 | 90 | 180 | 270
+  /// Crowsnest / Mainsail Target FPS — drives the snapshot-poll cadence.
+  final int               webcamTargetFps;
   final Stream<String>?   tunnelUrlUpdates;
   /// 'mainsail' | 'fluidd' | null — shown as logo when webcam unavailable.
   final String?           uiType;
@@ -509,9 +513,10 @@ class _WebcamSnapshot extends StatefulWidget {
     required this.printer,
     required this.connection,
     this.webcamSnapshotPath,
-    this.webcamFlipH    = false,
-    this.webcamFlipV    = false,
-    this.webcamRotation = 0,
+    this.webcamFlipH     = false,
+    this.webcamFlipV     = false,
+    this.webcamRotation  = 0,
+    this.webcamTargetFps = 15,
     this.tunnelUrlUpdates,
     this.uiType,
   });
@@ -542,19 +547,26 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
   }
 
   void _startTicker() {
-    // 50 ms tick = 20 fps target for the snapshot refresh.
-    //
-    // Effective frame rate is bounded by whichever is slower:
-    //   • this timer
-    //   • the time the Pi takes to capture + encode + transmit one JPEG
+    // Tick interval is derived from the Crowsnest / Mainsail "Target FPS"
+    // the user configured on the Pi.  If the user set 15 fps server-side,
+    // we tick every ~67 ms; 30 fps → ~33 ms; 5 fps → 200 ms.  This way the
+    // displayed rate matches what the server is actually producing, instead
+    // of either over-polling a slow stream or under-polling a fast one.
     //
     // `Image.network` with `gaplessPlayback: true` keeps showing the last
     // decoded frame until the new one is fully decoded, so the tile never
-    // flashes black between fetches even when the network leg is the slow
-    // step.  On a tunnel connection the snapshot latency typically caps the
-    // real rate well below 20 fps; on LAN it tracks the timer closely.
+    // flashes black between fetches even when the network leg is slower
+    // than the timer.  On a tunnel connection the snapshot latency usually
+    // caps the effective rate well below the target; on LAN it tracks.
+    //
+    // The widget rebuilds (e.g. when status updates change webcamTargetFps)
+    // restart this loop because of the `mounted` check + the closure
+    // capturing `widget.webcamTargetFps` is re-evaluated on every iteration.
     Future.doWhile(() async {
-      await Future.delayed(const Duration(milliseconds: 50));
+      // Clamp defensively in case a config from the wire has a junk value.
+      final fps = widget.webcamTargetFps.clamp(1, 60);
+      final intervalMs = (1000 / fps).round();
+      await Future.delayed(Duration(milliseconds: intervalMs));
       if (!mounted) return false;
       setState(() => _tick++);
       return true;

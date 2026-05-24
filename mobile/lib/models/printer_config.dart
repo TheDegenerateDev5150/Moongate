@@ -32,6 +32,12 @@ class PrinterConfig {
   final bool webcamFlipV;
   final int  webcamRotation; // 0 | 90 | 180 | 270
 
+  /// Crowsnest / Mainsail "Target FPS" for this printer's webcam.  The tile's
+  /// snapshot poll uses (1000 / fps) ms as its tick interval so the displayed
+  /// rate matches whatever the user configured server-side.  Persisted so the
+  /// very first frame after a cold launch already uses the right rate.
+  final int webcamTargetFps;
+
   const PrinterConfig({
     required this.id,
     required this.name,
@@ -42,6 +48,7 @@ class PrinterConfig {
     this.webcamFlipH     = false,
     this.webcamFlipV     = false,
     this.webcamRotation  = 0,
+    this.webcamTargetFps = 15,
   });
 
   PrinterConfig copyWith({
@@ -51,43 +58,49 @@ class PrinterConfig {
     bool?   webcamFlipH,
     bool?   webcamFlipV,
     int?    webcamRotation,
+    int?    webcamTargetFps,
   }) =>
       PrinterConfig(
-        id:             id,
-        name:           name           ?? this.name,
-        host:           host,
-        token:          token,
-        remoteHost:     remoteHost     ?? this.remoteHost,
-        preferRemote:   preferRemote   ?? this.preferRemote,
-        webcamFlipH:    webcamFlipH    ?? this.webcamFlipH,
-        webcamFlipV:    webcamFlipV    ?? this.webcamFlipV,
-        webcamRotation: webcamRotation ?? this.webcamRotation,
+        id:              id,
+        name:            name            ?? this.name,
+        host:            host,
+        token:           token,
+        remoteHost:      remoteHost      ?? this.remoteHost,
+        preferRemote:    preferRemote    ?? this.preferRemote,
+        webcamFlipH:     webcamFlipH     ?? this.webcamFlipH,
+        webcamFlipV:     webcamFlipV     ?? this.webcamFlipV,
+        webcamRotation:  webcamRotation  ?? this.webcamRotation,
+        webcamTargetFps: webcamTargetFps ?? this.webcamTargetFps,
       );
 
   Map<String, dynamic> toJson() => {
-        'id':             id,
-        'name':           name,
-        'host':           host,
-        'token':          token,
+        'id':              id,
+        'name':            name,
+        'host':            host,
+        'token':           token,
         if (remoteHost != null) 'remoteHost': remoteHost,
-        'preferRemote':   preferRemote,
-        'webcamFlipH':    webcamFlipH,
-        'webcamFlipV':    webcamFlipV,
-        'webcamRotation': webcamRotation,
+        'preferRemote':    preferRemote,
+        'webcamFlipH':     webcamFlipH,
+        'webcamFlipV':     webcamFlipV,
+        'webcamRotation':  webcamRotation,
+        'webcamTargetFps': webcamTargetFps,
       };
 
   factory PrinterConfig.fromJson(Map<String, dynamic> j) => PrinterConfig(
-        id:             j['id']           as String,
-        name:           j['name']         as String,
-        host:           j['host']         as String,
-        token:          j['token']        as String,
-        remoteHost:     j['remoteHost']   as String?,
-        preferRemote:   j['preferRemote'] as bool? ?? false,
+        id:              j['id']           as String,
+        name:            j['name']         as String,
+        host:            j['host']         as String,
+        token:           j['token']        as String,
+        remoteHost:      j['remoteHost']   as String?,
+        preferRemote:    j['preferRemote'] as bool? ?? false,
         // Webcam fields added in v0.1.7 — default to no transform so old
         // saved configs (without these keys) still load correctly.
-        webcamFlipH:    j['webcamFlipH']    as bool? ?? false,
-        webcamFlipV:    j['webcamFlipV']    as bool? ?? false,
-        webcamRotation: j['webcamRotation'] as int?  ?? 0,
+        webcamFlipH:     j['webcamFlipH']    as bool? ?? false,
+        webcamFlipV:     j['webcamFlipV']    as bool? ?? false,
+        webcamRotation:  j['webcamRotation'] as int?  ?? 0,
+        // Added in v0.2.25 — default 15 fps matches Crowsnest / mjpg-streamer
+        // stock setup, so configs saved before this field exist still behave.
+        webcamTargetFps: j['webcamTargetFps'] as int? ?? 15,
       );
 
   static List<PrinterConfig> listFromJson(String raw) {
@@ -132,6 +145,11 @@ class PrinterStatus {
   final bool   webcamFlipV;    // mirror vertically
   final int    webcamRotation; // clockwise degrees: 0 | 90 | 180 | 270
 
+  /// Crowsnest / Mainsail "Target FPS" — drives the snapshot-poll interval
+  /// in the dashboard tile.  Clamped server-side to [1, 60]; defaults to 15
+  /// (stock Crowsnest / mjpg-streamer) when not configured.
+  final int webcamTargetFps;
+
   const PrinterStatus({
     required this.state,
     required this.progress,
@@ -147,6 +165,7 @@ class PrinterStatus {
     this.webcamFlipH    = false,
     this.webcamFlipV    = false,
     this.webcamRotation = 0,
+    this.webcamTargetFps = 15,
   });
 
   bool get isPrinting => state == 'printing' || state == 'paused';

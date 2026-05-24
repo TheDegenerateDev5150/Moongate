@@ -870,11 +870,15 @@ class MoongatePlugin:
         from tornado.httpclient import HTTPRequest
 
         _default_path = "/webcam/?action=snapshot"
+        # 15 fps is the Crowsnest / mjpg-streamer default for a stock install,
+        # so it's the safest fallback when no target_fps is configured.
+        _default_fps = 15
         _defaults = {
             "snapshot_path":   _default_path,
             "flip_horizontal": False,
             "flip_vertical":   False,
             "rotation":        0,
+            "target_fps":      _default_fps,
         }
         try:
             req = HTTPRequest(
@@ -894,12 +898,25 @@ class MoongatePlugin:
                 return _defaults
             # Strip localhost prefix so only the path survives.
             snap = _re.sub(r'^https?://(localhost|127\.0\.0\.1)(:\d+)?', '', snap)
+            # target_fps is the Crowsnest/Mainsail "Webcam → Target FPS" field.
+            # Clamp to [1, 60] — anything outside is suspect (Mainsail won't
+            # serve faster than the camera can produce frames anyway, but
+            # we'd rather not let a typo turn the snapshot poll into a
+            # millisecond-tight loop).
+            raw_fps = cam.get("target_fps", _default_fps)
+            try:
+                tgt_fps = int(raw_fps)
+                if tgt_fps < 1 or tgt_fps > 60:
+                    tgt_fps = _default_fps
+            except (TypeError, ValueError):
+                tgt_fps = _default_fps
             return {
                 "snapshot_path":   snap or _default_path,
                 # Mainsail stores these as booleans; default False / 0 if absent.
                 "flip_horizontal": bool(cam.get("flip_horizontal", False)),
                 "flip_vertical":   bool(cam.get("flip_vertical",   False)),
                 "rotation":        int(cam.get("rotation", 0)),
+                "target_fps":      tgt_fps,
             }
         except Exception:
             return _defaults
@@ -991,6 +1008,10 @@ class MoongatePlugin:
         result["webcam_flip_horizontal"] = webcam["flip_horizontal"]
         result["webcam_flip_vertical"]   = webcam["flip_vertical"]
         result["webcam_rotation"]        = webcam["rotation"]
+        # Crowsnest / Mainsail "Target FPS" — the app uses this to time its
+        # snapshot poll, so a 15 fps stream really animates at 15 fps on the
+        # tile rather than the previous hard-coded value.
+        result["webcam_target_fps"]      = webcam["target_fps"]
 
         return result
 
