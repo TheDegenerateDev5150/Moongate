@@ -85,6 +85,49 @@ info "Linking plugin into Moonraker components..."
 ln -sf "$PLUGIN_SRC" "$COMPONENTS_DIR/moongate.py"
 success "Plugin linked: $COMPONENTS_DIR/moongate.py → $PLUGIN_SRC"
 
+# ── 2b. Install Python dependencies into Moonraker's venv ────────────────────
+# v0.3 plugin needs PyJWT[crypto] (EdDSA verification) and cryptography
+# (Ed25519 keypair generation + heartbeat signing). Both are pure-Python or
+# have prebuilt wheels for the architectures we care about (arm64, armv7, x86_64).
+info "Installing Python dependencies into Moonraker's venv..."
+
+MOONRAKER_VENV=""
+for candidate in \
+    "$HOME/moonraker-env" \
+    "$MOONRAKER_DIR/venv" \
+    "$MOONRAKER_DIR/../moonraker-env"; do
+    if [[ -f "$candidate/bin/pip" ]]; then
+        MOONRAKER_VENV="$candidate"
+        break
+    fi
+done
+
+if [[ -n "$MOONRAKER_VENV" ]]; then
+    "$MOONRAKER_VENV/bin/pip" install --upgrade --quiet \
+        "PyJWT[crypto]>=2.8" \
+        "cryptography>=41" \
+        || die "Failed to install Python deps into $MOONRAKER_VENV"
+    success "Python deps installed in $MOONRAKER_VENV"
+else
+    warn "Could not find Moonraker venv. Install manually:"
+    warn "  ~/moonraker-env/bin/pip install 'PyJWT[crypto]>=2.8' 'cryptography>=41'"
+fi
+
+# ── 2c. Wipe v0.2.x state if migrating ───────────────────────────────────────
+# v0.2.x stored tokens.json / secret.key / peers.json in ~/.config/moongate/.
+# v0.3 uses device_ed25519 / owner.json / jwks.json — none of the old files
+# are valid for the new model. Move them aside so re-running install.sh on
+# a v0.2.x box gets a clean v0.3 install.
+LEGACY_DIR="$HOME/.config/moongate/legacy-v0.2.x"
+if [[ -f "$HOME/.config/moongate/tokens.json" || -f "$HOME/.config/moongate/secret.key" ]]; then
+    info "Migrating v0.2.x state out of the way..."
+    mkdir -p "$LEGACY_DIR"
+    for f in tokens.json secret.key peers.json; do
+        [[ -f "$HOME/.config/moongate/$f" ]] && mv "$HOME/.config/moongate/$f" "$LEGACY_DIR/" 2>/dev/null || true
+    done
+    success "v0.2.x state moved to $LEGACY_DIR (safe to delete after v0.3 verified)"
+fi
+
 if grep -q '^\[moongate\]' "$MOONRAKER_CONF"; then
     info "[moongate] already in moonraker.conf"
 else
@@ -145,19 +188,14 @@ cat > "$MOONGATE_CFG" << 'MACROEOF'
 # Updates are handled automatically via Moonraker's update manager.
 
 [gcode_macro MOONGATE_PAIR]
-description: Generate a Moongate pairing code for the mobile app
+description: Start a Moongate pairing session and show a QR for the mobile app
 gcode:
     {action_call_remote_method("moongate_generate_pair_code")}
 
-[gcode_macro MOONGATE_LIST_TOKENS]
-description: Show every Moongate device token (active, expired, revoked) on the console
+[gcode_macro MOONGATE_RESET_OWNER]
+description: Wipe local Moongate owner binding so the printer can be re-paired
 gcode:
-    {action_call_remote_method("moongate_list_tokens")}
-
-[gcode_macro MOONGATE_REVOKE_ALL]
-description: Revoke every Moongate token — all paired apps must re-pair afterwards
-gcode:
-    {action_call_remote_method("moongate_revoke_all_tokens")}
+    {action_call_remote_method("moongate_reset_owner")}
 MACROEOF
 
 success "Macro written to $MOONGATE_CFG"
