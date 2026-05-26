@@ -5,28 +5,29 @@ import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../models/printer_config.dart';
-import '../../services/printer_registry.dart';
+import '../../services/printer_access_cache.dart';
+import '../../services/supabase_service.dart';
 
-/// Full-screen WebView showing the local Mainsail/Fluidd instance.
+/// Full-screen WebView showing the printer's Mainsail/Fluidd interface.
 ///
-/// Connection strategy:
-///   • Remote-first printers (preferRemote=true, e.g. work printer on a
-///     different network) skip the local attempt entirely and go straight
-///     to the Cloudflare tunnel URL — no 3-second wasted timeout.
-///   • Local-first printers try local first; if the main page hasn't loaded
-///     after 3 s the screen falls back to the tunnel URL automatically.
+/// v0.3.0 flow:
+///   1. On init, ask Supabase for the printer's current tunnel URL via
+///      [PrinterAccessCache] (which calls /printer-access under the hood).
+///   2. Load `${tunnel_url}/` in the WebView. Mainsail's API calls reach
+///      Moonraker on the Pi through the same tunnel.
+///   3. If the URL fetch returns 503 (Pi hasn't heartbeated yet — fresh
+///      pairing) we retry after a short delay.
+///   4. If the URL becomes unreachable we surface an in-app error overlay
+///      with a Retry button that re-fetches a fresh URL.
 ///
-/// Error handling:
-///   • HTTP errors (4xx/5xx) on the main frame — e.g. Cloudflare Error 1033
-///     when the tunnel is down — show an in-app overlay instead of the raw
-///     Cloudflare HTML, with contextual recovery buttons.
-///   • Network-level errors on the main frame (no connection, DNS failure,
-///     SSL error) while in tunnel mode show the same overlay.
-///   Sub-resource errors (webcam URLs pointing at localhost, etc.) are
-///   intentionally ignored so they don't flip the whole page into error state.
+/// Note: Mainsail's web UI doesn't carry an EdDSA access token, so it
+/// reaches native Moonraker endpoints through the tunnel un-authenticated.
+/// That's the same model as v0.2.x — the security upgrade in v0.3.0 is
+/// that control commands (which go through /server/moongate/control) now
+/// require a fresh EdDSA token from Supabase, which only the legitimate
+/// owner's signed-in app can mint.
 class PrinterScreen extends StatefulWidget {
   final PrinterConfig printer;
-
   const PrinterScreen({super.key, required this.printer});
 
   @override
@@ -35,205 +36,96 @@ class PrinterScreen extends StatefulWidget {
 
 class _PrinterScreenState extends State<PrinterScreen>
     with WidgetsBindingObserver {
-  late final WebViewController _webController;
+  WebViewController? _webController;
 
-  bool    _loading      = true;
-  bool    _usingRemote  = false;
-  bool    _didFallback  = false; // prevent double-fallback in one load cycle
-  String? _errorType;            // 'tunnel' | 'local' | null (no error)
-  String? _currentHost;          // host of the URL we most recently loaded
-  Timer?  _fallbackTimer;
+  bool    _loading   = true;
+  String? _errorMsg;
+  String? _tunnelUrl;
+  Timer?  _retryTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initController();
-    _startLoad();
+    _start();
   }
 
   @override
   void dispose() {
-    _fallbackTimer?.cancel();
+    _retryTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _didFallback = false;
-      _startLoad();
+    if (state == AppLifecycleState.resumed && _tunnelUrl != null) {
+      // Refresh in case the tunnel URL rotated while we were backgrounded.
+      _start();
     }
   }
 
-  void _initController() {
+  Future<void> _start() async {
+    setState(() { _loading = true; _errorMsg = null; });
+    try {
+      final access = await PrinterAccessCache.instance.get(widget.printer.id);
+      if (!mounted) return;
+      _tunnelUrl = access.tunnelUrl;
+      _initControllerIfNeeded();
+      await _webController!.loadRequest(Uri.parse('${access.tunnelUrl}/'));
+    } on PrinterUnavailableException catch (e) {
+      // Pi hasn't sent its first heartbeat — wait then retry.
+      if (!mounted) return;
+      setState(() {
+        _loading  = false;
+        _errorMsg = 'Printer is starting up. Retrying in ${e.retryAfter}s…';
+      });
+      _retryTimer = Timer(Duration(seconds: e.retryAfter), () {
+        if (mounted) _start();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() { _loading = false; _errorMsg = 'Could not reach printer: $e'; });
+    }
+  }
+
+  void _initControllerIfNeeded() {
+    if (_webController != null) return;
     _webController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(NavigationDelegate(
         onPageStarted: (_) {
-          if (mounted) setState(() { _loading = true; _errorType = null; });
+          if (mounted) setState(() { _loading = true; _errorMsg = null; });
         },
         onPageFinished: (_) {
-          _fallbackTimer?.cancel();
           if (mounted) setState(() => _loading = false);
         },
-
-        // ── Main-frame HTTP errors (Cloudflare 530, nginx 502, etc.) ──────
-        // WebResourceRequest lacks isForMainFrame in webview_flutter 4.7.x,
-        // so we filter by host: only act when the failing request comes from
-        // the same host we navigated to (not webcam/API sub-resources).
-        //
-        // Mirror onWebResourceError's logic: if we're still on the LOCAL
-        // attempt and a tunnel fallback is queued, swallow the error and let
-        // the fallback timer switch us to the tunnel.  Otherwise a stranger
-        // LAN where 192.168.x.x answers with a router-admin 4xx would
-        // surface "Printer unreachable" instead of falling through.
-        onHttpError: (HttpResponseError error) {
-          final code    = error.response?.statusCode ?? 0;
-          if (code < 400) return;
-          final errHost = error.request?.uri.host ?? '';
-          if (_currentHost != null && errHost != _currentHost) return;
-          final noFallback = widget.printer.remoteHost == null;
-          if (!_usingRemote && !noFallback) {
-            // Local attempt produced a 4xx/5xx and we still have a tunnel
-            // queued — let _tryRemote (3 s fallback timer) take over.
-            return;
-          }
-          if (mounted) {
-            _fallbackTimer?.cancel();
-            setState(() {
-              _loading   = false;
-              _errorType = _usingRemote ? 'tunnel' : 'local';
-            });
-          }
-        },
-
-        // ── Main-frame network errors (no connection, DNS, SSL) ───────────
-        // Only surface the in-app error overlay when we're already in tunnel
-        // mode (or have no tunnel fallback). While still on local, a network
-        // error is normal — the fallback timer handles the switch to tunnel.
-        onWebResourceError: (WebResourceError error) {
-          if (error.isForMainFrame != true) return;
-          final noFallback = widget.printer.remoteHost == null;
-          if ((_usingRemote || noFallback) && mounted) {
-            _fallbackTimer?.cancel();
-            setState(() {
-              _loading   = false;
-              _errorType = _usingRemote ? 'tunnel' : 'local';
-            });
-          }
+        onWebResourceError: (err) {
+          if (err.isForMainFrame != true) return;
+          if (!mounted) return;
+          setState(() {
+            _loading  = false;
+            _errorMsg = 'Cloudflare tunnel unreachable.\n${err.description}';
+          });
         },
       ));
   }
 
-  /// Load the correct starting URL.
-  ///
-  /// Connection-path decision (in priority order):
-  ///   1. Live in-session preference from [PrinterRegistry] — updated by the
-  ///      dashboard tile's status service every time a poll succeeds.  If the
-  ///      tile already discovered that this printer is only reachable via the
-  ///      tunnel (e.g. phone on a different network), we skip the local
-  ///      attempt entirely so the WebView doesn't waste 3 s timing out — or
-  ///      worse, latch onto a 4xx/5xx from some unrelated device on the
-  ///      stranger LAN that happens to answer on the same IP.
-  ///   2. Persisted [PrinterConfig.preferRemote] — set at pair time when only
-  ///      a tunnel URL was provided.  Fallback when no poll has succeeded
-  ///      yet this session (e.g. user opens the printer screen before the
-  ///      dashboard tile has had a chance to probe).
-  ///   3. Default: try local first, fall back to tunnel after 3 s if local
-  ///      doesn't finish loading.
-  void _startLoad() {
-    _fallbackTimer?.cancel();
-    _didFallback = false;
-    _errorType   = null;
-
-    final remote = widget.printer.remoteHost;
-
-    // Live decision wins over the persisted flag — the dashboard knows what
-    // actually works on this network right now.
-    final livePref =
-        PrinterRegistry.instance.livePreferRemote(widget.printer.id);
-    final goRemote =
-        (livePref ?? widget.printer.preferRemote) && remote != null;
-
-    if (goRemote) {
-      // Remote-first: straight to tunnel, no local attempt
-      _usingRemote = true;
-      _didFallback = true;
-      _loadRemoteUrl();
-    } else {
-      // Local-first: try local, fall back to tunnel after 3 s if needed
-      _usingRemote = false;
-      _loadUrl(widget.printer.host);
-      if (remote != null) {
-        _fallbackTimer = Timer(const Duration(seconds: 3), _tryRemote);
-      }
-    }
-  }
-
-  void _tryRemote() {
-    final remote = widget.printer.remoteHost;
-    if (_didFallback || remote == null) return;
-    _didFallback = true;
-    _fallbackTimer?.cancel();
-    if (mounted) setState(() => _usingRemote = true);
-    _loadRemoteUrl();
-  }
-
-  void _loadRemoteUrl() {
-    final remote    = widget.printer.remoteHost!;
-    final remoteUri = Uri.parse(remote);
-    final wsScheme  = remoteUri.scheme == 'https' ? 'wss' : 'ws';
-    final serverHint = '$wsScheme://${remoteUri.host}';
-    _loadUrl('$remote/?server=${Uri.encodeComponent(serverHint)}');
-  }
-
-  Future<void> _loadUrl(String url) async {
-    _currentHost = Uri.tryParse(url)?.host;
-    await _webController.loadRequest(Uri.parse(url));
-  }
-
-  // ── Error recovery actions ──────────────────────────────────────────────────
-
-  void _retryCurrentUrl() {
-    setState(() { _errorType = null; _loading = true; });
-    if (_usingRemote) {
-      _loadRemoteUrl();
-    } else {
-      _loadUrl(widget.printer.host);
-    }
-  }
-
-  void _switchToLocal() {
-    _fallbackTimer?.cancel();
-    _didFallback = false;
-    setState(() { _errorType = null; _usingRemote = false; _loading = true; });
-    _loadUrl(widget.printer.host);
-  }
-
-  void _switchToRemote() {
-    _fallbackTimer?.cancel();
-    setState(() { _errorType = null; _loading = true; });
-    _tryRemote();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final hasRemote = widget.printer.remoteHost != null;
-    final hasLocal  = !widget.printer.preferRemote ||
-        widget.printer.host != widget.printer.remoteHost;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(widget.printer.name),
             Text(
-              _usingRemote ? 'Remote (tunnel)' : 'Local network',
+              'Tunnel via Moongate',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: _usingRemote ? Colors.orange : Colors.green,
+                    color: Colors.orange,
                   ),
             ),
           ],
@@ -243,151 +135,62 @@ class _PrinterScreenState extends State<PrinterScreen>
           onPressed: () => context.pop(),
         ),
         actions: [
-          if (hasRemote)
-            IconButton(
-              icon: Icon(
-                _usingRemote ? Icons.wifi : Icons.cloud_outlined,
-                size: 20,
-              ),
-              tooltip: _usingRemote ? 'Switch to local' : 'Switch to remote',
-              onPressed: () {
-                if (_usingRemote) {
-                  _switchToLocal();
-                } else {
-                  _switchToRemote();
-                }
-              },
-            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              _fallbackTimer?.cancel();
-              _didFallback = false;
-              _startLoad();
+              // Re-fetch a fresh tunnel URL too — handles cloudflared rotation.
+              PrinterAccessCache.instance.invalidate(widget.printer.id);
+              _start();
             },
           ),
         ],
       ),
       body: Stack(
         children: [
-          // WebView always present in tree — keeps state across overlay show/hide
-          WebViewWidget(controller: _webController),
+          if (_webController != null)
+            WebViewWidget(controller: _webController!),
 
-          // Loading spinner
-          if (_loading && _errorType == null)
+          if (_loading && _errorMsg == null)
             const Center(child: CircularProgressIndicator()),
 
-          // In-app error overlay — replaces the raw Cloudflare/nginx error page
-          if (_errorType != null)
-            _ErrorOverlay(
-              isTunnel:   _errorType == 'tunnel',
-              hasLocal:   hasLocal,
-              hasRemote:  hasRemote && !_usingRemote,
-              onRetry:    _retryCurrentUrl,
-              onLocal:    _switchToLocal,
-              onRemote:   _switchToRemote,
+          if (_errorMsg != null && !_loading)
+            Container(
+              color: cs.surface,
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.cloud_off_outlined, size: 64, color: cs.error),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Printer unreachable',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(color: cs.error),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _errorMsg!,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: cs.onSurface.withValues(alpha: 0.7)),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  FilledButton.icon(
+                    onPressed: () {
+                      PrinterAccessCache.instance.invalidate(widget.printer.id);
+                      _start();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── In-app error overlay ──────────────────────────────────────────────────────
-
-class _ErrorOverlay extends StatelessWidget {
-  final bool isTunnel;
-  final bool hasLocal;
-  final bool hasRemote;
-  final VoidCallback onRetry;
-  final VoidCallback onLocal;
-  final VoidCallback onRemote;
-
-  const _ErrorOverlay({
-    required this.isTunnel,
-    required this.hasLocal,
-    required this.hasRemote,
-    required this.onRetry,
-    required this.onLocal,
-    required this.onRemote,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    final (icon, title, body) = isTunnel
-        ? (
-            Icons.cloud_off_outlined,
-            'Tunnel unreachable',
-            'The Cloudflare tunnel to your printer is not responding.\n\n'
-                'This usually means:\n'
-                '• cloudflared restarted and has a new URL\n'
-                '• The Pi lost its internet connection\n\n'
-                'Try switching to local Wi-Fi, or restart cloudflared on '
-                'the Pi and re-run MOONGATE_PAIR to get the new tunnel URL.',
-          )
-        : (
-            Icons.wifi_off_outlined,
-            'Printer unreachable',
-            'Could not connect to your printer on the local network.\n\n'
-                'Make sure your phone is on the same Wi-Fi as the printer '
-                'and that Moonraker is running.',
-          );
-
-    return Container(
-      color: cs.surface,
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 64, color: cs.error),
-          const SizedBox(height: 20),
-          Text(
-            title,
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(color: cs.error),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            body,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: cs.onSurface.withValues(alpha: 0.7)),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-
-          // Retry same URL
-          FilledButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-
-          // Switch to local (shown when tunnel failed and local URL exists)
-          if (isTunnel && hasLocal) ...[
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: onLocal,
-              icon: const Icon(Icons.wifi),
-              label: const Text('Try local network'),
-            ),
-          ],
-
-          // Switch to tunnel (shown when local failed and tunnel exists)
-          if (!isTunnel && hasRemote) ...[
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: onRemote,
-              icon: const Icon(Icons.cloud_outlined),
-              label: const Text('Try tunnel'),
-            ),
-          ],
         ],
       ),
     );

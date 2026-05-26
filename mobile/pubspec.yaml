@@ -15,6 +15,12 @@ dependencies:
   web_socket_channel: ^2.4.0
   http: ^1.2.0
 
+  # Supabase — anonymous auth, Edge Function calls, printers table queries.
+  # v0.3.0 routes every printer call through Supabase: app signs in
+  # anonymously, gets a JWT, calls /printer-access to fetch the current
+  # tunnel URL + a short-lived EdDSA access token, then hits the Pi.
+  supabase_flutter: ^2.5.0
+
   # Secure storage (token / pairing data)
   flutter_secure_storage: ^9.0.0
 

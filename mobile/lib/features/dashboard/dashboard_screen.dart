@@ -461,7 +461,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             (p) => ListTile(
               leading: const Icon(Icons.print, color: Colors.redAccent),
               title: Text(p.name),
-              subtitle: Text(p.host, style: const TextStyle(fontSize: 12)),
+              subtitle: Text(
+                'id ${p.id.substring(0, 8)}…',
+                style: const TextStyle(fontSize: 12),
+              ),
               trailing: const Icon(Icons.delete_outline, color: Colors.redAccent),
               onTap: () {
                 Navigator.pop(ctx);
