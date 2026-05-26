@@ -69,7 +69,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         : _PrinterGrid(
             printers: _printers,
             columns:  gridColumns,
-            onTap:    (p) => context.push('/printer/${p.id}'),
+            // Reload after the printer screen pops so any rename done in
+            // the app bar there propagates to the tile.
+            onTap:    (p) => context.push('/printer/${p.id}').then((_) => _load()),
             onRemove: _removePrinter,
           );
 

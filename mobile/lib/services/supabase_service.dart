@@ -77,24 +77,27 @@ class SupabaseService {
     required String piPublicKey,
     required String name,
   }) async {
-    final response = await client.functions.invoke(
-      'printer-claim',
-      body: {
-        'enrollment_token': enrollmentToken,
-        'pi_public_key':    piPublicKey,
-        'name':             name,
-      },
-    );
-
-    final status = response.status;
-    final data   = response.data;
-
-    if (status == 200 && data is Map && data['printer_id'] is String) {
-      return data['printer_id'] as String;
+    try {
+      final response = await client.functions.invoke(
+        'printer-claim',
+        body: {
+          'enrollment_token': enrollmentToken,
+          'pi_public_key':    piPublicKey,
+          'name':             name,
+        },
+      );
+      final data = response.data;
+      if (data is Map && data['printer_id'] is String) {
+        return data['printer_id'] as String;
+      }
+      throw Exception('printer-claim returned unexpected payload: $data');
+    } on FunctionException catch (e) {
+      // supabase_flutter throws FunctionException for non-2xx before our
+      // own status-based checks can run. Translate to our typed exceptions.
+      if (e.status == 404) throw PairingNotFoundException();
+      if (e.status == 409) throw PairingConflictException();
+      throw Exception('printer-claim returned HTTP ${e.status}: ${e.details}');
     }
-    if (status == 404) throw PairingNotFoundException();
-    if (status == 409) throw PairingConflictException();
-    throw Exception('printer-claim returned HTTP $status: $data');
   }
 
   // ── Access (per-call tunnel URL + EdDSA token) ─────────────────────────────
@@ -109,32 +112,36 @@ class SupabaseService {
   ///     hasn't sent its first heartbeat yet (just paired).
   ///     The exception's [retryAfter] tells the caller how long to wait.
   Future<PrinterAccess> getPrinterAccess(String printerId) async {
-    final response = await client.functions.invoke(
-      'printer-access',
-      body: {'printer_id': printerId},
-    );
-
-    final status = response.status;
-    final data   = response.data;
-
-    if (status == 200 && data is Map) {
-      final tunnel = data['tunnel_url'] as String?;
-      final token  = data['access_token'] as String?;
-      final expIn  = (data['expires_in'] as num?)?.toInt() ?? 300;
-      if (tunnel != null && token != null) {
-        return PrinterAccess(
-          tunnelUrl:   tunnel,
-          accessToken: token,
-          expiresAt:   DateTime.now().add(Duration(seconds: expIn)),
-        );
+    try {
+      final response = await client.functions.invoke(
+        'printer-access',
+        body: {'printer_id': printerId},
+      );
+      final data = response.data;
+      if (data is Map) {
+        final tunnel = data['tunnel_url']   as String?;
+        final token  = data['access_token'] as String?;
+        final expIn  = (data['expires_in']  as num?)?.toInt() ?? 300;
+        if (tunnel != null && token != null) {
+          return PrinterAccess(
+            tunnelUrl:   tunnel,
+            accessToken: token,
+            expiresAt:   DateTime.now().add(Duration(seconds: expIn)),
+          );
+        }
       }
+      throw Exception('printer-access returned unexpected payload: $data');
+    } on FunctionException catch (e) {
+      if (e.status == 404) throw PrinterNotFoundException();
+      if (e.status == 503) {
+        final retry = (e.details is Map
+                ? (e.details as Map)['retry_after'] as num?
+                : null)
+            ?.toInt() ?? 5;
+        throw PrinterUnavailableException(retryAfter: retry);
+      }
+      throw Exception('printer-access returned HTTP ${e.status}: ${e.details}');
     }
-    if (status == 404) throw PrinterNotFoundException();
-    if (status == 503) {
-      final retry = (data is Map ? data['retry_after'] as num? : null)?.toInt() ?? 5;
-      throw PrinterUnavailableException(retryAfter: retry);
-    }
-    throw Exception('printer-access returned HTTP $status: $data');
   }
 
   // ── Printers list (RLS-scoped to current user) ─────────────────────────────

@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../models/printer_config.dart';
 import '../../services/printer_access_cache.dart';
+import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
 
 /// Full-screen WebView showing the printer's Mainsail/Fluidd interface.
@@ -39,9 +40,14 @@ class _PrinterScreenState extends State<PrinterScreen>
   WebViewController? _webController;
 
   bool    _loading   = true;
+  bool    _usingLan  = false;
   String? _errorMsg;
   String? _tunnelUrl;
   Timer?  _retryTimer;
+
+  // Local copy of the printer name so the app bar reflects renames
+  // immediately, without waiting for a dashboard rebuild.
+  late String _displayName = widget.printer.name;
 
   @override
   void initState() {
@@ -71,10 +77,17 @@ class _PrinterScreenState extends State<PrinterScreen>
       final access = await PrinterAccessCache.instance.get(widget.printer.id);
       if (!mounted) return;
       _tunnelUrl = access.tunnelUrl;
+
+      // Prefer the cached LAN URL when present — Mainsail loads dramatically
+      // faster on direct LAN than through Cloudflare. If LAN is unreachable
+      // the WebView's onWebResourceError surfaces an error overlay; user
+      // taps Retry to force the tunnel.
+      final lanUrl   = widget.printer.lanUrl;
+      final useUrl   = lanUrl ?? access.tunnelUrl;
+      _usingLan      = lanUrl != null;
       _initControllerIfNeeded();
-      await _webController!.loadRequest(Uri.parse('${access.tunnelUrl}/'));
+      await _webController!.loadRequest(Uri.parse('$useUrl/'));
     } on PrinterUnavailableException catch (e) {
-      // Pi hasn't sent its first heartbeat — wait then retry.
       if (!mounted) return;
       setState(() {
         _loading  = false;
@@ -87,6 +100,30 @@ class _PrinterScreenState extends State<PrinterScreen>
       if (!mounted) return;
       setState(() { _loading = false; _errorMsg = 'Could not reach printer: $e'; });
     }
+  }
+
+  Future<void> _showRenameDialog() async {
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (_) => _RenameDialog(initial: _displayName),
+    );
+    if (newName == null || newName.isEmpty || newName == _displayName) return;
+    await PrinterRegistry.instance.renamePrinter(widget.printer.id, newName);
+    if (!mounted) return;
+    setState(() => _displayName = newName);
+  }
+
+  /// Force a fallback to the Cloudflare tunnel. Called from the Retry
+  /// button on the error overlay (so a LAN load that fails surfaces a
+  /// quick path to the tunnel).
+  Future<void> _retryViaTunnel() async {
+    if (_tunnelUrl == null) {
+      _start();
+      return;
+    }
+    setState(() { _loading = true; _errorMsg = null; _usingLan = false; });
+    _initControllerIfNeeded();
+    await _webController!.loadRequest(Uri.parse('$_tunnelUrl/'));
   }
 
   void _initControllerIfNeeded() {
@@ -117,16 +154,36 @@ class _PrinterScreenState extends State<PrinterScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(widget.printer.name),
-            Text(
-              'Tunnel via Moongate',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.orange,
+            // Edit-name icon directly before the name, per request.
+            IconButton(
+              icon: const Icon(Icons.edit, size: 18),
+              tooltip: 'Edit name',
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              onPressed: _showRenameDialog,
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _displayName,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                  Text(
+                    _usingLan ? 'Local network' : 'Tunnel via Moongate',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: _usingLan ? Colors.green : Colors.orange,
+                        ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -188,11 +245,74 @@ class _PrinterScreenState extends State<PrinterScreen>
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry'),
                   ),
+                  if (_usingLan && _tunnelUrl != null) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _retryViaTunnel,
+                      icon: const Icon(Icons.cloud_outlined),
+                      label: const Text('Use tunnel'),
+                    ),
+                  ],
                 ],
               ),
             ),
         ],
       ),
+    );
+  }
+}
+
+// ── Rename dialog ─────────────────────────────────────────────────────────────
+//
+// Wrapped in a StatefulWidget so the TextEditingController is owned by the
+// dialog's State and disposed cleanly when the dialog is torn down. Disposing
+// a controller from the calling code AFTER `await showDialog` resolves races
+// the framework's own dispose pass and trips the `_dependents.isEmpty`
+// assertion.
+
+class _RenameDialog extends StatefulWidget {
+  final String initial;
+  const _RenameDialog({required this.initial});
+
+  @override
+  State<_RenameDialog> createState() => _RenameDialogState();
+}
+
+class _RenameDialogState extends State<_RenameDialog> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Rename printer'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        maxLength: 48,
+        textCapitalization: TextCapitalization.words,
+        decoration: const InputDecoration(
+          labelText: 'Printer name',
+          border: OutlineInputBorder(),
+        ),
+        onSubmitted: (v) => Navigator.pop(context, v.trim()),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

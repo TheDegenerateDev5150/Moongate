@@ -103,6 +103,31 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Rename a printer locally. Note: the Supabase row's `name` field is
+  /// left unchanged — the local rename is cosmetic only. Re-pairing would
+  /// reset to whatever name was sent during the claim.
+  Future<void> renamePrinter(String printerId, String newName) async {
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty) return;
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    if (_printers[idx].name == trimmed) return;
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(name: trimmed);
+    await _save();
+  }
+
+  /// Update the cached LAN URL for a printer after a /status response
+  /// surfaces it. Pass null to clear (e.g. when LAN starts failing).
+  Future<void> updateLanUrl(String printerId, String? lanUrl) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    if (_printers[idx].lanUrl == lanUrl) return;
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(lanUrl: lanUrl);
+    await _save();
+  }
+
   /// Update webcam transform info from a successful Moongate /status poll.
   Future<void> updateWebcamInfo(
     String printerId, {

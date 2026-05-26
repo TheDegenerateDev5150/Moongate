@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.2.29+39
+version: 0.3.0+40
 publish_to: none
 
 environment:
@@ -60,6 +60,14 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+
+# supabase_flutter 2.x transitively depends on app_links for OAuth deep-link
+# callbacks. We only use anonymous sign-in, so the dep is unused at runtime,
+# but it has to resolve. app_links 7.x uses an AndroidLibrarySourceSet API
+# that breaks on this project's AGP 9.0.1 (Gradle cast error). Pin an older
+# 6.x release that uses the legacy API and builds cleanly.
+dependency_overrides:
+  app_links: ^6.4.0
 
 flutter:
   uses-material-design: true

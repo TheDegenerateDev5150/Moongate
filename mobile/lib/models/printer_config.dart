@@ -11,6 +11,10 @@ import 'dart:convert';
 ///
 /// JSON is versioned via `schema_version` (3 for v0.3.0). Older payloads
 /// produced by v0.2.x can be detected and discarded by [PrinterRegistry].
+// Sentinel for copyWith's lanUrl param so callers can pass `null` to clear it
+// without ambiguity vs "don't change". Module-private const.
+const Object _sentinel = Object();
+
 class PrinterConfig {
   static const int schemaVersion = 3;
 
@@ -19,6 +23,12 @@ class PrinterConfig {
 
   /// User-chosen name.
   final String name;
+
+  /// Cached LAN address of the Pi, learned from the /status response.
+  /// When set, the app tries this URL (with the EdDSA token from
+  /// /printer-access) before falling back to the Cloudflare tunnel.
+  /// Format: `http://192.168.1.157:80`. Null until first successful poll.
+  final String? lanUrl;
 
   /// Cached webcam display-transform settings, populated from the Moongate
   /// /status response after each successful poll. Persisted so the tile
@@ -31,6 +41,7 @@ class PrinterConfig {
   const PrinterConfig({
     required this.id,
     required this.name,
+    this.lanUrl,
     this.webcamFlipH     = false,
     this.webcamFlipV     = false,
     this.webcamRotation  = 0,
@@ -39,6 +50,7 @@ class PrinterConfig {
 
   PrinterConfig copyWith({
     String? name,
+    Object? lanUrl = _sentinel, // sentinel so we can copy null in
     bool?   webcamFlipH,
     bool?   webcamFlipV,
     int?    webcamRotation,
@@ -47,6 +59,7 @@ class PrinterConfig {
       PrinterConfig(
         id:              id,
         name:            name            ?? this.name,
+        lanUrl:          identical(lanUrl, _sentinel) ? this.lanUrl : lanUrl as String?,
         webcamFlipH:     webcamFlipH     ?? this.webcamFlipH,
         webcamFlipV:     webcamFlipV     ?? this.webcamFlipV,
         webcamRotation:  webcamRotation  ?? this.webcamRotation,
@@ -67,6 +80,7 @@ class PrinterConfig {
         'schema_version':  schemaVersion,
         'id':              id,
         'name':            name,
+        if (lanUrl != null) 'lanUrl': lanUrl,
         'webcamFlipH':     webcamFlipH,
         'webcamFlipV':     webcamFlipV,
         'webcamRotation':  webcamRotation,
@@ -81,6 +95,7 @@ class PrinterConfig {
     return PrinterConfig(
       id:              j['id']   as String,
       name:            j['name'] as String,
+      lanUrl:          j['lanUrl']          as String?,
       webcamFlipH:     j['webcamFlipH']     as bool? ?? false,
       webcamFlipV:     j['webcamFlipV']     as bool? ?? false,
       webcamRotation:  j['webcamRotation']  as int?  ?? 0,

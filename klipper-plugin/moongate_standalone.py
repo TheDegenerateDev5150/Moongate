@@ -859,6 +859,12 @@ class MoongatePlugin:
         data   = json.loads(resp.body)
         result = data.get("result", data)
         result["tunnel_url"] = _get_tunnel_url()
+        # Surface the Pi's LAN address so the app can prefer a direct LAN
+        # call (with the same EdDSA token) when it's on the same network,
+        # skipping the Cloudflare round-trip. Doesn't add port — app pairs
+        # it with the configured http_port from its own knowledge.
+        result["local_ip"]   = _get_local_ip()
+        result["http_port"]  = self.http_port
 
         webcam = await self._get_webcam_info(client)
         result["webcam_snapshot_path"]   = webcam["snapshot_path"]

@@ -38,7 +38,21 @@ class PrinterStatusService {
   double? _estimatedPrintSeconds;
   String? _metadataFilename;
 
-  PrinterStatusService(this.config);
+  // ── LAN-first state ──────────────────────────────────────────────────────
+  // The printer's last-known LAN URL is fetched from /status (Pi reports
+  // local_ip + http_port). When set, the service tries LAN before the
+  // Cloudflare tunnel. After 3 consecutive LAN failures we back off for
+  // 5 minutes so off-LAN polling doesn't waste 2s per cycle.
+  //
+  // `_currentLanUrl` is a mutable copy initialised from the PrinterConfig
+  // snapshot. Subsequent /status responses update it in-place so the very
+  // next poll uses the freshly-learned LAN URL. Without this the service
+  // would be stuck on the construction-time snapshot forever.
+  String?   _currentLanUrl;
+  int       _lanFailureStreak = 0;
+  DateTime? _skipLanUntil;
+
+  PrinterStatusService(this.config) : _currentLanUrl = config.lanUrl;
 
   Stream<PrinterStatus> get stream => _controller.stream;
 
@@ -50,7 +64,35 @@ class PrinterStatusService {
 
   Stream<String> get probePhase       => const Stream<String>.empty();
   Stream<String> get tunnelUrlUpdates => const Stream<String>.empty();
-  String?         get uiType          => null;
+  String?        get uiType           => _uiType;
+
+  // ── UI-type detection (Mainsail vs Fluidd) ───────────────────────────────
+  // The tile renders the appropriate logo as a webcam placeholder when no
+  // camera is configured. Detected once per service lifetime by fetching
+  // the root page and sniffing the HTML for "mainsail" or "fluidd".
+  String? _uiType;
+  bool    _uiTypeChecked = false;
+
+  Future<void> _detectUiType(String baseUrl) async {
+    _uiTypeChecked = true;
+    try {
+      final uri      = Uri.parse('$baseUrl/');
+      final response = await http
+          .get(uri)
+          .timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final body = response.body.toLowerCase();
+        if (body.contains('mainsail')) {
+          _uiType = 'mainsail';
+        } else if (body.contains('fluidd')) {
+          _uiType = 'fluidd';
+        }
+      }
+    } catch (_) {
+      // Detection failed — retry on next successful poll
+      _uiTypeChecked = false;
+    }
+  }
 
   void start({Duration interval = const Duration(seconds: 4)}) {
     _poll();
@@ -105,14 +147,35 @@ class PrinterStatusService {
       await _discoverChamberSensor(access);
     }
 
-    // 3. Hit the Moongate plugin — one shot, no fallback path needed
-    final status = await _tryMoongateEndpoint(access);
-    if (status != null) {
-      if (!_disposed) _controller.add(status);
+    // 3. LAN-first when we have a cached URL and haven't been failing
+    //    too hard. Same EdDSA token works on LAN or tunnel.
+    final lanUrl = _currentLanUrl;
+    final canTryLan = lanUrl != null &&
+        (_skipLanUntil == null || DateTime.now().isAfter(_skipLanUntil!));
+    if (canTryLan) {
+      final lan = await _tryMoongateEndpoint(
+          baseUrl: lanUrl, access: access, isLan: true);
+      if (lan != null) {
+        _lanFailureStreak = 0;
+        _skipLanUntil     = null;
+        if (!_disposed) _controller.add(lan);
+        return;
+      }
+      _lanFailureStreak++;
+      if (_lanFailureStreak >= 3) {
+        _skipLanUntil = DateTime.now().add(const Duration(minutes: 5));
+      }
+    }
+
+    // 4. Tunnel via Cloudflare
+    final tunnelStatus =
+        await _tryMoongateEndpoint(baseUrl: access.tunnelUrl, access: access, isLan: false);
+    if (tunnelStatus != null) {
+      if (!_disposed) _controller.add(tunnelStatus);
       return;
     }
 
-    // 4. Maybe the token got invalidated server-side. Drop cache and
+    // 5. Maybe the token got invalidated server-side. Drop cache and
     //    try once more with a fresh token before declaring offline.
     PrinterAccessCache.instance.invalidate(config.id);
     try {
@@ -121,7 +184,8 @@ class PrinterStatusService {
       if (!_disposed) _controller.add(PrinterStatus.offline);
       return;
     }
-    final retry = await _tryMoongateEndpoint(access);
+    final retry =
+        await _tryMoongateEndpoint(baseUrl: access.tunnelUrl, access: access, isLan: false);
     if (!_disposed) _controller.add(retry ?? PrinterStatus.offline);
   }
 
@@ -184,18 +248,22 @@ class PrinterStatusService {
 
   // ── Moongate plugin endpoint ─────────────────────────────────────────────
 
-  Future<PrinterStatus?> _tryMoongateEndpoint(PrinterAccess access) async {
+  Future<PrinterStatus?> _tryMoongateEndpoint({
+    required String        baseUrl,
+    required PrinterAccess access,
+    required bool          isLan,
+  }) async {
     try {
       final uri = Uri.parse(
-        '${access.tunnelUrl}/server/moongate/status?mg_token=${Uri.encodeComponent(access.accessToken)}',
+        '$baseUrl/server/moongate/status?mg_token=${Uri.encodeComponent(access.accessToken)}',
       );
-      final response = await http
-          .get(uri)
-          .timeout(const Duration(seconds: 8));
-      if (response.statusCode == 401) {
-        // Plugin rejected the token — caller drops the cache and retries.
-        return null;
-      }
+      // LAN: fast-fail at 2s so off-LAN polling doesn't stall.
+      // Tunnel: 8s for Cloudflare Quick Tunnel cold-start latency.
+      final timeout = isLan
+          ? const Duration(seconds: 2)
+          : const Duration(seconds: 8);
+      final response = await http.get(uri).timeout(timeout);
+      if (response.statusCode == 401) return null;
       if (response.statusCode != 200) return null;
 
       final body   = jsonDecode(response.body) as Map<String, dynamic>;
@@ -203,24 +271,25 @@ class PrinterStatusService {
       final status = Map<String, dynamic>.from(
           result['status'] as Map<String, dynamic>);
 
-      // Supplementary queries for older plugin builds that don't include
-      // chamber / display_status / virtual_sdcard in their status response.
       if (_chamberKey != null && status[_chamberKey!] == null) {
-        await _supplementaryChamberQuery(access.tunnelUrl, status);
+        await _supplementaryChamberQuery(baseUrl, status);
       }
       if (status['display_status'] == null ||
           status['virtual_sdcard'] == null) {
-        await _supplementaryProgressQuery(access.tunnelUrl, status);
+        await _supplementaryProgressQuery(baseUrl, status);
       }
 
-      // Slicer estimated_time → progress = print_duration / estimated_time
       final stats = status['print_stats'] as Map<String, dynamic>? ?? {};
       if (stats['state'] == 'printing') {
-        await _fetchFileMetadata(
-            access.tunnelUrl, stats['filename'] as String?);
+        await _fetchFileMetadata(baseUrl, stats['filename'] as String?);
       }
 
-      return _parseStatus(status: status, moongateResult: result);
+      // Fire-and-forget UI detection on the first successful connection so
+      // the tile knows whether to show the Mainsail or Fluidd logo when no
+      // webcam is configured.
+      if (!_uiTypeChecked) _detectUiType(baseUrl);
+
+      return _parseStatus(status: status, moongateResult: result, isLan: isLan);
     } catch (_) {
       return null;
     }
@@ -272,6 +341,7 @@ class PrinterStatusService {
   PrinterStatus _parseStatus({
     required Map<String, dynamic> status,
     required Map<String, dynamic>? moongateResult,
+    required bool                 isLan,
   }) {
     final printStats = status['print_stats'] as Map<String, dynamic>? ?? {};
     final extruder   = status['extruder']    as Map<String, dynamic>? ?? {};
@@ -317,6 +387,8 @@ class PrinterStatusService {
     }
 
     // Persist webcam transform info — keeps the tile correct on next launch.
+    // Also pick up the Pi's local_ip if it surfaced, so future polls can
+    // try LAN first.
     if (moongateResult != null) {
       final flipH    = (moongateResult['webcam_flip_horizontal'] as bool?) ?? false;
       final flipV    = (moongateResult['webcam_flip_vertical']   as bool?) ?? false;
@@ -329,6 +401,16 @@ class PrinterStatusService {
         rotation:  rotation,
         targetFps: fps,
       ).ignore();
+
+      final lip  = moongateResult['local_ip']  as String?;
+      final port = (moongateResult['http_port'] as num?)?.toInt() ?? 80;
+      if (lip != null && lip.isNotEmpty && lip != 'localhost') {
+        final newLanUrl = port == 80 ? 'http://$lip' : 'http://$lip:$port';
+        // Update the service's mutable copy IMMEDIATELY so the very next
+        // poll tries LAN first. Also persist to the registry for cold-start.
+        _currentLanUrl = newLanUrl;
+        PrinterRegistry.instance.updateLanUrl(config.id, newLanUrl).ignore();
+      }
     }
 
     return PrinterStatus(
@@ -341,7 +423,7 @@ class PrinterStatusService {
       chamberTemp:        (chamberSensor?['temperature'] as num?)?.toDouble() ?? 0,
       chamberTarget:      (chamberSensor?['target']      as num?)?.toDouble() ?? 0,
       filename:           printStats['filename']         as String?,
-      connection:         PrinterConnection.remote,
+      connection:         isLan ? PrinterConnection.local : PrinterConnection.remote,
       webcamSnapshotPath: moongateResult?['webcam_snapshot_path'] as String?,
       webcamFlipH:     (moongateResult?['webcam_flip_horizontal'] as bool?) ?? false,
       webcamFlipV:     (moongateResult?['webcam_flip_vertical']   as bool?) ?? false,

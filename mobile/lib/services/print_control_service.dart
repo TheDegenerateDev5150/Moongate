@@ -26,27 +26,44 @@ class PrintControlService {
       return false;
     }
 
-    if (await _send(access, action)) return true;
+    // LAN first if we have a cached URL — fast-fail at 2s
+    final lanUrl = config.lanUrl;
+    if (lanUrl != null &&
+        await _send(lanUrl, access.accessToken, action,
+                    timeout: const Duration(seconds: 2))) {
+      return true;
+    }
 
-    // 401 / network blip — drop the cache and retry once with a fresh token
+    if (await _send(access.tunnelUrl, access.accessToken, action,
+                    timeout: const Duration(seconds: 10))) {
+      return true;
+    }
+
+    // 401 / network blip — drop the cache and retry tunnel once with a
+    // fresh token. LAN already tried.
     PrinterAccessCache.instance.invalidate(config.id);
     try {
       access = await PrinterAccessCache.instance.get(config.id);
     } catch (_) {
       return false;
     }
-    return _send(access, action);
+    return _send(access.tunnelUrl, access.accessToken, action,
+                 timeout: const Duration(seconds: 10));
   }
 
-  Future<bool> _send(PrinterAccess access, String action) async {
+  Future<bool> _send(
+    String baseUrl,
+    String token,
+    String action, {
+    required Duration timeout,
+  }) async {
     try {
       final uri = Uri.parse(
-        '${access.tunnelUrl}/server/moongate/control'
-        '?mg_token=${Uri.encodeComponent(access.accessToken)}'
+        '$baseUrl/server/moongate/control'
+        '?mg_token=${Uri.encodeComponent(token)}'
         '&action=${Uri.encodeComponent(action)}',
       );
-      final response =
-          await http.post(uri).timeout(const Duration(seconds: 10));
+      final response = await http.post(uri).timeout(timeout);
       return response.statusCode == 200;
     } catch (_) {
       return false;
