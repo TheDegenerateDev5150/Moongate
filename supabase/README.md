@@ -191,7 +191,148 @@ confirm each session only sees its own.
 Update `docs/v0.3-supabase-design.md` §14 with any decisions you made along
 the way (project ref, key creation date, etc. — though **not the key value**).
 
-Then it's time for Phase 2: Edge Functions.
+Then it's time for Phase 2: Edge Functions (next section).
+
+---
+
+## Phase 2 — Edge Functions
+
+This phase deploys the five Edge Functions that mediate everything between
+the app, the Pi, and Postgres.
+
+| Function | Caller | JWT required? |
+|---|---|---|
+| `enroll-prepare`   | Pi  | No (function does its own checks) |
+| `printer-claim`    | App | Yes (anon Supabase JWT)            |
+| `printer-access`   | App | Yes (anon Supabase JWT)            |
+| `printer-heartbeat`| Pi  | No (Ed25519 signature on payload)  |
+| `jwks`             | Pi  | No (intentionally public)          |
+
+Source lives at `supabase/functions/`. Shared helpers in `_shared/`.
+
+### Phase 2.1 — Apply the RPC helpers migration
+
+A second migration adds Postgres RPC functions that the Edge Functions call.
+This keeps `bytea` encoding inside SQL and concentrates business logic
+near the data.
+
+- Open Supabase dashboard → **SQL Editor** → **New query**
+- Paste the contents of `supabase/migrations/20260526120001_rpc_helpers.sql`
+- Click **Run**
+- Expect `Success. No rows returned.`
+
+Verify:
+```sql
+SELECT proname
+FROM pg_proc
+WHERE proname IN ('upsert_enrollment_token', 'claim_printer',
+                  'get_printer_access', 'record_heartbeat')
+ORDER BY proname;
+```
+Expect four rows.
+
+### Phase 2.2 — Generate the JWT signing key
+
+The Edge Functions sign short-lived access tokens with **EdDSA (Ed25519)**.
+The private key lives only in Supabase secrets. The public key is exposed
+via the `/jwks` Edge Function so the Pi can fetch it.
+
+From a PowerShell window:
+
+```powershell
+cd C:\dev\Moongate
+node .\supabase\scripts\generate-jwt-signing-key.js
+```
+
+This prints a JSON Web Key (JWK) for the private key. **Treat it as a
+secret.** Save it in your password manager.
+
+> Rotating this key invalidates every in-flight access token. The app
+> simply requests a new token, so user-visible impact is small, but don't
+> rotate casually.
+
+### Phase 2.3 — Set the signing key as a secret
+
+Supabase dashboard → **Edge Functions** → **Manage secrets** → add:
+
+| Name | Value |
+|---|---|
+| `MOONGATE_JWT_SIGNING_KEY` | (the entire JWK JSON string from Phase 2.2) |
+
+Click **Save**. You now have two Edge Function secrets:
+- `MOONGATE_TUNNEL_URL_KEY` (from Phase 1)
+- `MOONGATE_JWT_SIGNING_KEY` (just added)
+
+`SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are
+auto-populated by Supabase — you do NOT add those.
+
+### Phase 2.4 — Log in to the Supabase CLI
+
+```powershell
+supabase login
+```
+
+A browser window opens. Sign in to Supabase. The CLI stores a token at
+`~/.supabase/access-token` (or similar) for subsequent commands.
+
+### Phase 2.5 — Get your project ref
+
+Open your project in the dashboard. The URL looks like:
+
+    https://supabase.com/dashboard/project/abcxyz123/...
+
+The `abcxyz123` part is your **project ref**. Tell Claude what it is.
+
+### Phase 2.6 — Deploy (handled by Claude)
+
+With the CLI logged in and the project ref known, Claude runs:
+
+```powershell
+supabase functions deploy enroll-prepare    --project-ref <ref> --no-verify-jwt
+supabase functions deploy printer-claim     --project-ref <ref>
+supabase functions deploy printer-access    --project-ref <ref>
+supabase functions deploy printer-heartbeat --project-ref <ref> --no-verify-jwt
+supabase functions deploy jwks              --project-ref <ref> --no-verify-jwt
+```
+
+`--no-verify-jwt` disables Supabase's automatic gateway JWT check for the
+endpoints that handle their own auth (Pi-signed payloads or public JWKS).
+`printer-claim` and `printer-access` keep the gateway check on for
+defence-in-depth even though they also re-verify the JWT internally.
+
+### Phase 2.7 — Smoke tests (curl)
+
+After deploy, we run a few curl tests from Claude's side to confirm each
+function responds correctly. The full sequence (Claude will execute):
+
+```powershell
+# Replace <PROJECT_REF> and <ANON_KEY> with your values.
+$BASE  = "https://<PROJECT_REF>.supabase.co/functions/v1"
+$ANON  = "<ANON_KEY>"
+
+# 1. jwks should return our public key
+Invoke-RestMethod "$BASE/jwks"
+
+# 2. enroll-prepare with bad input → 400
+Invoke-RestMethod -Method POST -Uri "$BASE/enroll-prepare" `
+    -Headers @{ apikey = $ANON } `
+    -Body '{}' -ContentType 'application/json'
+
+# 3. enroll-prepare with valid bogus pubkey → 200 (registers a token hash)
+$pubkey = [Convert]::ToBase64String((1..32 | ForEach-Object { [byte]0 }))
+$hash   = [Convert]::ToBase64String((1..32 | ForEach-Object { [byte]0 }))
+Invoke-RestMethod -Method POST -Uri "$BASE/enroll-prepare" `
+    -Headers @{ apikey = $ANON } `
+    -Body (@{ pi_public_key=$pubkey; token_hash=$hash } | ConvertTo-Json) `
+    -ContentType 'application/json'
+
+# 4. printer-claim without JWT → 401
+Invoke-RestMethod -Method POST -Uri "$BASE/printer-claim" `
+    -Headers @{ apikey = $ANON } `
+    -Body '{}' -ContentType 'application/json'
+```
+
+Claude will run these and confirm Phase 2 is done.
 
 ---
 
