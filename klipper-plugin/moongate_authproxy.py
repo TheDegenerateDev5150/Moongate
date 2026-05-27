@@ -243,10 +243,16 @@ def _forward_request_headers(request: web.Request) -> dict[str, str]:
 
 
 def _forward_response_headers(headers) -> dict[str, str]:
+    # Preserve Content-Length when upstream sends one. Stripping it forces
+    # aiohttp into Transfer-Encoding: chunked, which adds per-chunk
+    # framing overhead and prevents the client from pre-allocating /
+    # showing progress. For Mainsail's ~2MB JS bundle over Cloudflare +
+    # cellular, the extra round-trips were enough to trip a WebView
+    # cancel mid-stream (observed as "Cannot write to closing transport"
+    # on the proxy side, ERR_INCOMPLETE_CHUNKED_ENCODING on the client).
     return {
         k: v for k, v in headers.items()
         if k.lower() not in HOP_BY_HOP_HEADERS
-        and k.lower() != "content-length"
     }
 
 
@@ -275,12 +281,26 @@ async def _proxy_http(
                 headers=_forward_response_headers(upstream.headers),
             )
             await response.prepare(request)
-            async for chunk in upstream.content.iter_chunked(64 * 1024):
+            # 256 KiB chunks: large enough that a ~2 MB Mainsail bundle is
+            # ~8 await round-trips instead of ~32, small enough that
+            # backpressure on cellular doesn't pile up. The actual TCP
+            # write size on the wire is independent.
+            async for chunk in upstream.content.iter_chunked(256 * 1024):
                 await response.write(chunk)
             await response.write_eof()
             return response
     except asyncio.CancelledError:
         raise
+    except (ConnectionResetError, ConnectionAbortedError) as exc:
+        # Client (cloudflared / WebView) closed the connection mid-stream.
+        # 499 is the de-facto "client closed request" code (nginx-ism);
+        # aiohttp may not even get to send it because the client is gone,
+        # but the empty Response is a valid return value either way.
+        # Debug-only log because this is normal behaviour (back-button
+        # mid-load, cellular handoff, WebView cancel for any reason).
+        logger.debug("client disconnect during %s %s: %s",
+                     request.method, target_url, exc)
+        return web.Response(status=499, text="")
     except Exception as exc:
         logger.warning("upstream %s %s failed: %s",
                        request.method, target_url, exc)
