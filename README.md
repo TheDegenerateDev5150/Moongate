@@ -240,8 +240,8 @@ For a tour of the codebase — Riverpod providers, the service layer, data flows
 |---|---|
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Prerequisites, running, building, debugging, release signing, CI |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Code structure, state management, data-flow walkthroughs, design decisions |
-| [SECURITY.md](SECURITY.md) | Threat model, JWT internals, key management, URL-leakage exposure, audit references, vulnerability reporting |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common failure modes — Offline tiles, tunnel issues, camera errors, progress mismatch, in-app update banner not appearing — with diagnostics for each |
+| [SECURITY.md](SECURITY.md) | Threat model, what the tunnel exposes (and doesn't), the empirical 35-vector verification of the v0.4 "URL alone gives nothing" promise, audit references, vulnerability reporting |
+| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common failure modes — "Connected — Printer idle", offline tiles, tunnel issues, pairing failures, auth-proxy diagnostics — with shell commands for each |
 | [CHANGELOG.md](CHANGELOG.md) | Every release from v0.2.0 onwards with one-line summaries of what changed and why |
 | [docs/setup-guide.md](docs/setup-guide.md) | End-user setup walkthrough (friendlier version of [Setup](#setup) above) |
 
