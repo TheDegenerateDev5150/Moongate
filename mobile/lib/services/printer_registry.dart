@@ -128,6 +128,18 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Persist the detected web UI type ('mainsail' | 'fluidd') so the tile
+  /// can render the right logo on a cold launch — including when the
+  /// printer is currently offline (power-off, Pi rebooting, etc.).
+  Future<void> updateUiType(String printerId, String uiType) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    if (_printers[idx].uiType == uiType) return;
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(uiType: uiType);
+    await _save();
+  }
+
   /// Update webcam transform info from a successful Moongate /status poll.
   Future<void> updateWebcamInfo(
     String printerId, {

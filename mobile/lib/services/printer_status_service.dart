@@ -40,38 +40,36 @@ class PrinterStatusService {
 
   // ── LAN-first state ──────────────────────────────────────────────────────
   // The printer's last-known LAN URL is fetched from /status (Pi reports
-  // local_ip + http_port). When set, the service tries LAN before the
-  // Cloudflare tunnel. After 3 consecutive LAN failures we back off for
-  // 5 minutes so off-LAN polling doesn't waste 2s per cycle.
+  // local_ip + http_port). When set, EVERY poll tries LAN before the
+  // tunnel — so reconnecting to home WiFi after being on cellular flips
+  // the tile back to "Local" on the very next poll. The cost is one ~2s
+  // LAN timeout per poll when off-LAN; that's the trade we explicitly
+  // want per the user's "always check for local first" rule.
   //
   // `_currentLanUrl` is a mutable copy initialised from the PrinterConfig
   // snapshot. Subsequent /status responses update it in-place so the very
-  // next poll uses the freshly-learned LAN URL. Without this the service
-  // would be stuck on the construction-time snapshot forever.
-  String?   _currentLanUrl;
-  int       _lanFailureStreak = 0;
-  DateTime? _skipLanUntil;
+  // next poll uses the freshly-learned LAN URL.
+  String? _currentLanUrl;
 
-  PrinterStatusService(this.config) : _currentLanUrl = config.lanUrl;
+  PrinterStatusService(this.config)
+      : _currentLanUrl = config.lanUrl,
+        _uiType        = config.uiType,
+        _uiTypeChecked = config.uiType != null;
 
   Stream<PrinterStatus> get stream => _controller.stream;
 
-  // ── v0.2.x compat stubs (PrinterTile still subscribes to these) ─────────
-  //
-  // The dual-path "Loading Local…" / "Loading Tunnel…" UI no longer makes
-  // sense in v0.3 since there's only one path (Supabase-mediated tunnel).
-  // We expose empty streams so existing listeners don't crash.
-
-  Stream<String> get probePhase       => const Stream<String>.empty();
-  Stream<String> get tunnelUrlUpdates => const Stream<String>.empty();
-  String?        get uiType           => _uiType;
+  String? get uiType => _uiType;
 
   // ── UI-type detection (Mainsail vs Fluidd) ───────────────────────────────
   // The tile renders the appropriate logo as a webcam placeholder when no
-  // camera is configured. Detected once per service lifetime by fetching
-  // the root page and sniffing the HTML for "mainsail" or "fluidd".
+  // camera is configured, AND as a "the printer is currently offline" hint
+  // so the tile stays identifiable when the K3 is powered off. Detection
+  // is done once per printer (persisted in PrinterConfig) by sniffing the
+  // root page HTML for "mainsail" or "fluidd".
   String? _uiType;
-  bool    _uiTypeChecked = false;
+  // Seeded `true` when the config already has a persisted uiType — saves a
+  // redundant root-page fetch on every cold launch.
+  bool    _uiTypeChecked;
 
   Future<void> _detectUiType(String baseUrl, String accessToken) async {
     _uiTypeChecked = true;
@@ -84,10 +82,17 @@ class PrinterStatusService {
           timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body = response.body.toLowerCase();
+        String? detected;
         if (body.contains('mainsail')) {
-          _uiType = 'mainsail';
+          detected = 'mainsail';
         } else if (body.contains('fluidd')) {
-          _uiType = 'fluidd';
+          detected = 'fluidd';
+        }
+        if (detected != null) {
+          _uiType = detected;
+          // Persist so a future cold launch can show the logo immediately,
+          // even before any poll succeeds (printer powered off, Pi rebooting).
+          PrinterRegistry.instance.updateUiType(config.id, detected).ignore();
         }
       }
     } catch (_) {
@@ -149,23 +154,16 @@ class PrinterStatusService {
       await _discoverChamberSensor(access);
     }
 
-    // 3. LAN-first when we have a cached URL and haven't been failing
-    //    too hard. Same EdDSA token works on LAN or tunnel.
+    // 3. LAN-first on every poll when we have a cached URL. Same EdDSA
+    //    token works on LAN or tunnel. The 2s fast-fail timeout inside
+    //    _tryMoongateEndpoint caps the off-LAN penalty.
     final lanUrl = _currentLanUrl;
-    final canTryLan = lanUrl != null &&
-        (_skipLanUntil == null || DateTime.now().isAfter(_skipLanUntil!));
-    if (canTryLan) {
+    if (lanUrl != null) {
       final lan = await _tryMoongateEndpoint(
           baseUrl: lanUrl, access: access, isLan: true);
       if (lan != null) {
-        _lanFailureStreak = 0;
-        _skipLanUntil     = null;
         if (!_disposed) _controller.add(lan);
         return;
-      }
-      _lanFailureStreak++;
-      if (_lanFailureStreak >= 3) {
-        _skipLanUntil = DateTime.now().add(const Duration(minutes: 5));
       }
     }
 
@@ -188,7 +186,44 @@ class PrinterStatusService {
     }
     final retry =
         await _tryMoongateEndpoint(baseUrl: access.tunnelUrl, access: access, isLan: false);
-    if (!_disposed) _controller.add(retry ?? PrinterStatus.offline);
+    if (retry != null) {
+      if (!_disposed) _controller.add(retry);
+      return;
+    }
+
+    // 6. All moongate paths failed. Distinguish two cases for the user:
+    //    • Pi reachable but Klipper / Moonraker not responding — common
+    //      on the K3 when the printer-power toggle inside Mainsail is off
+    //      ('waiting'). Tile shows "Connected" + the logo, not "Offline".
+    //    • Nothing answers on either LAN or tunnel — actually offline.
+    final reachable = await _isPiReachable(access);
+    if (!_disposed) {
+      _controller.add(reachable ? PrinterStatus.waiting : PrinterStatus.offline);
+    }
+  }
+
+  // ── Reachability probe ───────────────────────────────────────────────────
+  // HEADs the LAN URL (if we have one and haven't been failing it) and the
+  // tunnel URL. ANY HTTP response back — auth proxy's 401, nginx's 200/304
+  // for the Mainsail root, even an upstream-down 502 — proves the Pi
+  // answered. We only get an exception when nothing on that host is
+  // listening. Used to differentiate "Klipper not running" from "Pi off"
+  // after the moongate /status path has given up.
+  Future<bool> _isPiReachable(PrinterAccess access) async {
+    final candidates = <String>[
+      if (_currentLanUrl != null) _currentLanUrl!,
+      access.tunnelUrl,
+    ];
+    for (final base in candidates) {
+      try {
+        await http.head(Uri.parse(base))
+            .timeout(const Duration(seconds: 2));
+        return true;
+      } catch (_) {
+        // Refused / timeout / DNS — try next candidate
+      }
+    }
+    return false;
   }
 
   // ── Authed GET helper ────────────────────────────────────────────────────

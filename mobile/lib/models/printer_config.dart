@@ -38,6 +38,12 @@ class PrinterConfig {
   final int  webcamRotation; // 0 | 90 | 180 | 270
   final int  webcamTargetFps;
 
+  /// 'mainsail' | 'fluidd' | null — sniffed once on first successful poll.
+  /// Persisted so the tile can show the right logo on a cold launch
+  /// (e.g. when the printer is powered off and the tile would otherwise
+  /// be a blank spinner).
+  final String? uiType;
+
   const PrinterConfig({
     required this.id,
     required this.name,
@@ -46,6 +52,7 @@ class PrinterConfig {
     this.webcamFlipV     = false,
     this.webcamRotation  = 0,
     this.webcamTargetFps = 15,
+    this.uiType,
   });
 
   PrinterConfig copyWith({
@@ -55,6 +62,7 @@ class PrinterConfig {
     bool?   webcamFlipV,
     int?    webcamRotation,
     int?    webcamTargetFps,
+    String? uiType,
   }) =>
       PrinterConfig(
         id:              id,
@@ -64,6 +72,7 @@ class PrinterConfig {
         webcamFlipV:     webcamFlipV     ?? this.webcamFlipV,
         webcamRotation:  webcamRotation  ?? this.webcamRotation,
         webcamTargetFps: webcamTargetFps ?? this.webcamTargetFps,
+        uiType:          uiType          ?? this.uiType,
       );
 
   // ── v0.2.x compat getters ──────────────────────────────────────────────
@@ -85,6 +94,7 @@ class PrinterConfig {
         'webcamFlipV':     webcamFlipV,
         'webcamRotation':  webcamRotation,
         'webcamTargetFps': webcamTargetFps,
+        if (uiType != null) 'uiType': uiType,
       };
 
   factory PrinterConfig.fromJson(Map<String, dynamic> j) {
@@ -100,6 +110,7 @@ class PrinterConfig {
       webcamFlipV:     j['webcamFlipV']     as bool? ?? false,
       webcamRotation:  j['webcamRotation']  as int?  ?? 0,
       webcamTargetFps: j['webcamTargetFps'] as int?  ?? 15,
+      uiType:          j['uiType']          as String?,
     );
   }
 
@@ -125,7 +136,9 @@ class PrinterStatus {
   ///   'startup'      — Klipper reachable but still initialising
   ///   'connecting'   — before the first status poll completes
   ///   'starting_up'  — Pi hasn't heartbeated to Supabase yet (just paired)
-  ///   'offline'      — all network paths exhausted
+  ///   'waiting'      — Pi reachable, but the printer-side stack isn't
+  ///                    (K3 printer power off, Klipper not running, etc.)
+  ///   'offline'      — all network paths exhausted, Pi unreachable
   final String state;
   final double progress; // 0.0 – 1.0
   final double hotendTemp;
@@ -176,6 +189,19 @@ class PrinterStatus {
 
   static const startingUp = PrinterStatus(
     state: 'starting_up',
+    progress: 0,
+    hotendTemp: 0,
+    hotendTarget: 0,
+    bedTemp: 0,
+    bedTarget: 0,
+    connection: PrinterConnection.offline,
+  );
+
+  /// Pi is reachable but its printer-side stack isn't responding — e.g.
+  /// the K3's printer power is toggled off so Klipper isn't running, or
+  /// Moonraker hasn't come back up yet after a restart.
+  static const waiting = PrinterStatus(
+    state: 'waiting',
     progress: 0,
     hotendTemp: 0,
     hotendTarget: 0,
