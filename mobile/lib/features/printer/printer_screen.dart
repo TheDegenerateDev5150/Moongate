@@ -11,22 +11,22 @@ import '../../services/supabase_service.dart';
 
 /// Full-screen WebView showing the printer's Mainsail/Fluidd interface.
 ///
-/// v0.3.0 flow:
-///   1. On init, ask Supabase for the printer's current tunnel URL via
-///      [PrinterAccessCache] (which calls /printer-access under the hood).
-///   2. Load `${tunnel_url}/` in the WebView. Mainsail's API calls reach
-///      Moonraker on the Pi through the same tunnel.
-///   3. If the URL fetch returns 503 (Pi hasn't heartbeated yet — fresh
-///      pairing) we retry after a short delay.
-///   4. If the URL becomes unreachable we surface an in-app error overlay
-///      with a Retry button that re-fetches a fresh URL.
-///
-/// Note: Mainsail's web UI doesn't carry an EdDSA access token, so it
-/// reaches native Moonraker endpoints through the tunnel un-authenticated.
-/// That's the same model as v0.2.x — the security upgrade in v0.3.0 is
-/// that control commands (which go through /server/moongate/control) now
-/// require a fresh EdDSA token from Supabase, which only the legitimate
-/// owner's signed-in app can mint.
+/// Flow:
+///   1. On init, fetch a fresh `{tunnel_url, access_token}` from Supabase
+///      via [PrinterAccessCache].
+///   2. v0.4: before navigation, set an `mg_token` cookie on the WebView
+///      scoped to the tunnel host. The auth proxy on the Pi reads it on
+///      every request the WebView makes (static assets + WebSocket upgrade),
+///      verifies the EdDSA signature, and only then proxies to nginx /
+///      Moonraker. On v0.3 Pis the cookie is set anyway but ignored.
+///   3. Refresh the cookie at ~4 min (token TTL is 5 min) so an open
+///      WebView session never falls off the cliff.
+///   4. Load the LAN URL when one is cached (faster); fall back to tunnel
+///      on error. Cookie scope is tunnel-host, so LAN requests don't carry
+///      it — but LAN doesn't need it (nginx is unauth'd on LAN).
+///   5. On 503 from /printer-access (Pi hasn't heartbeated yet, fresh
+///      pairing) retry after a short delay. On other errors surface an
+///      in-app overlay with a Retry button.
 class PrinterScreen extends StatefulWidget {
   final PrinterConfig printer;
   const PrinterScreen({super.key, required this.printer});
@@ -44,6 +44,7 @@ class _PrinterScreenState extends State<PrinterScreen>
   String? _errorMsg;
   String? _tunnelUrl;
   Timer?  _retryTimer;
+  Timer?  _cookieRefreshTimer;
 
   // Local copy of the printer name so the app bar reflects renames
   // immediately, without waiting for a dashboard rebuild.
@@ -59,6 +60,7 @@ class _PrinterScreenState extends State<PrinterScreen>
   @override
   void dispose() {
     _retryTimer?.cancel();
+    _cookieRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -77,6 +79,13 @@ class _PrinterScreenState extends State<PrinterScreen>
       final access = await PrinterAccessCache.instance.get(widget.printer.id);
       if (!mounted) return;
       _tunnelUrl = access.tunnelUrl;
+
+      // v0.4: prime the EdDSA cookie before navigation so the auth proxy
+      // accepts every WebView request (HTML, JS, XHR, WS upgrade). Schedule
+      // a periodic refresh so a long-open session never sends an expired
+      // token. Both no-ops on v0.3 Pis.
+      await _setMgTokenCookie(access);
+      _scheduleCookieRefresh();
 
       // Prefer the cached LAN URL when present — Mainsail loads dramatically
       // faster on direct LAN than through Cloudflare. If LAN is unreachable
@@ -146,6 +155,56 @@ class _PrinterScreenState extends State<PrinterScreen>
           });
         },
       ));
+  }
+
+  // ── v0.4: EdDSA cookie wiring for the WebView ─────────────────────────────
+  //
+  // The auth proxy on the Pi (v0.4+) requires every request to carry the
+  // EdDSA access token. WebView-loaded static assets and WS upgrades can't
+  // easily set an Authorization header, so we use a cookie scoped to the
+  // tunnel host. The proxy reads `mg_token=<jwt>` from Cookie:, verifies
+  // EdDSA, and proxies upstream.
+  //
+  // Scope decisions:
+  //   - Domain = tunnel host exactly. We don't broaden to .trycloudflare.com
+  //     because that would leak our token to anyone else's quick-tunnel
+  //     subdomain the user might happen to visit in the same WebView.
+  //   - Path = "/" — token applies to every resource on the host.
+  //   - No explicit expiry — set as a session cookie, overwritten before
+  //     the JWT expires by the refresh timer.
+
+  Future<void> _setMgTokenCookie(PrinterAccess access) async {
+    final tunnel = Uri.tryParse(access.tunnelUrl);
+    if (tunnel == null || tunnel.host.isEmpty) return;
+    try {
+      await WebViewCookieManager().setCookie(WebViewCookie(
+        name:   'mg_token',
+        value:  access.accessToken,
+        domain: tunnel.host,
+        path:   '/',
+      ));
+    } catch (_) {
+      // setCookie can throw on older WebView versions; fall through. The
+      // WebView will eventually 401 and surface the error overlay.
+    }
+  }
+
+  void _scheduleCookieRefresh() {
+    _cookieRefreshTimer?.cancel();
+    // Token TTL is 5 min; refresh at 4 to leave a safety margin for
+    // clock skew + the WebView holding a stale cookie momentarily.
+    _cookieRefreshTimer = Timer.periodic(const Duration(minutes: 4), (_) async {
+      if (!mounted) return;
+      try {
+        final access = await PrinterAccessCache.instance.get(widget.printer.id);
+        if (!mounted) return;
+        await _setMgTokenCookie(access);
+      } catch (_) {
+        // Refresh failed — the WebView will eventually get a 401 and the
+        // user can tap Retry. Don't disrupt the current view for a single
+        // missed background refresh.
+      }
+    });
   }
 
   @override

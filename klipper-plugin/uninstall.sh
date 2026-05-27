@@ -37,7 +37,6 @@ echo "  • moongate-pair.html from Mainsail"
 echo ""
 echo "And RESTORE (from ~/.config/moongate/v0.4-backup/ if present):"
 echo "  • moonraker.conf — back to pre-v0.4 (Moonraker bound to 0.0.0.0)"
-echo "  • nginx vhost(s) — back to pre-v0.4 (Mainsail listens publicly again)"
 echo ""
 read -r -p "Continue? [y/N] " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
@@ -103,35 +102,11 @@ if [[ -d "$V04_BACKUP_DIR" ]]; then
         success "moonraker.conf restored"
     fi
 
-    # nginx vhosts — backups named nginx-<basename>.orig. Restore each to
-    # the location it came from (we infer by basename, which is unique for
-    # mainsail/fluidd).
-    NGINX_RESTORED=0
-    for backup in "$V04_BACKUP_DIR"/nginx-*.orig; do
-        [[ -f "$backup" ]] || continue
-        base="$(basename "$backup")"
-        base="${base#nginx-}"
-        base="${base%.orig}"
-        for candidate in \
-            /etc/nginx/sites-available/"$base" \
-            /etc/nginx/conf.d/"$base"; do
-            if [[ -f "$candidate" ]]; then
-                sudo cp "$backup" "$candidate"
-                success "nginx vhost restored: $candidate"
-                NGINX_RESTORED=1
-                break
-            fi
-        done
-    done
-
-    if [[ $NGINX_RESTORED -eq 1 ]]; then
-        if sudo nginx -t 2>/dev/null; then
-            sudo systemctl reload nginx
-            success "nginx reloaded"
-        else
-            warn "nginx -t failed after restore — manual inspection needed."
-        fi
-    fi
+    # nginx-*.orig backups may exist from an earlier draft of v0.4 that
+    # patched nginx too. We don't restore them (the corresponding install
+    # path was removed before ship), but we don't delete them either —
+    # if a user has them, the corresponding nginx vhost was already
+    # restored manually or never modified.
 else
     info "No v0.4 backup dir found — skipping restore (Pi was never v0.4 or already cleaned)."
 fi

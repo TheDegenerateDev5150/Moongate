@@ -73,13 +73,15 @@ class PrinterStatusService {
   String? _uiType;
   bool    _uiTypeChecked = false;
 
-  Future<void> _detectUiType(String baseUrl) async {
+  Future<void> _detectUiType(String baseUrl, String accessToken) async {
     _uiTypeChecked = true;
     try {
       final uri      = Uri.parse('$baseUrl/');
-      final response = await http
-          .get(uri)
-          .timeout(const Duration(seconds: 5));
+      // In v0.4 the tunnel-side Mainsail root is gated by the auth proxy;
+      // we attach the EdDSA token. On LAN the header is ignored.
+      final response = await _authedGet(
+          uri, accessToken,
+          timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body = response.body.toLowerCase();
         if (body.contains('mainsail')) {
@@ -189,15 +191,32 @@ class PrinterStatusService {
     if (!_disposed) _controller.add(retry ?? PrinterStatus.offline);
   }
 
+  // ── Authed GET helper ────────────────────────────────────────────────────
+  // v0.4 puts an EdDSA auth proxy in front of Moonraker on the tunnel
+  // side; un-authed calls to /printer/* and /server/* return 401. We
+  // attach the access token as Authorization: Bearer on every tunnel-side
+  // GET. On the LAN side the header is ignored — nginx and Moonraker
+  // don't read it (Moonraker has its own ?token= mechanism and trusts the
+  // LAN subnet by default).
+  Future<http.Response> _authedGet(
+    Uri uri,
+    String accessToken, {
+    required Duration timeout,
+  }) {
+    return http
+        .get(uri, headers: {'Authorization': 'Bearer $accessToken'})
+        .timeout(timeout);
+  }
+
   // ── Chamber sensor discovery (one call per service lifetime) ─────────────
 
   Future<void> _discoverChamberSensor(PrinterAccess access) async {
     try {
       final uri      = Uri.parse(
           '${access.tunnelUrl}/printer/objects/list');
-      final response = await http
-          .get(uri)
-          .timeout(const Duration(seconds: 5));
+      final response = await _authedGet(
+          uri, access.accessToken,
+          timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body    = jsonDecode(response.body) as Map<String, dynamic>;
         final objects =
@@ -222,7 +241,7 @@ class PrinterStatusService {
   // ── File metadata for accurate progress (kept from v0.2.x) ───────────────
 
   Future<void> _fetchFileMetadata(
-      String tunnelUrl, String? filename) async {
+      String baseUrl, String accessToken, String? filename) async {
     if (filename == null || filename.isEmpty) return;
     if (filename == _metadataFilename) return;
     _estimatedPrintSeconds = null;
@@ -230,10 +249,10 @@ class PrinterStatusService {
     try {
       final encoded  = Uri.encodeComponent(filename);
       final uri      = Uri.parse(
-          '$tunnelUrl/server/files/metadata?filename=$encoded');
-      final response = await http
-          .get(uri)
-          .timeout(const Duration(seconds: 5));
+          '$baseUrl/server/files/metadata?filename=$encoded');
+      final response = await _authedGet(
+          uri, accessToken,
+          timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body      = jsonDecode(response.body) as Map<String, dynamic>;
         final estimated =
@@ -272,22 +291,23 @@ class PrinterStatusService {
           result['status'] as Map<String, dynamic>);
 
       if (_chamberKey != null && status[_chamberKey!] == null) {
-        await _supplementaryChamberQuery(baseUrl, status);
+        await _supplementaryChamberQuery(baseUrl, access.accessToken, status);
       }
       if (status['display_status'] == null ||
           status['virtual_sdcard'] == null) {
-        await _supplementaryProgressQuery(baseUrl, status);
+        await _supplementaryProgressQuery(baseUrl, access.accessToken, status);
       }
 
       final stats = status['print_stats'] as Map<String, dynamic>? ?? {};
       if (stats['state'] == 'printing') {
-        await _fetchFileMetadata(baseUrl, stats['filename'] as String?);
+        await _fetchFileMetadata(
+            baseUrl, access.accessToken, stats['filename'] as String?);
       }
 
       // Fire-and-forget UI detection on the first successful connection so
       // the tile knows whether to show the Mainsail or Fluidd logo when no
       // webcam is configured.
-      if (!_uiTypeChecked) _detectUiType(baseUrl);
+      if (!_uiTypeChecked) _detectUiType(baseUrl, access.accessToken);
 
       return _parseStatus(status: status, moongateResult: result, isLan: isLan);
     } catch (_) {
@@ -296,14 +316,14 @@ class PrinterStatusService {
   }
 
   Future<void> _supplementaryChamberQuery(
-      String tunnelUrl, Map<String, dynamic> status) async {
+      String baseUrl, String accessToken, Map<String, dynamic> status) async {
     try {
       final encoded  = Uri.encodeComponent(_chamberKey!);
       final uri      = Uri.parse(
-          '$tunnelUrl/printer/objects/query?$encoded');
-      final response = await http
-          .get(uri)
-          .timeout(const Duration(seconds: 5));
+          '$baseUrl/printer/objects/query?$encoded');
+      final response = await _authedGet(
+          uri, accessToken,
+          timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
         final s    = body['result']?['status'] as Map<String, dynamic>?;
@@ -314,13 +334,13 @@ class PrinterStatusService {
   }
 
   Future<void> _supplementaryProgressQuery(
-      String tunnelUrl, Map<String, dynamic> status) async {
+      String baseUrl, String accessToken, Map<String, dynamic> status) async {
     try {
       final uri = Uri.parse(
-          '$tunnelUrl/printer/objects/query?display_status&virtual_sdcard');
-      final response = await http
-          .get(uri)
-          .timeout(const Duration(seconds: 5));
+          '$baseUrl/printer/objects/query?display_status&virtual_sdcard');
+      final response = await _authedGet(
+          uri, accessToken,
+          timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
         final s    = body['result']?['status'] as Map<String, dynamic>?;

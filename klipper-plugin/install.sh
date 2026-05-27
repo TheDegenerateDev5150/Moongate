@@ -205,109 +205,15 @@ print("moonraker.conf: [server] host=127.0.0.1")
 PYEOF
 success "Moonraker bound to 127.0.0.1"
 
-# ── 2f. Bind Mainsail/Fluidd nginx vhost to 127.0.0.1 ────────────────────────
-# Same reasoning as 2e: the auth proxy is the only public-facing reachable
-# port for tunnel traffic. nginx's vhost still serves the LAN web UI on the
-# Pi's local IP via the loopback bind + the Pi's own local routing — i.e.
-# the loopback bind is reached over LAN by the auth proxy forwarding requests
-# from cloudflared. The pair-page at http://<lan-ip>/moongate-pair.html
-# requires a separate LAN listen, which we add below alongside the loopback.
-info "Binding Mainsail/Fluidd nginx vhost to 127.0.0.1..."
-
-NGINX_VHOSTS=()
-# Iterate over typical KIAUH / MainsailOS / manual install locations.
-# Resolve symlinks so we patch the real file once even if both
-# sites-available and sites-enabled point to it.
-for candidate in \
-    /etc/nginx/sites-available/mainsail \
-    /etc/nginx/sites-available/fluidd \
-    /etc/nginx/conf.d/mainsail.conf \
-    /etc/nginx/conf.d/fluidd.conf; do
-    if [[ -f "$candidate" ]]; then
-        real="$(readlink -f "$candidate")"
-        # Dedupe in case a sites-enabled symlink resolves to the same file
-        already=0
-        for v in "${NGINX_VHOSTS[@]}"; do
-            [[ "$v" == "$real" ]] && already=1 && break
-        done
-        [[ $already -eq 0 ]] && NGINX_VHOSTS+=("$real")
-    fi
-done
-
-if [[ ${#NGINX_VHOSTS[@]} -eq 0 ]]; then
-    warn "No Mainsail/Fluidd nginx vhost found at the usual locations."
-    warn "If your nginx config listens publicly, the v0.4 promise is weakened."
-    warn "Manual: edit /etc/nginx/sites-available/<vhost>, change 'listen 80;' to"
-    warn "        'listen 127.0.0.1:80;' (and add a second 'listen <lan-ip>:80;'"
-    warn "        line if you want the pair-page on the LAN web UI)."
-else
-    for vhost in "${NGINX_VHOSTS[@]}"; do
-        base="$(basename "$vhost")"
-        backup_once "$vhost" "nginx-${base}.orig"
-
-        # Use python3 — same reason as moonraker.conf: regex on multi-line
-        # listen directives is awkward in sed and we want to be idempotent.
-        # Rewrites unqualified or wildcard listen directives to 127.0.0.1.
-        # Already-loopback or already-LAN-specific listens are left alone.
-        sudo python3 - "$vhost" << 'PYEOF'
-import re, sys
-path = sys.argv[1]
-with open(path) as f:
-    content = f.read()
-
-# Patterns we rewrite (each captures the port — group 1):
-#   listen 80;                  → listen 127.0.0.1:80;
-#   listen 80 default_server;   → listen 127.0.0.1:80 default_server;
-#   listen *:80;                → listen 127.0.0.1:80;
-# Patterns left untouched:
-#   listen 127.0.0.1:80;        already loopback
-#   listen 192.168.x.y:80;      already specific
-#   listen [::]:80;             IPv6 — strip (no v6 loopback equivalent we want exposed)
-def rewrite_listen(match):
-    indent = match.group(1)
-    rest   = match.group(2)
-    # Skip already-specific binds (e.g. listen 192.168.1.100:80; or
-    # listen 127.0.0.1:80;) — return the original body unchanged.
-    if re.search(r'\b\d+\.\d+\.\d+\.\d+:', rest):
-        return f"{indent}listen {rest}"
-    # Rewrite 'listen *:N' or 'listen N' to 'listen 127.0.0.1:N'
-    rest_new = re.sub(r'^\*:', '127.0.0.1:', rest)            # listen *:80 → listen 127.0.0.1:80
-    if rest_new == rest:
-        rest_new = re.sub(r'^(\d+)', r'127.0.0.1:\1', rest)   # listen 80 → listen 127.0.0.1:80
-    return f"{indent}listen {rest_new}"
-
-original = content
-# Each path through rewrite_listen returns without a trailing ';' — the
-# outer lambda re-appends it exactly once.
-content = re.sub(r'(?m)^(\s*)listen\s+(.+?);', lambda m: rewrite_listen(m) + ';', content)
-# Comment out any bare IPv6 listens — no information leak via v6 either.
-content = re.sub(r'(?m)^(\s*)listen\s+\[::\]:', r'\1# [v0.4] removed: listen [::]:', content)
-
-if content != original:
-    with open(path, 'w') as f:
-        f.write(content)
-    print(f"patched: {path}")
-else:
-    print(f"already loopback (or no listen lines matched): {path}")
-PYEOF
-        success "nginx vhost: $vhost"
-    done
-
-    # Validate before restart so we never break the user's web UI.
-    if sudo nginx -t 2>/dev/null; then
-        sudo systemctl reload nginx
-        success "nginx reloaded"
-    else
-        warn "nginx -t reported errors. Restoring originals and skipping reload."
-        for vhost in "${NGINX_VHOSTS[@]}"; do
-            base="$(basename "$vhost")"
-            if [[ -f "$V04_BACKUP_DIR/nginx-${base}.orig" ]]; then
-                sudo cp "$V04_BACKUP_DIR/nginx-${base}.orig" "$vhost"
-            fi
-        done
-        warn "Run 'sudo nginx -t' manually, fix any conflicts, then re-run install.sh."
-    fi
-fi
+# NOTE: We intentionally do NOT patch nginx vhosts in v0.4.0. The original
+# v0.4 design considered binding nginx to 127.0.0.1 (defense in depth), but
+# that would break the LAN-first path that v0.3 introduced — Mainsail loaded
+# from http://<pi-lan-ip>/ would 404 because nothing would be listening on
+# the LAN interface. The actual security guarantee comes from retargeting
+# cloudflared (step 7 below) to the auth proxy: the tunnel no longer reaches
+# nginx, only the EdDSA gate. nginx stays reachable on LAN exactly as today.
+# If a user explicitly port-forwards :80, they have made nginx public on
+# their own initiative — same risk profile as v0.3 in that scenario.
 
 if grep -q '^\[moongate\]' "$MOONRAKER_CONF"; then
     info "[moongate] already in moonraker.conf"
