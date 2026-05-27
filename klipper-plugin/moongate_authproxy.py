@@ -343,15 +343,24 @@ async def _proxy_websocket(
 
     # Forward identification headers (User-Agent etc.) to Moonraker so
     # its log reflects the real client, not "Python/3.11 aiohttp/...".
-    # _forward_request_headers already drops hop-by-hop, Host,
-    # Authorization, X-Forwarded-For, and the mg_token cookie. We also
-    # drop Sec-WebSocket-* because aiohttp's ws_connect generates its
-    # own (different Sec-WebSocket-Key, etc.) and HTTP header keys are
-    # case-sensitive in dicts even though they're case-insensitive on
-    # the wire.
+    #
+    # Origin MUST be stripped: Moonraker enforces cors_domains on WS
+    # upgrades. The browser's Origin is the tunnel hostname (e.g.
+    # `https://abc.trycloudflare.com`), which is not — and cannot
+    # practically be — in the user's cors_domains list (tunnel URL
+    # rotates on every Pi reboot). Without an Origin header Moonraker
+    # treats the upgrade as a non-browser request and accepts it
+    # because the connection is from a trusted_clients address
+    # (127.0.0.1, since the proxy fronts everything). Same effect as
+    # before this commit when we passed no headers at all — but we
+    # keep User-Agent etc. for log visibility.
+    #
+    # Sec-WebSocket-* are dropped because aiohttp's ws_connect generates
+    # its own (different key, etc.) and would conflict with stale values.
     _WS_HEADERS_TO_DROP = {"sec-websocket-key", "sec-websocket-version",
                            "sec-websocket-extensions",
-                           "sec-websocket-protocol"}
+                           "sec-websocket-protocol",
+                           "origin"}
     ws_headers = {
         k: v for k, v in _forward_request_headers(request).items()
         if k.lower() not in _WS_HEADERS_TO_DROP
