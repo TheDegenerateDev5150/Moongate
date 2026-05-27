@@ -207,12 +207,26 @@ def _backend_for(path: str) -> str:
 
 def _forward_request_headers(request: web.Request) -> dict[str, str]:
     """Copy request headers for the upstream call, stripping hop-by-hop
-    headers, the inbound Host, our own Authorization header, and the
-    mg_token cookie. Add X-Forwarded-For / -Proto."""
+    headers, the inbound Host, our own Authorization header, the mg_token
+    cookie, and any X-Forwarded-For from cloudflared.
+
+    We intentionally do NOT forward X-Forwarded-For. Moonraker uses it to
+    determine the source IP for its trusted_clients check; passing the
+    real internet client IP causes Moonraker to reject the request (it's
+    not in 10.0.0.0/8, 127.0.0.0/8, etc.). Dropping the header lets
+    Moonraker see the request as coming from the auth proxy on 127.0.0.1,
+    which is in the default trusted_clients range — so Moonraker trusts
+    us. The actual access decision is made at our proxy *before* the
+    request ever reaches Moonraker (EdDSA gate); Moonraker's own auth is
+    a no-op when fronted by us.
+
+    Bonus: real client IPs never end up in Moonraker / Mainsail logs."""
     out: dict[str, str] = {}
     for name, value in request.headers.items():
         lower = name.lower()
-        if lower in HOP_BY_HOP_HEADERS or lower in ("host", "authorization"):
+        if lower in HOP_BY_HOP_HEADERS:
+            continue
+        if lower in ("host", "authorization", "x-forwarded-for"):
             continue
         if lower == "cookie":
             kept = "; ".join(
@@ -224,11 +238,6 @@ def _forward_request_headers(request: web.Request) -> dict[str, str]:
             continue
         out[name] = value
 
-    out["X-Forwarded-For"] = (
-        request.headers.get("X-Forwarded-For")
-        or request.remote
-        or ""
-    )
     out["X-Forwarded-Proto"] = "https"
     return out
 
