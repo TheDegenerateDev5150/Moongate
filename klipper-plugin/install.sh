@@ -74,18 +74,19 @@ if [[ -d "$MOONGATE_DIR/.git" ]]; then
     CURRENT_BRANCH="$(git -C "$MOONGATE_DIR" branch --show-current 2>/dev/null || echo unknown)"
     if [[ "$CURRENT_BRANCH" == "master" ]]; then
         info "Repo on master — pulling latest..."
-        # Robust update: a `git pull --ff-only` can fail fatally with
-        # "refusing to merge unrelated histories" when the local clone has
-        # commits that share no ancestor with origin/master (e.g. an older
-        # fork, or a prior upstream force-push). set -e would then abort
-        # the installer mid-way. Fall back to re-cloning fresh, preserving
-        # the broken clone for forensic inspection.
+        # Robust update: `git pull --ff-only` can fail fatally for several
+        # reasons — divergent history (force-push upstream), dirty working
+        # tree (CRLF conversion, manual edits), untracked files that would
+        # be overwritten, or local commits ahead of master. set -e would
+        # then abort the installer mid-way. Fall back to re-cloning fresh,
+        # preserving the broken clone for forensic inspection. (Git's own
+        # error message printed above tells the user the specific cause.)
         if git -C "$MOONGATE_DIR" fetch origin master \
             && git -C "$MOONGATE_DIR" merge --ff-only origin/master; then
             success "Repository updated."
         else
             BROKEN_DIR="${MOONGATE_DIR}.broken-$(date +%Y%m%d-%H%M%S)"
-            warn "Local clone can't fast-forward to origin/master (divergent history)."
+            warn "Local clone can't fast-forward to origin/master (see git error above)."
             warn "Moving aside to $BROKEN_DIR and re-cloning fresh."
             mv "$MOONGATE_DIR" "$BROKEN_DIR"
             git clone --depth=1 "$MOONGATE_REPO" "$MOONGATE_DIR"
