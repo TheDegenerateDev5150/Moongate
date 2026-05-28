@@ -539,8 +539,16 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
     // restart this loop because of the `mounted` check + the closure
     // capturing `widget.webcamTargetFps` is re-evaluated on every iteration.
     Future.doWhile(() async {
-      // Clamp defensively in case a config from the wire has a junk value.
-      final fps = widget.webcamTargetFps.clamp(1, 60);
+      // Cap the tick rate on tunnel mode. Cellular + Cloudflare-edge RTT
+      // makes each snapshot take 200-1000ms; at the configured 15+ FPS,
+      // Image.network would cancel every in-flight load with the next
+      // tick (new `_t=N` ⇒ new src), so no frame ever completes and the
+      // errorBuilder placeholder shows permanently. 3 FPS leaves ~333ms
+      // per fetch — plenty for the tunnel path while still smooth for a
+      // thumbnail. LAN mode keeps the configured rate (snapshots finish
+      // in tens of ms).
+      final maxFps = widget.connection == PrinterConnection.remote ? 3 : 60;
+      final fps = widget.webcamTargetFps.clamp(1, maxFps);
       final intervalMs = (1000 / fps).round();
       await Future.delayed(Duration(milliseconds: intervalMs));
       if (!mounted) return false;
