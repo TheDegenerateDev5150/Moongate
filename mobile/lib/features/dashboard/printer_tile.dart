@@ -173,9 +173,8 @@ class _PrinterTileState extends State<PrinterTile> {
                 fit: StackFit.expand,
                 children: [
                   _WebcamSnapshot(
-                    printer: widget.printer,
                     connection: _status.connection,
-                    webcamSnapshotPath: _status.webcamSnapshotPath,
+                    webcamSnapshotUrl: _status.webcamSnapshotUrl,
                     webcamFlipH:     _status.webcamFlipH,
                     webcamFlipV:     _status.webcamFlipV,
                     webcamRotation:  _status.webcamRotation,
@@ -486,9 +485,12 @@ class _Btn extends StatelessWidget {
 // the connection indicator on the tile.
 
 class _WebcamSnapshot extends StatefulWidget {
-  final PrinterConfig     printer;
   final PrinterConnection connection;
-  final String?           webcamSnapshotPath;
+  /// Absolute, ready-to-fetch snapshot URL (already includes mg_token for
+  /// tunnel mode). Built by PrinterStatusService each poll. Null while
+  /// no webcam is configured or the printer hasn't been reached yet —
+  /// errorBuilder renders the UI-type logo placeholder.
+  final String?           webcamSnapshotUrl;
   final bool              webcamFlipH;
   final bool              webcamFlipV;
   final int               webcamRotation; // 0 | 90 | 180 | 270
@@ -498,9 +500,8 @@ class _WebcamSnapshot extends StatefulWidget {
   final String?           uiType;
 
   const _WebcamSnapshot({
-    required this.printer,
     required this.connection,
-    this.webcamSnapshotPath,
+    this.webcamSnapshotUrl,
     this.webcamFlipH     = false,
     this.webcamFlipV     = false,
     this.webcamRotation  = 0,
@@ -538,8 +539,16 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
     // restart this loop because of the `mounted` check + the closure
     // capturing `widget.webcamTargetFps` is re-evaluated on every iteration.
     Future.doWhile(() async {
-      // Clamp defensively in case a config from the wire has a junk value.
-      final fps = widget.webcamTargetFps.clamp(1, 60);
+      // Cap the tick rate on tunnel mode. Cellular + Cloudflare-edge RTT
+      // makes each snapshot take 200-1000ms; at the configured 15+ FPS,
+      // Image.network would cancel every in-flight load with the next
+      // tick (new `_t=N` ⇒ new src), so no frame ever completes and the
+      // errorBuilder placeholder shows permanently. 3 FPS leaves ~333ms
+      // per fetch — plenty for the tunnel path while still smooth for a
+      // thumbnail. LAN mode keeps the configured rate (snapshots finish
+      // in tens of ms).
+      final maxFps = widget.connection == PrinterConnection.remote ? 3 : 60;
+      final fps = widget.webcamTargetFps.clamp(1, maxFps);
       final intervalMs = (1000 / fps).round();
       await Future.delayed(Duration(milliseconds: intervalMs));
       if (!mounted) return false;
@@ -549,15 +558,13 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
   }
 
   String get _snapshotUrl {
-    // v0.3+ compat: `widget.printer.host` is a stub that returns ''. This
-    // means the resulting URL is malformed and Image.network falls through
-    // to errorBuilder, which renders the _WebcamPlaceholder (logo or
-    // generic icon). Pre-existing latent issue — wiring a real webcam URL
-    // through Supabase /printer-access is its own piece of work.
-    final base = widget.printer.host;
-    final path = widget.webcamSnapshotPath ?? '/webcam/?action=snapshot';
-    final sep  = path.contains('?') ? '&' : '?';
-    return '$base$path${sep}_t=$_tick';
+    // PrinterStatusService gives us the absolute, pre-authenticated URL.
+    // We just bolt on a cache-buster so each tick refetches even when
+    // Image.network's cache would otherwise reuse the same response.
+    final url = widget.webcamSnapshotUrl;
+    if (url == null || url.isEmpty) return '';
+    final sep = url.contains('?') ? '&' : '?';
+    return '$url${sep}_t=$_tick';
   }
 
   @override

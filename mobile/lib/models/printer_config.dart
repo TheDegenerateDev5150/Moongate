@@ -80,6 +80,16 @@ class PrinterConfig {
   // These remain so UI code that still reads `printer.host` etc. keeps
   // compiling. v0.3.0 fetches everything fresh per call via Supabase
   // `/printer-access`; the stored fields are no longer the truth.
+  //
+  // !!! DO NOT USE THESE STUBS TO BUILD URLS !!!
+  // Reading `host` to construct a snapshot / status / control URL silently
+  // produces a relative path (e.g. `/webcam/?action=snapshot`), Image.network
+  // and http.get error out, and the widget shows an error placeholder while
+  // looking superficially "fine" in code review. This is exactly the bug the
+  // v0.3 → v0.4.0 webcam preview regression rode in on (fixed in v0.4.1).
+  // The authoritative absolute URL for any printer-bound request comes from
+  // PrinterStatus (built by PrinterStatusService each poll using the LAN /
+  // tunnel base it's currently winning on, plus the EdDSA token).
   String  get host         => '';
   String? get remoteHost   => null;
   String  get token        => '';
@@ -150,7 +160,12 @@ class PrinterStatus {
   final String? filename;
   final PrinterConnection connection;
 
-  final String? webcamSnapshotPath;
+  /// Absolute, ready-to-fetch snapshot URL — base + path + (mg_token for
+  /// tunnel mode). Built fresh each poll by PrinterStatusService so the
+  /// URL always reflects the path the service is currently using and
+  /// carries a valid access token. Null when no webcam is configured or
+  /// the printer hasn't been reached yet.
+  final String? webcamSnapshotUrl;
   final bool    webcamFlipH;
   final bool    webcamFlipV;
   final int     webcamRotation;
@@ -167,7 +182,7 @@ class PrinterStatus {
     this.chamberTarget = 0,
     this.filename,
     this.connection = PrinterConnection.offline,
-    this.webcamSnapshotPath,
+    this.webcamSnapshotUrl,
     this.webcamFlipH    = false,
     this.webcamFlipV    = false,
     this.webcamRotation = 0,
