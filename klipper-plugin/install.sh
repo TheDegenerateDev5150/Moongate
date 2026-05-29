@@ -56,14 +56,37 @@ KLIPPER_CFG_DIR="$PRINTER_DATA/config"
 [[ -f "$MOONRAKER_CONF" ]] || die "moonraker.conf not found at $MOONRAKER_CONF."
 
 ARCH=$(uname -m)
-case "$ARCH" in
-    aarch64|arm64) CF_ARCH="arm64" ;;
-    armv7l|armhf)  CF_ARCH="arm"   ;;
-    x86_64)        CF_ARCH="amd64" ;;
-    *) die "Unsupported architecture: $ARCH" ;;
-esac
 
-info "Architecture: $ARCH → cloudflared: $CF_ARCH"
+# Pick the cloudflared deb that matches the dpkg system architecture.
+# uname -m alone is unreliable: the kernel reports armv7l on a system
+# whose userland is armhf, and dpkg refuses to install an "arm" deb on
+# an "armhf" host. dpkg --print-architecture is what dpkg uses when
+# matching a .deb, so it's the authoritative source here.
+DPKG_ARCH=""
+if command -v dpkg &>/dev/null; then
+    DPKG_ARCH="$(dpkg --print-architecture)"
+    case "$DPKG_ARCH" in
+        arm64)  CF_ARCH="arm64" ;;
+        armhf)  CF_ARCH="armhf" ;;
+        armel)  CF_ARCH="arm"   ;;
+        amd64)  CF_ARCH="amd64" ;;
+        i386)   CF_ARCH="386"   ;;
+        *) die "Unsupported dpkg architecture: $DPKG_ARCH (uname: $ARCH)" ;;
+    esac
+else
+    # No dpkg — unusual on a Klipper Pi, but fall back to uname so the
+    # diagnostic still fires before we try to install cloudflared.
+    case "$ARCH" in
+        aarch64|arm64) CF_ARCH="arm64" ;;
+        armv7l)        CF_ARCH="armhf" ;;
+        armv6l)        CF_ARCH="arm"   ;;
+        x86_64)        CF_ARCH="amd64" ;;
+        i686|i386)     CF_ARCH="386"   ;;
+        *) die "Unsupported architecture: $ARCH" ;;
+    esac
+fi
+
+info "Architecture: $ARCH (dpkg: ${DPKG_ARCH:-n/a}) → cloudflared: $CF_ARCH"
 
 # ── 1. Clone or update the Moongate repo ─────────────────────────────────────
 # Cloning to ~/moongate lets Moonraker's update manager track the repo and
@@ -285,11 +308,49 @@ info "Found printer.cfg at $PRINTER_CFG"
 KLIPPER_CFG_DIR="$(dirname "$PRINTER_CFG")"
 MOONGATE_CFG="$KLIPPER_CFG_DIR/moongate.cfg"
 
-cat > "$MOONGATE_CFG" << 'MACROEOF'
+# Detect whether [respond] is already declared anywhere in the user's
+# Klipper config. The MOONGATE_PAIR macro uses M118 to print the pair
+# code, QR URL, and instructions to the Mainsail console; M118 is only
+# available when [respond] is enabled. Many stock setups (vanilla
+# MainsailOS / KIAUH) ship without it.
+#
+# We exclude moongate.cfg itself from the scan: on re-install, our own
+# previously-written [respond] would otherwise trip the detector and
+# we'd strip it back out, breaking M118 again. Excluding our file means
+# the check answers "is [respond] declared *outside* of us?".
+RESPOND_PRESENT=0
+while IFS= read -r f; do
+    [[ "$(basename "$f")" == "moongate.cfg" ]] && continue
+    if grep -qE '^\s*\[respond\]' "$f"; then
+        RESPOND_PRESENT=1
+        break
+    fi
+done < <(find "$KLIPPER_CFG_DIR" -maxdepth 2 -name "*.cfg" 2>/dev/null)
+
+# Build moongate.cfg. Always emits the two macros; conditionally emits
+# [respond] only when no other config file already declares it
+# (declaring [respond] twice is a fatal Klipper config error).
+{
+    cat << 'HEADER'
 # ── Moongate ──────────────────────────────────────────────────────────────────
 # Managed by the Moongate installer — do not edit manually.
 # Updates are handled automatically via Moonraker's update manager.
 
+HEADER
+
+    if [[ $RESPOND_PRESENT -eq 0 ]]; then
+        cat << 'RESPONDSECTION'
+# [respond] enables the M118 command, which MOONGATE_PAIR uses to print
+# the pair code, QR URL, and instructions to the Mainsail/Fluidd console.
+# Without this, MOONGATE_PAIR would log "Unknown command: M118" instead.
+# If you later add [respond] elsewhere in your config, remove this block
+# — Klipper refuses to start with two [respond] sections.
+[respond]
+
+RESPONDSECTION
+    fi
+
+    cat << 'MACROS'
 [gcode_macro MOONGATE_PAIR]
 description: Start a Moongate pairing session and show a QR for the mobile app
 gcode:
@@ -299,8 +360,14 @@ gcode:
 description: Wipe local Moongate owner binding so the printer can be re-paired
 gcode:
     {action_call_remote_method("moongate_reset_owner")}
-MACROEOF
+MACROS
+} > "$MOONGATE_CFG"
 
+if [[ $RESPOND_PRESENT -eq 1 ]]; then
+    info "[respond] already enabled in your config — moongate.cfg uses your existing one"
+else
+    success "[respond] auto-added to moongate.cfg (required for MOONGATE_PAIR's M118 output)"
+fi
 success "Macro written to $MOONGATE_CFG"
 
 if grep -q '\[include moongate\.cfg\]' "$PRINTER_CFG"; then
@@ -357,18 +424,46 @@ fi
 success "Plugin HTTP port saved to $PLUGIN_CFG_FILE"
 
 # ── 6. Install cloudflared (skip if already installed) ───────────────────────
+# Two install paths so this works on the variety of SBCs Klipper runs on:
+#   • Debian-family (dpkg present): grab the matching .deb. Covers
+#     stock MainsailOS / FluiddPI / KIAUH on Raspberry Pi, plus Armbian
+#     on Orange Pi / NanoPi / Odroid etc.
+#   • Anything else (no dpkg): pull the raw binary into /usr/local/bin.
+#     Covers Arch Linux ARM, Alpine, and any future distro where dpkg
+#     isn't around.
+# Cloudflare publishes both shapes for every arch we care about, so a
+# single $CF_ARCH variable drives both paths.
 if command -v cloudflared &>/dev/null; then
-    info "cloudflared already installed — skipping."
+    info "cloudflared already installed at $(command -v cloudflared) — skipping."
 else
-    info "Installing cloudflared..."
-    CF_DEB="cloudflared-linux-${CF_ARCH}.deb"
-    CF_URL="https://github.com/cloudflare/cloudflared/releases/latest/download/$CF_DEB"
-    TMP_DEB="/tmp/$CF_DEB"
-    curl -fsSL "$CF_URL" -o "$TMP_DEB"
-    sudo dpkg -i "$TMP_DEB"
-    rm -f "$TMP_DEB"
-    success "cloudflared installed"
+    CF_BASE="https://github.com/cloudflare/cloudflared/releases/latest/download"
+    if command -v dpkg &>/dev/null; then
+        info "Installing cloudflared via dpkg (cloudflared-linux-${CF_ARCH}.deb)..."
+        TMP_DEB="/tmp/cloudflared-linux-${CF_ARCH}.deb"
+        curl -fsSL "$CF_BASE/cloudflared-linux-${CF_ARCH}.deb" -o "$TMP_DEB" \
+            || die "Failed to download cloudflared deb for $CF_ARCH"
+        sudo dpkg -i "$TMP_DEB" || die "dpkg failed installing $TMP_DEB"
+        rm -f "$TMP_DEB"
+    else
+        # No dpkg — install the binary directly. /usr/local/bin is on
+        # PATH on every Linux we'd realistically run on. systemd will
+        # find it via the resolved $CLOUDFLARED_BIN below.
+        info "Installing cloudflared binary to /usr/local/bin (no dpkg detected)..."
+        sudo curl -fsSL "$CF_BASE/cloudflared-linux-${CF_ARCH}" \
+            -o /usr/local/bin/cloudflared \
+            || die "Failed to download cloudflared binary for $CF_ARCH"
+        sudo chmod +x /usr/local/bin/cloudflared
+    fi
+    success "cloudflared installed at $(command -v cloudflared)"
 fi
+
+# Resolve the cloudflared path once so the systemd unit below uses
+# whichever location it actually ended up in: /usr/bin via dpkg,
+# /usr/local/bin via binary, or somewhere else for a pre-existing
+# install (e.g. the user dropped it in ~/bin). Avoids hard-coding
+# /usr/bin/cloudflared which is wrong on non-Debian systems.
+CLOUDFLARED_BIN="$(command -v cloudflared)"
+[[ -n "$CLOUDFLARED_BIN" ]] || die "cloudflared not on PATH after install"
 
 # ── 6b. Install moongate-authproxy systemd service (v0.4) ────────────────────
 # The auth proxy must be running BEFORE cloudflared starts pointing at it,
@@ -473,7 +568,7 @@ Wants=network-online.target moongate-authproxy.service
 [Service]
 Type=simple
 User=$USER
-ExecStart=/usr/bin/cloudflared tunnel --url http://localhost:$MG_AUTHPROXY_PORT --no-autoupdate
+ExecStart=$CLOUDFLARED_BIN tunnel --url http://localhost:$MG_AUTHPROXY_PORT --no-autoupdate
 Restart=on-failure
 RestartSec=10
 StandardOutput=append:/run/moongate-tunnel.log
