@@ -974,6 +974,14 @@ class MoongatePlugin:
             # a valid owner. See docs/v0.5-lan-discovery-design.md §6.4 —
             # unpaired Pis are intentionally invisible on mDNS.
             self._write_avahi_service()
+            # v0.5.0: the owner just bound over LAN (the app reaches us
+            # directly via mDNS the instant pairing completes, before the
+            # cloud knows our tunnel URL). Poke the heartbeat to report the
+            # tunnel NOW instead of waiting up to a full interval — so the
+            # tile's remote indicator flips to "ready" within a second or
+            # two of going Local, rather than the user watching "Starting
+            # up…"/"connecting" for minutes.
+            self.heartbeat.request_immediate_send()
         return claims
 
     def _is_lan_request(self, webrequest: Any) -> bool:

@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../models/printer_config.dart';
+import '../../services/lan_discovery_service.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
@@ -88,22 +89,41 @@ class _PrinterScreenState extends State<PrinterScreen>
       await _setMgTokenCookie(access);
       _scheduleCookieRefresh();
 
-      // Prefer the cached LAN URL when present — Mainsail loads dramatically
-      // faster on direct LAN than through Cloudflare. Pre-flight a quick
-      // HEAD-style probe with a 2s timeout: on cellular the phone has no
-      // route to RFC1918 addresses, but the WebView would block silently
-      // (no `onWebResourceError`, just a forever loading spinner) because
-      // it relies on the OS to time the connect out. The probe gives us a
-      // fast decision and a clean fall-through to the tunnel.
-      final lanUrl = widget.printer.lanUrl;
-      final String useUrl;
+      // Prefer the LAN URL when present — Mainsail loads dramatically
+      // faster on direct LAN than through Cloudflare. v0.5.0: try the
+      // mDNS-discovered address first (survives DHCP changes), then the
+      // persisted one. Pre-flight a quick HEAD-style probe with a 2s
+      // timeout: on cellular the phone has no route to RFC1918 addresses,
+      // but the WebView would block silently (no `onWebResourceError`,
+      // just a forever spinner) because it relies on the OS to time the
+      // connect out. The probe gives us a fast decision and a clean
+      // fall-through to the tunnel.
+      final lanUrl = LanDiscoveryService.instance.lookup(widget.printer.id)
+          ?? widget.printer.lanUrl;
+      String? useUrl;
       if (lanUrl != null && await _isLanReachable(lanUrl)) {
         useUrl    = lanUrl;
         _usingLan = true;
-      } else {
+      } else if (access.tunnelUrl != null) {
         useUrl    = access.tunnelUrl;
         _usingLan = false;
       }
+
+      // Neither LAN reachable nor a tunnel URL yet — the printer was just
+      // paired / is rebooting and remote isn't up. Show the same
+      // "starting up" retry the 503 path uses instead of loading a null URL.
+      if (useUrl == null) {
+        if (!mounted) return;
+        setState(() {
+          _loading  = false;
+          _errorMsg = 'Printer is starting up. Retrying in 5s…';
+        });
+        _retryTimer = Timer(const Duration(seconds: 5), () {
+          if (mounted) _start();
+        });
+        return;
+      }
+
       _initControllerIfNeeded();
       await _webController!.loadRequest(Uri.parse('$useUrl/'));
     } on PrinterUnavailableException catch (e) {
@@ -184,7 +204,11 @@ class _PrinterScreenState extends State<PrinterScreen>
   //     the JWT expires by the refresh timer.
 
   Future<void> _setMgTokenCookie(PrinterAccess access) async {
-    final tunnel = Uri.tryParse(access.tunnelUrl);
+    // No tunnel yet (fresh pair) → nothing to scope a cookie to. LAN
+    // doesn't need it (nginx/Moonraker trust the subnet); the cookie gets
+    // set on a later refresh once the tunnel comes up.
+    if (access.tunnelUrl == null) return;
+    final tunnel = Uri.tryParse(access.tunnelUrl!);
     if (tunnel == null || tunnel.host.isEmpty) return;
     try {
       await WebViewCookieManager().setCookie(WebViewCookie(

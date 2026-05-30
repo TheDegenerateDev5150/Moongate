@@ -262,6 +262,14 @@ class _PrinterTileState extends State<PrinterTile> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        // v0.5.0: when connected over LAN, show the remote
+                        // (tunnel) status as a small background hint — a
+                        // spinner-ish "connecting" pip while the Pi's tunnel
+                        // is still coming up after a fresh pair / reboot, and
+                        // a green check once the cloud knows the tunnel URL.
+                        // On the tunnel path itself the badge already says so.
+                        if (_status.connection == PrinterConnection.local)
+                          _TunnelStatusDot(ready: _status.tunnelReady),
                       ],
                     ],
                   ),
@@ -779,6 +787,38 @@ class _ConnectionProbe extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Remote (tunnel) status dot ────────────────────────────────────────────────
+//
+// Shown next to the "Local" label so the user can see, at a glance, whether
+// remote access is also ready while they're on the home network:
+//   • amber cloud-sync  — the Pi's tunnel isn't registered with the cloud yet
+//     (fresh pair, or Pi still booting cloudflared). Remote won't work until
+//     this resolves, but Local already does — so the tile is usable now.
+//   • green cloud-done  — the cloud knows the tunnel URL; remote access works.
+// This is the "pairing icon → green tick" affordance: pairing happens on-LAN,
+// the tile goes Local instantly, and the tunnel finishes establishing in the
+// background without blocking anything.
+
+class _TunnelStatusDot extends StatelessWidget {
+  final bool ready;
+  const _TunnelStatusDot({required this.ready});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 5),
+      child: Tooltip(
+        message: ready ? 'Remote access ready' : 'Remote connecting…',
+        child: Icon(
+          ready ? Icons.cloud_done_rounded : Icons.cloud_sync_outlined,
+          size: 11,
+          color: ready ? Colors.green : Colors.orangeAccent,
+        ),
+      ),
     );
   }
 }

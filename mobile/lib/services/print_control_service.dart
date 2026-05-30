@@ -55,7 +55,11 @@ class PrintControlService {
       return true;
     }
 
-    if (await _send(access.tunnelUrl, access.accessToken, action,
+    // Tunnel only when the cloud has reported one. v0.5.0: a freshly-paired
+    // printer can be controlled over LAN before its tunnel exists, so a null
+    // tunnel here is normal, not a failure.
+    if (access.tunnelUrl != null &&
+        await _send(access.tunnelUrl!, access.accessToken, action,
                     timeout: const Duration(seconds: 10))) {
       return true;
     }
@@ -68,7 +72,8 @@ class PrintControlService {
     } catch (_) {
       return false;
     }
-    return _send(access.tunnelUrl, access.accessToken, action,
+    if (access.tunnelUrl == null) return false;
+    return _send(access.tunnelUrl!, access.accessToken, action,
                  timeout: const Duration(seconds: 10));
   }
 
