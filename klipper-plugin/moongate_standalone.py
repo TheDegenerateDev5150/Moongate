@@ -709,11 +709,27 @@ class MoongatePlugin:
             logger.error("enroll-prepare failed: HTTP %s %s", status, body)
             return None
 
-        qr = "moongate://pair?" + urllib.parse.urlencode({
+        # v0.5.1: embed the Pi's LAN address in the QR so the app can connect
+        # Local the instant it scans — no mDNS round-trip, no waiting for the
+        # cloud heartbeat. This is the key to "instant Local on pair": a fresh
+        # pair has no mDNS advert yet (the Pi only advertises AFTER an owner
+        # binds, and binding needs a LAN call first — a chicken-and-egg the
+        # app can't break on its own). The QR is generated here (we know our
+        # own IP) and scanned on the same network, so the private IP is a pure
+        # LAN-local hand-off — it never travels through the cloud. After the
+        # owner binds over this URL, mDNS takes over to keep Local alive across
+        # IP changes. Older apps ignore unknown query params, so this is
+        # backward-compatible.
+        local_ip = _get_local_ip()
+        qr_params = {
             "v":  "3",
             "pk": self.device.public_key_b64,
             "et": raw,
-        })
+        }
+        if local_ip and local_ip != "localhost":
+            qr_params["ip"]   = local_ip
+            qr_params["port"] = str(self.http_port)
+        qr = "moongate://pair?" + urllib.parse.urlencode(qr_params)
         pending = PendingPair(
             raw_token=raw,
             expires_at=time.time() + int(self._config["enrollment_ttl_seconds"]),

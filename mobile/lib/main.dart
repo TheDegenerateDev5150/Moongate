@@ -30,6 +30,7 @@ void main() async {
   await container.read(fontScaleProvider.notifier).load();
   await container.read(gridColumnsProvider.notifier).load();
   await container.read(allowRotationProvider.notifier).load();
+  await container.read(dashboardCameraRefreshProvider.notifier).load();
 
   // v0.5.0: kick off the first mDNS browse in the background so the
   // LanDiscoveryService cache is (ideally) populated by the time the
