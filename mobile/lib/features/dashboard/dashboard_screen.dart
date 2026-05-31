@@ -676,6 +676,10 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.5.2', [
+    'Back up & restore your printer list to a file — "Back up config" / "Restore config" now use a file you choose instead of the clipboard, so it survives reinstalling the app',
+    'Fixed missing print progress and chamber temperature when viewing a printer over local Wi-Fi',
+  ]),
   _ChangelogEntry('v0.5.1', [
     'Pairing is instant — scan the QR and the printer shows as Local right away',
     'Remote (tunnel) access now syncs in the background; both icons appear once it\'s ready',

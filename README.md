@@ -94,7 +94,7 @@ At the end you'll see output like:
 
 **Latest public release: v0.5.1.**
 
-**[⬇ Download Moongate-v0.5.1.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.5.1.apk)** and install it on your Android phone.
+**[⬇ Download Moongate-v0.5.2.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.5.2.apk)** and install it on your Android phone.
 
 > Android only for now. Tap the link above to download directly to your phone.
 > Enable **Install from unknown sources** for your browser or file manager before installing.
@@ -237,7 +237,7 @@ The drawer scrolls — two captures to show everything.
 ```
 moongate/
 ├── APK/                    # Pre-built release APKs + version manifest
-│   ├── Moongate-v0.5.1.apk
+│   ├── Moongate-v0.5.2.apk
 │   ├── Moongate-latest.apk
 │   └── latest_version.json
 ├── docs/
