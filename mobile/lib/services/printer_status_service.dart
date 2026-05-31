@@ -83,14 +83,18 @@ class PrinterStatusService {
   // redundant root-page fetch on every cold launch.
   bool    _uiTypeChecked;
 
-  Future<void> _detectUiType(String baseUrl, String accessToken) async {
+  Future<void> _detectUiType(String baseUrl, String accessToken,
+      {required bool isLan}) async {
     _uiTypeChecked = true;
     try {
       final uri      = Uri.parse('$baseUrl/');
-      // In v0.4 the tunnel-side Mainsail root is gated by the auth proxy;
-      // we attach the EdDSA token. On LAN the header is ignored.
+      // Tunnel-side the Mainsail root is gated by the auth proxy, so we send
+      // the EdDSA token. On LAN we hit nginx directly, which serves the root
+      // without auth — and sending the Bearer there would be wrong (see
+      // _authedGet).
       final response = await _authedGet(
           uri, accessToken,
+          isLan: isLan,
           timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body = response.body.toLowerCase();
@@ -276,18 +280,27 @@ class PrinterStatusService {
 
   // ── Authed GET helper ────────────────────────────────────────────────────
   // v0.4 puts an EdDSA auth proxy in front of Moonraker on the tunnel
-  // side; un-authed calls to /printer/* and /server/* return 401. We
+  // side; un-authed calls to /printer/* and /server/* return 401, so we
   // attach the access token as Authorization: Bearer on every tunnel-side
-  // GET. On the LAN side the header is ignored — nginx and Moonraker
-  // don't read it (Moonraker has its own ?token= mechanism and trusts the
-  // LAN subnet by default).
+  // GET.
+  //
+  // On LAN we MUST NOT send that header. The LAN request reaches Moonraker
+  // directly (nginx → Moonraker over loopback, no auth proxy in the path),
+  // and Moonraker treats any Authorization: Bearer as one of ITS OWN JWTs —
+  // it tries to decode our EdDSA access token, fails, and returns 401
+  // "JWT Decode Error". That silently broke the progress bar, chamber temp,
+  // and accurate-progress metadata on LAN. LAN is trusted by subnet (and the
+  // moongate /status path authenticates via ?mg_token= in the query), so no
+  // Authorization header is needed — or wanted — there.
   Future<http.Response> _authedGet(
     Uri uri,
     String accessToken, {
+    required bool isLan,
     required Duration timeout,
   }) {
     return http
-        .get(uri, headers: {'Authorization': 'Bearer $accessToken'})
+        .get(uri,
+            headers: isLan ? null : {'Authorization': 'Bearer $accessToken'})
         .timeout(timeout);
   }
 
@@ -298,14 +311,18 @@ class PrinterStatusService {
     // the discovered/persisted LAN URL first, the tunnel only if there is
     // one. With neither available (fresh pair, tunnel not up, off-LAN) we
     // skip and retry on a later poll.
-    final base = LanDiscoveryService.instance.lookup(config.id)
-        ?? _currentLanUrl
-        ?? access.tunnelUrl;
+    final lanBase = LanDiscoveryService.instance.lookup(config.id)
+        ?? _currentLanUrl;
+    final base    = lanBase ?? access.tunnelUrl;
     if (base == null) return;
+    // We're on LAN whenever a LAN base won the selection above; only fall
+    // through to the tunnel (and its Bearer header) when no LAN URL exists.
+    final isLan = lanBase != null;
     try {
       final uri      = Uri.parse('$base/printer/objects/list');
       final response = await _authedGet(
           uri, access.accessToken,
+          isLan: isLan,
           timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body    = jsonDecode(response.body) as Map<String, dynamic>;
@@ -331,7 +348,8 @@ class PrinterStatusService {
   // ── File metadata for accurate progress (kept from v0.2.x) ───────────────
 
   Future<void> _fetchFileMetadata(
-      String baseUrl, String accessToken, String? filename) async {
+      String baseUrl, String accessToken, String? filename,
+      {required bool isLan}) async {
     if (filename == null || filename.isEmpty) return;
     if (filename == _metadataFilename) return;
     _estimatedPrintSeconds = null;
@@ -342,6 +360,7 @@ class PrinterStatusService {
           '$baseUrl/server/files/metadata?filename=$encoded');
       final response = await _authedGet(
           uri, accessToken,
+          isLan: isLan,
           timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body      = jsonDecode(response.body) as Map<String, dynamic>;
@@ -382,23 +401,26 @@ class PrinterStatusService {
           result['status'] as Map<String, dynamic>);
 
       if (_chamberKey != null && status[_chamberKey!] == null) {
-        await _supplementaryChamberQuery(baseUrl, access.accessToken, status);
+        await _supplementaryChamberQuery(baseUrl, access.accessToken, status,
+            isLan: isLan);
       }
       if (status['display_status'] == null ||
           status['virtual_sdcard'] == null) {
-        await _supplementaryProgressQuery(baseUrl, access.accessToken, status);
+        await _supplementaryProgressQuery(baseUrl, access.accessToken, status,
+            isLan: isLan);
       }
 
       final stats = status['print_stats'] as Map<String, dynamic>? ?? {};
       if (stats['state'] == 'printing') {
         await _fetchFileMetadata(
-            baseUrl, access.accessToken, stats['filename'] as String?);
+            baseUrl, access.accessToken, stats['filename'] as String?,
+            isLan: isLan);
       }
 
       // Fire-and-forget UI detection on the first successful connection so
       // the tile knows whether to show the Mainsail or Fluidd logo when no
       // webcam is configured.
-      if (!_uiTypeChecked) _detectUiType(baseUrl, access.accessToken);
+      if (!_uiTypeChecked) _detectUiType(baseUrl, access.accessToken, isLan: isLan);
 
       return _parseStatus(
         status: status,
@@ -414,13 +436,15 @@ class PrinterStatusService {
   }
 
   Future<void> _supplementaryChamberQuery(
-      String baseUrl, String accessToken, Map<String, dynamic> status) async {
+      String baseUrl, String accessToken, Map<String, dynamic> status,
+      {required bool isLan}) async {
     try {
       final encoded  = Uri.encodeComponent(_chamberKey!);
       final uri      = Uri.parse(
           '$baseUrl/printer/objects/query?$encoded');
       final response = await _authedGet(
           uri, accessToken,
+          isLan: isLan,
           timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -432,12 +456,14 @@ class PrinterStatusService {
   }
 
   Future<void> _supplementaryProgressQuery(
-      String baseUrl, String accessToken, Map<String, dynamic> status) async {
+      String baseUrl, String accessToken, Map<String, dynamic> status,
+      {required bool isLan}) async {
     try {
       final uri = Uri.parse(
           '$baseUrl/printer/objects/query?display_status&virtual_sdcard');
       final response = await _authedGet(
           uri, accessToken,
+          isLan: isLan,
           timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
