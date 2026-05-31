@@ -61,6 +61,12 @@ dependencies:
   # rationale (Android NsdManager + iOS NetServiceBrowser under one API).
   bonsoir: ^5.1.0
 
+  # Backup/restore: save/load the printer list as a file via the Android
+  # Storage Access Framework (saveFile + pickFiles). Replaces the old
+  # clipboard round-trip, which was fragile. No storage permission needed —
+  # SAF hands back a user-chosen document URI.
+  file_picker: ^8.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
