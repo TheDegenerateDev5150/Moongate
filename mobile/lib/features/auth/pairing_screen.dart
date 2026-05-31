@@ -7,6 +7,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../models/printer_config.dart';
+import '../../services/lan_discovery_service.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
 
@@ -52,6 +53,9 @@ class _PairingScreenState extends State<PairingScreen> {
   // QR-scan path: both fields populated.
   String? _scannedPubKey;
   String? _scannedEnrollmentToken;
+  // v0.5.1: LAN URL embedded in the QR (`ip`/`port`), if present. Lets a
+  // fresh pair go Local immediately — no mDNS round-trip, no heartbeat wait.
+  String? _scannedLanUrl;
 
   // Manual-entry path: normalised GATE-XXXX-XXXX token. Pubkey unknown
   // here — server uses its stored value from enrollment_tokens.
@@ -246,9 +250,21 @@ class _PairingScreenState extends State<PairingScreen> {
           'This QR code is from an older Moongate version. Update the Pi to v0.3.0 first.');
       return;
     }
+    // v0.5.1: optional LAN address embedded by v0.4.5+ Pis. Build the base
+    // URL now so the new tile connects Local on its very first poll. Absent
+    // on older Pis — we fall back to mDNS/tunnel exactly as before.
+    final ip   = uri.queryParameters['ip'];
+    final port = uri.queryParameters['port'];
+    String? lanUrl;
+    if (ip != null && ip.isNotEmpty) {
+      lanUrl = (port == null || port.isEmpty || port == '80')
+          ? 'http://$ip'
+          : 'http://$ip:$port';
+    }
     setState(() {
       _scannedPubKey         = pk;
       _scannedEnrollmentToken = et;
+      _scannedLanUrl         = lanUrl;
       _error                 = null;
     });
   }
@@ -280,8 +296,16 @@ class _PairingScreenState extends State<PairingScreen> {
         piPublicKey:     pk,
         name:            name,
       );
+      // Seed the printer's LAN URL so it lands on the dashboard already
+      // showing "Local" (~1 s) instead of "Starting up… waiting for first
+      // heartbeat". Best source is the QR itself (v0.4.5+ Pis embed ip/port)
+      // — deterministic, works even before the Pi advertises mDNS. For the
+      // manual GATE-code path or older QRs we fall back to a brief mDNS
+      // prewarm; if neither resolves, lanUrl stays null and the normal
+      // background browse + tunnel path takes over (no regression).
+      final lanUrl = _scannedLanUrl ?? await _prewarmLanUrl(printerId);
       await PrinterRegistry.instance.addClaimed(
-        PrinterConfig(id: printerId, name: name),
+        PrinterConfig(id: printerId, name: name, lanUrl: lanUrl),
       );
       if (!mounted) return;
       if (context.canPop()) {
@@ -296,6 +320,31 @@ class _PairingScreenState extends State<PairingScreen> {
     } catch (e) {
       if (mounted) setState(() { _error = 'Pairing failed: $e'; _loading = false; });
     }
+  }
+
+  // ── First-add LAN pre-warm ───────────────────────────────────────────────
+
+  /// Give mDNS a brief head start right after a successful claim so the
+  /// printer shows "Local" on the dashboard almost immediately, rather than
+  /// "Starting up…" for a poll cycle or two while discovery catches up.
+  ///
+  /// Pairing happens on the same network as the Pi (you just scanned its QR
+  /// or typed its console code), so its `_moongate._tcp` advert is almost
+  /// always resolvable within a second — often already cached from the
+  /// startup / foreground browse, in which case the first lookup returns
+  /// straight away. We kick a fresh browse and poll the resolved map for up
+  /// to ~1.2 s, then seed the printer's `lanUrl` so the very first dashboard
+  /// poll goes straight to LAN. On timeout (multicast blocked, Pi pre-v0.4.4,
+  /// or off-network) we return null and the normal background browse + tunnel
+  /// path takes over — no regression, just the old "Starting up…" window.
+  Future<String?> _prewarmLanUrl(String printerId) async {
+    LanDiscoveryService.instance.refresh().ignore(); // ~5 s browse, async
+    for (var i = 0; i < 8; i++) { // 8 × 150 ms ≈ 1.2 s cap
+      final url = LanDiscoveryService.instance.lookup(printerId);
+      if (url != null) return url;
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+    return null;
   }
 
   void _resetScan() {

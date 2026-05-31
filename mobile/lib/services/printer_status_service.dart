@@ -5,6 +5,7 @@ import 'dart:developer' as dev;
 import 'package:http/http.dart' as http;
 
 import '../models/printer_config.dart';
+import 'lan_discovery_service.dart';
 import 'printer_access_cache.dart';
 import 'printer_registry.dart';
 import 'supabase_service.dart';
@@ -49,7 +50,18 @@ class PrinterStatusService {
   // `_currentLanUrl` is a mutable copy initialised from the PrinterConfig
   // snapshot. Subsequent /status responses update it in-place so the very
   // next poll uses the freshly-learned LAN URL.
+  //
+  // v0.5.0: [LanDiscoveryService] takes priority over this when present.
+  // The discovered URL is what the Pi is *currently* advertising on mDNS;
+  // the persisted one might be stale (DHCP renewal, router reboot). See
+  // docs/v0.5-lan-discovery-design.md §8.1.
   String? _currentLanUrl;
+
+  // v0.5.0: bump every poll. Trigger a fresh mDNS browse every Nth poll
+  // (N=15 ≈ 1 min at 4 s polling) so IP changes are picked up promptly
+  // without spamming the network. See docs/v0.5-lan-discovery-design.md §7.4.
+  int _pollCount = 0;
+  static const int _mDnsBrowseEveryNPolls = 15;
 
   PrinterStatusService(this.config)
       : _currentLanUrl = config.lanUrl,
@@ -131,12 +143,25 @@ class PrinterStatusService {
       return;
     }
 
-    // 1. Fresh access token + tunnel URL from Supabase
+    // 0. v0.5.0: every Nth poll, kick off a non-blocking mDNS browse so
+    //    the LanDiscoveryService cache stays fresh against IP changes.
+    //    Fire-and-forget — never gate the poll itself on the browse.
+    _pollCount++;
+    if (_pollCount % _mDnsBrowseEveryNPolls == 1) {
+      LanDiscoveryService.instance.refresh().ignore();
+    }
+
+    // 1. Fresh access token (+ tunnel URL when known) from Supabase.
+    //    v0.5.0: the token now comes back even before the Pi has reported a
+    //    tunnel URL (access.tunnelUrl == null in that window) so the LAN
+    //    path isn't gated on the cloud→tunnel round-trip. We only land in
+    //    'starting_up' below when BOTH LAN and tunnel are unavailable.
     PrinterAccess access;
     try {
       access = await PrinterAccessCache.instance.get(config.id);
     } on PrinterUnavailableException {
-      // Pi hasn't sent its first heartbeat yet.
+      // Legacy 503 (Pi pre-v0.5 server, or server says wait): nothing we
+      // can do without a token. Surface "starting up".
       if (!_disposed) _controller.add(PrinterStatus.startingUp);
       return;
     } on PrinterNotFoundException {
@@ -149,53 +174,76 @@ class PrinterStatusService {
       return;
     }
 
+    // Whether the cloud knows the tunnel yet — surfaced on the tile as the
+    // background "remote ready / connecting" hint regardless of which path
+    // wins this poll.
+    final bool tunnelReady = access.tunnelUrl != null;
+
     // 2. Discover chamber sensor on first reach
     if (!_chamberDiscovered) {
       await _discoverChamberSensor(access);
     }
 
-    // 3. LAN-first on every poll when we have a cached URL. Same EdDSA
-    //    token works on LAN or tunnel. The 2s fast-fail timeout inside
-    //    _tryMoongateEndpoint caps the off-LAN penalty.
-    final lanUrl = _currentLanUrl;
+    // 3. LAN-first on every poll. Same EdDSA token works on LAN or
+    //    tunnel; the 2s fast-fail timeout inside _tryMoongateEndpoint
+    //    caps the off-LAN penalty.
+    //
+    //    v0.5.0: a freshly-discovered URL from mDNS takes precedence over
+    //    the persisted lanUrl. When both are set and the discovered one
+    //    differs (Pi just moved IPs), we go straight to the new IP
+    //    without wasting a poll on the stale persisted one. Crucially this
+    //    runs even when tunnelReady is false — pairing happens on-LAN, so
+    //    the tile can go "Local" the instant the owner binds, with the
+    //    tunnel still coming up in the background.
+    final discoveredLanUrl = LanDiscoveryService.instance.lookup(config.id);
+    final lanUrl = discoveredLanUrl ?? _currentLanUrl;
     if (lanUrl != null) {
       final lan = await _tryMoongateEndpoint(
-          baseUrl: lanUrl, access: access, isLan: true);
+          baseUrl: lanUrl, access: access, isLan: true, tunnelReady: tunnelReady);
       if (lan != null) {
         if (!_disposed) _controller.add(lan);
         return;
       }
     }
 
-    // 4. Tunnel via Cloudflare
-    final tunnelStatus =
-        await _tryMoongateEndpoint(baseUrl: access.tunnelUrl, access: access, isLan: false);
-    if (tunnelStatus != null) {
-      if (!_disposed) _controller.add(tunnelStatus);
-      return;
+    // 4. Tunnel via Cloudflare — only when we actually have a URL.
+    if (access.tunnelUrl != null) {
+      final tunnelStatus = await _tryMoongateEndpoint(
+          baseUrl: access.tunnelUrl!, access: access, isLan: false, tunnelReady: true);
+      if (tunnelStatus != null) {
+        if (!_disposed) _controller.add(tunnelStatus);
+        return;
+      }
+
+      // 5. Maybe the token got invalidated server-side. Drop cache and
+      //    try once more with a fresh token before declaring offline.
+      PrinterAccessCache.instance.invalidate(config.id);
+      try {
+        access = await PrinterAccessCache.instance.get(config.id);
+      } catch (_) {
+        if (!_disposed) _controller.add(PrinterStatus.offline);
+        return;
+      }
+      if (access.tunnelUrl != null) {
+        final retry = await _tryMoongateEndpoint(
+            baseUrl: access.tunnelUrl!, access: access, isLan: false, tunnelReady: true);
+        if (retry != null) {
+          if (!_disposed) _controller.add(retry);
+          return;
+        }
+      }
     }
 
-    // 5. Maybe the token got invalidated server-side. Drop cache and
-    //    try once more with a fresh token before declaring offline.
-    PrinterAccessCache.instance.invalidate(config.id);
-    try {
-      access = await PrinterAccessCache.instance.get(config.id);
-    } catch (_) {
-      if (!_disposed) _controller.add(PrinterStatus.offline);
+    // 6. All reachable paths failed. Distinguish for the user:
+    //    • No tunnel URL yet AND LAN didn't answer → the printer was just
+    //      paired / is rebooting and remote isn't up; show "starting up".
+    //    • Pi reachable but Klipper / Moonraker not responding — common on
+    //      the K3 when the printer-power toggle is off ('waiting').
+    //    • Nothing answers on any path — actually offline.
+    if (!tunnelReady) {
+      if (!_disposed) _controller.add(PrinterStatus.startingUp);
       return;
     }
-    final retry =
-        await _tryMoongateEndpoint(baseUrl: access.tunnelUrl, access: access, isLan: false);
-    if (retry != null) {
-      if (!_disposed) _controller.add(retry);
-      return;
-    }
-
-    // 6. All moongate paths failed. Distinguish two cases for the user:
-    //    • Pi reachable but Klipper / Moonraker not responding — common
-    //      on the K3 when the printer-power toggle inside Mainsail is off
-    //      ('waiting'). Tile shows "Connected" + the logo, not "Offline".
-    //    • Nothing answers on either LAN or tunnel — actually offline.
     final reachable = await _isPiReachable(access);
     if (!_disposed) {
       _controller.add(reachable ? PrinterStatus.waiting : PrinterStatus.offline);
@@ -212,7 +260,7 @@ class PrinterStatusService {
   Future<bool> _isPiReachable(PrinterAccess access) async {
     final candidates = <String>[
       if (_currentLanUrl != null) _currentLanUrl!,
-      access.tunnelUrl,
+      if (access.tunnelUrl != null) access.tunnelUrl!,
     ];
     for (final base in candidates) {
       try {
@@ -246,9 +294,16 @@ class PrinterStatusService {
   // ── Chamber sensor discovery (one call per service lifetime) ─────────────
 
   Future<void> _discoverChamberSensor(PrinterAccess access) async {
+    // Best-effort, once per service lifetime. Use whatever base is usable:
+    // the discovered/persisted LAN URL first, the tunnel only if there is
+    // one. With neither available (fresh pair, tunnel not up, off-LAN) we
+    // skip and retry on a later poll.
+    final base = LanDiscoveryService.instance.lookup(config.id)
+        ?? _currentLanUrl
+        ?? access.tunnelUrl;
+    if (base == null) return;
     try {
-      final uri      = Uri.parse(
-          '${access.tunnelUrl}/printer/objects/list');
+      final uri      = Uri.parse('$base/printer/objects/list');
       final response = await _authedGet(
           uri, access.accessToken,
           timeout: const Duration(seconds: 5));
@@ -306,6 +361,7 @@ class PrinterStatusService {
     required String        baseUrl,
     required PrinterAccess access,
     required bool          isLan,
+    required bool          tunnelReady,
   }) async {
     try {
       final uri = Uri.parse(
@@ -350,6 +406,7 @@ class PrinterStatusService {
         isLan: isLan,
         baseUrl: baseUrl,
         accessToken: access.accessToken,
+        tunnelReady: tunnelReady,
       );
     } catch (_) {
       return null;
@@ -405,6 +462,7 @@ class PrinterStatusService {
     required bool                 isLan,
     required String               baseUrl,
     required String               accessToken,
+    required bool                 tunnelReady,
   }) {
     final printStats = status['print_stats'] as Map<String, dynamic>? ?? {};
     final extruder   = status['extruder']    as Map<String, dynamic>? ?? {};
@@ -505,6 +563,7 @@ class PrinterStatusService {
       chamberTarget:      (chamberSensor?['target']      as num?)?.toDouble() ?? 0,
       filename:           printStats['filename']         as String?,
       connection:         isLan ? PrinterConnection.local : PrinterConnection.remote,
+      tunnelReady:        tunnelReady,
       webcamSnapshotUrl:  webcamSnapshotUrl,
       webcamFlipH:     (moongateResult?['webcam_flip_horizontal'] as bool?) ?? false,
       webcamFlipV:     (moongateResult?['webcam_flip_vertical']   as bool?) ?? false,

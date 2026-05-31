@@ -121,14 +121,19 @@ class SupabaseService {
     try {
       final response = await client.functions.invoke(
         'printer-access',
-        body: {'printer_id': printerId},
+        // v0.5.0: accept a token even when the tunnel URL isn't known yet,
+        // so the LAN-first path works immediately after pairing. tunnel_url
+        // comes back null in that window; we go Local via mDNS and pick up
+        // the tunnel in the background once the Pi reports it.
+        body: {'printer_id': printerId, 'accept_no_tunnel': true},
       );
       final data = response.data;
       if (data is Map) {
-        final tunnel = data['tunnel_url']   as String?;
+        final tunnel = data['tunnel_url']   as String?; // nullable in v0.5.0
         final token  = data['access_token'] as String?;
         final expIn  = (data['expires_in']  as num?)?.toInt() ?? 300;
-        if (tunnel != null && token != null) {
+        // Only the token is mandatory now — tunnel may legitimately be null.
+        if (token != null) {
           return PrinterAccess(
             tunnelUrl:   tunnel,
             accessToken: token,
@@ -204,9 +209,18 @@ class SupabaseService {
 
 /// Result of a /printer-access call.
 class PrinterAccess {
-  final String   tunnelUrl;
+  /// Cloudflare tunnel base URL, or null when the Pi hasn't reported one
+  /// yet (fresh pair / Pi just rebooted). The access token is still valid
+  /// on the LAN in that window — the app goes LAN-first via mDNS and the
+  /// tunnel populates on the next heartbeat. A non-null value also doubles
+  /// as the "remote access ready" signal surfaced on the tile.
+  final String?  tunnelUrl;
   final String   accessToken;
   final DateTime expiresAt;
+
+  /// True once the cloud knows the printer's tunnel URL — i.e. remote
+  /// access is available, not just LAN.
+  bool get tunnelReady => tunnelUrl != null;
 
   PrinterAccess({
     required this.tunnelUrl,

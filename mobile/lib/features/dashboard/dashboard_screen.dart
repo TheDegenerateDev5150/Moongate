@@ -136,6 +136,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final themeMode     = ref.watch(themeModeProvider);
     final gridColumns   = ref.watch(gridColumnsProvider);
     final allowRotation = ref.watch(allowRotationProvider);
+    final cameraRefresh = ref.watch(dashboardCameraRefreshProvider);
 
     return Drawer(
       child: SafeArea(
@@ -322,25 +323,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 4),
                       child: SegmentedButton<int>(
+                        // No selected-checkmark — it pushes the label onto a
+                        // second line in these narrow segments. Selection is
+                        // shown by the highlighted background instead. Icons
+                        // dropped too for a clean, single-line look.
+                        showSelectedIcon: false,
                         style: SegmentedButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                         ),
                         segments: const [
-                          ButtonSegment(
-                            value: 1,
-                            icon: Icon(Icons.view_stream, size: 16),
-                            label: Text('1 col'),
-                          ),
-                          ButtonSegment(
-                            value: 2,
-                            icon: Icon(Icons.view_column, size: 16),
-                            label: Text('2 col'),
-                          ),
-                          ButtonSegment(
-                            value: 3,
-                            icon: Icon(Icons.view_module, size: 16),
-                            label: Text('3 col'),
-                          ),
+                          ButtonSegment(value: 1, label: Text('1 col')),
+                          ButtonSegment(value: 2, label: Text('2 col')),
+                          ButtonSegment(value: 3, label: Text('3 col')),
                         ],
                         selected: {gridColumns},
                         onSelectionChanged: (s) =>
@@ -356,6 +350,52 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       value: allowRotation,
                       onChanged: (v) =>
                           ref.read(allowRotationProvider.notifier).set(v),
+                    ),
+
+                    const Divider(),
+
+                    // ── Camera feed ───────────────────────────────────────────
+                    // Throttles how often EVERY dashboard tile re-fetches its
+                    // webcam snapshot. The default 1 s cuts network use ~15× vs
+                    // the old raw feed; 'Raw' restores the live per-printer FPS.
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: Text('Dashboard camera feed',
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelMedium
+                              ?.copyWith(color: Colors.white54)),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+                      child: Text(
+                        'How often tiles refresh the camera. Lower rates use '
+                        'much less data.',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: Colors.white38),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
+                      child: SegmentedButton<DashboardCameraRefresh>(
+                        // No selected-checkmark (see column picker above) — keeps
+                        // 'Raw'/'1s'/'3s'/'5s' on a single line when selected.
+                        showSelectedIcon: false,
+                        style: SegmentedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        segments: [
+                          for (final r in DashboardCameraRefresh.values)
+                            ButtonSegment(value: r, label: Text(r.label)),
+                        ],
+                        selected: {cameraRefresh},
+                        onSelectionChanged: (s) => ref
+                            .read(dashboardCameraRefreshProvider.notifier)
+                            .set(s.first),
+                      ),
                     ),
 
                     const Divider(),
@@ -600,6 +640,22 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.5.1', [
+    'Pairing is instant — scan the QR and the printer shows as Local right away',
+    'Remote (tunnel) access now syncs in the background; both icons appear once it\'s ready',
+    'No more sitting on "Starting up… waiting for first heartbeat" after you pair',
+    'New "Dashboard camera feed" setting — Raw / 1s / 3s / 5s (default 1s) to cut data use',
+    'Dashboard webcams pause while the app is in the background',
+    'Reinstalling or on a new phone? Run MOONGATE_RESET_OWNER on the Pi first, then re-pair',
+    'Re-run the Pi installer to enable instant pairing',
+  ]),
+  _ChangelogEntry('v0.5.0', [
+    'Dashboard tile stays "Local" when your Pi\'s IP changes — even if the internet is down',
+    'Finds your Pi on the local network via mDNS (pairs with the v0.4.4 Pi advertisement)',
+    'Print controls now read the live LAN URL too — no stale-IP gap after DHCP changes',
+    'Falls through to v0.4.x behaviour when discovery doesn\'t resolve (different WiFi, multicast blocked, etc.)',
+    'Re-run the Pi installer to enable the Pi-side advertisement',
+  ]),
   _ChangelogEntry('v0.4.4', [
     'Pi-side groundwork for LAN discovery — your Pi now advertises itself on the local network',
     'No visible change yet on its own; pairs with the upcoming v0.5.0 app update',

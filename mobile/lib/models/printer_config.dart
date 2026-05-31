@@ -160,6 +160,13 @@ class PrinterStatus {
   final String? filename;
   final PrinterConnection connection;
 
+  /// v0.5.0: whether the cloud currently knows the printer's tunnel URL —
+  /// i.e. remote access is ready, independent of which path THIS poll won
+  /// on. The tile uses it to show a "remote connecting…" vs "remote ready"
+  /// hint next to the Local badge, so a freshly-paired printer that came up
+  /// Local can show the tunnel still being established in the background.
+  final bool tunnelReady;
+
   /// Absolute, ready-to-fetch snapshot URL — base + path + (mg_token for
   /// tunnel mode). Built fresh each poll by PrinterStatusService so the
   /// URL always reflects the path the service is currently using and
@@ -182,6 +189,7 @@ class PrinterStatus {
     this.chamberTarget = 0,
     this.filename,
     this.connection = PrinterConnection.offline,
+    this.tunnelReady = false,
     this.webcamSnapshotUrl,
     this.webcamFlipH    = false,
     this.webcamFlipV    = false,

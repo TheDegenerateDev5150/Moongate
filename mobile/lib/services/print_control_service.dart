@@ -1,7 +1,9 @@
 import 'package:http/http.dart' as http;
 
 import '../models/printer_config.dart';
+import 'lan_discovery_service.dart';
 import 'printer_access_cache.dart';
+import 'printer_registry.dart';
 import 'supabase_service.dart';
 
 /// Sends print-control commands to the Moongate plugin.
@@ -26,15 +28,38 @@ class PrintControlService {
       return false;
     }
 
-    // LAN first if we have a cached URL — fast-fail at 2s
-    final lanUrl = config.lanUrl;
+    // v0.5.0: pick the freshest available LAN URL.
+    //   1. A discovered URL from mDNS (= what the Pi is *currently*
+    //      advertising on the LAN — survives DHCP IP changes).
+    //   2. The registry-live lanUrl (what the status service most
+    //      recently learned from a successful /status response). This
+    //      read closes the v0.4.x bug where the control service captured
+    //      `config.lanUrl` at construction and never re-read it, so an
+    //      IP change picked up by the status service didn't propagate to
+    //      pause/resume/cancel until the tile was rebuilt.
+    //   3. Fall through to the construction-time config.lanUrl if the
+    //      registry entry has vanished (race during printer removal).
+    //
+    // See docs/v0.5-lan-discovery-design.md §8.2 and §10.2.
+    final discovered = LanDiscoveryService.instance.lookup(config.id);
+    final live = PrinterRegistry.instance.printers
+        .firstWhere(
+          (p) => p.id == config.id,
+          orElse: () => config,
+        )
+        .lanUrl;
+    final lanUrl = discovered ?? live;
     if (lanUrl != null &&
         await _send(lanUrl, access.accessToken, action,
                     timeout: const Duration(seconds: 2))) {
       return true;
     }
 
-    if (await _send(access.tunnelUrl, access.accessToken, action,
+    // Tunnel only when the cloud has reported one. v0.5.0: a freshly-paired
+    // printer can be controlled over LAN before its tunnel exists, so a null
+    // tunnel here is normal, not a failure.
+    if (access.tunnelUrl != null &&
+        await _send(access.tunnelUrl!, access.accessToken, action,
                     timeout: const Duration(seconds: 10))) {
       return true;
     }
@@ -47,7 +72,8 @@ class PrintControlService {
     } catch (_) {
       return false;
     }
-    return _send(access.tunnelUrl, access.accessToken, action,
+    if (access.tunnelUrl == null) return false;
+    return _send(access.tunnelUrl!, access.accessToken, action,
                  timeout: const Duration(seconds: 10));
   }
 

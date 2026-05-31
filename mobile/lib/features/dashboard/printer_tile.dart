@@ -3,10 +3,12 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 
 import '../../models/printer_config.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/print_control_service.dart';
 import '../../services/printer_status_service.dart';
 
@@ -262,6 +264,14 @@ class _PrinterTileState extends State<PrinterTile> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        // v0.5.0: when connected over LAN, show the remote
+                        // (tunnel) status as a small background hint — a
+                        // spinner-ish "connecting" pip while the Pi's tunnel
+                        // is still coming up after a fresh pair / reboot, and
+                        // a green check once the cloud knows the tunnel URL.
+                        // On the tunnel path itself the badge already says so.
+                        if (_status.connection == PrinterConnection.local)
+                          _TunnelStatusDot(ready: _status.tunnelReady),
                       ],
                     ],
                   ),
@@ -496,7 +506,7 @@ class _Btn extends StatelessWidget {
 // tunnel-side incarnation of the same race. The fix there was a static 3 FPS
 // cap on tunnel mode; this generalises that to any slow path.
 
-class _WebcamSnapshot extends StatefulWidget {
+class _WebcamSnapshot extends ConsumerStatefulWidget {
   /// Absolute, ready-to-fetch snapshot URL (already includes mg_token for
   /// tunnel mode). Built by PrinterStatusService each poll. Null while
   /// no webcam is configured or the printer hasn't been reached yet —
@@ -522,10 +532,11 @@ class _WebcamSnapshot extends StatefulWidget {
   });
 
   @override
-  State<_WebcamSnapshot> createState() => _WebcamSnapshotState();
+  ConsumerState<_WebcamSnapshot> createState() => _WebcamSnapshotState();
 }
 
-class _WebcamSnapshotState extends State<_WebcamSnapshot> {
+class _WebcamSnapshotState extends ConsumerState<_WebcamSnapshot>
+    with WidgetsBindingObserver {
   /// Bytes of the most recent successful snapshot. Null until the first
   /// fetch lands; build() shows the UI-type logo placeholder in that
   /// window. After the first frame, `Image.memory(gaplessPlayback: true)`
@@ -533,10 +544,27 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
   /// — no flicker between updates.
   Uint8List? _currentBytes;
 
+  /// True while the app is backgrounded. The fetch loop idles instead of
+  /// pulling frames — a dashboard nobody is looking at shouldn't keep
+  /// streaming webcam JPEGs over the network. Resumes on foreground.
+  bool _appPaused = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loop();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appPaused = state != AppLifecycleState.resumed;
   }
 
   /// Sequential snapshot-fetch loop. One in flight at a time. The next
@@ -551,14 +579,31 @@ class _WebcamSnapshotState extends State<_WebcamSnapshot> {
   /// the sleep is effectively zero and the next fetch starts immediately.
   Future<void> _loop() async {
     while (mounted) {
+      // Backgrounded — don't fetch. Idle in short ticks so we resume
+      // promptly (within ~400 ms) when the app comes back to the foreground.
+      if (_appPaused) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        continue;
+      }
+
       final start = DateTime.now();
       await _fetchOnce();
       if (!mounted) return;
 
-      final fps        = widget.webcamTargetFps.clamp(1, 60);
-      final intervalMs = (1000 / fps).round();
-      final elapsedMs  = DateTime.now().difference(start).inMilliseconds;
-      final remaining  = intervalMs - elapsedMs;
+      // The global dashboard refresh setting takes precedence. A fixed
+      // interval (1/3/5 s) caps network use; 'raw' falls back to the
+      // printer's own target FPS (self-throttled by this sequential loop).
+      final fixed = ref.read(dashboardCameraRefreshProvider).intervalMs;
+      final int intervalMs;
+      if (fixed != null) {
+        intervalMs = fixed;
+      } else {
+        final fps  = widget.webcamTargetFps.clamp(1, 60);
+        intervalMs = (1000 / fps).round();
+      }
+
+      final elapsedMs = DateTime.now().difference(start).inMilliseconds;
+      final remaining = intervalMs - elapsedMs;
       if (remaining > 0) {
         await Future.delayed(Duration(milliseconds: remaining));
       }
@@ -779,6 +824,38 @@ class _ConnectionProbe extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Remote (tunnel) status dot ────────────────────────────────────────────────
+//
+// Shown next to the "Local" label so the user can see, at a glance, whether
+// remote access is also ready while they're on the home network:
+//   • amber cloud-sync  — the Pi's tunnel isn't registered with the cloud yet
+//     (fresh pair, or Pi still booting cloudflared). Remote won't work until
+//     this resolves, but Local already does — so the tile is usable now.
+//   • green cloud-done  — the cloud knows the tunnel URL; remote access works.
+// This is the "pairing icon → green tick" affordance: pairing happens on-LAN,
+// the tile goes Local instantly, and the tunnel finishes establishing in the
+// background without blocking anything.
+
+class _TunnelStatusDot extends StatelessWidget {
+  final bool ready;
+  const _TunnelStatusDot({required this.ready});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 5),
+      child: Tooltip(
+        message: ready ? 'Remote access ready' : 'Remote connecting…',
+        child: Icon(
+          ready ? Icons.cloud_done_rounded : Icons.cloud_sync_outlined,
+          size: 11,
+          color: ready ? Colors.green : Colors.orangeAccent,
+        ),
+      ),
     );
   }
 }
