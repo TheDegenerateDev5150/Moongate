@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -192,19 +195,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // Import / Export
                     if (_printers.isNotEmpty)
                       ListTile(
-                        leading: const Icon(Icons.upload_outlined),
-                        title: const Text('Export config'),
+                        leading: const Icon(Icons.upload_file_outlined),
+                        title: const Text('Back up config'),
                         subtitle:
-                            const Text('Copy to clipboard before reinstalling'),
+                            const Text('Save to a file before reinstalling'),
                         onTap: () {
                           Navigator.pop(context);
                           _exportConfig();
                         },
                       ),
                     ListTile(
-                      leading: const Icon(Icons.download_outlined),
-                      title: const Text('Import config'),
-                      subtitle: const Text('Restore from exported text'),
+                      leading: const Icon(Icons.file_download_outlined),
+                      title: const Text('Restore config'),
+                      subtitle: const Text('Load from a backup file'),
                       onTap: () {
                         Navigator.pop(context);
                         _importConfig();
@@ -469,72 +472,105 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  /// Copies the printer list JSON to the clipboard so the user can paste it
-  /// somewhere safe before uninstalling, then restore via Import after reinstall.
+  /// Saves the printer list to a JSON file chosen via the Android Storage
+  /// Access Framework, so the user can keep it somewhere safe before a
+  /// destructive reinstall and load it back afterwards. NB: this carries the
+  /// printer list only — NOT the Supabase anonymous identity (that lives in
+  /// flutter_secure_storage and is wiped on uninstall), so a restored config
+  /// still needs a re-pair per printer to bind the new anon UID.
   Future<void> _exportConfig() async {
-    final json = PrinterConfig.listToJson(_printers);
-    await Clipboard.setData(ClipboardData(text: json));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Printer config copied to clipboard — paste it somewhere safe!'),
-        duration: Duration(seconds: 4),
+    final messenger = ScaffoldMessenger.of(context);
+    final bytes = Uint8List.fromList(
+      utf8.encode(PrinterConfig.listToJson(_printers)),
+    );
+    String? savedPath;
+    try {
+      // On Android, passing `bytes` makes saveFile write the file through the
+      // SAF "create document" dialog and return its path (null if cancelled).
+      // Without `bytes`, saveFile only returns a path and leaves the write to
+      // us — which scoped storage won't allow.
+      savedPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save Moongate backup',
+        fileName: 'moongate-printers.json',
+        bytes: bytes,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Backup failed — could not save the file.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+    if (!mounted || savedPath == null) return; // user cancelled
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Backed up ${_printers.length} printer(s) to a file.'),
+        duration: const Duration(seconds: 4),
       ),
     );
   }
 
-  /// Shows a dialog where the user can paste a previously exported JSON string
-  /// to restore their printer list after a reinstall.
+  /// Lets the user pick a previously saved backup file via the SAF document
+  /// picker and restores its printer list. Existing printers are kept;
+  /// duplicates (same id) are skipped.
   Future<void> _importConfig() async {
-    final controller = TextEditingController();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Import printer config'),
-        content: TextField(
-          controller: controller,
-          maxLines: 6,
-          decoration: const InputDecoration(
-            hintText: 'Paste your exported JSON here…',
-            border: OutlineInputBorder(),
-          ),
+    final messenger = ScaffoldMessenger.of(context);
+    FilePickerResult? picked;
+    try {
+      // `withData: true` returns the bytes inline rather than a path we may
+      // not be able to read under scoped storage. We accept any file type
+      // (not a custom .json filter — Android's picker frequently greys those
+      // out) and validate by parsing instead.
+      picked = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Select a Moongate backup',
+        withData: true,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Could not open the file picker.'),
+          backgroundColor: Colors.redAccent,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Import'),
-          ),
-        ],
-      ),
-    );
-    // Capture text BEFORE disposing — reading .text after dispose is unsafe.
-    final importText = controller.text.trim();
-    controller.dispose();
-    if (confirmed != true || !mounted) return;
+      );
+      return;
+    }
+    if (picked == null || !mounted) return; // user cancelled
+    final bytes = picked.files.single.bytes;
+    if (bytes == null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Could not read that file.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
 
     try {
-      final printers = PrinterConfig.listFromJson(importText);
+      final printers = PrinterConfig.listFromJson(utf8.decode(bytes));
       // Merge: add only printers not already in registry (match by id).
       final existing = PrinterRegistry.instance.printers.map((p) => p.id).toSet();
+      var added = 0;
       for (final p in printers) {
         if (!existing.contains(p.id)) {
           await PrinterRegistry.instance.add(p);
+          added++;
         }
       }
       _load();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${printers.length} printer(s) imported.')),
+      messenger.showSnackBar(
+        SnackBar(content: Text('$added printer(s) restored.')),
       );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
-          content: Text('Invalid config — make sure you pasted the full exported text.'),
+          content: Text('Invalid backup file — please pick a Moongate config file.'),
           backgroundColor: Colors.redAccent,
         ),
       );
