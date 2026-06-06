@@ -15,6 +15,20 @@ Moongate is a free, open-source Android app that gives you a **full remote contr
 
 ---
 
+## ☕ Buy me a coffee
+
+Moongate is free, open source, and built in my spare time for the Klipper community — no ads, no subscriptions, no data harvesting. If it's earned a spot on your phone, you can buy me a coffee to say thanks. Every contribution goes straight back into the project: test hardware, the cloud service that keeps remote access working, and the time to keep shipping features like these.
+
+Thank you for being part of it 💜
+
+<p align="center">
+  <a href="https://www.paypal.com/donate/?hosted_button_id=WCWAZKQ7WKQB4">
+    <img src="https://img.shields.io/badge/%E2%98%95%20Buy%20me%20a%20coffee-Donate-FFDD00?style=for-the-badge" alt="Buy me a coffee"/>
+  </a>
+</p>
+
+---
+
 ## How it works
 
 ```
