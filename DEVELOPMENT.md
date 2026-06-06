@@ -135,14 +135,8 @@ mobile/lib/
     ├── printer_registry.dart           # Persistent printer list + LAN URL / webcam / UI-type updaters
     ├── printer_status_service.dart     # Per-tile 4 s poll loop, LAN-first with reachability probe
     ├── print_control_service.dart      # pause/resume/cancel/firmware_restart
-    ├── update_service.dart             # /APK/latest_version.json poll
-    ├── auth_service.dart               # Vestigial v0.2.x JWT path — kept for now, not on the v0.3+ data flow
-    ├── network_discovery_service.dart  # Vestigial v0.2.x subnet check — no longer wired into the v0.3+ status flow
-    ├── moonraker_service.dart          # WebSocket client — not yet wired into the UI
-    └── vpn_service.dart                # Vestigial WireGuard stub — no longer on any active code path
+    └── update_service.dart             # /APK/latest_version.json poll
 ```
-
-The four `Vestigial` entries are kept while we wait to confirm nothing external imports them — they're dead in v0.4 but harmless to leave until a cleanup pass. New code shouldn't reference them.
 
 For a guided tour of how these pieces fit together, see [ARCHITECTURE.md](ARCHITECTURE.md).
 

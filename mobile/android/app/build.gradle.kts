@@ -94,8 +94,4 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    // Note: com.wireguard.android:tunnel is not on any public Maven repo —
-    // it is an internal module in the wireguard-android project and must be
-    // compiled from Go source. WireGuard support is implemented via a stub
-    // VPN service for now; native WireGuard-Go will be bundled in Phase 2.
 }
