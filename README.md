@@ -92,9 +92,9 @@ At the end you'll see output like:
 
 ### Step 2 — Install the app
 
-**Latest public release: v0.5.1.**
+**Latest public release: v0.6.0.**
 
-**[⬇ Download Moongate-v0.5.2.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.5.2.apk)** and install it on your Android phone.
+**[⬇ Download Moongate-v0.6.0.apk](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-v0.6.0.apk)** and install it on your Android phone.
 
 > Android only for now. Tap the link above to download directly to your phone.
 > Enable **Install from unknown sources** for your browser or file manager before installing.
@@ -237,7 +237,7 @@ The drawer scrolls — two captures to show everything.
 ```
 moongate/
 ├── APK/                    # Pre-built release APKs + version manifest
-│   ├── Moongate-v0.5.2.apk
+│   ├── Moongate-v0.6.0.apk
 │   ├── Moongate-latest.apk
 │   └── latest_version.json
 ├── docs/
@@ -248,8 +248,8 @@ moongate/
 │   │   ├── features/       # UI screens (dashboard, printer, pairing, settings)
 │   │   ├── models/         # Data models (PrinterConfig, etc.)
 │   │   ├── providers/      # Riverpod providers (settings, updates, version)
-│   │   └── services/       # Status polling, print control, auth, registry, network discovery
-│   └── android/            # Android platform code (CameraX, WireGuard stub, ProGuard)
+│   │   └── services/       # Status polling, print control, registry, cloud middleman
+│   └── android/            # Android platform code (CameraX, ProGuard)
 └── klipper-plugin/
     ├── moongate_standalone.py     # Moonraker plugin (pairing, status, control)
     ├── moongate_authproxy.py      # v0.4 auth proxy — gates every tunnel-facing request

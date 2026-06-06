@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/app_lock/app_lock_gate.dart';
+import 'features/app_lock/app_lock_settings_screen.dart';
 import 'features/auth/pairing_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/printer/printer_screen.dart';
 import 'features/settings/custom_theme_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/splash/splash_screen.dart';
+import 'providers/app_lock_provider.dart';
 import 'providers/custom_theme_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/update_provider.dart';
@@ -41,6 +44,10 @@ final _router = GoRouter(
       path: '/theme/custom',
       builder: (_, __) => const CustomThemeScreen(),
     ),
+    GoRoute(
+      path: '/settings/app-lock',
+      builder: (_, __) => const AppLockSettingsScreen(),
+    ),
   ],
 );
 
@@ -67,7 +74,15 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      // Stamp when we left so the app-lock can decide whether to re-lock on
+      // resume (per the user's auto-lock timeout).
+      ref.read(lockStateProvider.notifier).markBackgrounded();
+    }
     if (state == AppLifecycleState.resumed) {
+      // Re-lock if the configured background timeout has elapsed (no-op for the
+      // default "only on cold launch").
+      ref.read(lockStateProvider.notifier).evaluateOnResume();
       // Re-run the update check so a banner appears if CI published a new
       // release while we were backgrounded.
       ref.invalidate(updateProvider);
@@ -106,7 +121,9 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
         data: MediaQuery.of(context).copyWith(
           textScaler: TextScaler.linear(fontScale),
         ),
-        child: child!,
+        // The app-lock overlay sits above the router's Navigator, so no route
+        // can render without the lock and the underlying screen is preserved.
+        child: AppLockGate(child: child!),
       ),
     );
   }

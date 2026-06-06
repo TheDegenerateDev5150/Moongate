@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.5.2+52
+version: 0.6.0+53
 publish_to: none
 
 environment:
@@ -66,6 +66,14 @@ dependencies:
   # clipboard round-trip, which was fragile. No storage permission needed —
   # SAF hands back a user-chosen document URI.
   file_picker: ^8.0.0
+
+  # App lock: biometric (fingerprint/face) prompt. MainActivity already
+  # extends FlutterFragmentActivity, which local_auth requires on Android,
+  # so no native activity change is needed.
+  local_auth: ^2.3.0
+
+  # Salted SHA-256 hashing for the app-lock PIN (stored in flutter_secure_storage).
+  crypto: ^3.0.0
 
 dev_dependencies:
   flutter_test:

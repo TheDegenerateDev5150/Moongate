@@ -422,6 +422,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       },
                     ),
                     ListTile(
+                      leading: const Icon(Icons.lock_outline),
+                      title: const Text('App lock'),
+                      subtitle: Text(ref.watch(appLockEnabledProvider)
+                          ? 'On — unlock required on launch'
+                          : 'Off'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/settings/app-lock');
+                      },
+                    ),
+                    ListTile(
                       leading: const Icon(Icons.coffee_outlined,
                           color: Colors.amber),
                       title: const Text('Buy me a coffee'),
@@ -676,6 +687,12 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.6.0', [
+    'New optional App lock — protect Moongate with a PIN, plus fingerprint or face if your phone supports it (Menu → App lock)',
+    'The lock appears when you open the app; you can optionally re-lock after time in the background',
+    'Your PIN is stored encrypted on the device and wrong guesses are rate-limited',
+    'Slimmer app — removed unused VPN code, so Moongate no longer asks for VPN or special background permissions',
+  ]),
   _ChangelogEntry('v0.5.2', [
     'Back up & restore your printer list to a file — "Back up config" / "Restore config" now use a file you choose instead of the clipboard, so it survives reinstalling the app',
     'Fixed missing print progress and chamber temperature when viewing a printer over local Wi-Fi',

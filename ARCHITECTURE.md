@@ -80,7 +80,6 @@ The `services/` directory has zero UI. Each file is a focused capability:
 | `print_control_service.dart` | Sends `pause` / `resume` / `cancel` / `firmware_restart`. Same per-call token retrieval, same LAN-first routing |
 | `printer_registry.dart` | Persistent printer list. `addClaimed` after a successful pair, `remove` plus middleman-release on un-pair, helpers to update individual fields like LAN URL, webcam transforms, and the detected UI type from a successful poll |
 | `update_service.dart` | One-shot GitHub `latest_version.json` fetch on app launch |
-| `moonraker_service.dart` | WebSocket client — present but not yet wired into the UI; reserved for future real-time push of status events |
 
 ### Android native side
 
@@ -88,7 +87,7 @@ Most of the app is pure Dart, but a few things need Kotlin:
 
 ```
 mobile/android/app/src/main/
-├── AndroidManifest.xml              # CAMERA, INTERNET, FOREGROUND_SERVICE
+├── AndroidManifest.xml              # CAMERA, INTERNET, USE_BIOMETRIC
 ├── kotlin/com/moongate/app/
 │   └── moongate/MainActivity.kt     # FlutterFragmentActivity
 └── app/proguard-rules.pro           # R8 keep-rules for ML Kit + mobile_scanner + CameraX

@@ -204,3 +204,114 @@ final dashboardCameraRefreshProvider =
     NotifierProvider<DashboardCameraRefreshNotifier, DashboardCameraRefresh>(
   DashboardCameraRefreshNotifier.new,
 );
+
+// ---------------------------------------------------------------------------
+// App lock  (optional biometric / PIN gate on launch)
+// ---------------------------------------------------------------------------
+
+/// Whether the app requires authentication before the dashboard is reachable.
+/// Off by default; enabling it (from the App-lock settings screen) also sets a
+/// PIN — see [PinService]. The runtime locked/unlocked state lives in
+/// `lockStateProvider`; this is just the persisted on/off preference.
+class AppLockEnabledNotifier extends Notifier<bool> {
+  static const _key = 'app_lock_enabled';
+
+  @override
+  bool build() => false;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? false;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, enabled);
+  }
+}
+
+final appLockEnabledProvider =
+    NotifierProvider<AppLockEnabledNotifier, bool>(AppLockEnabledNotifier.new);
+
+/// Whether to offer biometric unlock on top of the PIN. Only meaningful when
+/// the lock is enabled AND the device actually has biometric hardware (see
+/// `biometricAvailableProvider`). The PIN is always the fallback.
+class BiometricUnlockNotifier extends Notifier<bool> {
+  static const _key = 'app_lock_biometric';
+
+  @override
+  bool build() => false;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? false;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, enabled);
+  }
+}
+
+final biometricUnlockProvider =
+    NotifierProvider<BiometricUnlockNotifier, bool>(BiometricUnlockNotifier.new);
+
+/// When the app should re-lock after returning from the background. The lock
+/// ALWAYS appears on a cold launch; this only governs re-locking an already
+/// running process. Default [coldLaunchOnly] = never re-lock while running.
+enum AutoLockTimeout {
+  immediately,
+  oneMinute,
+  fiveMinutes,
+  fifteenMinutes,
+  coldLaunchOnly,
+}
+
+extension AutoLockTimeoutX on AutoLockTimeout {
+  /// How long the app may sit backgrounded before it re-locks, or null to never
+  /// re-lock while the process lives (a cold launch still locks).
+  Duration? get resumeAfter => switch (this) {
+        AutoLockTimeout.immediately    => Duration.zero,
+        AutoLockTimeout.oneMinute      => const Duration(minutes: 1),
+        AutoLockTimeout.fiveMinutes    => const Duration(minutes: 5),
+        AutoLockTimeout.fifteenMinutes => const Duration(minutes: 15),
+        AutoLockTimeout.coldLaunchOnly => null,
+      };
+
+  String get label => switch (this) {
+        AutoLockTimeout.immediately    => 'Immediately',
+        AutoLockTimeout.oneMinute      => 'After 1 minute',
+        AutoLockTimeout.fiveMinutes    => 'After 5 minutes',
+        AutoLockTimeout.fifteenMinutes => 'After 15 minutes',
+        AutoLockTimeout.coldLaunchOnly => 'Only on app launch',
+      };
+}
+
+class AutoLockTimeoutNotifier extends Notifier<AutoLockTimeout> {
+  static const _key = 'app_lock_timeout';
+
+  @override
+  AutoLockTimeout build() => AutoLockTimeout.coldLaunchOnly;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_key);
+    state = AutoLockTimeout.values.firstWhere(
+      (e) => e.name == raw,
+      orElse: () => AutoLockTimeout.coldLaunchOnly,
+    );
+  }
+
+  Future<void> set(AutoLockTimeout value) async {
+    state = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, value.name);
+  }
+}
+
+final autoLockTimeoutProvider =
+    NotifierProvider<AutoLockTimeoutNotifier, AutoLockTimeout>(
+  AutoLockTimeoutNotifier.new,
+);

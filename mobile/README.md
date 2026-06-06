@@ -33,8 +33,7 @@ lib/
 └── services/
     ├── printer_status_service.dart   # Per-tile status polling (local-first, tunnel fallback)
     ├── print_control_service.dart    # pause / resume / cancel / firmware_restart
-    ├── printer_registry.dart         # Persistent list of paired printers
-    └── moonraker_service.dart        # WebSocket client
+    └── printer_registry.dart         # Persistent list of paired printers
 ```
 
 See the root [README](../README.md) and [docs/](../docs/) for full setup instructions.
