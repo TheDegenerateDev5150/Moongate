@@ -1,0 +1,44 @@
+# Dependabot keeps dependencies patched and surfaces vulnerable packages.
+#
+# Repo-level Dependabot *alerts* + *automated security fixes* were enabled on
+# 2026-06-07 (they had been switched off, which is why a stale vuln count
+# lingered for weeks with no way to verify it). Security-update PRs are driven
+# by those alerts and need no config here. This file adds scheduled *version*
+# update coverage so dependencies don't silently drift out of date.
+version: 2
+updates:
+  # ── Flutter / Dart packages (the app) ──────────────────────────────────────
+  - package-ecosystem: "pub"
+    directory: "/mobile"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    # Bundle in-range minor/patch bumps into one PR to keep the noise down;
+    # majors (mostly constraint-blocked here) still come through individually.
+    groups:
+      dart-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  # ── Android / Gradle (native side) ─────────────────────────────────────────
+  # Not currently in the dependency graph, so adding it here also extends
+  # scanning to the Android build. Flutter's generated Gradle can be awkward for
+  # Dependabot to parse; if it can't, it just logs on the Dependabot tab.
+  - package-ecosystem: "gradle"
+    directory: "/mobile/android"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(android)"
+
+  # ── GitHub Actions used by CI ──────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
