@@ -63,6 +63,20 @@ class PrinterStatusService {
   int _pollCount = 0;
   static const int _mDnsBrowseEveryNPolls = 15;
 
+  // ── Startup grace window ──────────────────────────────────────────────────
+  // A freshly-paired or rebooting Pi legitimately has no tunnel URL yet and
+  // may not answer on LAN for a few seconds, so we show 'starting_up' for a
+  // bounded window after this service's first poll. Once it elapses with the
+  // printer still unreachable on every path we report 'offline' instead of
+  // sticking on "Starting up…" forever — the bug this fixes is a just-paired
+  // host that's actually powered off, which never gets a tunnel URL (so
+  // tunnelReady stays false indefinitely) and used to sit on 'starting_up'.
+  DateTime? _firstPollAt;
+  static const Duration _startupGrace = Duration(seconds: 45);
+  bool get _withinStartupGrace =>
+      _firstPollAt != null &&
+      DateTime.now().difference(_firstPollAt!) < _startupGrace;
+
   PrinterStatusService(this.config)
       : _currentLanUrl = config.lanUrl,
         _uiType        = config.uiType,
@@ -141,6 +155,7 @@ class PrinterStatusService {
   }
 
   Future<void> _doPoll() async {
+    _firstPollAt ??= DateTime.now();
     if (!SupabaseService.instance.ready) {
       // Supabase isn't authenticated yet (cold start, no network).
       if (!_disposed) _controller.add(PrinterStatus.offline);
@@ -238,19 +253,30 @@ class PrinterStatusService {
       }
     }
 
-    // 6. All reachable paths failed. Distinguish for the user:
-    //    • No tunnel URL yet AND LAN didn't answer → the printer was just
-    //      paired / is rebooting and remote isn't up; show "starting up".
-    //    • Pi reachable but Klipper / Moonraker not responding — common on
-    //      the K3 when the printer-power toggle is off ('waiting').
-    //    • Nothing answers on any path — actually offline.
-    if (!tunnelReady) {
-      if (!_disposed) _controller.add(PrinterStatus.startingUp);
+    // 6. All Moongate /status paths failed. Distinguish for the user:
+    //    • Pi reachable (any HTTP answer) but the Moongate/Klipper stack
+    //      isn't responding — e.g. the K3 printer-power toggle is off, so
+    //      Moonraker may be up but Klipper isn't ('waiting').
+    //    • Nothing answers anywhere, the cloud has no tunnel yet, and we
+    //      only started polling moments ago → freshly paired / rebooting,
+    //      so show 'starting_up' — but bounded by a grace window.
+    //    • Otherwise nothing answers on any path → 'offline'.
+    //
+    // The grace window is the fix: a just-paired host that is genuinely
+    // unreachable (powered off) never heartbeats a tunnel URL, so tunnelReady
+    // stays false forever. Without the time bound the tile would sit on
+    // "Starting up…" indefinitely instead of settling to offline.
+    final reachable = await _isPiReachable(access);
+    if (reachable) {
+      if (!_disposed) _controller.add(PrinterStatus.waiting);
       return;
     }
-    final reachable = await _isPiReachable(access);
     if (!_disposed) {
-      _controller.add(reachable ? PrinterStatus.waiting : PrinterStatus.offline);
+      _controller.add(
+        (!tunnelReady && _withinStartupGrace)
+            ? PrinterStatus.startingUp
+            : PrinterStatus.offline,
+      );
     }
   }
 
