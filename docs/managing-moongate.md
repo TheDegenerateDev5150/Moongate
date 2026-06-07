@@ -8,7 +8,7 @@ Moongate has two parts — the **app** on your phone and the **plugin** on your 
 
 When a new version is out, the app shows an **update banner** on launch — tap it to download the latest APK, then install over the top. Your printers and settings are preserved (same signing key, so it installs as an upgrade, not a fresh install).
 
-You can also grab it manually any time: **[download the latest APK](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-latest.apk)** and install over your existing copy.
+You can also grab it manually any time: **[download the latest APK](https://github.com/PEEKYPAUL/Moongate/releases/latest)** and install over your existing copy.
 
 > As long as you **install over** the existing app (rather than uninstalling first), your identity is kept and nothing needs re-pairing.
 

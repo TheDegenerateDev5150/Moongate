@@ -265,11 +265,11 @@ The CI pipeline ([`.github/workflows/build-android.yml`](.github/workflows/build
 1. Sets up Flutter stable + JDK 17
 2. Decodes the keystore from Secrets and writes `key.properties`
 3. `flutter build apk --release`
-4. Copies the APK to `APK/Moongate-vX.Y.Z.apk` (versioned) and `APK/Moongate-latest.apk`
-5. Generates a fresh `APK/latest_version.json` for the in-app update banner
-6. Commits with `[skip ci]` to avoid recursion and pushes back to `master`
+4. Publishes the signed APK as a **GitHub Release asset** (`Moongate-vX.Y.Z.apk`) — it is **not** committed to the repo (the ~73 MB binary tripped GitHub's 50 MB push warning on every push)
+5. Generates a fresh `APK/latest_version.json` whose `apk_url` points at that Release asset, for the in-app update banner
+6. Commits **only the manifest** with `[skip ci]` and pushes back to `master`
 
-So **the only thing you commit by hand is code + screenshots + docs**. APKs land 2–3 minutes after each push.
+So **the only thing you commit by hand is code + screenshots + docs**. The release APK lands as a Release asset 2–3 minutes after each push; the in-app updater downloads from there.
 
 `ci.yml` runs `flutter analyze` and `flutter test` on PRs.
 

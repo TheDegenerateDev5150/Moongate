@@ -7,7 +7,7 @@
 [![Latest release](https://img.shields.io/github/v/release/PEEKYPAUL/Moongate?label=latest%20release&color=6C63FF)](https://github.com/PEEKYPAUL/Moongate/releases/latest)
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)](#quick-start)
-[![Download APK](https://img.shields.io/badge/%E2%AC%87%20download-APK-success)](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-latest.apk)
+[![Download APK](https://img.shields.io/badge/%E2%AC%87%20download-APK-success)](https://github.com/PEEKYPAUL/Moongate/releases/latest)
 
 Moongate is a free, open-source Android app for **full remote control of your Klipper 3D printer** — live webcam, print controls, temperatures, and the complete Mainsail/Fluidd UI — over your home WiFi and automatically over the internet when you're away. No Tailscale, no VPN setup, no subscriptions.
 
@@ -105,9 +105,9 @@ In the app's pair screen, set the **Port** field to match (leave it blank for 80
 
 ### 2. Install the app
 
-[![Download Moongate APK](https://img.shields.io/badge/%E2%AC%87%20download-Moongate%20APK-success?style=for-the-badge)](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-latest.apk)
+[![Download Moongate APK](https://img.shields.io/badge/%E2%AC%87%20download-Moongate%20APK-success?style=for-the-badge)](https://github.com/PEEKYPAUL/Moongate/releases/latest)
 
-Android only. Enable **Install from unknown sources** for your browser or file manager, then open the APK. Every release lives in the [APK folder](https://github.com/PEEKYPAUL/Moongate/tree/master/APK).
+Android only. Enable **Install from unknown sources** for your browser or file manager, then open the APK. Every release lives on the [Releases page](https://github.com/PEEKYPAUL/Moongate/releases).
 
 ### 3. Pair
 

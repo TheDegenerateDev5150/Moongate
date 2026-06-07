@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # needed to push the APK back to the repo
+      contents: write   # needed to push the manifest + publish the Release
 
     steps:
       - uses: actions/checkout@v4
@@ -58,105 +58,31 @@ jobs:
         working-directory: mobile
         run: flutter build apk --release
 
-      - name: Copy APK and generate version manifest
+      - name: Stage APK + read version
+        # The signed APK is published ONLY as a GitHub Release asset (next step)
+        # — it is no longer committed to the repo. Stage it under its versioned
+        # name so the release-upload and artifact steps can find it.
+        id: meta
         run: |
-          mkdir -p APK
-
-          # Parse version and build number from pubspec.yaml
-          # e.g. "version: 0.2.3+13" → VERSION=0.2.3  BUILD=13
           VERSION=$(grep '^version:' mobile/pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f1)
           BUILD=$(grep '^version:' mobile/pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f2)
-          VERSIONED_NAME="Moongate-v${VERSION}.apk"
+          cp mobile/build/app/outputs/flutter-apk/app-release.apk "Moongate-v${VERSION}.apk"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD"     >> "$GITHUB_OUTPUT"
+          echo "Built Moongate-v${VERSION}.apk (build $BUILD)"
 
-          # Write both a versioned copy and the always-current Moongate-latest.apk
-          cp mobile/build/app/outputs/flutter-apk/app-release.apk "APK/${VERSIONED_NAME}"
-          cp mobile/build/app/outputs/flutter-apk/app-release.apk APK/Moongate-latest.apk
-
-          # Point the manifest at the versioned file so the GitHub folder makes it
-          # immediately obvious which APK is which version.
-          cat > APK/latest_version.json <<EOF
-          {
-            "version": "$VERSION",
-            "build_number": $BUILD,
-            "apk_url": "https://github.com/PEEKYPAUL/Moongate/raw/master/APK/${VERSIONED_NAME}",
-            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          }
-          EOF
-          echo "Versioned APK: ${VERSIONED_NAME}"
-          echo "Version manifest: $(cat APK/latest_version.json)"
-
-      - name: Commit APK + manifest, prune old APKs, push
-        # Only commit on direct pushes to master (not PRs — they can't push back)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        id: commit
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Save the freshly built files before touching the git tree
-          VERSION=$(grep '^version:' mobile/pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f1)
-          VERSIONED_NAME="Moongate-v${VERSION}.apk"
-          cp APK/Moongate-latest.apk /tmp/Moongate-latest.apk
-          cp "APK/${VERSIONED_NAME}" "/tmp/${VERSIONED_NAME}"
-          cp APK/latest_version.json /tmp/latest_version.json
-
-          # Sync to the current remote HEAD (handles concurrent CI runs that may
-          # have already pushed an APK while this build was running).
-          # We then overlay our fresh build on top so the latest build always wins.
-          # A plain rebase fails on binary files when two runs commit the APK at
-          # the same time, so we hard-reset instead.
-          git fetch origin master
-          git reset --hard origin/master
-
-          # Only overwrite if our build number is >= what's already on remote.
-          # Without this check, a slow CI run for an *older* commit (lower build
-          # number) can finish after a newer run and silently downgrade the APK.
-          REMOTE_BUILD=$(grep -o '"build_number":[^,}]*' APK/latest_version.json | grep -o '[0-9]*' || echo 0)
-          LOCAL_BUILD=$(grep -o '"build_number":[^,}]*' /tmp/latest_version.json | grep -o '[0-9]*' || echo 0)
-          echo "Remote build: $REMOTE_BUILD  |  Our build: $LOCAL_BUILD"
-
-          if [ "$LOCAL_BUILD" -lt "$REMOTE_BUILD" ]; then
-            echo "Remote already has a newer build ($REMOTE_BUILD > $LOCAL_BUILD) — skipping push."
-            echo "published=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Restore our freshly built outputs
-          cp /tmp/Moongate-latest.apk APK/Moongate-latest.apk
-          cp "/tmp/${VERSIONED_NAME}" "APK/${VERSIONED_NAME}" 2>/dev/null || true
-          cp /tmp/latest_version.json APK/latest_version.json
-
-          # Prune the APK folder to the 3 most-recent versioned APKs.
-          # `sort -V` is semver-aware (so v0.2.10 sorts after v0.2.9, not before).
-          # `head -n -3` outputs all-but-the-last-3 → those are the old ones.
-          # Moongate-latest.apk is excluded from the glob and never deleted.
-          (
-            cd APK
-            ls Moongate-v*.apk 2>/dev/null | sort -V | head -n -3 | xargs -r rm -f
-          )
-
-          git add -A APK/
-          if git diff --staged --quiet; then
-            echo "APK unchanged after sync, nothing to commit"
-            echo "published=false" >> "$GITHUB_OUTPUT"
-          else
-            git commit -m "Release Moongate-v${VERSION} [skip ci]"
-            git push origin master
-            echo "published=true" >> "$GITHUB_OUTPUT"
-            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Create / update GitHub Release
-        # Mirrors what landed in APK/ into a proper GitHub Release so the repo's
-        # right-sidebar "Releases" widget shows the current version.  Idempotent:
+      - name: Publish APK as a GitHub Release asset
+        # Why a Release asset, not a committed file: the signed APK is ~73 MB,
+        # which tripped GitHub's 50 MB push warning on EVERY push and bloated
+        # the git history. Release assets carry none of that cost. Idempotent —
         # re-running on the same version replaces the asset instead of erroring.
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.commit.outputs.published == 'true'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ steps.commit.outputs.version }}"
+          VERSION="${{ steps.meta.outputs.version }}"
           TAG="v${VERSION}"
-          ASSET="APK/Moongate-v${VERSION}.apk"
+          ASSET="Moongate-v${VERSION}.apk"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists — replacing asset"
@@ -171,10 +97,58 @@ jobs:
               --latest
           fi
 
+      - name: Update version manifest, push
+        # Commits ONLY APK/latest_version.json (tiny). Its apk_url points at the
+        # Release asset published in the previous step, so the in-app updater
+        # downloads from the Release, not from the repo. No APK binary is ever
+        # committed. Runs AFTER the asset is published so the manifest never
+        # advertises a download URL that doesn't exist yet.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          VERSION="${{ steps.meta.outputs.version }}"
+          BUILD="${{ steps.meta.outputs.build }}"
+
+          # Sync to the current remote HEAD (handles concurrent CI runs that may
+          # have already pushed a manifest while this build was running).
+          git fetch origin master
+          git reset --hard origin/master
+
+          # Don't let a slow CI run for an OLDER commit (lower build number)
+          # finish late and downgrade the manifest to a stale version.
+          REMOTE_BUILD=$(grep -o '"build_number":[^,}]*' APK/latest_version.json 2>/dev/null | grep -o '[0-9]*' || echo 0)
+          REMOTE_BUILD=${REMOTE_BUILD:-0}
+          echo "Remote manifest build: $REMOTE_BUILD  |  Our build: $BUILD"
+          if [ "$BUILD" -lt "$REMOTE_BUILD" ]; then
+            echo "Remote already has a newer build ($REMOTE_BUILD > $BUILD) — skipping manifest update."
+            exit 0
+          fi
+
+          mkdir -p APK
+          cat > APK/latest_version.json <<EOF
+          {
+            "version": "$VERSION",
+            "build_number": $BUILD,
+            "apk_url": "https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/Moongate-v${VERSION}.apk",
+            "published_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+          git add APK/latest_version.json
+          if git diff --staged --quiet; then
+            echo "Manifest unchanged, nothing to commit"
+          else
+            git commit -m "Release Moongate-v${VERSION} [skip ci]"
+            git push origin master
+            echo "Published manifest for v${VERSION} (build $BUILD)"
+          fi
+
       - name: Prune old Releases (keep last 3)
-        # Drops every Release past the 3 most-recent (by createdAt).  `--cleanup-tag`
+        # Drops every Release past the 3 most-recent (by createdAt). --cleanup-tag
         # also removes the underlying git tag so it doesn't linger.
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.commit.outputs.published == 'true'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -195,5 +169,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Moongate-release
-          path: APK/Moongate-latest.apk
+          path: Moongate-v${{ steps.meta.outputs.version }}.apk
           retention-days: 30
