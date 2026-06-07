@@ -687,6 +687,9 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.6.1', [
+    'Fixed a printer staying on "Starting up…" forever when it was paired while powered off (or went offline right after pairing) — it now settles to "Offline" once unreachable, with a short grace window for one that\'s genuinely still booting',
+  ]),
   _ChangelogEntry('v0.6.0', [
     'New optional App lock — protect Moongate with a PIN, plus fingerprint or face if your phone supports it (Menu → App lock)',
     'The lock appears when you open the app; you can optionally re-lock after time in the background',
