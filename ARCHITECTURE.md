@@ -187,9 +187,9 @@ push to master
   ├─ flutter pub get
   ├─ Decode the keystore from GitHub Secrets → key.properties
   ├─ flutter build apk --release
-  ├─ Copy APK to APK/Moongate-v<X.Y.Z>.apk and APK/Moongate-latest.apk
-  ├─ Regenerate APK/latest_version.json with current version + build_number
-  └─ git commit + push  →  "Release Moongate-vX.Y.Z [skip ci]"
+  ├─ Publish the signed APK as a GitHub Release asset (Moongate-v<X.Y.Z>.apk)
+  ├─ Regenerate APK/latest_version.json (apk_url → the Release asset)
+  └─ git commit + push the manifest  →  "Release Moongate-vX.Y.Z [skip ci]"
 ```
 
 The `[skip ci]` suffix prevents the commit-back from re-triggering CI. The in-app update banner ([`UpdateService`](mobile/lib/services/update_service.dart)) polls `latest_version.json` on launch and shows the banner if the remote `build_number` exceeds the installed one.
