@@ -1,0 +1,72 @@
+# Updating &amp; removing Moongate
+
+Moongate has two parts — the **app** on your phone and the **plugin** on your Pi — and they update independently. For first-time setup, see the [Quick start](../README.md#quick-start) in the README.
+
+---
+
+## Updating the app
+
+When a new version is out, the app shows an **update banner** on launch — tap it to download the latest APK, then install over the top. Your printers and settings are preserved (same signing key, so it installs as an upgrade, not a fresh install).
+
+You can also grab it manually any time: **[download the latest APK](https://github.com/PEEKYPAUL/Moongate/raw/master/APK/Moongate-latest.apk)** and install over your existing copy.
+
+> As long as you **install over** the existing app (rather than uninstalling first), your identity is kept and nothing needs re-pairing.
+
+---
+
+## Updating the plugin
+
+Pi-side updates appear automatically in **Mainsail → Machine → Software Updates → Moongate** — click **Update** there, no SSH needed.
+
+Prefer the command line? SSH in and re-run the installer — it pulls the latest and restarts the services:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh | bash
+```
+
+> Some releases note **"re-run the Pi installer"** in the changelog — that means a plugin-side change shipped (e.g. v0.5.1's instant-pairing QR). Update the plugin to get it.
+
+---
+
+## Reinstalling the app (or moving to a new phone)
+
+This is the one case that needs care. A fresh install — uninstalling and reinstalling, clearing app data, or setting up a new phone — creates a **brand-new app identity**. Your printers are still tied to the *old* identity in the cloud, so after a fresh install every tile shows offline until you re-pair.
+
+To reinstall cleanly:
+
+1. **Before uninstalling**, for each printer run **`MOONGATE_RESET_OWNER`** in the Klipper console. This releases the cloud association so the printer can be claimed again.
+   *(Optional: menu → **Back up config** to save your printer names + layout. This restores the list, but not the connection — re-pairing is what reconnects.)*
+2. Uninstall the old app / set up the new phone, and install Moongate.
+3. *(If you backed up)* menu → **Restore config** to bring your printer list back.
+4. For each printer: run `MOONGATE_PAIR` on the Pi and scan the QR (or type the GATE code) — see [Step 3 — Pair](../README.md#3-pair).
+
+> **Forgot to run `MOONGATE_RESET_OWNER` first?** No problem — run it now (it works any time), then `MOONGATE_PAIR` and pair again. See [TROUBLESHOOTING.md](../TROUBLESHOOTING.md#all-tiles-offline-after-reinstalling-the-app-or-a-new-phone).
+
+> **Just upgrading the app over the top?** None of this applies — your identity is kept and your printers stay paired.
+
+---
+
+## Removing Moongate
+
+To completely remove Moongate from your Pi, SSH in and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/uninstall.sh | MOONGATE_YES=1 bash
+```
+
+(`MOONGATE_YES=1` skips the confirmation prompt, which can't be answered interactively when piping through `bash`. Omit it if you download the script first.)
+
+This removes:
+
+- The `moongate-tunnel` and `moongate-authproxy` systemd services
+- The Moongate Moonraker plugin and auth proxy
+- The `~/moongate` repository clone
+- `~/.config/moongate` (local state — owner record, device key)
+- The `[moongate]` and `[update_manager moongate]` entries from `moonraker.conf`
+- The Moonraker `host:` override the v0.4 installer applied (restored from its pre-install backup)
+- The `MOONGATE_PAIR` macro from your Klipper config
+- The `moongate-pair.html` page from Mainsail
+
+`cloudflared` itself is left in place as it may be used by other services. To remove it too: `sudo apt remove cloudflared`
+
+Don't forget to uninstall the Moongate app from your phone as well.
