@@ -2,9 +2,16 @@
 #
 # Repo-level Dependabot *alerts* + *automated security fixes* were enabled on
 # 2026-06-07 (they had been switched off, which is why a stale vuln count
-# lingered for weeks with no way to verify it). Security-update PRs are driven
-# by those alerts and need no config here. This file adds scheduled *version*
-# update coverage so dependencies don't silently drift out of date.
+# lingered for weeks with no way to verify it). SECURITY updates are driven by
+# those alerts and override the ignore rules below, so a vulnerable package is
+# always offered a fix regardless of semver.
+#
+# For routine VERSION updates we deliberately stay quiet:
+#   * each ecosystem is collapsed into a SINGLE grouped PR, and
+#   * MAJOR bumps are ignored — they tend to carry breaking changes and need a
+#     human to test/migrate, so we bump those by hand when we choose to.
+# Net effect: at most one low-risk (minor/patch) PR per ecosystem per week,
+# plus security PRs whenever they're actually needed.
 version: 2
 updates:
   # ── Flutter / Dart packages (the app) ──────────────────────────────────────
@@ -15,17 +22,14 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "deps"
-    # Bundle in-range minor/patch bumps into one PR to keep the noise down;
-    # majors (mostly constraint-blocked here) still come through individually.
     groups:
-      dart-minor-patch:
+      pub:
         patterns: ["*"]
-        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   # ── Android / Gradle (native side) ─────────────────────────────────────────
-  # Not currently in the dependency graph, so adding it here also extends
-  # scanning to the Android build. Flutter's generated Gradle can be awkward for
-  # Dependabot to parse; if it can't, it just logs on the Dependabot tab.
   - package-ecosystem: "gradle"
     directory: "/mobile/android"
     schedule:
@@ -33,8 +37,17 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "deps(android)"
+    groups:
+      gradle:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   # ── GitHub Actions used by CI ──────────────────────────────────────────────
+  # Actions tag by major (v4/v5/v6...), so ignoring majors effectively pins
+  # them — that's fine, they're bumped by hand when wanted, and security still
+  # overrides. Grouped so any minor/patch lands in one PR.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -42,3 +55,9 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
