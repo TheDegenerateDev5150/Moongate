@@ -136,6 +136,14 @@ class PrinterStatusService {
     _timer = Timer.periodic(interval, (_) => _poll());
   }
 
+  /// Trigger an immediate poll outside the timer cadence — e.g. when the app
+  /// returns to the foreground. Aggressive battery optimisation (Samsung
+  /// Freecess et al.) can freeze the process and suspend our [Timer], leaving
+  /// the tile stuck on a stale 'offline'; polling on resume recovers it at
+  /// once instead of waiting for the next tick. Cheap: [_poll] no-ops if one
+  /// is already in flight.
+  void pollNow() => _poll();
+
   void dispose() {
     _disposed = true;
     _timer?.cancel();
@@ -288,14 +296,22 @@ class PrinterStatusService {
   // listening. Used to differentiate "Klipper not running" from "Pi off"
   // after the moongate /status path has given up.
   Future<bool> _isPiReachable(PrinterAccess access) async {
+    // Include the mDNS-discovered URL, not just the persisted one: right after
+    // a fresh pair the LAN /status poll may have failed (owner-bind/token not
+    // settled yet) so _currentLanUrl is still null — but the printer is plainly
+    // on the network. Probing the discovered URL here keeps the tile on
+    // "Starting up…" instead of flipping to a scary "Offline" while it settles.
+    final discovered = LanDiscoveryService.instance.lookup(config.id);
     final candidates = <String>[
+      if (discovered != null) discovered,
       if (_currentLanUrl != null) _currentLanUrl!,
       if (access.tunnelUrl != null) access.tunnelUrl!,
     ];
     for (final base in candidates) {
       try {
-        await http.head(Uri.parse(base))
-            .timeout(const Duration(seconds: 2));
+        // 4s, not 2s: a Cloudflare Quick Tunnel cold-start can exceed 2s, and a
+        // slow-but-alive host should read as "reachable", not "offline".
+        await http.head(Uri.parse(base)).timeout(const Duration(seconds: 4));
         return true;
       } catch (_) {
         // Refused / timeout / DNS — try next candidate

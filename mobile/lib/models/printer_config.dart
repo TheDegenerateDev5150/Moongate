@@ -75,6 +75,42 @@ class PrinterConfig {
         uiType:          uiType          ?? this.uiType,
       );
 
+  /// Normalise a user-typed printer address into a base [lanUrl] such as
+  /// `http://192.168.1.50:7125`, or null if [input] is blank. Accepts a bare
+  /// host, `host:port`, or a full `http(s)://` URL; defaults to http, drops
+  /// any path, and validates host + port so a typo never gets persisted.
+  ///
+  /// Used by the "Advanced — custom network" field on the add-printer screen
+  /// and the edit-printer dialog so people behind a reverse proxy / Docker can
+  /// point the app straight at the address that serves their Mainsail/Fluidd
+  /// page (the same origin that proxies the Moonraker API) — bypassing mDNS
+  /// and the Pi-advertised IP/port entirely. Returns a clean base ready to
+  /// have `/server/...` paths appended.
+  static String? parseLanUrl(String input) {
+    var s = input.trim();
+    if (s.isEmpty) return null;
+    var scheme = 'http';
+    final schemeMatch =
+        RegExp(r'^(https?)://', caseSensitive: false).firstMatch(s);
+    if (schemeMatch != null) {
+      scheme = schemeMatch.group(1)!.toLowerCase();
+      s = s.substring(schemeMatch.end);
+    }
+    // Keep only the authority (host[:port]); drop any path/query a user
+    // pasted from a browser URL bar.
+    s = s.split('/').first.split('?').first.trim();
+    final m = RegExp(r'^([A-Za-z0-9.\-]+)(?::(\d{1,5}))?$').firstMatch(s);
+    if (m == null) return null;
+    final host = m.group(1)!;
+    final port = m.group(2);
+    if (port != null) {
+      final p = int.tryParse(port);
+      if (p == null || p < 1 || p > 65535) return null;
+      return '$scheme://$host:$port';
+    }
+    return '$scheme://$host';
+  }
+
   // ── v0.2.x compat getters ──────────────────────────────────────────────
   //
   // These remain so UI code that still reads `printer.host` etc. keeps

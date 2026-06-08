@@ -126,6 +126,47 @@ See [SECURITY.md → "What the tunnel actually exposes (v0.4)"](SECURITY.md#what
 
 If you're still running v0.2.x: upgrade. The known browser-direct-to-Mainsail hole was the explicit driver for v0.4.0.
 
+## Moonraker behind a reverse proxy (Traefik, Caddy, NPM) or in Docker
+
+Moongate assumes the standard Klipper layout: it connects to your printer **directly over plain HTTP, by IP address, on your LAN** — by default port 80, where one web server serves the Mainsail/Fluidd page *and* proxies the Moonraker API. A homelab where Moonraker sits behind a hostname-routing reverse proxy (Traefik, Caddy, Nginx Proxy Manager) or runs in Docker breaks that assumption:
+
+- Moongate talks to an **IP over plain HTTP** — no hostname, no HTTPS — so a proxy that terminates TLS on 443 and routes by hostname is never in a form Moongate can use.
+- The LAN address Moongate advertises comes from the printer host's own "which interface reaches the internet" lookup. Inside a Docker bridge network that returns a container-internal address (e.g. `172.x.x.x`) your phone can't reach.
+
+You don't have to route Moongate *through* your proxy — you just have to give it a plain-HTTP door straight to your Klipper web stack. Your existing `https://…` proxy hostname can stay exactly as it is; Moongate simply doesn't use it. (Remote access, when you're away from home, runs over Moongate's own tunnel and is independent of your proxy.)
+
+### "Connection refused" right after adding the printer
+
+Adding a printer is a cloud step, so the tile appears even with no local connectivity. The first status poll then tries `http://<ip>:<http_port>/server/moongate/status`, nothing is listening there, and you get connection refused.
+
+**Easiest — set the address in the app:** when adding the printer, expand **Advanced — printer on a custom network?** and enter the address you use to open its web page in a browser (e.g. `192.168.1.50:7125`). Already added it? Open the printer, tap the ✏️ icon, and set **Printer address** there. This points the app straight at your printer and skips the auto-discovery a reverse-proxy / Docker setup breaks — no server changes needed. Use an address that serves the Mainsail/Fluidd **page**, since that same origin also proxies the API — that's what fixes "Bad Gateway" below, too.
+
+**Server-side alternative** — makes the QR and auto-discovery advertise the right port for *every* device:
+
+1. Expose your Klipper web server (the one serving Mainsail/Fluidd) on the LAN on a normal HTTP port — not only the proxy's `https://…` hostname. If it runs in Docker, publish that port to the **host's LAN**, not just the container network.
+2. On the machine running Moonraker, edit (create if missing) `~/.config/moongate/config.json` and set that port:
+   ```json
+   { "http_port": 80 }
+   ```
+   Use whatever port that web server actually listens on — `80` is the default; set e.g. `"http_port": 8080` if that's what you exposed. (In Docker this file lives under the home of the user Moonraker runs as, *inside* the container.)
+3. Restart Moonraker so the plugin reloads, then **re-pair** in the app — remove the printer and add it again so the new pairing carries the right port.
+4. Pair while your phone is on the **same WiFi/LAN** as the printer; initial pairing is LAN-only by design.
+
+If the address still looks wrong (the app lands on a `172.x` Docker address it can't reach), run the Moonraker container with **host networking** so it advertises your real LAN IP.
+
+### Tile connects, but opening the printer shows "Bad Gateway" (502)
+
+The dashboard tile only uses the Moonraker **API** (`/server/…`). Tapping into a printer opens the **full Mainsail/Fluidd web page** in a built-in browser, by loading `http://<ip>:<http_port>/`. A 502 there is emitted by *your* web server or proxy — the app reached that layer, but it couldn't get the page from its upstream.
+
+The usual cause: `http_port` points at **Moonraker directly (port 7125)**, which serves the API but has no web page, or at a proxy whose web-UI backend is down. `http_port` must point at the origin that serves **both** the Mainsail/Fluidd page **and** proxies the Moonraker API — the same single URL a browser uses to open your printer's interface.
+
+**Confirm it's server-side, not the app** — on a computer on the same network, open the exact URL the app uses, `http://<the-ip-and-http_port-you-set>/`, in a browser:
+
+- Bad Gateway in the browser too → it's your server/proxy config, not Moongate. Whatever serves that port can't reach its upstream (the Mainsail/Fluidd files, or Moonraker).
+- The interface loads fine in the browser but not in the app → [open an issue](https://github.com/PEEKYPAUL/Moongate/issues/new); that's unusual.
+
+**Fix:** point Moongate at the origin that serves the Mainsail/Fluidd page *and* proxies `/server`, `/websocket`, `/printer` to Moonraker. Quickest is in the app — open the printer, tap ✏️, and set **Printer address** to the address you open the web page at. Server-side, set `http_port` to that same port and restart Moonraker. Then re-open the printer.
+
 ## Need to capture a fresh log
 
 For mobile-side issues:
