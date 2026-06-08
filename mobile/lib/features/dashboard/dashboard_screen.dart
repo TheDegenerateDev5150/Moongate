@@ -687,6 +687,11 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.6.2', [
+    'Set a printer\'s address by hand — a new "Advanced" option when adding a printer, and an address field in each printer\'s edit dialog. Handy when your printer is behind a reverse proxy (Traefik, Caddy, NPM) or in Docker and the app can\'t find it automatically — enter the address you\'d use to open its web page in a browser',
+    'Clearer pairing — scanning the QR is marked as the instant method; typing the GATE code is flagged as the slower alternative',
+    'Steadier first connection — a freshly-paired printer is less likely to show a premature "Offline", and recovers on its own when you return to the app',
+  ]),
   _ChangelogEntry('v0.6.1', [
     'Fixed a printer staying on "Starting up…" forever when it was paired while powered off (or went offline right after pairing) — it now settles to "Offline" once unreachable, with a short grace window for one that\'s genuinely still booting',
   ]),
