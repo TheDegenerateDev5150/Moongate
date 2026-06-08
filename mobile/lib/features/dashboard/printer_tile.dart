@@ -22,7 +22,7 @@ class PrinterTile extends StatefulWidget {
   State<PrinterTile> createState() => _PrinterTileState();
 }
 
-class _PrinterTileState extends State<PrinterTile> {
+class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
   late final PrinterStatusService _statusService;
   late final PrintControlService _controlService;
   late PrinterStatus _status;
@@ -39,6 +39,7 @@ class _PrinterTileState extends State<PrinterTile> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Seed the initial status with persisted webcam transform settings so the
     // first frame already shows the correct orientation — before any poll.
     // Use 'connecting' rather than 'offline' so the badge says "Connecting"
@@ -83,9 +84,19 @@ class _PrinterTileState extends State<PrinterTile> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _statusService.dispose();
     _stopConfirmTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // The OS may have frozen us (battery optimisation) and suspended the poll
+    // timer. On return to the foreground, poll immediately so a stale 'offline'
+    // tile refreshes at once instead of waiting up to a full cycle. The
+    // app-level observer (app.dart) kicks the mDNS browse in parallel.
+    if (state == AppLifecycleState.resumed) _statusService.pollNow();
   }
 
   Future<void> _handlePause() async {
