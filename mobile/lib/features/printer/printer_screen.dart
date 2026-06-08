@@ -141,15 +141,33 @@ class _PrinterScreenState extends State<PrinterScreen>
     }
   }
 
-  Future<void> _showRenameDialog() async {
-    final newName = await showDialog<String>(
+  Future<void> _showEditPrinterDialog() async {
+    final result = await showDialog<({String name, String? lanUrl})>(
       context: context,
-      builder: (_) => _RenameDialog(initial: _displayName),
+      builder: (_) => _EditPrinterDialog(
+        initialName:   _displayName,
+        initialLanUrl: widget.printer.lanUrl,
+      ),
     );
-    if (newName == null || newName.isEmpty || newName == _displayName) return;
-    await PrinterRegistry.instance.renamePrinter(widget.printer.id, newName);
-    if (!mounted) return;
-    setState(() => _displayName = newName);
+    if (result == null) return;
+    final newName = result.name;
+    if (newName.isNotEmpty && newName != _displayName) {
+      await PrinterRegistry.instance.renamePrinter(widget.printer.id, newName);
+      if (mounted) setState(() => _displayName = newName);
+    }
+    if (result.lanUrl != widget.printer.lanUrl) {
+      await PrinterRegistry.instance
+          .updateLanUrl(widget.printer.id, result.lanUrl);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.lanUrl == null
+                ? 'Custom address cleared'
+                : 'Printer address updated'),
+          ),
+        );
+      }
+    }
   }
 
   /// Force a fallback to the Cloudflare tunnel. Called from the Retry
@@ -269,14 +287,14 @@ class _PrinterScreenState extends State<PrinterScreen>
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Edit-name icon directly before the name, per request.
+            // Edit icon directly before the name (name + advanced address).
             IconButton(
               icon: const Icon(Icons.edit, size: 18),
-              tooltip: 'Edit name',
+              tooltip: 'Edit printer',
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              onPressed: _showRenameDialog,
+              onPressed: _showEditPrinterDialog,
             ),
             const SizedBox(width: 4),
             Flexible(
@@ -374,46 +392,90 @@ class _PrinterScreenState extends State<PrinterScreen>
   }
 }
 
-// ── Rename dialog ─────────────────────────────────────────────────────────────
+// ── Edit-printer dialog ─────────────────────────────────────────────────────
 //
-// Wrapped in a StatefulWidget so the TextEditingController is owned by the
+// Name + an optional advanced "Printer address" override, for reverse-proxy /
+// Docker setups where mDNS and the Pi-advertised address can't be reached.
+// Wrapped in a StatefulWidget so the TextEditingControllers are owned by the
 // dialog's State and disposed cleanly when the dialog is torn down. Disposing
 // a controller from the calling code AFTER `await showDialog` resolves races
 // the framework's own dispose pass and trips the `_dependents.isEmpty`
 // assertion.
 
-class _RenameDialog extends StatefulWidget {
-  final String initial;
-  const _RenameDialog({required this.initial});
+class _EditPrinterDialog extends StatefulWidget {
+  final String  initialName;
+  final String? initialLanUrl;
+  const _EditPrinterDialog({required this.initialName, this.initialLanUrl});
 
   @override
-  State<_RenameDialog> createState() => _RenameDialogState();
+  State<_EditPrinterDialog> createState() => _EditPrinterDialogState();
 }
 
-class _RenameDialogState extends State<_RenameDialog> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.initial);
+class _EditPrinterDialogState extends State<_EditPrinterDialog> {
+  late final TextEditingController _nameController =
+      TextEditingController(text: widget.initialName);
+  // Show the stored lanUrl without the scheme — the friendlier host:port
+  // form people actually type.
+  late final TextEditingController _addressController = TextEditingController(
+    text: (widget.initialLanUrl ?? '').replaceFirst(RegExp(r'^https?://'), ''),
+  );
+  String? _addressError;
 
   @override
   void dispose() {
-    _controller.dispose();
+    _nameController.dispose();
+    _addressController.dispose();
     super.dispose();
+  }
+
+  void _save() {
+    final name    = _nameController.text.trim();
+    final addrRaw = _addressController.text.trim();
+    final lanUrl  = PrinterConfig.parseLanUrl(addrRaw);
+    if (addrRaw.isNotEmpty && lanUrl == null) {
+      setState(() => _addressError = 'Try e.g. 192.168.1.50:7125');
+      return;
+    }
+    Navigator.pop(context, (name: name, lanUrl: lanUrl));
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Rename printer'),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        maxLength: 48,
-        textCapitalization: TextCapitalization.words,
-        decoration: const InputDecoration(
-          labelText: 'Printer name',
-          border: OutlineInputBorder(),
-        ),
-        onSubmitted: (v) => Navigator.pop(context, v.trim()),
+      title: const Text('Edit printer'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _nameController,
+            autofocus: true,
+            maxLength: 48,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              labelText: 'Printer name',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 4),
+          TextField(
+            controller: _addressController,
+            keyboardType: TextInputType.url,
+            autocorrect: false,
+            decoration: InputDecoration(
+              labelText: 'Printer address (advanced)',
+              hintText: '192.168.1.50:7125',
+              helperText: 'Only for reverse-proxy / Docker setups. '
+                  'Leave blank to use automatic discovery.',
+              helperMaxLines: 2,
+              errorText: _addressError,
+              border: const OutlineInputBorder(),
+            ),
+            onChanged: (_) {
+              if (_addressError != null) setState(() => _addressError = null);
+            },
+          ),
+        ],
       ),
       actions: [
         TextButton(
@@ -421,7 +483,7 @@ class _RenameDialogState extends State<_RenameDialog> {
           child: const Text('Cancel'),
         ),
         FilledButton(
-          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          onPressed: _save,
           child: const Text('Save'),
         ),
       ],

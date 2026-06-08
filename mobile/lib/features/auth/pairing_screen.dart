@@ -35,6 +35,12 @@ class PairingScreen extends StatefulWidget {
 class _PairingScreenState extends State<PairingScreen> {
   final _nameController      = TextEditingController(text: 'My Printer');
 
+  // Optional "Advanced — custom network" address. When non-blank it becomes
+  // the printer's lanUrl, overriding the QR/mDNS-supplied address. The escape
+  // hatch for reverse-proxy / Docker setups where auto-discovery can't find
+  // the printer (see TROUBLESHOOTING.md → reverse proxy).
+  final _addressController   = TextEditingController();
+
   // Two 4-digit boxes for the GATE code. Split lets us show a numpad
   // (TextInputType.number) instead of the full keyboard, and lets us
   // auto-advance focus from box 1 to box 2 after 4 digits.
@@ -66,6 +72,7 @@ class _PairingScreenState extends State<PairingScreen> {
     _barcodeSub?.cancel();
     _scannerController?.dispose();
     _nameController.dispose();
+    _addressController.dispose();
     _codeFirstController.dispose();
     _codeSecondController.dispose();
     _codeFirstFocus.dispose();
@@ -282,6 +289,15 @@ class _PairingScreenState extends State<PairingScreen> {
           'Scan the QR code, or type the GATE code from the printer console.');
       return;
     }
+    // Advanced override: an explicit address wins over the QR/mDNS one. A
+    // typed-but-unparseable address is a user error worth flagging rather
+    // than silently ignoring.
+    final manualLanUrl = PrinterConfig.parseLanUrl(_addressController.text);
+    if (_addressController.text.trim().isNotEmpty && manualLanUrl == null) {
+      setState(() => _error =
+          'That printer address doesn\'t look right — try e.g. 192.168.1.50:7125');
+      return;
+    }
     final pk = scannedEt != null ? _scannedPubKey : null;
 
     final name = _nameController.text.trim().isEmpty
@@ -303,7 +319,8 @@ class _PairingScreenState extends State<PairingScreen> {
       // manual GATE-code path or older QRs we fall back to a brief mDNS
       // prewarm; if neither resolves, lanUrl stays null and the normal
       // background browse + tunnel path takes over (no regression).
-      final lanUrl = _scannedLanUrl ?? await _prewarmLanUrl(printerId);
+      final lanUrl =
+          manualLanUrl ?? _scannedLanUrl ?? await _prewarmLanUrl(printerId);
       await PrinterRegistry.instance.addClaimed(
         PrinterConfig(id: printerId, name: name, lanUrl: lanUrl),
       );
@@ -554,6 +571,51 @@ class _PairingScreenState extends State<PairingScreen> {
                     TextButton(
                       onPressed: _loading ? null : _resetScan,
                       child: const Text('Rescan'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // ── Advanced: manual address (reverse proxy / Docker) ──────
+            if (!_scanning) ...[
+              const SizedBox(height: 8),
+              Theme(
+                data: Theme.of(context)
+                    .copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: const EdgeInsets.only(bottom: 4),
+                  expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+                  title: Text(
+                    'Advanced — printer on a custom network?',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: cs.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  children: [
+                    Text(
+                      'Most people can leave this blank. If your printer is '
+                      'behind a reverse proxy (Traefik, Caddy, NPM) or in '
+                      'Docker, enter the same address you use to open its web '
+                      'page (Mainsail / Fluidd) in a browser.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _addressController,
+                      enabled: !_loading,
+                      keyboardType: TextInputType.url,
+                      autocorrect: false,
+                      decoration: const InputDecoration(
+                        labelText: 'Printer address',
+                        hintText: '192.168.1.50:7125',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                   ],
                 ),
