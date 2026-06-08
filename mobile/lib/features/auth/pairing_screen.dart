@@ -422,6 +422,16 @@ class _PairingScreenState extends State<PairingScreen> {
                 label: const Text('Scan QR code'),
                 onPressed: _loading ? null : _openScanner,
               ),
+              const SizedBox(height: 6),
+              Text(
+                'Recommended — connects instantly',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: cs.primary,
+                ),
+              ),
               const SizedBox(height: 14),
               Row(children: [
                 Expanded(child: Divider(color: cs.outlineVariant)),
@@ -486,6 +496,35 @@ class _PairingScreenState extends State<PairingScreen> {
                         ? cs.primary
                         : cs.onSurface.withValues(alpha: 0.6),
                   ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.warning_amber_rounded,
+                        size: 18, color: Colors.amber.shade700),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Alternative method. Without the QR, the printer can take '
+                        'a few minutes — occasionally up to ~10 — to come fully '
+                        'online on the dashboard. Scan the QR code above for an '
+                        'instant connection.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          height: 1.35,
+                          color: cs.onSurface.withValues(alpha: 0.75),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
