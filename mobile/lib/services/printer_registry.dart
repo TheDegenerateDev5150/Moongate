@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer' as dev;
 
+import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/printer_config.dart';
@@ -93,6 +95,39 @@ class PrinterRegistry {
 
   /// Legacy alias kept for import-config flow. Behaves like [addClaimed].
   Future<void> add(PrinterConfig printer) => addClaimed(printer);
+
+  /// Opens the SAF document picker, parses a Moongate backup, and merges its
+  /// printers into the local cache (existing kept, duplicates matched by id
+  /// skipped). Returns the number of printers added, or null if the user
+  /// cancelled the picker. Throws on a malformed / unreadable file so the
+  /// caller can surface an error.
+  ///
+  /// Shared by the dashboard "Restore config" item and the first-launch
+  /// pairing screen. A backup carries the printer list only, NOT the Supabase
+  /// anon identity — restored printers stay offline until each Pi is re-paired
+  /// (a reinstall gets a new cloud identity).
+  Future<int?> importFromBackupFile() async {
+    // withData:true returns bytes inline rather than a path we may not be able
+    // to read under scoped storage. Accept any file type (Android often greys
+    // out custom .json filters) and validate by parsing instead.
+    final picked = await FilePicker.platform.pickFiles(
+      dialogTitle: 'Select a Moongate backup',
+      withData: true,
+    );
+    if (picked == null) return null; // user cancelled
+    final bytes = picked.files.single.bytes;
+    if (bytes == null) throw const FormatException('unreadable_file');
+    final imported = PrinterConfig.listFromJson(utf8.decode(bytes));
+    final existing = _printers.map((p) => p.id).toSet();
+    var added = 0;
+    for (final p in imported) {
+      if (!existing.contains(p.id)) {
+        await add(p);
+        added++;
+      }
+    }
+    return added;
+  }
 
   /// Remove the local cache entry. Note: this does NOT delete the row
   /// from Supabase — for that, the user should run MOONGATE_RESET_OWNER

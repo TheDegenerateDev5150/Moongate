@@ -339,6 +339,47 @@ class _PairingScreenState extends State<PairingScreen> {
     }
   }
 
+  // ── First-launch / reinstall restore ─────────────────────────────────────
+
+  /// Pick a backup file and merge its printers in, then head to the
+  /// dashboard. Restored printers come back offline — a reinstall gets a new
+  /// cloud identity, so the user re-pairs each Pi to bring it online. Shares
+  /// PrinterRegistry.importFromBackupFile with the drawer "Restore config".
+  Future<void> _importConfig() async {
+    final messenger = ScaffoldMessenger.of(context);
+    int? added;
+    try {
+      added = await PrinterRegistry.instance.importFromBackupFile();
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Invalid backup file — please pick a Moongate config file.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+    if (added == null || !mounted) return; // user cancelled
+    if (added == 0) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No new printers found in that file.')),
+      );
+      return;
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+            '$added printer(s) restored — re-pair each Pi to bring it online.'),
+      ),
+    );
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/dashboard');
+    }
+  }
+
   // ── First-add LAN pre-warm ───────────────────────────────────────────────
 
   /// Give mDNS a brief head start right after a successful claim so the
@@ -686,6 +727,28 @@ class _PairingScreenState extends State<PairingScreen> {
                   _error!,
                   style: TextStyle(color: cs.onErrorContainer),
                 ),
+              ),
+            ],
+
+            // ── Restore from a backup file (reinstall / first launch) ──
+            if (!_scanning) ...[
+              const SizedBox(height: 24),
+              Divider(color: cs.onSurface.withValues(alpha: 0.12)),
+              const SizedBox(height: 8),
+              Text(
+                'Reinstalling? Restore your saved printers from a backup '
+                "file. You'll still re-pair each one to bring it online.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: cs.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: _loading ? null : _importConfig,
+                icon: const Icon(Icons.file_download_outlined),
+                label: const Text('Import config from file'),
               ),
             ],
           ],

@@ -539,54 +539,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// duplicates (same id) are skipped.
   Future<void> _importConfig() async {
     final messenger = ScaffoldMessenger.of(context);
-    FilePickerResult? picked;
+    int? added;
     try {
-      // `withData: true` returns the bytes inline rather than a path we may
-      // not be able to read under scoped storage. We accept any file type
-      // (not a custom .json filter — Android's picker frequently greys those
-      // out) and validate by parsing instead.
-      picked = await FilePicker.platform.pickFiles(
-        dialogTitle: 'Select a Moongate backup',
-        withData: true,
-      );
-    } catch (_) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Could not open the file picker.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-    if (picked == null || !mounted) return; // user cancelled
-    final bytes = picked.files.single.bytes;
-    if (bytes == null) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Could not read that file.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-
-    try {
-      final printers = PrinterConfig.listFromJson(utf8.decode(bytes));
-      // Merge: add only printers not already in registry (match by id).
-      final existing = PrinterRegistry.instance.printers.map((p) => p.id).toSet();
-      var added = 0;
-      for (final p in printers) {
-        if (!existing.contains(p.id)) {
-          await PrinterRegistry.instance.add(p);
-          added++;
-        }
-      }
-      _load();
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('$added printer(s) restored.')),
-      );
+      added = await PrinterRegistry.instance.importFromBackupFile();
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -595,7 +550,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           backgroundColor: Colors.redAccent,
         ),
       );
+      return;
     }
+    if (added == null || !mounted) return; // user cancelled
+    _load();
+    messenger.showSnackBar(
+      SnackBar(content: Text('$added printer(s) restored.')),
+    );
   }
 
   void _showRemoveSheet(BuildContext context) {
