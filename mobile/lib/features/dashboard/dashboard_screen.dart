@@ -673,6 +673,13 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.6.3', [
+    'Restore now brings your printers back ONLINE after a reinstall or on a new phone — no re-pairing. Your backup carries a one-time code that re-links them to the freshly-installed app',
+    'Re-run the Pi installer so the printer recognises the restored app (needed for restore to reconnect)',
+    'Import config from the Add Printer screen — restore before you pair, handy when reinstalling',
+    'New "Report a problem" in the menu — sends a bug report with diagnostics (app, device, network, printer status) attached so issues are easier to fix',
+    'Plus a "Trouble pairing? Send a report" link on the Add Printer screen',
+  ]),
   _ChangelogEntry('v0.6.2', [
     'Set a printer\'s address by hand — a new "Advanced" option when adding a printer, and an address field in each printer\'s edit dialog. Handy when your printer is behind a reverse proxy (Traefik, Caddy, NPM) or in Docker and the app can\'t find it automatically — enter the address you\'d use to open its web page in a browser',
     'Clearer pairing — scanning the QR is marked as the instant method; typing the GATE code is flagged as the slower alternative',
