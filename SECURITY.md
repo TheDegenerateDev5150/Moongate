@@ -182,6 +182,16 @@ The auth proxy is even more constrained — it doesn't talk to Klipper at all, i
 
 ---
 
+## Backup restore & in-app reports (v0.6.3)
+
+**Ownership is cloud-authoritative.** A printer's owner is whoever the cloud says it is. The Pi binds an owner on first contact and, since v0.6.3, **re-binds** when it receives a *validly-signed, printer-scoped* access token bearing a new identity — because the middleman only ever mints such a token to the printer's current owner. This is what lets a restored backup reconnect without re-pairing. It does **not** weaken the tunnel promise: an unsigned / forged / wrong-printer token is still rejected with a flat 401; only a token the cloud already vouched for can move the binding, and access tokens are short-lived.
+
+**Restore codes.** A config backup made by v0.6.3+ carries a single-use *restore code*. Only its SHA-256 is stored server-side (in `restore_grants`, like enrollment tokens); the raw code lives only in the user's backup file, expires in 90 days, and is consumed on first redeem (which re-assigns the original identity's printers to the redeemer). Anyone holding the backup file can therefore reclaim those printers — treat the file as sensitive — but the code is **scoped** (printers only, never a login), **expiring**, and **single-use**.
+
+**In-app reports.** The `feedback` table is locked down like the rest of the schema — no client read/write. Only the `submit-feedback` Edge Function (service role) writes; only the Supabase dashboard or the secret-gated `read-feedback` function reads (it requires an `x-moongate-debug` header matched against a server-only `MOONGATE_DEBUG_KEY`, so the public anon key can't read it). Reports carry diagnostics — app / device / network / per-printer connection state — but no print content, files, or personal data.
+
+---
+
 ## How to audit Moongate yourself
 
 | Question | Where to look |

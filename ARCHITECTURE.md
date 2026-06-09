@@ -171,6 +171,8 @@ What the middleman intentionally does **not** see:
 - Anything from your webcam (snapshots go phone → Pi directly)
 - Anything you'd consider personal (no email, no name, no contact info)
 
+**v0.6.3 additions.** The middleman gained two small jobs. **(a) Backup restore** — a one-time, hashed *restore code* (table `restore_grants`; functions `create-restore-grant` / `redeem-restore-grant`) lets a reinstalled app reclaim its printers by re-assigning their ownership to the new identity, so a restored backup reconnects without re-pairing. **(b) Bug reports** — a locked-down `feedback` table (function `submit-feedback`) collects in-app reports with diagnostics, readable only via the dashboard or the secret-gated `read-feedback` function. Ownership is now **cloud-authoritative**: the Pi follows the cloud's owner — it re-binds when a validly-signed token presents a new identity — rather than pinning the first one, which is what makes restore reconnect (see [SECURITY.md](SECURITY.md)). App-side, `diagnostics_service.dart` + `printer_status_registry.dart` assemble the report payload (app / device / network / per-printer status incl. the last LAN-poll outcome).
+
 The deep design — schemas, token mechanics, key rotation, the specific cross-tenant isolation guarantees — lives in [`docs/v0.3-supabase-design.md`](docs/v0.3-supabase-design.md) and [`docs/v0.4-secure-remote-access-design.md`](docs/v0.4-secure-remote-access-design.md) alongside the alternative-architectures discussion that explains why we landed here.
 
 ---

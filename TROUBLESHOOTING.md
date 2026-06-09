@@ -32,12 +32,15 @@ This is **not** an error — it's the v0.4 way of saying "the Pi is reachable, b
 - The printer's power toggle inside Mainsail is off (Creality K3 and similar — Klipper isn't running until the printer-power switch is on).
 - Klipper crashed or is in an error state. Check `~/printer_data/logs/klippy.log` for the cause.
 - The Pi is rebooting and Klipper hasn't come back up yet.
+- **Just after restoring a backup:** the printer loads fine when you tap the tile, but the dashboard sits on "Connected — Printer idle". The Pi is likely on a **pre-v0.6.3 plugin** that doesn't yet recognise the restored app — update the plugin (*Mainsail → Update Manager*, or re-run the installer) and restart Moonraker.
 
 If the printer should be ready and the tile still shows "Connected — Printer idle":
 - Restart Klipper: `sudo systemctl restart klipper`
 - Restart Moonraker: `sudo systemctl restart moonraker`
 
 The tile will flip to live status within a couple of poll cycles after the underlying issue clears.
+
+Not sure which cause applies? **Menu → Report a problem** (in the app) sends a diagnostic report that records exactly why the status request failed — `404` (endpoint / proxy route missing), `401` (auth / owner), or `timeout` (slow or wrong network) — so it can be pinned down without guesswork.
 
 ## Tile shows "Offline — Printer unreachable"
 
@@ -110,13 +113,15 @@ Before v0.4.2 the cloud row could be orphaned by a fresh app install (new anonym
 
 ## All tiles offline after reinstalling the app (or a new phone)
 
-**Symptom:** You reinstalled Moongate, or switched to a new phone, and every printer shows offline — even sitting on your home WiFi.
+**Symptom:** You reinstalled Moongate, or switched to a new phone, and every printer shows offline — even on your home WiFi.
 
-**Cause:** A fresh install creates a new anonymous app identity. Your printers are still associated with the *previous* identity in the cloud, so the new install owns nothing and every tile reads offline. Importing a config backup brings back the printer names and layout, but not the cloud association.
+**Cause:** A fresh install creates a new anonymous app identity. Your printers are still associated with the *previous* identity in the cloud, so a brand-new install owns nothing.
 
-**Fix:** Re-pair each printer. On the Pi, run `MOONGATE_RESET_OWNER` in the Klipper console, then `MOONGATE_PAIR`, and scan the QR (or type the GATE code) in the app.
+**Fix (v0.6.3+): restore from a config backup.** If the backup was made by **v0.6.3 or newer**, it carries a single-use restore code that re-links your printers to the new install — they come back **online automatically, with no re-pairing**. Use **Menu → Restore config**, or **Import config from file** on the Add Printer screen. Each Pi must be on the **v0.6.3+ plugin** (update via *Mainsail → Update Manager*, or re-run the installer) so it recognises the restored app — otherwise restored tiles sit on "Connected / idle" (see above).
 
-> **Save yourself a step:** run `MOONGATE_RESET_OWNER` *before* you uninstall the old app. Then a fresh install just needs `MOONGATE_PAIR` and a scan.
+**If your backup predates v0.6.3** (no restore code), or you don't have one, re-pair each printer: on the Pi run `MOONGATE_RESET_OWNER` then `MOONGATE_PAIR`, and scan the QR (or type the GATE code) in the app.
+
+> **Best practice:** back up your config *before* you uninstall — a v0.6.3+ backup carries the restore code, so restoring on the new install brings everything back online.
 
 ## Tunnel URL leakage — what's actually exposed in v0.4?
 
