@@ -240,6 +240,42 @@ class SupabaseService {
     );
     _log('Feedback submitted');
   }
+
+  // ── Backup restore grants ──────────────────────────────────────────────────
+
+  /// Mint a single-use restore code for the current identity (called when
+  /// exporting a backup). Returns the raw code to embed in the backup file, or
+  /// null on failure — export then falls back to a printer-list-only backup.
+  Future<String?> createRestoreGrant() async {
+    try {
+      final res  = await client.functions.invoke('create-restore-grant');
+      final data = res.data;
+      if (data is Map && data['restore_code'] is String) {
+        return data['restore_code'] as String;
+      }
+      return null;
+    } catch (e) {
+      _log('createRestoreGrant failed: $e');
+      return null;
+    }
+  }
+
+  /// Redeem a restore code after a reinstall: re-assigns the original
+  /// identity's printers to the current anonymous user. Returns the number of
+  /// printers reclaimed, or null if the code is invalid / expired / already
+  /// used (404) so the caller can fall back to re-pairing.
+  Future<int?> redeemRestoreGrant(String code) async {
+    try {
+      final res  = await client.functions
+          .invoke('redeem-restore-grant', body: {'restore_code': code});
+      final data  = res.data;
+      final count = (data is Map) ? data['count'] : null;
+      return count is int ? count : 0;
+    } on FunctionException catch (e) {
+      if (e.status == 404) return null; // invalid / expired / used code
+      rethrow;
+    }
+  }
 }
 
 /// Result of a /printer-access call.

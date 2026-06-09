@@ -347,9 +347,9 @@ class _PairingScreenState extends State<PairingScreen> {
   /// PrinterRegistry.importFromBackupFile with the drawer "Restore config".
   Future<void> _importConfig() async {
     final messenger = ScaffoldMessenger.of(context);
-    int? added;
+    ImportOutcome? outcome;
     try {
-      added = await PrinterRegistry.instance.importFromBackupFile();
+      outcome = await PrinterRegistry.instance.importFromBackupFile();
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -360,8 +360,8 @@ class _PairingScreenState extends State<PairingScreen> {
       );
       return;
     }
-    if (added == null || !mounted) return; // user cancelled
-    if (added == 0) {
+    if (outcome == null || !mounted) return; // user cancelled
+    if (outcome.added == 0 && !outcome.reconnected) {
       messenger.showSnackBar(
         const SnackBar(content: Text('No new printers found in that file.')),
       );
@@ -369,8 +369,9 @@ class _PairingScreenState extends State<PairingScreen> {
     }
     messenger.showSnackBar(
       SnackBar(
-        content: Text(
-            '$added printer(s) restored — re-pair each Pi to bring it online.'),
+        content: Text(outcome.reconnected
+            ? '${outcome.added} printer(s) restored and reconnected.'
+            : '${outcome.added} printer(s) restored — re-pair each Pi to bring it online.'),
       ),
     );
     if (context.canPop()) {

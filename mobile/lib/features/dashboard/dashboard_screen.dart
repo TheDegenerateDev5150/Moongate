@@ -501,8 +501,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// still needs a re-pair per printer to bind the new anon UID.
   Future<void> _exportConfig() async {
     final messenger = ScaffoldMessenger.of(context);
+    // Mint a single-use restore code so this backup can bring the printers
+    // back ONLINE after a reinstall (re-binds them to the new identity), not
+    // just restore the list. Best-effort — a list-only backup if it fails.
+    final restoreCode = await SupabaseService.instance.createRestoreGrant();
+    if (!mounted) return;
     final bytes = Uint8List.fromList(
-      utf8.encode(PrinterConfig.listToJson(_printers)),
+      utf8.encode(
+        PrinterConfig.toBackupJson(_printers, restoreCode: restoreCode),
+      ),
     );
     String? savedPath;
     try {
@@ -528,8 +535,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted || savedPath == null) return; // user cancelled
     messenger.showSnackBar(
       SnackBar(
-        content: Text('Backed up ${_printers.length} printer(s) to a file.'),
-        duration: const Duration(seconds: 4),
+        content: Text(restoreCode != null
+            ? 'Backed up ${_printers.length} printer(s). This file can restore '
+                'them on a new install — keep it private.'
+            : 'Backed up ${_printers.length} printer(s) (list only — couldn’t '
+                'reach the cloud for a restore code).'),
+        duration: const Duration(seconds: 5),
       ),
     );
   }
@@ -539,9 +550,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// duplicates (same id) are skipped.
   Future<void> _importConfig() async {
     final messenger = ScaffoldMessenger.of(context);
-    int? added;
+    ImportOutcome? outcome;
     try {
-      added = await PrinterRegistry.instance.importFromBackupFile();
+      outcome = await PrinterRegistry.instance.importFromBackupFile();
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -552,10 +563,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
       return;
     }
-    if (added == null || !mounted) return; // user cancelled
+    if (outcome == null || !mounted) return; // user cancelled
     _load();
     messenger.showSnackBar(
-      SnackBar(content: Text('$added printer(s) restored.')),
+      SnackBar(
+        content: Text(outcome.reconnected
+            ? '${outcome.added} printer(s) restored and reconnected.'
+            : '${outcome.added} printer(s) restored.'),
+      ),
     );
   }
 
