@@ -1,35 +1,36 @@
-import 'dart:io' show Platform;
-
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../models/printer_config.dart';
-import '../../services/printer_status_registry.dart';
+import '../../services/diagnostics_service.dart';
 import '../../services/supabase_service.dart';
 
-/// Bottom sheet for the drawer's "Report a problem" action.
+/// Bottom sheet behind "Report a problem" (dashboard drawer) and "Trouble
+/// pairing?" (Add Printer screen).
 ///
 /// Collects a free-text comment (+ optional contact and which-printer) and
-/// attaches auto-diagnostics (app version, device, printer list) before
-/// posting to the submit-feedback Edge Function. Deliberately light — the
-/// goal is to turn "it says connected but idle" into a report we can act on
-/// without a back-and-forth.
+/// attaches a comprehensive diagnostics snapshot (see [DiagnosticsService])
+/// before posting to the submit-feedback Edge Function. [pairingContext] is
+/// supplied when launched from the pairing screen, so a user who can't pair —
+/// and never reaches the dashboard — can still send a report carrying the live
+/// discovery + attempt state.
 Future<void> showFeedbackSheet(
   BuildContext context,
-  List<PrinterConfig> printers,
-) {
+  List<PrinterConfig> printers, {
+  Map<String, dynamic>? pairingContext,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true, // grow with the keyboard
     showDragHandle: true,
-    builder: (_) => _FeedbackSheet(printers: printers),
+    builder: (_) =>
+        _FeedbackSheet(printers: printers, pairingContext: pairingContext),
   );
 }
 
 class _FeedbackSheet extends StatefulWidget {
-  const _FeedbackSheet({required this.printers});
+  const _FeedbackSheet({required this.printers, this.pairingContext});
   final List<PrinterConfig> printers;
+  final Map<String, dynamic>? pairingContext;
 
   @override
   State<_FeedbackSheet> createState() => _FeedbackSheetState();
@@ -43,16 +44,16 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
   String? _printerName;
   bool _sending = false;
 
+  bool get _fromPairing => widget.pairingContext != null;
+
   @override
   void initState() {
     super.initState();
-    // Pre-select when there's exactly one printer — saves a tap and is almost
-    // always what a single-printer user means.
+    // Pre-select when there's exactly one printer — saves a tap.
     if (widget.printers.length == 1) {
       _printerName = widget.printers.single.name;
     }
-    // Live enable/disable of the Send button as the comment is typed.
-    _comment.addListener(() => setState(() {}));
+    _comment.addListener(() => setState(() {})); // live enable/disable Send
   }
 
   @override
@@ -62,57 +63,31 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
     super.dispose();
   }
 
-  Future<String> _describeDevice() async {
-    final info = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
-      final a = await info.androidInfo;
-      return 'Android ${a.version.release} (API ${a.version.sdkInt}) — '
-          '${a.manufacturer} ${a.model}';
-    }
-    if (Platform.isIOS) {
-      final i = await info.iosInfo;
-      return '${i.systemName} ${i.systemVersion} — ${i.utsname.machine}';
-    }
-    return Platform.operatingSystem;
-  }
-
   Future<void> _send() async {
     final comment = _comment.text.trim();
     if (comment.isEmpty || _sending) return;
     setState(() => _sending = true);
 
+    var diagnostics = <String, dynamic>{};
+    try {
+      diagnostics = await DiagnosticsService.collect(
+        printers: widget.printers,
+        pairingContext: widget.pairingContext,
+      );
+    } catch (_) {/* best-effort — send the comment regardless */}
+
+    // Lift version + platform into the dedicated columns (easy dashboard
+    // filtering); the full picture lives in `diagnostics`.
     String? appVersion;
     String? platform;
-    try {
-      final info = await PackageInfo.fromPlatform();
-      appVersion = '${info.version} (build ${info.buildNumber})';
-    } catch (_) {/* best-effort */}
-    try {
-      platform = await _describeDevice();
-    } catch (_) {/* best-effort */}
-
-    final diagnostics = <String, dynamic>{
-      'printer_count': widget.printers.length,
-      'printers': widget.printers.map((p) {
-        final s = PrinterStatusRegistry.instance.snapshot(p.id);
-        return {
-          'name': p.name,
-          'lanUrl': p.lanUrl,
-          'has_lan_url': p.lanUrl != null,
-          'ui_type': p.uiType,
-          'webcam_target_fps': p.webcamTargetFps,
-          // Live state the dashboard last showed — connection path, whether the
-          // tunnel is up, and the Klipper/synthetic state ('waiting', etc.).
-          if (s != null)
-            'live': {
-              'state': s.state,
-              'connection': s.connection.name,
-              'tunnel_ready': s.tunnelReady,
-              'has_webcam': s.webcamSnapshotUrl != null,
-            },
-        };
-      }).toList(),
-    };
+    final app = diagnostics['app'];
+    if (app is Map) appVersion = '${app['version']} (build ${app['build']})';
+    final dev = diagnostics['device'];
+    if (dev is Map) {
+      platform = dev['platform'] == 'android'
+          ? '${dev['os']} — ${dev['manufacturer']} ${dev['model']}'
+          : dev['os']?.toString();
+    }
 
     try {
       await SupabaseService.instance.submitFeedback(
@@ -146,8 +121,6 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
     final theme = Theme.of(context);
     final canSend = _comment.text.trim().isNotEmpty && !_sending;
 
-    // Lift content above the keyboard; SafeArea(bottom) keeps Send clear of the
-    // 3-button nav bar — the clipping we hit on the remove + PIN sheets before.
     return SafeArea(
       top: false,
       child: Padding(
@@ -167,13 +140,19 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
                   Icon(Icons.bug_report_outlined,
                       color: theme.colorScheme.primary),
                   const SizedBox(width: 10),
-                  Text('Report a problem', style: theme.textTheme.titleLarge),
+                  Text(_fromPairing ? 'Trouble pairing?' : 'Report a problem',
+                      style: theme.textTheme.titleLarge),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                "Tell us what's happening. Your app version, device and printer "
-                'list are attached automatically to help us track it down.',
+                _fromPairing
+                    ? "Describe what happens when you try to add the printer. "
+                        'Your network + discovery details are attached '
+                        "automatically so we can see why it isn't connecting."
+                    : "Tell us what's happening. Your app version, device, "
+                        'network and printer details are attached automatically '
+                        'to help us track it down.',
                 style:
                     theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
               ),

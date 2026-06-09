@@ -23,4 +23,16 @@ class PrinterStatusRegistry {
 
   /// Latest known status for [printerId], or null if it hasn't polled yet.
   PrinterStatus? snapshot(String printerId) => _latest[printerId];
+
+  // ── Last-poll diagnostics (for bug reports) ─────────────────────────────
+  final Map<String, Map<String, dynamic>> _pollDiag = {};
+
+  /// Record why the last poll resolved as it did (LAN /status outcome, the
+  /// URL tried, timestamp) so a bug report can explain a stuck tile.
+  void recordPoll(String printerId, Map<String, dynamic> diag) {
+    _pollDiag[printerId] = diag;
+  }
+
+  /// Last-poll diagnostic for [printerId], or null if it hasn't polled yet.
+  Map<String, dynamic>? pollDiag(String printerId) => _pollDiag[printerId];
 }

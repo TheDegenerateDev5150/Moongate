@@ -10,6 +10,7 @@ import '../../models/printer_config.dart';
 import '../../services/lan_discovery_service.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
+import '../dashboard/feedback_sheet.dart';
 
 /// v0.3.0 pairing flow (with v0.4.2 manual-entry fallback):
 ///
@@ -381,6 +382,24 @@ class _PairingScreenState extends State<PairingScreen> {
     }
   }
 
+  /// Open the bug-report sheet pre-loaded with the current pairing attempt's
+  /// state (method, scanned IP, manual address, last error, live mDNS) so a
+  /// user who can't pair can report it without ever reaching the dashboard.
+  void _reportPairingProblem() {
+    final method = _scannedEnrollmentToken != null
+        ? 'qr'
+        : (_manualEnrollmentToken != null ? 'gate_code' : 'none_yet');
+    final manual = _addressController.text.trim();
+    showFeedbackSheet(context, const [], pairingContext: {
+      'method': method,
+      'scanned_lan_url': _scannedLanUrl,
+      'has_scanned_ip': _scannedLanUrl != null,
+      'manual_address': manual.isEmpty ? null : manual,
+      'last_error': _error,
+      'mdns_discovered': LanDiscoveryService.instance.discovered,
+    });
+  }
+
   // ── First-add LAN pre-warm ───────────────────────────────────────────────
 
   /// Give mDNS a brief head start right after a successful claim so the
@@ -750,6 +769,12 @@ class _PairingScreenState extends State<PairingScreen> {
                 onPressed: _loading ? null : _importConfig,
                 icon: const Icon(Icons.file_download_outlined),
                 label: const Text('Import config from file'),
+              ),
+              const SizedBox(height: 4),
+              TextButton.icon(
+                onPressed: _loading ? null : _reportPairingProblem,
+                icon: const Icon(Icons.bug_report_outlined, size: 18),
+                label: const Text('Trouble pairing? Send a report'),
               ),
             ],
           ],
