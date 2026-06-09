@@ -15,6 +15,7 @@ import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
 import '../../services/update_service.dart';
+import 'feedback_sheet.dart';
 import 'printer_tile.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -422,6 +423,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       },
                     ),
                     ListTile(
+                      leading: const Icon(Icons.bug_report_outlined),
+                      title: const Text('Report a problem'),
+                      subtitle: const Text('Send a bug report or feedback'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        showFeedbackSheet(context, _printers);
+                      },
+                    ),
+                    ListTile(
                       leading: const Icon(Icons.lock_outline),
                       title: const Text('App lock'),
                       subtitle: Text(ref.watch(appLockEnabledProvider)
@@ -491,8 +501,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// still needs a re-pair per printer to bind the new anon UID.
   Future<void> _exportConfig() async {
     final messenger = ScaffoldMessenger.of(context);
+    // Mint a single-use restore code so this backup can bring the printers
+    // back ONLINE after a reinstall (re-binds them to the new identity), not
+    // just restore the list. Best-effort — a list-only backup if it fails.
+    final restoreCode = await SupabaseService.instance.createRestoreGrant();
+    if (!mounted) return;
     final bytes = Uint8List.fromList(
-      utf8.encode(PrinterConfig.listToJson(_printers)),
+      utf8.encode(
+        PrinterConfig.toBackupJson(_printers, restoreCode: restoreCode),
+      ),
     );
     String? savedPath;
     try {
@@ -518,8 +535,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted || savedPath == null) return; // user cancelled
     messenger.showSnackBar(
       SnackBar(
-        content: Text('Backed up ${_printers.length} printer(s) to a file.'),
-        duration: const Duration(seconds: 4),
+        content: Text(restoreCode != null
+            ? 'Backed up ${_printers.length} printer(s). This file can restore '
+                'them on a new install — keep it private.'
+            : 'Backed up ${_printers.length} printer(s) (list only — couldn’t '
+                'reach the cloud for a restore code).'),
+        duration: const Duration(seconds: 5),
       ),
     );
   }
@@ -529,54 +550,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// duplicates (same id) are skipped.
   Future<void> _importConfig() async {
     final messenger = ScaffoldMessenger.of(context);
-    FilePickerResult? picked;
+    ImportOutcome? outcome;
     try {
-      // `withData: true` returns the bytes inline rather than a path we may
-      // not be able to read under scoped storage. We accept any file type
-      // (not a custom .json filter — Android's picker frequently greys those
-      // out) and validate by parsing instead.
-      picked = await FilePicker.platform.pickFiles(
-        dialogTitle: 'Select a Moongate backup',
-        withData: true,
-      );
-    } catch (_) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Could not open the file picker.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-    if (picked == null || !mounted) return; // user cancelled
-    final bytes = picked.files.single.bytes;
-    if (bytes == null) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Could not read that file.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-
-    try {
-      final printers = PrinterConfig.listFromJson(utf8.decode(bytes));
-      // Merge: add only printers not already in registry (match by id).
-      final existing = PrinterRegistry.instance.printers.map((p) => p.id).toSet();
-      var added = 0;
-      for (final p in printers) {
-        if (!existing.contains(p.id)) {
-          await PrinterRegistry.instance.add(p);
-          added++;
-        }
-      }
-      _load();
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('$added printer(s) restored.')),
-      );
+      outcome = await PrinterRegistry.instance.importFromBackupFile();
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -585,7 +561,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           backgroundColor: Colors.redAccent,
         ),
       );
+      return;
     }
+    if (outcome == null || !mounted) return; // user cancelled
+    _load();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(outcome.reconnected
+            ? '${outcome.added} printer(s) restored and reconnected.'
+            : '${outcome.added} printer(s) restored.'),
+      ),
+    );
   }
 
   void _showRemoveSheet(BuildContext context) {
@@ -687,6 +673,13 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.6.3', [
+    'Restore now brings your printers back ONLINE after a reinstall or on a new phone — no re-pairing. Your backup carries a one-time code that re-links them to the freshly-installed app',
+    'Re-run the Pi installer so the printer recognises the restored app (needed for restore to reconnect)',
+    'Import config from the Add Printer screen — restore before you pair, handy when reinstalling',
+    'New "Report a problem" in the menu — sends a bug report with diagnostics (app, device, network, printer status) attached so issues are easier to fix',
+    'Plus a "Trouble pairing? Send a report" link on the Add Printer screen',
+  ]),
   _ChangelogEntry('v0.6.2', [
     'Set a printer\'s address by hand — a new "Advanced" option when adding a printer, and an address field in each printer\'s edit dialog. Handy when your printer is behind a reverse proxy (Traefik, Caddy, NPM) or in Docker and the app can\'t find it automatically — enter the address you\'d use to open its web page in a browser',
     'Clearer pairing — scanning the QR is marked as the instant method; typing the GATE code is flagged as the slower alternative',

@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer' as dev;
 
+import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/printer_config.dart';
@@ -94,6 +96,73 @@ class PrinterRegistry {
   /// Legacy alias kept for import-config flow. Behaves like [addClaimed].
   Future<void> add(PrinterConfig printer) => addClaimed(printer);
 
+  /// Opens the SAF document picker, parses a Moongate backup, and merges its
+  /// printers into the local cache (existing kept, duplicates matched by id
+  /// skipped). Returns the number of printers added, or null if the user
+  /// cancelled the picker. Throws on a malformed / unreadable file so the
+  /// caller can surface an error.
+  ///
+  /// Shared by the dashboard "Restore config" item and the first-launch
+  /// pairing screen. A backup carries the printer list only, NOT the Supabase
+  /// anon identity — restored printers stay offline until each Pi is re-paired
+  /// (a reinstall gets a new cloud identity).
+  Future<ImportOutcome?> importFromBackupFile() async {
+    // withData:true returns bytes inline rather than a path we may not be able
+    // to read under scoped storage. Accept any file type (Android often greys
+    // out custom .json filters) and validate by parsing instead.
+    final picked = await FilePicker.platform.pickFiles(
+      dialogTitle: 'Select a Moongate backup',
+      withData: true,
+    );
+    if (picked == null) return null; // user cancelled
+    final bytes = picked.files.single.bytes;
+    if (bytes == null) throw const FormatException('unreadable_file');
+
+    // Two shapes: a legacy bare array (printers only) or the v2 envelope
+    // { backup_version, restore_code?, printers: [...] }.
+    final decoded = jsonDecode(utf8.decode(bytes));
+    final List<PrinterConfig> imported;
+    String? restoreCode;
+    if (decoded is List) {
+      imported = decoded
+          .map((e) => PrinterConfig.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else if (decoded is Map<String, dynamic>) {
+      final list = (decoded['printers'] as List<dynamic>?) ?? const [];
+      imported = list
+          .map((e) => PrinterConfig.fromJson(e as Map<String, dynamic>))
+          .toList();
+      final code = decoded['restore_code'];
+      if (code is String && code.isNotEmpty) restoreCode = code;
+    } else {
+      throw const FormatException('unrecognised_backup');
+    }
+
+    // Reclaim ownership FIRST so the just-added printers resolve online on
+    // their first poll. Best-effort: an invalid/expired code or a network
+    // error just leaves them offline until re-paired.
+    var reconnected = false;
+    if (restoreCode != null) {
+      try {
+        final reclaimed =
+            await SupabaseService.instance.redeemRestoreGrant(restoreCode);
+        reconnected = reclaimed != null;
+      } catch (e) {
+        _log('redeemRestoreGrant failed during import: $e');
+      }
+    }
+
+    final existing = _printers.map((p) => p.id).toSet();
+    var added = 0;
+    for (final p in imported) {
+      if (!existing.contains(p.id)) {
+        await add(p);
+        added++;
+      }
+    }
+    return ImportOutcome(added: added, reconnected: reconnected);
+  }
+
   /// Remove the local cache entry. Note: this does NOT delete the row
   /// from Supabase — for that, the user should run MOONGATE_RESET_OWNER
   /// on the Pi (it'll be cleaned up by the 6-week inactivity sweep
@@ -179,4 +248,16 @@ class PrinterRegistry {
   /// app fetches the current one on every access call. There's nothing
   /// to persist client-side.
   Future<void> updateRemoteHost(String printerId, String newRemoteHost) async {}
+}
+
+/// Result of PrinterRegistry.importFromBackupFile.
+class ImportOutcome {
+  /// Printers added to the local list (duplicates by id were skipped).
+  final int added;
+
+  /// True when the backup carried a restore code that redeemed OK, so the
+  /// printers were re-bound to this identity and will come back online.
+  final bool reconnected;
+
+  const ImportOutcome({required this.added, required this.reconnected});
 }

@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.6.2+55
+version: 0.6.3+56
 publish_to: none
 
 environment:
@@ -44,6 +44,11 @@ dependencies:
 
   # App version info (reads version from the installed package manifest)
   package_info_plus: ^8.0.0
+
+  # Device model + Android version for the in-app bug-report diagnostics.
+  # This project's bugs skew heavily Samsung / One UI, so the exact model is
+  # worth capturing on every report. Read-only; no runtime permissions.
+  device_info_plus: ^10.1.0
 
   # Open URLs in the browser (used for the in-app update download prompt)
   url_launcher: ^6.3.0

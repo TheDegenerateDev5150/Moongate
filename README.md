@@ -49,7 +49,9 @@ Moongate is a free, open-source Android app for **full remote control of your Kl
 | **Hardened remote access** | Every internet-facing request is gated by a short-lived signed token. The tunnel URL alone gives an attacker nothing — just flat `401`s with no Mainsail/Moonraker fingerprint. |
 | **Secure, simple pairing** | One Klipper command makes a time-limited QR + code. LAN-only — no port forwarding, static IP, or DNS to manage. |
 | **Themes &amp; layout** | System / Light / Dark / fully **Custom** colours, a 1–3 column grid, font scaling, and optional landscape. |
-| **Backup &amp; in-app updates** | Back up / restore your printer list to a file, and get a one-tap prompt when a new release lands. |
+| **Backup &amp; restore** | Back up your printers to a file; restoring after a reinstall — or on a new phone — brings them **back online automatically, with no re-pairing** (run the Pi installer once so the printer recognises the restored app). |
+| **Report a problem** | Send a bug report from the menu — or the Add Printer screen if you can't pair — with diagnostics (app, device, network, per-printer status) attached, so issues are quick to fix. |
+| **In-app updates** | A one-tap prompt when a new release lands. |
 
 ---
 
@@ -117,7 +119,7 @@ Android only. Enable **Install from unknown sources** for your browser or file m
 
 No working camera? Type the **`GATE-XXXX-XXXX`** code shown in the console instead.
 
-> Pairing is LAN-only by design: nothing to port-forward, no URL to share. Already running Moongate and reinstalling or switching phones? Read **[Updating &amp; removing](docs/managing-moongate.md)** *before* you uninstall — a fresh install needs re-pairing.
+> Pairing is LAN-only by design: nothing to port-forward, no URL to share. Reinstalling or switching phones? **Back up your config first** — restoring it on the new install brings your printers back online without re-pairing (re-run the Pi installer once on each Pi so it recognises the restored app). See **[Updating &amp; removing](docs/managing-moongate.md)**.
 
 ---
 

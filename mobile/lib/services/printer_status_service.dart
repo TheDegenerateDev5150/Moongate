@@ -8,6 +8,7 @@ import '../models/printer_config.dart';
 import 'lan_discovery_service.dart';
 import 'printer_access_cache.dart';
 import 'printer_registry.dart';
+import 'printer_status_registry.dart';
 import 'supabase_service.dart';
 
 /// Polls the Moongate plugin's /server/moongate/status endpoint for one
@@ -73,6 +74,11 @@ class PrinterStatusService {
   // tunnelReady stays false indefinitely) and used to sit on 'starting_up'.
   DateTime? _firstPollAt;
   static const Duration _startupGrace = Duration(seconds: 45);
+
+  /// Why the most recent /status attempt resolved as it did (ok / http_401 /
+  /// http_404 / timeout / error) — set inside _tryMoongateEndpoint and
+  /// captured by the bug-report diagnostics.
+  String? _lastEndpointReason;
   bool get _withinStartupGrace =>
       _firstPollAt != null &&
       DateTime.now().difference(_firstPollAt!) < _startupGrace;
@@ -225,8 +231,17 @@ class PrinterStatusService {
     final discoveredLanUrl = LanDiscoveryService.instance.lookup(config.id);
     final lanUrl = discoveredLanUrl ?? _currentLanUrl;
     if (lanUrl != null) {
+      _lastEndpointReason = null;
       final lan = await _tryMoongateEndpoint(
           baseUrl: lanUrl, access: access, isLan: true, tunnelReady: tunnelReady);
+      // Capture why this LAN /status attempt resolved as it did, for the
+      // bug-report diagnostics (ok / http_401 / http_404 / timeout / error).
+      PrinterStatusRegistry.instance.recordPoll(config.id, {
+        'lan_url': lanUrl,
+        'lan_status': _lastEndpointReason ?? 'unknown',
+        if (discoveredLanUrl != null) 'discovered_url': discoveredLanUrl,
+        'at': DateTime.now().toIso8601String(),
+      });
       if (lan != null) {
         if (!_disposed) _controller.add(lan);
         return;
@@ -434,8 +449,14 @@ class PrinterStatusService {
           ? const Duration(seconds: 2)
           : const Duration(seconds: 8);
       final response = await http.get(uri).timeout(timeout);
-      if (response.statusCode == 401) return null;
-      if (response.statusCode != 200) return null;
+      if (response.statusCode == 401) {
+        _lastEndpointReason = 'http_401';
+        return null;
+      }
+      if (response.statusCode != 200) {
+        _lastEndpointReason = 'http_${response.statusCode}';
+        return null;
+      }
 
       final body   = jsonDecode(response.body) as Map<String, dynamic>;
       final result = body['result'] as Map<String, dynamic>;
@@ -464,6 +485,7 @@ class PrinterStatusService {
       // webcam is configured.
       if (!_uiTypeChecked) _detectUiType(baseUrl, access.accessToken, isLan: isLan);
 
+      _lastEndpointReason = 'ok';
       return _parseStatus(
         status: status,
         moongateResult: result,
@@ -472,7 +494,11 @@ class PrinterStatusService {
         accessToken: access.accessToken,
         tunnelReady: tunnelReady,
       );
+    } on TimeoutException {
+      _lastEndpointReason = 'timeout';
+      return null;
     } catch (_) {
+      _lastEndpointReason = 'error';
       return null;
     }
   }
