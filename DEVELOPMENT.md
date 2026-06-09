@@ -293,6 +293,14 @@ In-app, users running an older version will see the update banner appear within 
 
 > Feature branches (anything other than `master`) **do not** trigger CI APK builds. That's intentional — unreleased work doesn't get pulled into the in-app updater.
 
+### Plugin version (Pi side)
+
+The Pi-side plugin has **no separate version number** — Moonraker derives the version shown in Mainsail's **Software Update** panel from the repo's git **tags**, which are the same `vX.Y.Z` release tags CI creates. So the plugin and app share one version line; there's nothing extra to bump.
+
+For this to work the Pi's clone must carry tags. `install.sh` uses a **blobless** clone (`git clone --filter=blob:none`) — full ref/tag history, but without the large historical APK blobs — and converts any old shallow (`--depth=1`) clone on re-run. A shallow clone shows `v0.0.0-…-inferred` instead; see [TROUBLESHOOTING.md](TROUBLESHOOTING.md#software-update-panel-shows-an-inferred-version-for-moongate).
+
+> The CI "keep last 3 releases" prune deletes old tags, but the most recent tag is always an ancestor of `master` HEAD, so version detection on an up-to-date Pi always resolves.
+
 ---
 
 ## Coding conventions

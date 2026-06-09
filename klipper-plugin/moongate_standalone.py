@@ -1,5 +1,9 @@
 """
-Moongate v0.3.0 — single-file Moonraker component.
+Moongate — single-file Moonraker component.
+
+Version shown in Mainsail's Software Update panel comes from the repo's git
+tags (this file does not self-report a version); see install.sh for the clone
+settings that make tag-based version detection work.
 
 Replaces the v0.2.x Pi-issued HS256 JWT model with EdDSA tokens issued by
 Supabase Edge Functions. The Pi:
