@@ -205,6 +205,41 @@ class SupabaseService {
             ))
         .toList();
   }
+
+  // ── Feedback / bug reports ─────────────────────────────────────────────────
+
+  /// Submit an in-app bug report / feedback. Routed through the
+  /// submit-feedback Edge Function — clients can't write the feedback table
+  /// directly (same lockdown as every other table in this project). The
+  /// destination is the feedback table only; a future version could forward
+  /// to GitHub from the function without an app change.
+  ///
+  /// [diagnostics] is a free-form JSON map (app/device info, printer list)
+  /// attached to help triage. Throws (FunctionException / network) on failure
+  /// so the caller can surface an error; success is silent.
+  Future<void> submitFeedback({
+    required String comment,
+    String? contact,
+    String? printerName,
+    String? appVersion,
+    String? platform,
+    Map<String, dynamic> diagnostics = const {},
+  }) async {
+    await client.functions.invoke(
+      'submit-feedback',
+      body: {
+        'comment': comment,
+        if (contact != null && contact.trim().isNotEmpty)
+          'contact': contact.trim(),
+        if (printerName != null && printerName.isNotEmpty)
+          'printer_name': printerName,
+        if (appVersion != null) 'app_version': appVersion,
+        if (platform != null) 'platform': platform,
+        'diagnostics': diagnostics,
+      },
+    );
+    _log('Feedback submitted');
+  }
 }
 
 /// Result of a /printer-access call.

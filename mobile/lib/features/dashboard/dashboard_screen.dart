@@ -15,6 +15,7 @@ import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
 import '../../services/update_service.dart';
+import 'feedback_sheet.dart';
 import 'printer_tile.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -419,6 +420,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         _showChangelog(context);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.bug_report_outlined),
+                      title: const Text('Report a problem'),
+                      subtitle: const Text('Send a bug report or feedback'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        showFeedbackSheet(context, _printers);
                       },
                     ),
                     ListTile(
