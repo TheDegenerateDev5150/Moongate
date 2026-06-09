@@ -330,7 +330,6 @@ class AccessTokenVerifier:
         self,
         token: str,
         expected_printer_id: Optional[str],
-        expected_owner: Optional[str],
     ) -> Optional[TokenClaims]:
         try:
             header = pyjwt.get_unverified_header(token)
@@ -371,9 +370,10 @@ class AccessTokenVerifier:
             logger.warning("printer_id mismatch (got %s, owner %s)",
                            printer_id, expected_printer_id)
             return None
-        if expected_owner and payload.get("sub") != expected_owner:
-            logger.warning("sub mismatch — refused")
-            return None
+        # No owner ("sub") pin here: a validly-signed, printer-scoped token is
+        # only ever minted by the cloud to the printer's CURRENT owner, so
+        # _authenticate honors a token bearing a new sub (a cloud ownership
+        # transfer, e.g. a backup restore) by re-binding, rather than refusing.
 
         return TokenClaims(
             sub=payload["sub"], printer_id=printer_id,
@@ -968,13 +968,18 @@ class MoongatePlugin:
         if not token:
             raise self.server.error("Authorization token required", 401)
 
-        expected_pid = self.owner.printer_id    if self.owner else None
-        expected_own = self.owner.owner_user_id if self.owner else None
-        claims = self.verifier.verify(str(token), expected_pid, expected_own)
+        expected_pid = self.owner.printer_id if self.owner else None
+        claims = self.verifier.verify(str(token), expected_pid)
         if claims is None:
             raise self.server.error("Invalid or expired token", 401)
 
-        if self.owner is None:
+        # Bind the owner on first contact, AND re-bind if a validly-signed
+        # token presents a new owner ("sub"). The cloud only mints a valid,
+        # printer-scoped token to the current owner, so a new sub means
+        # ownership was re-assigned in the cloud (e.g. a backup restore on a
+        # fresh install) — the Pi follows the cloud rather than refusing.
+        if self.owner is None or self.owner.owner_user_id != claims.sub:
+            first_bind = self.owner is None
             self.owner = OwnerState(
                 printer_id=claims.printer_id,
                 owner_user_id=claims.sub,
@@ -982,21 +987,19 @@ class MoongatePlugin:
             )
             try:
                 self.owner.save(OWNER_FILE)
-                logger.info("Owner bound: user=%s..., printer=%s...",
+                logger.info("Owner %s: user=%s..., printer=%s...",
+                            "bound" if first_bind else "re-bound (cloud transfer)",
                             claims.sub[:8], claims.printer_id[:8])
             except OSError as exc:
                 logger.error("Failed to persist owner.json: %s", exc)
-            # v0.4.4: Pi becomes discoverable on the LAN now that there's
-            # a valid owner. See docs/v0.5-lan-discovery-design.md §6.4 —
-            # unpaired Pis are intentionally invisible on mDNS.
+            # The Pi is discoverable on the LAN only once it has a valid owner
+            # (unpaired Pis are intentionally invisible on mDNS — see
+            # docs/v0.5-lan-discovery-design.md §6.4). Idempotent on re-bind.
             self._write_avahi_service()
-            # v0.5.0: the owner just bound over LAN (the app reaches us
-            # directly via mDNS the instant pairing completes, before the
-            # cloud knows our tunnel URL). Poke the heartbeat to report the
-            # tunnel NOW instead of waiting up to a full interval — so the
-            # tile's remote indicator flips to "ready" within a second or
-            # two of going Local, rather than the user watching "Starting
-            # up…"/"connecting" for minutes.
+            # Poke a heartbeat so the cloud's last_seen / tunnel URL refresh
+            # immediately: on first bind the app reached us over LAN before the
+            # cloud knows our tunnel; on a transfer the new owner wants the
+            # tunnel reported promptly too — instead of a "Starting up…" wait.
             self.heartbeat.request_immediate_send()
         return claims
 
