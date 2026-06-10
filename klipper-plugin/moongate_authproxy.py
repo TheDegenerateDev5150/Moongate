@@ -175,16 +175,24 @@ async def _authorize(request: web.Request) -> Optional[web.Response]:
         return _unauthorized()
 
     owner: Optional[OwnerState] = request.app["owner"].current
-    expected_pid = owner.printer_id    if owner else None
-    expected_own = owner.owner_user_id if owner else None
+    expected_pid = owner.printer_id if owner else None
 
     verifier: AccessTokenVerifier = request.app["verifier"]
 
     # AccessTokenVerifier.verify is sync and may perform a JWKS refetch
     # (network I/O) on cache miss. Run in the default thread pool so the
     # aiohttp event loop is never blocked.
+    #
+    # No owner ("sub") pin here — mirrors the in-Moonraker plugin's
+    # _authenticate since the v0.6.3 ownership-transfer fix (a validly-
+    # signed, printer-scoped token is honored whatever owner it names; the
+    # cloud only ever mints one to the printer's current owner, so a new sub
+    # is a legitimate cloud ownership transfer e.g. a backup restore).
+    # NOTE: that fix dropped verify()'s expected_owner parameter but missed
+    # THIS call site — passing a third arg raised TypeError on every tunnel
+    # request → HTTP 500 (LAN was unaffected, it doesn't go through here).
     claims = await asyncio.to_thread(
-        verifier.verify, token, expected_pid, expected_own,
+        verifier.verify, token, expected_pid,
     )
     if claims is None:
         logger.debug("401: bad token (%s %s)", request.method, request.path)
