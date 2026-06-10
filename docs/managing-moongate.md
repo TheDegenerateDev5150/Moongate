@@ -66,7 +66,12 @@ This removes:
 - The Moonraker `host:` override the v0.4 installer applied (restored from its pre-install backup)
 - The `MOONGATE_PAIR` macro from your Klipper config
 - The `moongate-pair.html` page from Mainsail
+- `cloudflared` itself — the binary plus its cached state (`~/.cloudflared`, `/etc/cloudflared`)
 
-`cloudflared` itself is left in place as it may be used by other services. To remove it too: `sudo apt remove cloudflared`
+`cloudflared` is removed by default. If the uninstaller detects it's used by something else on the Pi — a named-tunnel config, or a standalone `cloudflared` systemd service — it leaves it in place instead (Moongate's own Quick Tunnel creates none of those, so a Moongate-only Pi always has it removed). To keep `cloudflared` regardless, pass `MOONGATE_KEEP_CLOUDFLARED=1`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/uninstall.sh | MOONGATE_KEEP_CLOUDFLARED=1 MOONGATE_YES=1 bash
+```
 
 Don't forget to uninstall the Moongate app from your phone as well.
