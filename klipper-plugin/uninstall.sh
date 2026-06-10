@@ -7,7 +7,10 @@
 #   curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/uninstall.sh -o /tmp/u.sh && bash /tmp/u.sh
 #
 # Removes the plugin, tunnel service, repo clone, and all config data.
-# Does NOT remove cloudflared itself (it may be used by other services).
+# By default ALSO removes cloudflared (binary + cached state) — unless it looks
+# like another service uses it (a named-tunnel config or a standalone
+# cloudflared systemd unit), in which case it's left alone. Keep it regardless
+# with MOONGATE_KEEP_CLOUDFLARED=1.
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -30,6 +33,7 @@ echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "This will remove:"
 echo "  • moongate-tunnel systemd service (cloudflared tunnel)"
+echo "  • cloudflared itself — binary + cache (unless another service uses it)"
 echo "  • moongate-authproxy systemd service (v0.4 auth proxy)"
 echo "  • Moongate Moonraker plugin"
 echo "  • ~/moongate repository clone"
@@ -155,6 +159,57 @@ if [[ -f /etc/sudoers.d/moongate-avahi ]]; then
     success "Avahi sudoers entry removed"
 fi
 
+# ── 1e. Remove cloudflared — binary + cached state (default) ─────────────────
+# Moongate installs cloudflared for its Quick Tunnel, so by default we remove
+# it here too. BUT a named-tunnel config or a standalone cloudflared service
+# means something else relies on it — pulling the binary would break that, so
+# we detect those cases and leave it in place (with a warning). Force-keep it
+# regardless with MOONGATE_KEEP_CLOUDFLARED=1.
+if [[ "${MOONGATE_KEEP_CLOUDFLARED:-}" == "1" ]]; then
+    info "MOONGATE_KEEP_CLOUDFLARED=1 — leaving cloudflared in place."
+else
+    OTHER_CF_USE=0
+    # A standalone cloudflared systemd unit (`cloudflared service install`).
+    # moongate-tunnel.service is already gone (step 1), so any match here is a
+    # separate, non-Moongate install.
+    if systemctl list-unit-files 2>/dev/null | grep -qi cloudflared; then
+        OTHER_CF_USE=1
+    fi
+    # Named-tunnel config / login cert / credentials — a persistent tunnel the
+    # user set up themselves. Quick Tunnels (what Moongate uses) create none of
+    # these, so if they exist it's not ours to remove.
+    if [[ -f /etc/cloudflared/config.yml ]] \
+       || [[ -f "$HOME/.cloudflared/config.yml" ]] \
+       || [[ -f "$HOME/.cloudflared/cert.pem" ]] \
+       || ls "$HOME"/.cloudflared/*.json >/dev/null 2>&1; then
+        OTHER_CF_USE=1
+    fi
+
+    if [[ "$OTHER_CF_USE" == "1" ]]; then
+        warn "cloudflared looks used by something else (a named tunnel or its"
+        warn "own service) — leaving it installed. Remove by hand if you're"
+        warn "sure: sudo apt remove cloudflared"
+    else
+        info "Removing cloudflared (binary + cache)..."
+        # dpkg/apt install lands in /usr/bin; raw-binary install in
+        # /usr/local/bin. Handle both.
+        if command -v dpkg &>/dev/null && dpkg -s cloudflared &>/dev/null; then
+            sudo apt-get purge -y cloudflared >/dev/null 2>&1 \
+                || sudo dpkg -P cloudflared >/dev/null 2>&1 || true
+            success "cloudflared package removed"
+        fi
+        if [[ -f /usr/local/bin/cloudflared ]]; then
+            sudo rm -f /usr/local/bin/cloudflared
+            success "cloudflared binary removed"
+        fi
+        # Cached state: quick-tunnel leftovers + logs in ~/.cloudflared, plus
+        # any /etc/cloudflared the package left behind.
+        rm -rf "$HOME/.cloudflared" 2>/dev/null || true
+        sudo rm -rf /etc/cloudflared 2>/dev/null || true
+        success "cloudflared cached state removed"
+    fi
+fi
+
 # ── 2. Remove plugin from Moonraker components ────────────────────────────────
 info "Removing Moonraker plugin..."
 if [[ -e "$COMPONENTS_DIR/moongate.py" ]]; then
@@ -257,8 +312,9 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo -e "${GREEN}  Moongate has been uninstalled.${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "  cloudflared binary was left in place (may be used elsewhere)."
-echo "  To remove it too:  sudo apt remove cloudflared"
+echo "  cloudflared is removed by default; it's kept only if another service"
+echo "  on this Pi was using it (see the messages above)."
+echo "  Re-installing Moongate reinstalls cloudflared automatically."
 echo ""
 echo "  Don't forget to uninstall the Moongate app from your phone."
 echo ""
