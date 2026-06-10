@@ -108,6 +108,7 @@ class DiagnosticsService {
       'id': p.id,
       'name': p.name,
       'ui_type': p.uiType,
+      'plugin_version': poll?['plugin_version'],
       'webcam_target_fps': p.webcamTargetFps,
       'lan_url': p.lanUrl,
       'has_lan_url': p.lanUrl != null,

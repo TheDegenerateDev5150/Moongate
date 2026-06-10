@@ -371,7 +371,7 @@ class _PairingScreenState extends State<PairingScreen> {
     messenger.showSnackBar(
       SnackBar(
         content: Text(outcome.reconnected
-            ? '${outcome.added} printer(s) restored and reconnected.'
+            ? '${outcome.added} printer(s) restored — ${outcome.reconnectedCount} reconnected, coming back online.'
             : '${outcome.added} printer(s) restored — re-pair each Pi to bring it online.'),
       ),
     );

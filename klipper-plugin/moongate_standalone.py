@@ -52,6 +52,11 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 
 logger = logging.getLogger("moonraker.moongate")
 
+# Bumped on each release; surfaced in the /status response so the app's bug
+# reports show which plugin a Pi is actually running — the #1 triage blind spot
+# (an old plugin explains most "works on LAN / fails over tunnel" reports).
+MOONGATE_PLUGIN_VERSION = "0.6.4"
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Paths + defaults
@@ -1099,6 +1104,7 @@ class MoongatePlugin:
         # it with the configured http_port from its own knowledge.
         result["local_ip"]   = _get_local_ip()
         result["http_port"]  = self.http_port
+        result["plugin_version"] = MOONGATE_PLUGIN_VERSION
 
         webcam = await self._get_webcam_info(client)
         result["webcam_snapshot_path"]   = webcam["snapshot_path"]
