@@ -55,7 +55,7 @@ logger = logging.getLogger("moonraker.moongate")
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running — the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.4"
+MOONGATE_PLUGIN_VERSION = "0.6.5"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -973,17 +973,34 @@ class MoongatePlugin:
         if not token:
             raise self.server.error("Authorization token required", 401)
 
-        expected_pid = self.owner.printer_id if self.owner else None
+        # The stored owner's printer_id normally pins this Pi: a validly-signed
+        # token for any OTHER printer_id is refused, so a token minted for a
+        # different printer can never re-bind us. The one legitimate way a NEW
+        # printer_id appears for this same Pi is a deliberate re-pair that
+        # re-enrolled us under a fresh cloud row (the old row was released /
+        # recreated, so the cloud id changed). That only happens while a pairing
+        # session the user just started on the LAN/console is live — during that
+        # window we drop the pin so the new id can first-bind below. Outside
+        # pairing the pin stands and an id mismatch is a hard 401.
+        pairing = (self._pending is not None
+                   and time.time() <= self._pending.expires_at)
+        if pairing:
+            expected_pid = None
+        else:
+            expected_pid = self.owner.printer_id if self.owner else None
         claims = self.verifier.verify(str(token), expected_pid)
         if claims is None:
             raise self.server.error("Invalid or expired token", 401)
 
-        # Bind the owner on first contact, AND re-bind if a validly-signed
-        # token presents a new owner ("sub"). The cloud only mints a valid,
-        # printer-scoped token to the current owner, so a new sub means
-        # ownership was re-assigned in the cloud (e.g. a backup restore on a
-        # fresh install) — the Pi follows the cloud rather than refusing.
-        if self.owner is None or self.owner.owner_user_id != claims.sub:
+        # Bind the owner on first contact, AND re-bind if a validly-signed token
+        # presents a new owner ("sub") — a cloud ownership transfer such as a
+        # backup restore on a fresh install — or a new printer_id from the
+        # re-pair described above. The cloud only ever mints a valid, printer-
+        # scoped token to the current owner, so the Pi follows the cloud rather
+        # than refusing.
+        if (self.owner is None
+                or self.owner.owner_user_id != claims.sub
+                or self.owner.printer_id != claims.printer_id):
             first_bind = self.owner is None
             self.owner = OwnerState(
                 printer_id=claims.printer_id,
@@ -993,10 +1010,14 @@ class MoongatePlugin:
             try:
                 self.owner.save(OWNER_FILE)
                 logger.info("Owner %s: user=%s..., printer=%s...",
-                            "bound" if first_bind else "re-bound (cloud transfer)",
+                            "bound" if first_bind else "re-bound",
                             claims.sub[:8], claims.printer_id[:8])
             except OSError as exc:
                 logger.error("Failed to persist owner.json: %s", exc)
+            # A pairing session (if one was active) has served its purpose now
+            # that a valid token has bound — close it so the printer_id pin is
+            # back in force on the very next poll.
+            self._pending = None
             # The Pi is discoverable on the LAN only once it has a valid owner
             # (unpaired Pis are intentionally invisible on mDNS — see
             # docs/v0.5-lan-discovery-design.md §6.4). Idempotent on re-bind.
