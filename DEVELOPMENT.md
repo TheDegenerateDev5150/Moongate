@@ -143,6 +143,8 @@ mobile/lib/
 
 > **v0.6.3 services & deps.** `supabase_service.dart` also handles backup **restore grants** (`createRestoreGrant` / `redeemRestoreGrant`) and **bug reports** (`submitFeedback`); the report UI is `features/dashboard/feedback_sheet.dart`, reachable from the drawer **and** the pairing screen. New dependency: **`device_info_plus`** (device model + Android version for reports). To read submitted reports without the Supabase dashboard, POST to the **`read-feedback`** Edge Function with header `x-moongate-debug: <MOONGATE_DEBUG_KEY>` — the secret is a Supabase function secret (`supabase secrets set/unset`), never in the repo.
 
+> **v0.6.4–v0.6.5.** `diagnostics_service.dart` now also captures the Pi's **plugin version** (from the `/status` reply, where `moongate_standalone.py` reports `MOONGATE_PLUGIN_VERSION`) and the **remote/tunnel** connection result, not just the LAN outcome. v0.6.5 adds the first-run **"How pairing works"** onboarding — `_maybeShowPairingHelp()` / `_showPairingHelp()` in `dashboard_screen.dart`, shown once on cold launch (a persisted "Don't show again" flag suppresses it) and always reachable from the drawer's **How pairing works** item.
+
 For a guided tour of how these pieces fit together, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---

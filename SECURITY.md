@@ -190,6 +190,8 @@ The auth proxy is even more constrained — it doesn't talk to Klipper at all, i
 
 **In-app reports.** The `feedback` table is locked down like the rest of the schema — no client read/write. Only the `submit-feedback` Edge Function (service role) writes; only the Supabase dashboard or the secret-gated `read-feedback` function reads (it requires an `x-moongate-debug` header matched against a server-only `MOONGATE_DEBUG_KEY`, so the public anon key can't read it). Reports carry diagnostics — app / device / network / per-printer connection state — but no print content, files, or personal data.
 
+**v0.6.4 — the tunnel regression was fail-closed.** A v0.6.3 change altered the token verifier's `verify()` signature but missed the auth proxy's call site, so every tunnel-side request raised instead of validating — remote access returned a flat **500 and was denied**. It failed *closed*: nothing behind the tunnel was exposed, no auth check was bypassed, and LAN access (which never traverses the proxy) was unaffected. v0.6.4 fixed the call site; re-running the Pi installer deploys it. The plugin-version field added for diagnostics in the same release is a build identifier only — it carries no secret.
+
 ---
 
 ## How to audit Moongate yourself

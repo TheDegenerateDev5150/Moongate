@@ -40,7 +40,7 @@ If the printer should be ready and the tile still shows "Connected — Printer i
 
 The tile will flip to live status within a couple of poll cycles after the underlying issue clears.
 
-Not sure which cause applies? **Menu → Report a problem** (in the app) sends a diagnostic report that records exactly why the status request failed — `404` (endpoint / proxy route missing), `401` (auth / owner), or `timeout` (slow or wrong network) — so it can be pinned down without guesswork.
+Not sure which cause applies? **Menu → Report a problem** (in the app) sends a diagnostic report that records exactly why the status request failed — `404` (endpoint / proxy route missing), `401` (auth / owner), or `timeout` (slow or wrong network) — so it can be pinned down without guesswork. Since **v0.6.4** the report also carries the **remote (tunnel)** result and the **Pi's plugin version**, so an out-of-date plugin (a frequent cause of "works on LAN, fails remotely") shows up at a glance.
 
 ## Tile shows "Offline — Printer unreachable"
 
@@ -93,6 +93,18 @@ If your own app is getting 401s from the tunnel side (status tile is stuck offli
 - Check `~/.config/moongate/owner.json` exists and references your user. If it's missing or refers to a stale pair, run `MOONGATE_RESET_OWNER` in the Klipper console and re-pair.
 - A token mismatch can happen if the device signing key was regenerated (uninstall / re-install / manual `~/.config/moongate/` wipe). The app's cached token becomes invalid. Force-close and re-open the app — it'll refresh on next poll.
 
+## Remote access fails over the internet but LAN works (v0.6.3 Pi)
+
+If a printer is healthy on home WiFi but every **remote (tunnel)** request fails — typically a **500** — and the Pi was last updated around **v0.6.3**, this is the v0.6.3 auth-proxy regression. The proxy failed *closed* (it denied every request — nothing was exposed), which is why LAN access kept working and it slipped through.
+
+**Fix:** update the Pi to **v0.6.4 or newer** (*Mainsail → Update Manager*, or re-run the installer), then let the services restart:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh | bash
+```
+
+A bug report (see above) now shows the **Pi's plugin version**, so you can confirm the Pi is on v0.6.4+ afterwards.
+
 ## Webcam not showing
 
 - The app uses the snapshot path Moonraker reports for your webcam — typically `/webcam/?action=snapshot` for mjpg-streamer setups.
@@ -117,7 +129,7 @@ Before v0.4.2 the cloud row could be orphaned by a fresh app install (new anonym
 
 **Cause:** A fresh install creates a new anonymous app identity. Your printers are still associated with the *previous* identity in the cloud, so a brand-new install owns nothing.
 
-**Fix (v0.6.3+): restore from a config backup.** If the backup was made by **v0.6.3 or newer**, it carries a single-use restore code that re-links your printers to the new install — they come back **online automatically, with no re-pairing**. Use **Menu → Restore config**, or **Import config from file** on the Add Printer screen. Each Pi must be on the **v0.6.3+ plugin** (update via *Mainsail → Update Manager*, or re-run the installer) so it recognises the restored app — otherwise restored tiles sit on "Connected / idle" (see above).
+**Fix (v0.6.3+): restore from a config backup.** If the backup was made by **v0.6.3 or newer**, it carries a single-use restore code that re-links your printers to the new install — they come back **online automatically, with no re-pairing**. Use **Menu → Restore config**, or **Import config from file** on the Add Printer screen. Each Pi must be on the **v0.6.3+ plugin** (update via *Mainsail → Update Manager*, or re-run the installer) so it recognises the restored app — otherwise restored tiles sit on "Connected / idle" (see above). Since **v0.6.4** the app is explicit about the result — it tells you which printers actually came back online and which still need a re-pair, instead of always reporting success.
 
 **If your backup predates v0.6.3** (no restore code), or you don't have one, re-pair each printer: on the Pi run `MOONGATE_RESET_OWNER` then `MOONGATE_PAIR`, and scan the QR (or type the GATE code) in the app.
 
