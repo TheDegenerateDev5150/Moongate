@@ -842,6 +842,12 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.7.0', [
+    'Moongate now speaks your language — translations for German, French, Spanish, Italian, Simplified Chinese, Russian and Polish, alongside English. Pick your language on first launch, or change it anytime from Language at the bottom of the menu',
+    'New icon guide — tap it to see what every dashboard icon means, with a Back to dashboard button',
+    'Tidier single-column dashboard — printer tiles are now square',
+    'Translations are a best-effort starting point; corrections are welcome',
+  ]),
   _ChangelogEntry('v0.6.5', [
     'New "How pairing works" guide on launch (and in the menu) — explains that you pair once, that app updates keep your printers, and how to bring printers back after a reinstall (Restore from a backup, or MOONGATE_RESET_OWNER then re-pair). Tick "Don\'t show this again" to hide it',
   ]),
