@@ -1,11 +1,9 @@
-# Moongate v0.3.0 — Supabase Setup
+# Moongate — Supabase Backend Setup & Verification
 
-This directory contains everything needed to set up the Supabase side of v0.3.0.
+This directory contains everything needed to set up and verify Moongate's Supabase backend — the schema, Row-Level Security, cron cleanup, and the Edge Functions that mediate between the app, the Pi, and Postgres. It originated with the v0.3.0 cloud-pairing rewrite and is kept current (e.g. the `feedback` and `restore_grants` tables were added in v0.6.x).
 Design rationale: see [`docs/v0.3-supabase-design.md`](../docs/v0.3-supabase-design.md).
 
-> **All work is local-only until smoke test passes.** Do not push this branch
-> to GitHub. Do not deploy these Edge Functions to a production project that
-> v0.2.x users depend on.
+> **The backend is live and the repo is public — by design.** The rule that keeps that safe: the **server-side secrets never leave Supabase.** `MOONGATE_TUNNEL_URL_KEY`, `MOONGATE_JWT_SIGNING_KEY`, `MOONGATE_DEBUG_KEY`, and the `service_role` key live only in the Edge Functions environment — never in the APK, never in git. Only the **anon** key is public, and it's gated by the Row-Level Security verified in §3.
 
 ---
 
