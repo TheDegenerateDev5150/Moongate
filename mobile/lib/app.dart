@@ -10,6 +10,7 @@ import 'features/printer/printer_screen.dart';
 import 'features/settings/custom_theme_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/splash/splash_screen.dart';
+import 'l10n/app_localizations.dart';
 import 'providers/app_lock_provider.dart';
 import 'providers/custom_theme_provider.dart';
 import 'providers/settings_provider.dart';
@@ -100,6 +101,7 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
     final appMode   = ref.watch(themeModeProvider);
     final fontScale = ref.watch(fontScaleProvider);
     final custom    = ref.watch(customThemeProvider);
+    final localeCode = ref.watch(localeProvider);
 
     // When the user has picked Custom, force both light and dark slots to the
     // same custom theme — the user is taking over colour decisions so the
@@ -115,6 +117,12 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
       darkTheme: darkTheme,
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
+      // i18n: a null locale follows the system language (resolved against
+      // supportedLocales, English fallback); a non-null code is the user's
+      // explicit pick from the language picker.
+      locale: localeCode == null ? null : Locale(localeCode),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       // Apply font scaling via builder so we inherit the real system MediaQuery
       // (status-bar height, nav-bar height, etc.) rather than discarding it.
       builder: (context, child) => MediaQuery(

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../providers/app_lock_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/pin_service.dart';
@@ -73,9 +74,10 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
   Future<void> _promptBiometric() async {
     final auth = LocalAuthentication();
+    final reason = AppLocalizations.of(context).lockBiometricReason;
     try {
       final ok = await auth.authenticate(
-        localizedReason: 'Unlock Moongate',
+        localizedReason: reason,
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,
@@ -96,26 +98,25 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       if (mounted) setState(() => _lockout = lock);
       return null; // the status line shows the countdown
     }
-    return 'Wrong PIN';
+    if (!mounted) return null;
+    return AppLocalizations.of(context).lockWrongPin;
   }
 
   Future<void> _forgotPin() async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Reset Moongate?'),
-        content: const Text(
-            'This removes the app lock and clears the paired printers from '
-            'this device so you can start over. Your printers are not deleted '
-            '— re-pair them by running MOONGATE_PAIR on each one.'),
+        title: Text(l.lockResetTitle),
+        content: Text(l.lockResetBody),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(l.commonCancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Reset'),
+            child: Text(l.lockResetConfirm),
           ),
         ],
       ),
@@ -135,6 +136,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
     final lockedOut = _lockout != null;
     final showBiometric = ref.watch(biometricUnlockProvider) &&
         (ref.watch(biometricAvailableProvider).valueOrNull ?? false);
@@ -159,12 +161,12 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 ),
                 const SizedBox(height: 8),
                 PinEntryView(
-                  title: 'Enter your PIN',
-                  subtitle: 'Moongate is locked',
+                  title: l.lockEnterPin,
+                  subtitle: l.lockSubtitle,
                   expectedLength: _pinLength,
                   enabled: !lockedOut,
                   statusText: lockedOut
-                      ? 'Too many attempts. Try again in ${_lockout!.inSeconds}s'
+                      ? l.lockTooManyAttempts(_lockout!.inSeconds)
                       : null,
                   onSubmit: _onPin,
                   belowKeypad: Column(
@@ -173,11 +175,11 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                         TextButton.icon(
                           onPressed: lockedOut ? null : _promptBiometric,
                           icon: const Icon(Icons.fingerprint),
-                          label: const Text('Use biometrics'),
+                          label: Text(l.lockUseBiometrics),
                         ),
                       TextButton(
                         onPressed: _forgotPin,
-                        child: const Text('Forgot PIN?'),
+                        child: Text(l.lockForgotPin),
                       ),
                     ],
                   ),

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 
+import '../../l10n/app_localizations.dart';
 import '../../models/printer_config.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/print_control_service.dart';
@@ -107,9 +108,9 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
     final ok = await _controlService.sendAction('pause');
     if (!ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not reach printer — pause failed'),
-          duration: Duration(seconds: 3),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).tilePauseFailed),
+          duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -120,9 +121,9 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
     final ok = await _controlService.sendAction('resume');
     if (!ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not reach printer — resume failed'),
-          duration: Duration(seconds: 3),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).tileResumeFailed),
+          duration: const Duration(seconds: 3),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -146,9 +147,9 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
         if (mounted) setState(() => _stopConfirmPending = false);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Press STOP again to cancel the print'),
-          duration: Duration(seconds: 4),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).tileStopAgainToCancel),
+          duration: const Duration(seconds: 4),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -168,6 +169,7 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
 
     // Colours used for the connection indicator throughout the tile.
     final connColor = switch (_status.connection) {
@@ -272,8 +274,8 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                         const SizedBox(width: 3),
                         Text(
                           _status.connection == PrinterConnection.local
-                              ? 'Local'
-                              : 'Tunnel',
+                              ? l.tileLocal
+                              : l.tileTunnel,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: connColor,
                             fontWeight: FontWeight.w600,
@@ -357,6 +359,7 @@ class _ActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme    = Theme.of(context);
+    final l        = AppLocalizations.of(context);
     final printing = status.state == 'printing';
     final paused   = status.state == 'paused';
     final active   = printing || paused;
@@ -378,7 +381,7 @@ class _ActionRow extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            paused ? 'Paused' : 'Printing',
+                            paused ? l.tilePaused : l.tilePrinting,
                             style: theme.textTheme.labelSmall
                                 ?.copyWith(color: color),
                           ),
@@ -413,14 +416,14 @@ class _ActionRow extends StatelessWidget {
             _Btn(
               icon: Icons.play_arrow_rounded,
               color: Colors.green,
-              tooltip: 'Resume',
+              tooltip: l.tileResume,
               onTap: onResume,
             ),
           if (printing)
             _Btn(
               icon: Icons.pause_rounded,
               color: Colors.orange,
-              tooltip: 'Pause',
+              tooltip: l.tilePause,
               onTap: onPause,
             ),
           // Stop (active) / Firmware Restart (idle) — always shown for online printers.
@@ -435,8 +438,8 @@ class _ActionRow extends StatelessWidget {
                 ? (stopConfirmPending ? Colors.red : Colors.redAccent)
                 : Colors.orange,
             tooltip: active
-                ? (stopConfirmPending ? 'Confirm stop' : 'Stop print')
-                : 'Firmware restart',
+                ? (stopConfirmPending ? l.tileConfirmStop : l.tileStopPrint)
+                : l.tileFirmwareRestart,
             onTap: onStop,
           ),
         ],
@@ -452,12 +455,13 @@ class _IdleLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     final (label, icon, color) = switch (status.state) {
-      'complete'  => ('Print complete', Icons.check_circle_outline,  Colors.teal),
-      'cancelled' => ('Print cancelled', Icons.cancel_outlined,      Colors.blueGrey),
-      'error'     => ('Printer error',   Icons.error_outline,        Colors.red),
-      'startup'   => ('Klipper starting', Icons.hourglass_empty,     Colors.blueGrey),
-      _           => ('Ready',            Icons.check_circle_outline, Colors.blueGrey),
+      'complete'  => (l.tilePrintComplete, Icons.check_circle_outline,  Colors.teal),
+      'cancelled' => (l.tilePrintCancelled, Icons.cancel_outlined,      Colors.blueGrey),
+      'error'     => (l.tilePrinterError,  Icons.error_outline,        Colors.red),
+      'startup'   => (l.tileKlipperStarting, Icons.hourglass_empty,     Colors.blueGrey),
+      _           => (l.tileReady,           Icons.check_circle_outline, Colors.blueGrey),
     };
     return Row(
       children: [
@@ -753,19 +757,20 @@ class _ConnectionProbe extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final hasLogo = uiType == 'mainsail' || uiType == 'fluidd';
 
     final label = switch (state) {
-      'offline'     => 'Offline',
-      'starting_up' => 'Starting up…',
-      'waiting'     => 'Connected',
-      _             => 'Connecting…',
+      'offline'     => l.tileOffline,
+      'starting_up' => l.tileStartingUp,
+      'waiting'     => l.tileConnected,
+      _             => l.tileConnecting,
     };
     final sub = switch (state) {
-      'offline'     => 'Printer unreachable',
-      'starting_up' => 'Waiting for first heartbeat',
-      'waiting'     => 'Printer idle',
-      _             => 'Reaching printer',
+      'offline'     => l.tilePrinterUnreachable,
+      'starting_up' => l.tileWaitingForHeartbeat,
+      'waiting'     => l.tilePrinterIdle,
+      _             => l.tileReachingPrinter,
     };
 
     // Top accent: spinner for "in flight" states, wifi-off when offline,
@@ -861,10 +866,11 @@ class _TunnelStatusDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.only(left: 5),
       child: Tooltip(
-        message: ready ? 'Remote access ready' : 'Remote connecting…',
+        message: ready ? l.tileRemoteReady : l.tileRemoteConnecting,
         child: Icon(
           ready ? Icons.cloud_done_rounded : Icons.cloud_sync_outlined,
           size: 11,
@@ -883,18 +889,19 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final (label, color) = switch (status.state) {
-      'printing'   => ('Printing',   Colors.green),
-      'paused'     => ('Paused',     Colors.orange),
-      'standby'    => ('Idle',       Colors.blueGrey),
-      'complete'   => ('Done',       Colors.teal),
-      'cancelled'  => ('Cancelled',  Colors.blueGrey),
-      'error'      => ('Error',      Colors.red),
+      'printing'   => (l.tilePrinting,      Colors.green),
+      'paused'     => (l.tilePaused,        Colors.orange),
+      'standby'    => (l.tileIdle,          Colors.blueGrey),
+      'complete'   => (l.tileDone,          Colors.teal),
+      'cancelled'  => (l.tileCancelled,     Colors.blueGrey),
+      'error'      => (l.tileError,         Colors.red),
       // Klipper is reachable but hasn't finished initialising yet
-      'startup'    => ('Starting',   Colors.blueGrey),
+      'startup'    => (l.tileStarting,      Colors.blueGrey),
       // Before the first poll completes
-      'connecting' => ('Connecting', Colors.blueGrey),
-      _            => ('Offline',    Colors.black54),
+      'connecting' => (l.tileConnectingBadge, Colors.blueGrey),
+      _            => (l.tileOffline,       Colors.black54),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

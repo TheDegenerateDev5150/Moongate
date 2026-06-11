@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/printer_config.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/update_provider.dart';
@@ -16,6 +17,8 @@ import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
 import '../../services/update_service.dart';
+import '../info/ui_guide.dart';
+import '../language/language_picker.dart';
 import 'feedback_sheet.dart';
 import 'printer_tile.dart';
 
@@ -37,7 +40,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Show the pairing/reinstall explainer on cold launch until the user opts
     // out ("Don't show again"). Post-frame so the dialog has a mounted context.
     WidgetsBinding.instance
-        .addPostFrameCallback((_) => _maybeShowPairingHelp().ignore());
+        .addPostFrameCallback((_) => _runFirstRunOnboarding().ignore());
   }
 
   void _load() {
@@ -46,17 +49,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _removePrinter(PrinterConfig printer) async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove printer?'),
-        content: Text('Remove "${printer.name}" from Moongate?'),
+        title: Text(l.dashboardRemovePrinterTitle),
+        content: Text(l.dashboardRemovePrinterBody(printer.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l.commonCancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Remove'),
+            child: Text(l.commonRemove),
           ),
         ],
       ),
@@ -72,11 +76,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     if (!released && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Removed locally, but couldn’t reach Supabase. '
-            'Run MOONGATE_RESET_OWNER on the Pi if re-pairing fails.',
-          ),
+        SnackBar(
+          content: Text(l.dashboardRemoveSupabaseUnreachable),
         ),
       );
     }
@@ -85,6 +86,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     // Check for update — runs once per session, silently ignored on failure.
     final updateAsync = ref.watch(updateProvider);
     final update = _updateDismissed ? null : updateAsync.valueOrNull;
@@ -109,7 +111,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Builder(
             builder: (ctx) => IconButton(
               icon: const Icon(Icons.menu),
-              tooltip: 'Menu',
+              tooltip: l.dashboardMenuTooltip,
               onPressed: () => Scaffold.of(ctx).openEndDrawer(),
             ),
           ),
@@ -134,13 +136,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 await context.push('/pair');
                 _load();
               },
-              tooltip: 'Add printer',
+              tooltip: l.dashboardAddPrinter,
               child: const Icon(Icons.add),
             ),
     );
   }
 
   Widget _buildDrawer(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final fontScale     = ref.watch(fontScaleProvider);
     final themeMode     = ref.watch(themeModeProvider);
     final gridColumns   = ref.watch(gridColumnsProvider);
@@ -177,7 +180,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // Printer management
                     ListTile(
                       leading: const Icon(Icons.add_circle_outline),
-                      title: const Text('Add printer'),
+                      title: Text(l.dashboardAddPrinter),
                       onTap: () async {
                         Navigator.pop(context);
                         await context.push('/pair');
@@ -188,8 +191,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ListTile(
                         leading: const Icon(Icons.remove_circle_outline,
                             color: Colors.redAccent),
-                        title: const Text('Remove printer',
-                            style: TextStyle(color: Colors.redAccent)),
+                        title: Text(l.dashboardRemovePrinter,
+                            style: const TextStyle(color: Colors.redAccent)),
                         onTap: () {
                           Navigator.pop(context);
                           _showRemoveSheet(context);
@@ -202,9 +205,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     if (_printers.isNotEmpty)
                       ListTile(
                         leading: const Icon(Icons.upload_file_outlined),
-                        title: const Text('Back up config'),
+                        title: Text(l.dashboardBackUpConfig),
                         subtitle:
-                            const Text('Save to a file before reinstalling'),
+                            Text(l.dashboardBackUpConfigSubtitle),
                         onTap: () {
                           Navigator.pop(context);
                           _exportConfig();
@@ -212,8 +215,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     ListTile(
                       leading: const Icon(Icons.file_download_outlined),
-                      title: const Text('Restore config'),
-                      subtitle: const Text('Load from a backup file'),
+                      title: Text(l.dashboardRestoreConfig),
+                      subtitle: Text(l.dashboardRestoreConfigSubtitle),
                       onTap: () {
                         Navigator.pop(context);
                         _importConfig();
@@ -225,7 +228,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // Theme
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Text('Theme',
+                      child: Text(l.dashboardThemeHeading,
                           style: Theme.of(context)
                               .textTheme
                               .labelMedium
@@ -244,27 +247,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           context.push('/theme/custom');
                         }
                       },
-                      child: const Column(
+                      child: Column(
                         children: [
                           RadioListTile(
                             value: AppThemeMode.system,
-                            title: Text('System default'),
-                            secondary: Icon(Icons.brightness_auto),
+                            title: Text(l.dashboardThemeSystem),
+                            secondary: const Icon(Icons.brightness_auto),
                           ),
                           RadioListTile(
                             value: AppThemeMode.dark,
-                            title: Text('Dark'),
-                            secondary: Icon(Icons.dark_mode),
+                            title: Text(l.dashboardThemeDark),
+                            secondary: const Icon(Icons.dark_mode),
                           ),
                           RadioListTile(
                             value: AppThemeMode.light,
-                            title: Text('Light'),
-                            secondary: Icon(Icons.light_mode),
+                            title: Text(l.dashboardThemeLight),
+                            secondary: const Icon(Icons.light_mode),
                           ),
                           RadioListTile(
                             value: AppThemeMode.custom,
-                            title: Text('Custom'),
-                            secondary: Icon(Icons.palette_outlined),
+                            title: Text(l.dashboardThemeCustom),
+                            secondary: const Icon(Icons.palette_outlined),
                           ),
                         ],
                       ),
@@ -275,9 +278,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     if (themeMode == AppThemeMode.custom)
                       ListTile(
                         leading: const Icon(Icons.tune),
-                        title: const Text('Customise colours'),
-                        subtitle: const Text(
-                            'Edit the five theme slots — HEX or palette'),
+                        title: Text(l.dashboardCustomiseColours),
+                        subtitle: Text(
+                            l.dashboardCustomiseColoursSubtitle),
                         onTap: () {
                           Navigator.pop(context);
                           context.push('/theme/custom');
@@ -289,7 +292,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // Font size
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Text('Font size',
+                      child: Text(l.dashboardFontSizeHeading,
                           style: Theme.of(context)
                               .textTheme
                               .labelMedium
@@ -321,7 +324,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // ── Dashboard layout ──────────────────────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                      child: Text('Dashboard layout',
+                      child: Text(l.dashboardLayoutHeading,
                           style: Theme.of(context)
                               .textTheme
                               .labelMedium
@@ -340,10 +343,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         style: SegmentedButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                         ),
-                        segments: const [
-                          ButtonSegment(value: 1, label: Text('1 col')),
-                          ButtonSegment(value: 2, label: Text('2 col')),
-                          ButtonSegment(value: 3, label: Text('3 col')),
+                        segments: [
+                          ButtonSegment(value: 1, label: Text(l.dashboardColumnCount(1))),
+                          ButtonSegment(value: 2, label: Text(l.dashboardColumnCount(2))),
+                          ButtonSegment(value: 3, label: Text(l.dashboardColumnCount(3))),
                         ],
                         selected: {gridColumns},
                         onSelectionChanged: (s) =>
@@ -354,8 +357,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     SwitchListTile(
                       dense: true,
                       secondary: const Icon(Icons.screen_rotation_outlined),
-                      title: const Text('Rotate with device'),
-                      subtitle: const Text('Unlocks landscape orientation'),
+                      title: Text(l.dashboardRotateWithDevice),
+                      subtitle: Text(l.dashboardRotateWithDeviceSubtitle),
                       value: allowRotation,
                       onChanged: (v) =>
                           ref.read(allowRotationProvider.notifier).set(v),
@@ -369,7 +372,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // the old raw feed; 'Raw' restores the live per-printer FPS.
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Text('Dashboard camera feed',
+                      child: Text(l.dashboardCameraFeedHeading,
                           style: Theme.of(context)
                               .textTheme
                               .labelMedium
@@ -378,8 +381,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
                       child: Text(
-                        'How often tiles refresh the camera. Lower rates use '
-                        'much less data.',
+                        l.dashboardCameraFeedSubtitle,
                         style: Theme.of(context)
                             .textTheme
                             .bodySmall
@@ -412,7 +414,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // ── About ────────────────────────────────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Text('About',
+                      child: Text(l.dashboardAboutHeading,
                           style: Theme.of(context)
                               .textTheme
                               .labelMedium
@@ -420,8 +422,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                     ListTile(
                       leading: const Icon(Icons.new_releases_outlined),
-                      title: const Text("What's new"),
-                      subtitle: const Text('Recent changes at a glance'),
+                      title: Text(l.dashboardWhatsNew),
+                      subtitle: Text(l.dashboardWhatsNewSubtitle),
                       onTap: () {
                         Navigator.pop(context);
                         _showChangelog(context);
@@ -429,17 +431,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                     ListTile(
                       leading: const Icon(Icons.help_outline),
-                      title: const Text('How pairing works'),
-                      subtitle: const Text('Pairing, reinstalling & restore'),
+                      title: Text(l.dashboardHowPairingWorks),
+                      subtitle: Text(l.dashboardHowPairingWorksSubtitle),
                       onTap: () {
                         Navigator.pop(context);
                         _showPairingHelp(context);
                       },
                     ),
                     ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: Text(l.uiGuideTitle),
+                      subtitle: Text(l.uiGuideMenuSubtitle),
+                      onTap: () {
+                        Navigator.pop(context);
+                        showUiGuide(context);
+                      },
+                    ),
+                    ListTile(
                       leading: const Icon(Icons.bug_report_outlined),
-                      title: const Text('Report a problem'),
-                      subtitle: const Text('Send a bug report or feedback'),
+                      title: Text(l.dashboardReportProblem),
+                      subtitle: Text(l.dashboardReportProblemSubtitle),
                       onTap: () {
                         Navigator.pop(context);
                         showFeedbackSheet(context, _printers);
@@ -447,10 +458,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                     ListTile(
                       leading: const Icon(Icons.lock_outline),
-                      title: const Text('App lock'),
+                      title: Text(l.dashboardAppLock),
                       subtitle: Text(ref.watch(appLockEnabledProvider)
-                          ? 'On — unlock required on launch'
-                          : 'Off'),
+                          ? l.dashboardAppLockOn
+                          : l.dashboardAppLockOff),
                       onTap: () {
                         Navigator.pop(context);
                         context.push('/settings/app-lock');
@@ -459,8 +470,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ListTile(
                       leading: const Icon(Icons.coffee_outlined,
                           color: Colors.amber),
-                      title: const Text('Buy me a coffee'),
-                      subtitle: const Text('Tip the dev via PayPal'),
+                      title: Text(l.dashboardBuyMeCoffee),
+                      subtitle: Text(l.dashboardBuyMeCoffeeSubtitle),
                       onTap: () async {
                         Navigator.pop(context);
                         await launchUrl(
@@ -479,17 +490,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.settings_outlined),
-              title: const Text('Settings'),
+              title: Text(l.dashboardSettings),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/settings');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.translate),
+              title: Text(l.menuLanguage),
+              subtitle: Text(
+                nativeLanguageName(ref.watch(localeProvider)) ??
+                    l.languageSystemDefault,
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                showLanguagePicker(context);
               },
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
               child: ref.watch(appVersionProvider).when(
                 data: (v) => Text(
-                  'Moongate v$v',
+                  l.dashboardVersion(v),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context)
                         .colorScheme
@@ -514,6 +537,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// flutter_secure_storage and is wiped on uninstall), so a restored config
   /// still needs a re-pair per printer to bind the new anon UID.
   Future<void> _exportConfig() async {
+    final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     // Mint a single-use restore code so this backup can bring the printers
     // back ONLINE after a reinstall (re-binds them to the new identity), not
@@ -532,15 +556,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       // Without `bytes`, saveFile only returns a path and leaves the write to
       // us — which scoped storage won't allow.
       savedPath = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save Moongate backup',
+        dialogTitle: l.dashboardSaveBackupDialogTitle,
         fileName: 'moongate-printers.json',
         bytes: bytes,
       );
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Backup failed — could not save the file.'),
+        SnackBar(
+          content: Text(l.dashboardBackupFailed),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -550,10 +574,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     messenger.showSnackBar(
       SnackBar(
         content: Text(restoreCode != null
-            ? 'Backed up ${_printers.length} printer(s). This file can restore '
-                'them on a new install — keep it private.'
-            : 'Backed up ${_printers.length} printer(s) (list only — couldn’t '
-                'reach the cloud for a restore code).'),
+            ? l.dashboardBackupSuccess(_printers.length)
+            : l.dashboardBackupSuccessListOnly(_printers.length)),
         duration: const Duration(seconds: 5),
       ),
     );
@@ -563,6 +585,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// picker and restores its printer list. Existing printers are kept;
   /// duplicates (same id) are skipped.
   Future<void> _importConfig() async {
+    final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     ImportOutcome? outcome;
     try {
@@ -570,8 +593,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Invalid backup file — please pick a Moongate config file.'),
+        SnackBar(
+          content: Text(l.dashboardInvalidBackupFile),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -581,15 +604,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     _load();
     final String msg;
     if (outcome.reconnected) {
-      msg = '${outcome.added} printer(s) restored — '
-          '${outcome.reconnectedCount} reconnected and coming back online.';
+      msg = l.dashboardRestoreReconnected(
+          outcome.added, outcome.reconnectedCount);
     } else if (outcome.hadRestoreCode) {
-      msg = '${outcome.added} printer(s) restored, but none reconnected — the '
-          'backup’s restore code didn’t match any printers (it may be from an '
-          'older backup, or already used). Re-pair them to bring them online.';
+      msg = l.dashboardRestoreNoneReconnected(outcome.added);
     } else {
-      msg = '${outcome.added} printer(s) restored (list only). Re-pair each '
-          'printer to bring it online.';
+      msg = l.dashboardRestoreListOnly(outcome.added);
     }
     messenger.showSnackBar(
       SnackBar(content: Text(msg), duration: const Duration(seconds: 6)),
@@ -597,6 +617,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _showRemoveSheet(BuildContext context) {
+    final l = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       // Without SafeArea the last ListTile clips behind the 3-button nav
@@ -606,17 +627,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Remove a printer',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(l.dashboardRemoveSheetTitle,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16)),
             ),
             ..._printers.map(
               (p) => ListTile(
                 leading: const Icon(Icons.print, color: Colors.redAccent),
                 title: Text(p.name),
                 subtitle: Text(
-                  'id ${p.id.substring(0, 8)}…',
+                  l.dashboardPrinterIdShort(p.id.substring(0, 8)),
                   style: const TextStyle(fontSize: 12),
                 ),
                 trailing: const Icon(Icons.delete_outline, color: Colors.redAccent),
@@ -643,11 +665,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _showChangelog(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("What's new"),
+        title: Text(l.dashboardWhatsNew),
         content: ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 380, maxWidth: 360),
           child: SingleChildScrollView(
@@ -679,7 +702,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
+            child: Text(l.commonClose),
           ),
         ],
       ),
@@ -688,6 +711,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   // ── Pairing onboarding help ──────────────────────────────────────────────
   static const _pairingHelpDismissedKey = 'pairing_help_dismissed';
+  static const _languageSelectedKey = 'language_selected';
+
+  /// First cold start: prompt for a language once, then run the pairing
+  /// explainer. The language prompt is gated by [_languageSelectedKey] so it
+  /// appears only on the very first launch; the pairing explainer keeps its
+  /// existing show-until-dismissed behaviour and follows it.
+  Future<void> _runFirstRunOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool(_languageSelectedKey) ?? false)) {
+      if (!mounted) return;
+      await showLanguagePicker(context, firstRun: true);
+      await prefs.setBool(_languageSelectedKey, true);
+    }
+    await _maybeShowPairingHelp();
+  }
 
   /// On cold launch, show the "how pairing works" explainer unless the user
   /// ticked "Don't show this again". Pressing OK without ticking shows it again
@@ -703,6 +741,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// ("How pairing works"). The "Don't show again" tick persists the dismissal
   /// so it never auto-shows again.
   Future<void> _showPairingHelp(BuildContext context) async {
+    final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
     var dontShowAgain = false;
     await showDialog<void>(
@@ -713,7 +752,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             children: [
               Icon(Icons.push_pin_outlined, color: cs.primary, size: 22),
               const SizedBox(width: 8),
-              const Expanded(child: Text('How pairing works')),
+              Expanded(child: Text(l.dashboardHowPairingWorks)),
             ],
           ),
           content: ConstrainedBox(
@@ -724,22 +763,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _pairingHelpItem(ctx, Icons.qr_code_2, cs.primary,
-                      'Pair once',
-                      'Scan the QR (or enter the GATE code) to add a printer — that link is saved in this app.'),
+                      l.dashboardPairingHelpPairOnceTitle,
+                      l.dashboardPairingHelpPairOnceBody),
                   _pairingHelpItem(ctx, Icons.check_circle_outline, Colors.green,
-                      'App updates keep your printers',
-                      'Updating Moongate never needs a re-pair.'),
+                      l.dashboardPairingHelpUpdatesTitle,
+                      l.dashboardPairingHelpUpdatesBody),
                   _pairingHelpItem(ctx, Icons.cloud_download_outlined, cs.primary,
-                      'Reinstalling or new phone?',
-                      'Back up first (Menu → Back up config), then Restore brings your printers back online — no re-pairing.'),
+                      l.dashboardPairingHelpReinstallTitle,
+                      l.dashboardPairingHelpReinstallBody),
                   _pairingHelpItem(ctx, Icons.restart_alt, Colors.orangeAccent,
-                      'No backup?',
-                      "Run MOONGATE_RESET_OWNER on the printer's console, then pair again."),
+                      l.dashboardPairingHelpNoBackupTitle,
+                      l.dashboardPairingHelpNoBackupBody),
                   const SizedBox(height: 4),
                   CheckboxListTile(
                     value: dontShowAgain,
                     onChanged: (v) => setLocal(() => dontShowAgain = v ?? false),
-                    title: const Text("Don't show this again"),
+                    title: Text(l.dashboardDontShowAgain),
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: EdgeInsets.zero,
                     dense: true,
@@ -757,7 +796,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 }
                 if (ctx.mounted) Navigator.pop(ctx);
               },
-              child: const Text('OK'),
+              child: Text(l.commonOk),
             ),
           ],
         ),
@@ -899,6 +938,7 @@ class _UpdateBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
     return Material(
       color: cs.primaryContainer,
@@ -911,7 +951,7 @@ class _UpdateBanner extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Update available — v${update.version}',
+                l.dashboardUpdateAvailable(update.version),
                 style: TextStyle(
                   color: cs.onPrimaryContainer,
                   fontWeight: FontWeight.w600,
@@ -921,7 +961,7 @@ class _UpdateBanner extends StatelessWidget {
             TextButton(
               onPressed: onDismiss,
               style: TextButton.styleFrom(foregroundColor: cs.onPrimaryContainer),
-              child: const Text('Later'),
+              child: Text(l.dashboardUpdateLater),
             ),
             const SizedBox(width: 4),
             FilledButton(
@@ -933,7 +973,7 @@ class _UpdateBanner extends StatelessWidget {
                 backgroundColor: cs.primary,
                 foregroundColor: cs.onPrimary,
               ),
-              child: const Text('Update'),
+              child: Text(l.dashboardUpdate),
             ),
           ],
         ),
@@ -976,7 +1016,7 @@ class _PrinterGrid extends StatelessWidget {
       // Wider tiles (fewer columns) can be shorter; narrow tiles need more
       // height to keep the webcam + controls comfortable.
       final aspectRatio = switch (effectiveCols) {
-        1 => 1.4,   // single full-width tile: landscape feel
+        1 => 1.0,   // single full-width tile: square on every device
         2 => 0.75,  // default two-column layout
         3 => 0.65,  // three columns — a bit taller relative to width
         _ => 0.55,  // four columns in landscape from a 3-col portrait pref
@@ -1007,6 +1047,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1014,16 +1055,16 @@ class _EmptyState extends StatelessWidget {
           const Icon(Icons.print_disabled,
               size: 72, color: Colors.white24),
           const SizedBox(height: 16),
-          Text('No printers added yet',
+          Text(l.dashboardEmptyTitle,
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          const Text('Tap the button below to pair your first printer.',
+          Text(l.dashboardEmptyBody,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white54)),
+              style: const TextStyle(color: Colors.white54)),
           const SizedBox(height: 24),
           FilledButton.icon(
             icon: const Icon(Icons.add),
-            label: const Text('Add printer'),
+            label: Text(l.dashboardAddPrinter),
             onPressed: onAddPrinter,
           ),
         ],

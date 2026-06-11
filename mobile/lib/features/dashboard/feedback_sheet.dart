@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/printer_config.dart';
 import '../../services/diagnostics_service.dart';
 import '../../services/supabase_service.dart';
@@ -64,6 +65,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
   }
 
   Future<void> _send() async {
+    final l = AppLocalizations.of(context);
     final comment = _comment.text.trim();
     if (comment.isEmpty || _sending) return;
     setState(() => _sending = true);
@@ -101,15 +103,14 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Thanks — your report was sent.')),
+        SnackBar(content: Text(l.feedbackSuccess)),
       );
     } catch (_) {
       if (!mounted) return;
       setState(() => _sending = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-              "Couldn't send — check your connection and try again."),
+          content: Text(l.feedbackError),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -119,6 +120,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     final canSend = _comment.text.trim().isNotEmpty && !_sending;
 
     return SafeArea(
@@ -140,19 +142,18 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
                   Icon(Icons.bug_report_outlined,
                       color: theme.colorScheme.primary),
                   const SizedBox(width: 10),
-                  Text(_fromPairing ? 'Trouble pairing?' : 'Report a problem',
+                  Text(
+                      _fromPairing
+                          ? l.feedbackTroublePairing
+                          : l.feedbackTitle,
                       style: theme.textTheme.titleLarge),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 _fromPairing
-                    ? "Describe what happens when you try to add the printer. "
-                        'Your network + discovery details are attached '
-                        "automatically so we can see why it isn't connecting."
-                    : "Tell us what's happening. Your app version, device, "
-                        'network and printer details are attached automatically '
-                        'to help us track it down.',
+                    ? l.feedbackPairingDescription
+                    : l.feedbackDescription,
                 style:
                     theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
               ),
@@ -163,15 +164,15 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
                 DropdownButtonFormField<String?>(
                   initialValue: _printerName,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Which printer? (optional)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l.feedbackWhichPrinter,
+                    border: const OutlineInputBorder(),
                     isDense: true,
                   ),
                   items: [
-                    const DropdownMenuItem<String?>(
+                    DropdownMenuItem<String?>(
                       value: null,
-                      child: Text('General / not printer-specific'),
+                      child: Text(l.feedbackGeneralOption),
                     ),
                     ...widget.printers.map(
                       (p) => DropdownMenuItem<String?>(
@@ -193,12 +194,10 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
                 maxLines: 8,
                 maxLength: 5000,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'What went wrong?',
-                  hintText:
-                      'e.g. "Printer shows Connected / idle but it\'s actually '
-                      'ready — opens fine when I tap the tile."',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l.feedbackCommentLabel,
+                  hintText: l.feedbackCommentHint,
+                  border: const OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),
               ),
@@ -206,10 +205,10 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
                 controller: _contact,
                 enabled: !_sending,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email or contact (optional)',
-                  hintText: 'Only if you want a reply',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l.feedbackContactLabel,
+                  hintText: l.feedbackContactHint,
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
               ),
@@ -223,7 +222,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.send_outlined),
-                label: Text(_sending ? 'Sending…' : 'Send report'),
+                label: Text(_sending ? l.feedbackSending : l.feedbackSend),
               ),
             ],
           ),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/printer_config.dart';
 import '../../services/lan_discovery_service.dart';
 import '../../services/printer_access_cache.dart';
@@ -76,6 +77,7 @@ class _PrinterScreenState extends State<PrinterScreen>
   }
 
   Future<void> _start() async {
+    final l = AppLocalizations.of(context);
     setState(() { _loading = true; _errorMsg = null; });
     try {
       final access = await PrinterAccessCache.instance.get(widget.printer.id);
@@ -116,7 +118,7 @@ class _PrinterScreenState extends State<PrinterScreen>
         if (!mounted) return;
         setState(() {
           _loading  = false;
-          _errorMsg = 'Printer is starting up. Retrying in 5s…';
+          _errorMsg = l.printerStartingUpRetry(5);
         });
         _retryTimer = Timer(const Duration(seconds: 5), () {
           if (mounted) _start();
@@ -130,18 +132,19 @@ class _PrinterScreenState extends State<PrinterScreen>
       if (!mounted) return;
       setState(() {
         _loading  = false;
-        _errorMsg = 'Printer is starting up. Retrying in ${e.retryAfter}s…';
+        _errorMsg = l.printerStartingUpRetry(e.retryAfter);
       });
       _retryTimer = Timer(Duration(seconds: e.retryAfter), () {
         if (mounted) _start();
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _loading = false; _errorMsg = 'Could not reach printer: $e'; });
+      setState(() { _loading = false; _errorMsg = l.printerCouldNotReach('$e'); });
     }
   }
 
   Future<void> _showEditPrinterDialog() async {
+    final l = AppLocalizations.of(context);
     final result = await showDialog<({String name, String? lanUrl})>(
       context: context,
       builder: (_) => _EditPrinterDialog(
@@ -162,8 +165,8 @@ class _PrinterScreenState extends State<PrinterScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.lanUrl == null
-                ? 'Custom address cleared'
-                : 'Printer address updated'),
+                ? l.printerAddressCleared
+                : l.printerAddressUpdated),
           ),
         );
       }
@@ -197,9 +200,10 @@ class _PrinterScreenState extends State<PrinterScreen>
         onWebResourceError: (err) {
           if (err.isForMainFrame != true) return;
           if (!mounted) return;
+          final l = AppLocalizations.of(context);
           setState(() {
             _loading  = false;
-            _errorMsg = 'Cloudflare tunnel unreachable.\n${err.description}';
+            _errorMsg = l.printerTunnelUnreachable(err.description);
           });
         },
       ));
@@ -281,6 +285,7 @@ class _PrinterScreenState extends State<PrinterScreen>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -290,7 +295,7 @@ class _PrinterScreenState extends State<PrinterScreen>
             // Edit icon directly before the name (name + advanced address).
             IconButton(
               icon: const Icon(Icons.edit, size: 18),
-              tooltip: 'Edit printer',
+              tooltip: l.printerEdit,
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -307,7 +312,7 @@ class _PrinterScreenState extends State<PrinterScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    _usingLan ? 'Local network' : 'Tunnel via Moongate',
+                    _usingLan ? l.printerLocalNetwork : l.printerTunnelVia,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: _usingLan ? Colors.green : Colors.orange,
                         ),
@@ -350,7 +355,7 @@ class _PrinterScreenState extends State<PrinterScreen>
                   Icon(Icons.cloud_off_outlined, size: 64, color: cs.error),
                   const SizedBox(height: 20),
                   Text(
-                    'Printer unreachable',
+                    l.printerUnreachable,
                     style: Theme.of(context)
                         .textTheme
                         .headlineSmall
@@ -373,14 +378,14 @@ class _PrinterScreenState extends State<PrinterScreen>
                       _start();
                     },
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                    label: Text(l.commonRetry),
                   ),
                   if (_usingLan && _tunnelUrl != null) ...[
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: _retryViaTunnel,
                       icon: const Icon(Icons.cloud_outlined),
-                      label: const Text('Use tunnel'),
+                      label: Text(l.printerUseTunnel),
                     ),
                   ],
                 ],
@@ -429,11 +434,12 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
   }
 
   void _save() {
+    final l       = AppLocalizations.of(context);
     final name    = _nameController.text.trim();
     final addrRaw = _addressController.text.trim();
     final lanUrl  = PrinterConfig.parseLanUrl(addrRaw);
     if (addrRaw.isNotEmpty && lanUrl == null) {
-      setState(() => _addressError = 'Try e.g. 192.168.1.50:7125');
+      setState(() => _addressError = l.printerAddressInvalid);
       return;
     }
     Navigator.pop(context, (name: name, lanUrl: lanUrl));
@@ -441,8 +447,9 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('Edit printer'),
+      title: Text(l.printerEdit),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -452,9 +459,9 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
             autofocus: true,
             maxLength: 48,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(
-              labelText: 'Printer name',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l.printerNameLabel,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 4),
@@ -463,10 +470,9 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
             keyboardType: TextInputType.url,
             autocorrect: false,
             decoration: InputDecoration(
-              labelText: 'Printer address (advanced)',
-              hintText: '192.168.1.50:7125',
-              helperText: 'Only for reverse-proxy / Docker setups. '
-                  'Leave blank to use automatic discovery.',
+              labelText: l.printerAddressLabel,
+              hintText: l.printerAddressHint,
+              helperText: l.printerAddressHelper,
               helperMaxLines: 2,
               errorText: _addressError,
               border: const OutlineInputBorder(),
@@ -480,11 +486,11 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l.commonCancel),
         ),
         FilledButton(
           onPressed: _save,
-          child: const Text('Save'),
+          child: Text(l.commonSave),
         ),
       ],
     );

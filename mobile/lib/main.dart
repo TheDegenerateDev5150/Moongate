@@ -26,6 +26,7 @@ void main() async {
 
   final container = ProviderContainer();
   await container.read(themeModeProvider.notifier).load();
+  await container.read(localeProvider.notifier).load();
   await container.read(customThemeProvider.notifier).load();
   await container.read(fontScaleProvider.notifier).load();
   await container.read(gridColumnsProvider.notifier).load();

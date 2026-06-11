@@ -1,0 +1,886 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Chinese (`zh`).
+class AppLocalizationsZh extends AppLocalizations {
+  AppLocalizationsZh([String locale = 'zh']) : super(locale);
+
+  @override
+  String get appTitle => 'Moongate';
+
+  @override
+  String get languagePickerTitle => '选择您的语言';
+
+  @override
+  String get languagePickerSubtitle => '您可以随时在菜单中更改。';
+
+  @override
+  String get languagePickerContinue => '继续';
+
+  @override
+  String get menuLanguage => '语言';
+
+  @override
+  String get languageSystemDefault => '跟随系统';
+
+  @override
+  String get commonCancel => '取消';
+
+  @override
+  String get commonOk => '确定';
+
+  @override
+  String get commonClose => '关闭';
+
+  @override
+  String get commonSave => '保存';
+
+  @override
+  String get commonDone => '完成';
+
+  @override
+  String get commonRetry => '重试';
+
+  @override
+  String get commonRemove => '移除';
+
+  @override
+  String get commonDelete => '删除';
+
+  @override
+  String get commonEnable => '启用';
+
+  @override
+  String get commonDisable => '禁用';
+
+  @override
+  String get settingsTitle => '设置';
+
+  @override
+  String get settingsRemoveAllTitle => '从此设备移除所有打印机';
+
+  @override
+  String get settingsRemoveAllSubtitle =>
+      '清除本地打印机缓存。保留您的 Supabase 账户，以便重新配对时顺畅无阻。';
+
+  @override
+  String get settingsRemoveAllConfirmTitle => '移除所有打印机？';
+
+  @override
+  String get settingsRemoveAllConfirmBody =>
+      '所有已配对的打印机都将从此设备移除。您可以在打印机上运行 MOONGATE_PAIR 重新添加它们。';
+
+  @override
+  String get settingsRemoveAllConfirmAction => '全部移除';
+
+  @override
+  String get dashboardAddPrinter => '添加打印机';
+
+  @override
+  String get dashboardRemovePrinter => '移除打印机';
+
+  @override
+  String get dashboardMenuTooltip => '菜单';
+
+  @override
+  String get dashboardRemovePrinterTitle => '移除打印机？';
+
+  @override
+  String dashboardRemovePrinterBody(String name) {
+    return '要从 Moongate 移除“$name”吗？';
+  }
+
+  @override
+  String get dashboardRemoveSupabaseUnreachable =>
+      '已在本地移除，但无法连接 Supabase。如果重新配对失败，请在 Pi 上运行 MOONGATE_RESET_OWNER。';
+
+  @override
+  String get dashboardBackUpConfig => '备份配置';
+
+  @override
+  String get dashboardBackUpConfigSubtitle => '重新安装前保存到文件';
+
+  @override
+  String get dashboardRestoreConfig => '恢复配置';
+
+  @override
+  String get dashboardRestoreConfigSubtitle => '从备份文件加载';
+
+  @override
+  String get dashboardThemeHeading => '主题';
+
+  @override
+  String get dashboardThemeSystem => '跟随系统';
+
+  @override
+  String get dashboardThemeDark => '深色';
+
+  @override
+  String get dashboardThemeLight => '浅色';
+
+  @override
+  String get dashboardThemeCustom => '自定义';
+
+  @override
+  String get dashboardCustomiseColours => '自定义配色';
+
+  @override
+  String get dashboardCustomiseColoursSubtitle => '编辑五个主题色槽 — HEX 或调色板';
+
+  @override
+  String get dashboardFontSizeHeading => '字体大小';
+
+  @override
+  String get dashboardLayoutHeading => '仪表盘布局';
+
+  @override
+  String dashboardColumnCount(int count) {
+    return '$count 列';
+  }
+
+  @override
+  String get dashboardRotateWithDevice => '随设备旋转';
+
+  @override
+  String get dashboardRotateWithDeviceSubtitle => '解锁横屏方向';
+
+  @override
+  String get dashboardCameraFeedHeading => '仪表盘摄像头画面';
+
+  @override
+  String get dashboardCameraFeedSubtitle => '磁贴刷新摄像头的频率。频率越低，流量消耗越少。';
+
+  @override
+  String get dashboardAboutHeading => '关于';
+
+  @override
+  String get dashboardWhatsNew => '更新内容';
+
+  @override
+  String get dashboardWhatsNewSubtitle => '一览最近的更改';
+
+  @override
+  String get dashboardHowPairingWorks => '配对原理';
+
+  @override
+  String get dashboardHowPairingWorksSubtitle => '配对、重新安装与恢复';
+
+  @override
+  String get dashboardReportProblem => '反馈问题';
+
+  @override
+  String get dashboardReportProblemSubtitle => '发送错误报告或反馈';
+
+  @override
+  String get dashboardAppLock => '应用锁';
+
+  @override
+  String get dashboardAppLockOn => '已开启 — 启动时需要解锁';
+
+  @override
+  String get dashboardAppLockOff => '已关闭';
+
+  @override
+  String get dashboardBuyMeCoffee => '请我喝杯咖啡';
+
+  @override
+  String get dashboardBuyMeCoffeeSubtitle => '通过 PayPal 给开发者打赏';
+
+  @override
+  String get dashboardSettings => '设置';
+
+  @override
+  String dashboardVersion(String version) {
+    return 'Moongate v$version';
+  }
+
+  @override
+  String get dashboardSaveBackupDialogTitle => '保存 Moongate 备份';
+
+  @override
+  String get dashboardBackupFailed => '备份失败 — 无法保存文件。';
+
+  @override
+  String dashboardBackupSuccess(int count) {
+    return '已备份 $count 台打印机。此文件可在新安装时恢复它们 — 请妥善保管。';
+  }
+
+  @override
+  String dashboardBackupSuccessListOnly(int count) {
+    return '已备份 $count 台打印机（仅列表 — 无法连接云端获取恢复码）。';
+  }
+
+  @override
+  String get dashboardInvalidBackupFile => '备份文件无效 — 请选择 Moongate 配置文件。';
+
+  @override
+  String dashboardRestoreReconnected(int added, int count) {
+    return '已恢复 $added 台打印机 — $count 台已重新连接，正在恢复在线。';
+  }
+
+  @override
+  String dashboardRestoreNoneReconnected(int added) {
+    return '已恢复 $added 台打印机，但没有任何一台重新连接 — 备份的恢复码与任何打印机都不匹配（可能来自较旧的备份，或已被使用）。请重新配对以使它们恢复在线。';
+  }
+
+  @override
+  String dashboardRestoreListOnly(int added) {
+    return '已恢复 $added 台打印机（仅列表）。请重新配对每台打印机以使其恢复在线。';
+  }
+
+  @override
+  String get dashboardRemoveSheetTitle => '移除打印机';
+
+  @override
+  String dashboardPrinterIdShort(String id) {
+    return 'ID $id…';
+  }
+
+  @override
+  String get dashboardPairingHelpPairOnceTitle => '只需配对一次';
+
+  @override
+  String get dashboardPairingHelpPairOnceBody =>
+      '扫描二维码（或输入 GATE code）即可添加打印机 — 该连接会保存在此应用中。';
+
+  @override
+  String get dashboardPairingHelpUpdatesTitle => '应用更新不影响您的打印机';
+
+  @override
+  String get dashboardPairingHelpUpdatesBody => '更新 Moongate 无需重新配对。';
+
+  @override
+  String get dashboardPairingHelpReinstallTitle => '重新安装或更换新手机？';
+
+  @override
+  String get dashboardPairingHelpReinstallBody =>
+      '请先备份（菜单 → 备份配置），然后“恢复”即可使您的打印机重新上线 — 无需重新配对。';
+
+  @override
+  String get dashboardPairingHelpNoBackupTitle => '没有备份？';
+
+  @override
+  String get dashboardPairingHelpNoBackupBody =>
+      '在打印机的控制台运行 MOONGATE_RESET_OWNER，然后重新配对。';
+
+  @override
+  String get dashboardDontShowAgain => '不再显示';
+
+  @override
+  String dashboardUpdateAvailable(String version) {
+    return '有可用更新 — v$version';
+  }
+
+  @override
+  String get dashboardUpdateLater => '稍后';
+
+  @override
+  String get dashboardUpdate => '更新';
+
+  @override
+  String get dashboardEmptyTitle => '尚未添加打印机';
+
+  @override
+  String get dashboardEmptyBody => '点击下方按钮配对您的第一台打印机。';
+
+  @override
+  String get pairingTitle => '添加打印机';
+
+  @override
+  String get pairingIntro =>
+      '在您的 Klipper 控制台运行 MOONGATE_PAIR — 扫描二维码或输入控制台上显示的 GATE code。';
+
+  @override
+  String get pairingNameLabel => '打印机名称';
+
+  @override
+  String get pairingNameHint => '例如 Voron 2.4';
+
+  @override
+  String get pairingScanButton => '扫描二维码';
+
+  @override
+  String get pairingScanRecommended => '推荐 — 即时连接';
+
+  @override
+  String get pairingOr => '或';
+
+  @override
+  String get pairingGateCodeLabel => 'GATE code';
+
+  @override
+  String get pairingGateCodeHint => '输入您的 Klipper 控制台中显示的 8 位代码。';
+
+  @override
+  String get pairingGateCodeValid => '代码有效 ✓';
+
+  @override
+  String get pairingGateCodeWarning =>
+      '替代方法。不使用二维码时，打印机可能需要几分钟 — 偶尔长达约 10 分钟 — 才能在仪表盘上完全上线。请扫描上方的二维码以即时连接。';
+
+  @override
+  String get pairingCameraPermissionNeeded => '需要摄像头权限';
+
+  @override
+  String get pairingCameraUnavailable => '摄像头不可用';
+
+  @override
+  String get pairingCancelScan => '取消扫描';
+
+  @override
+  String pairingQrScanned(String code) {
+    return '二维码已扫描 — 代码 $code';
+  }
+
+  @override
+  String get pairingRescan => '重新扫描';
+
+  @override
+  String get pairingAdvancedTitle => '高级 — 打印机在自定义网络上？';
+
+  @override
+  String get pairingAdvancedBody =>
+      '大多数人可以将此项留空。如果您的打印机位于反向代理（Traefik、Caddy、NPM）之后或在 Docker 中，请输入您在浏览器中打开其网页（Mainsail / Fluidd）所用的相同地址。';
+
+  @override
+  String get pairingAddressLabel => '打印机地址';
+
+  @override
+  String get pairingAddressHint => '192.168.1.50:7125';
+
+  @override
+  String get pairingPairButton => '配对打印机';
+
+  @override
+  String get pairingRestoreHint => '正在重新安装？从备份文件恢复您保存的打印机。您仍需重新配对每一台以使其上线。';
+
+  @override
+  String get pairingImportButton => '从文件导入配置';
+
+  @override
+  String get pairingReportButton => '配对遇到问题？发送报告';
+
+  @override
+  String get pairingCameraPermissionTitle => '需要摄像头权限';
+
+  @override
+  String get pairingCameraPermissionBody =>
+      'Moongate 需要摄像头访问权限来扫描二维码。\n\n打开 设置 → 应用 → Moongate → 权限 并启用摄像头，然后返回重试。';
+
+  @override
+  String get pairingOpenSettings => '打开设置';
+
+  @override
+  String get pairingErrorNotMoongateQr =>
+      '这不是 Moongate 二维码。请在打印机上运行 MOONGATE_PAIR 生成一个。';
+
+  @override
+  String get pairingErrorOldQr => '此二维码来自较旧的 Moongate 版本。请先将 Pi 更新到 v0.3.0。';
+
+  @override
+  String get pairingErrorNoCode => '请扫描二维码，或输入打印机控制台中的 GATE code。';
+
+  @override
+  String get pairingErrorBadAddress => '该打印机地址似乎不正确 — 请尝试例如 192.168.1.50:7125';
+
+  @override
+  String pairingErrorFailed(String error) {
+    return '配对失败：$error';
+  }
+
+  @override
+  String get pairingImportInvalidFile => '备份文件无效 — 请选择 Moongate 配置文件。';
+
+  @override
+  String get pairingImportNoNewPrinters => '在该文件中未找到新的打印机。';
+
+  @override
+  String pairingImportRestoredReconnected(int count, int reconnected) {
+    return '已恢复 $count 台打印机 — $reconnected 台已重新连接，正在恢复在线。';
+  }
+
+  @override
+  String pairingImportRestoredRepair(int count) {
+    return '已恢复 $count 台打印机 — 请重新配对每台 Pi 以使其上线。';
+  }
+
+  @override
+  String get customThemeTitle => '自定义主题';
+
+  @override
+  String get customThemeResetTooltip => '恢复默认值';
+
+  @override
+  String get customThemeResetConfirmTitle => '重置自定义主题？';
+
+  @override
+  String get customThemeResetConfirmBody => '所有五个色槽都将恢复为默认的深色背景紫色配色。';
+
+  @override
+  String get customThemeReset => '重置';
+
+  @override
+  String get customThemePreview => '预览';
+
+  @override
+  String get customThemeAccent => '强调色';
+
+  @override
+  String get customThemeAccentDesc => '按钮、悬浮按钮、进度条、链接';
+
+  @override
+  String get customThemeBackground => '页面背景';
+
+  @override
+  String get customThemeBackgroundDesc => '位于每个屏幕之后';
+
+  @override
+  String get customThemeSurface => '卡片与磁贴';
+
+  @override
+  String get customThemeSurfaceDesc => '仪表盘磁贴、底部面板、抽屉';
+
+  @override
+  String get customThemeText => '文字';
+
+  @override
+  String get customThemeTextDesc => '界面上的正文和标题文字';
+
+  @override
+  String get customThemeError => '错误 / 停止';
+
+  @override
+  String get customThemeErrorDesc => '破坏性操作、错误浮层';
+
+  @override
+  String get customThemePresets => '预设';
+
+  @override
+  String get customThemeInvalidHex => '不是有效的十六进制颜色';
+
+  @override
+  String get customThemeSamplePrinter => '示例打印机';
+
+  @override
+  String get customThemePrinting => '正在打印';
+
+  @override
+  String get tilePauseFailed => '无法连接打印机 — 暂停失败';
+
+  @override
+  String get tileResumeFailed => '无法连接打印机 — 恢复失败';
+
+  @override
+  String get tileStopAgainToCancel => '再次按下停止以取消打印';
+
+  @override
+  String get tileLocal => '本地';
+
+  @override
+  String get tileTunnel => '隧道';
+
+  @override
+  String get tilePrinting => '正在打印';
+
+  @override
+  String get tilePaused => '已暂停';
+
+  @override
+  String get tileResume => '恢复';
+
+  @override
+  String get tilePause => '暂停';
+
+  @override
+  String get tileConfirmStop => '确认停止';
+
+  @override
+  String get tileStopPrint => '停止打印';
+
+  @override
+  String get tileFirmwareRestart => '固件重启';
+
+  @override
+  String get tilePrintComplete => '打印完成';
+
+  @override
+  String get tilePrintCancelled => '打印已取消';
+
+  @override
+  String get tilePrinterError => '打印机错误';
+
+  @override
+  String get tileKlipperStarting => 'Klipper 正在启动';
+
+  @override
+  String get tileReady => '就绪';
+
+  @override
+  String get tileOffline => '离线';
+
+  @override
+  String get tileStartingUp => '正在启动…';
+
+  @override
+  String get tileConnected => '已连接';
+
+  @override
+  String get tileConnecting => '正在连接…';
+
+  @override
+  String get tilePrinterUnreachable => '无法连接打印机';
+
+  @override
+  String get tileWaitingForHeartbeat => '正在等待首次心跳';
+
+  @override
+  String get tilePrinterIdle => '打印机空闲';
+
+  @override
+  String get tileReachingPrinter => '正在连接打印机';
+
+  @override
+  String get tileRemoteReady => '远程访问就绪';
+
+  @override
+  String get tileRemoteConnecting => '远程连接中…';
+
+  @override
+  String get tileIdle => '空闲';
+
+  @override
+  String get tileDone => '完成';
+
+  @override
+  String get tileCancelled => '已取消';
+
+  @override
+  String get tileError => '错误';
+
+  @override
+  String get tileStarting => '正在启动';
+
+  @override
+  String get tileConnectingBadge => '正在连接';
+
+  @override
+  String get appLockTitle => '应用锁';
+
+  @override
+  String get appLockIntro =>
+      '在打开 Moongate 前要求输入 PIN 码 — 也可选择使用指纹或面容。每次全新启动应用时都会显示该锁。';
+
+  @override
+  String get appLockSubtitle => '打开应用需要 PIN 码';
+
+  @override
+  String get appLockBiometricTitle => '生物识别解锁';
+
+  @override
+  String get appLockBiometricSubtitle => '使用指纹或面容 — PIN 码作为后备方式保留';
+
+  @override
+  String get appLockChangePin => '更改 PIN 码';
+
+  @override
+  String get appLockAutoLock => '自动锁定';
+
+  @override
+  String get appLockPinUpdated => 'PIN 码已更新';
+
+  @override
+  String get appLockChoosePinTitle => '设置 PIN 码';
+
+  @override
+  String get appLockChoosePinSubtitle => '输入 4–6 位数字';
+
+  @override
+  String get appLockConfirmPinTitle => '确认 PIN 码';
+
+  @override
+  String get appLockPinsDontMatch => 'PIN 码不一致';
+
+  @override
+  String get appLockEnterCurrentPin => '输入当前 PIN 码';
+
+  @override
+  String get appLockTimeoutImmediately => '立即';
+
+  @override
+  String get appLockTimeoutOneMinute => '1 分钟后';
+
+  @override
+  String get appLockTimeoutFiveMinutes => '5 分钟后';
+
+  @override
+  String get appLockTimeoutFifteenMinutes => '15 分钟后';
+
+  @override
+  String get appLockTimeoutColdLaunch => '仅在应用启动时';
+
+  @override
+  String get lockEnterPin => '输入您的 PIN 码';
+
+  @override
+  String get lockSubtitle => 'Moongate 已锁定';
+
+  @override
+  String lockTooManyAttempts(int seconds) {
+    return '尝试次数过多。请在 $seconds 秒后重试';
+  }
+
+  @override
+  String get lockWrongPin => 'PIN 码错误';
+
+  @override
+  String get lockUseBiometrics => '使用生物识别';
+
+  @override
+  String get lockForgotPin => '忘记 PIN 码？';
+
+  @override
+  String get lockBiometricReason => '解锁 Moongate';
+
+  @override
+  String get lockResetTitle => '重置 Moongate？';
+
+  @override
+  String get lockResetBody =>
+      '此操作将移除应用锁并清除此设备上已配对的打印机，以便您重新开始。您的打印机不会被删除 — 在每台打印机上运行 MOONGATE_PAIR 即可重新配对。';
+
+  @override
+  String get lockResetConfirm => '重置';
+
+  @override
+  String get pinContinue => '继续';
+
+  @override
+  String printerStartingUpRetry(int seconds) {
+    return '打印机正在启动。将在 $seconds 秒后重试…';
+  }
+
+  @override
+  String printerCouldNotReach(String error) {
+    return '无法连接打印机：$error';
+  }
+
+  @override
+  String get printerAddressCleared => '已清除自定义地址';
+
+  @override
+  String get printerAddressUpdated => '已更新打印机地址';
+
+  @override
+  String printerTunnelUnreachable(String description) {
+    return '无法连接 Cloudflare 隧道。\n$description';
+  }
+
+  @override
+  String get printerEdit => '编辑打印机';
+
+  @override
+  String get printerLocalNetwork => '本地网络';
+
+  @override
+  String get printerTunnelVia => '通过 Moongate 隧道';
+
+  @override
+  String get printerUnreachable => '无法连接打印机';
+
+  @override
+  String get printerUseTunnel => '使用隧道';
+
+  @override
+  String get printerAddressInvalid => '请尝试例如 192.168.1.50:7125';
+
+  @override
+  String get printerNameLabel => '打印机名称';
+
+  @override
+  String get printerAddressLabel => '打印机地址（高级）';
+
+  @override
+  String get printerAddressHint => '192.168.1.50:7125';
+
+  @override
+  String get printerAddressHelper => '仅适用于反向代理 / Docker 配置。留空则使用自动发现。';
+
+  @override
+  String get feedbackTitle => '反馈问题';
+
+  @override
+  String get feedbackTroublePairing => '配对遇到问题？';
+
+  @override
+  String get feedbackDescription =>
+      '告诉我们发生了什么。您的应用版本、设备、网络和打印机信息会自动附上，以帮助我们排查问题。';
+
+  @override
+  String get feedbackPairingDescription =>
+      '描述您尝试添加打印机时发生的情况。您的网络和发现信息会自动附上，以便我们了解它为何无法连接。';
+
+  @override
+  String get feedbackWhichPrinter => '哪台打印机？（可选）';
+
+  @override
+  String get feedbackGeneralOption => '通用 / 与具体打印机无关';
+
+  @override
+  String get feedbackCommentLabel => '出了什么问题？';
+
+  @override
+  String get feedbackCommentHint => '例如“打印机显示已连接 / 空闲，但实际上已就绪 — 点击磁贴后可正常打开。”';
+
+  @override
+  String get feedbackContactLabel => '邮箱或联系方式（可选）';
+
+  @override
+  String get feedbackContactHint => '仅当您希望收到回复时填写';
+
+  @override
+  String get feedbackSending => '正在发送…';
+
+  @override
+  String get feedbackSend => '发送报告';
+
+  @override
+  String get feedbackSuccess => '谢谢 — 您的报告已发送。';
+
+  @override
+  String get feedbackError => '无法发送 — 请检查您的网络连接后重试。';
+
+  @override
+  String get splashTagline => 'Klipper 远程控制';
+
+  @override
+  String get uiGuideTitle => '图标指南';
+
+  @override
+  String get uiGuideMenuSubtitle => '仪表盘图标的含义';
+
+  @override
+  String get uiGuideIntro => '快速了解您将在仪表盘上看到的图标。';
+
+  @override
+  String get uiGuideSectionConnection => '连接';
+
+  @override
+  String get uiGuideSectionTemperatures => '温度';
+
+  @override
+  String get uiGuideSectionControls => '打印控制';
+
+  @override
+  String get uiGuideSectionStatus => '状态';
+
+  @override
+  String get uiGuideSectionWebcam => '摄像头与连接';
+
+  @override
+  String get uiGuideLocalTitle => '本地网络';
+
+  @override
+  String get uiGuideLocalDesc => '通过您的 Wi-Fi 直接连接 — 最快的路径。';
+
+  @override
+  String get uiGuideTunnelTitle => '远程（隧道）';
+
+  @override
+  String get uiGuideTunnelDesc => '通过安全的 Cloudflare 隧道从任何地方连接。';
+
+  @override
+  String get uiGuideTunnelReadyTitle => '远程就绪';
+
+  @override
+  String get uiGuideTunnelReadyDesc => '隧道已建立，可使用远程访问。';
+
+  @override
+  String get uiGuideTunnelConnectingTitle => '远程连接中';
+
+  @override
+  String get uiGuideTunnelConnectingDesc => '远程隧道仍在建立中。';
+
+  @override
+  String get uiGuideHotendTitle => '热端 / 喷嘴';
+
+  @override
+  String get uiGuideHotendDesc => '当前喷嘴温度。';
+
+  @override
+  String get uiGuideBedTitle => '热床';
+
+  @override
+  String get uiGuideBedDesc => '当前热床温度。';
+
+  @override
+  String get uiGuideChamberTitle => '腔体';
+
+  @override
+  String get uiGuideChamberDesc => '腔体温度 — 仅当您的打印机上报时显示。';
+
+  @override
+  String get uiGuideResumeTitle => '恢复';
+
+  @override
+  String get uiGuideResumeDesc => '恢复已暂停的打印。';
+
+  @override
+  String get uiGuidePauseTitle => '暂停';
+
+  @override
+  String get uiGuidePauseDesc => '暂停当前打印。';
+
+  @override
+  String get uiGuideStopTitle => '停止';
+
+  @override
+  String get uiGuideStopDesc => '取消打印 — 点击两次以确认。';
+
+  @override
+  String get uiGuideFirmwareRestartTitle => '固件重启';
+
+  @override
+  String get uiGuideFirmwareRestartDesc => '在打印机空闲或出错时重启 Klipper。';
+
+  @override
+  String get uiGuideStatusReadyTitle => '就绪 / 完成';
+
+  @override
+  String get uiGuideStatusReadyDesc => '打印机处于空闲状态，或已完成上一次打印。';
+
+  @override
+  String get uiGuideStatusCancelledTitle => '已取消';
+
+  @override
+  String get uiGuideStatusCancelledDesc => '上一次打印已取消。';
+
+  @override
+  String get uiGuideStatusErrorTitle => '错误';
+
+  @override
+  String get uiGuideStatusErrorDesc => 'Klipper 报告了一个错误 — 打开打印机查看详情。';
+
+  @override
+  String get uiGuideStatusStartingTitle => '正在启动';
+
+  @override
+  String get uiGuideStatusStartingDesc => 'Klipper 正在启动；就绪后会显示控制按钮。';
+
+  @override
+  String get uiGuideOfflineTitle => '离线';
+
+  @override
+  String get uiGuideOfflineDesc => '目前无法连接到打印机。';
+
+  @override
+  String get uiGuideNoWebcamTitle => '无摄像头';
+
+  @override
+  String get uiGuideNoWebcamDesc => '此打印机没有可用的摄像头快照。';
+
+  @override
+  String get uiGuideBack => '返回仪表盘';
+}
