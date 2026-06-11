@@ -79,6 +79,18 @@ class PrinterStatusService {
   /// http_404 / timeout / error) — set inside _tryMoongateEndpoint and
   /// captured by the bug-report diagnostics.
   String? _lastEndpointReason;
+
+  /// Accumulates THIS poll's diagnostics (both the LAN and the tunnel attempt
+  /// outcomes) so a bug report shows the tunnel result too — not just LAN. The
+  /// old code only ever recorded the LAN attempt, which is exactly why a tunnel
+  /// 500 never surfaced in a report. Reset at the top of every poll.
+  Map<String, dynamic> _pollDiag = {};
+
+  void _recordPollDiag(Map<String, dynamic> updates) {
+    _pollDiag = {..._pollDiag, ...updates, 'at': DateTime.now().toIso8601String()};
+    PrinterStatusRegistry.instance.recordPoll(config.id, _pollDiag);
+  }
+
   bool get _withinStartupGrace =>
       _firstPollAt != null &&
       DateTime.now().difference(_firstPollAt!) < _startupGrace;
@@ -170,6 +182,7 @@ class PrinterStatusService {
 
   Future<void> _doPoll() async {
     _firstPollAt ??= DateTime.now();
+    _pollDiag = {};
     if (!SupabaseService.instance.ready) {
       // Supabase isn't authenticated yet (cold start, no network).
       if (!_disposed) _controller.add(PrinterStatus.offline);
@@ -236,11 +249,10 @@ class PrinterStatusService {
           baseUrl: lanUrl, access: access, isLan: true, tunnelReady: tunnelReady);
       // Capture why this LAN /status attempt resolved as it did, for the
       // bug-report diagnostics (ok / http_401 / http_404 / timeout / error).
-      PrinterStatusRegistry.instance.recordPoll(config.id, {
+      _recordPollDiag({
         'lan_url': lanUrl,
         'lan_status': _lastEndpointReason ?? 'unknown',
         if (discoveredLanUrl != null) 'discovered_url': discoveredLanUrl,
-        'at': DateTime.now().toIso8601String(),
       });
       if (lan != null) {
         if (!_disposed) _controller.add(lan);
@@ -252,6 +264,10 @@ class PrinterStatusService {
     if (access.tunnelUrl != null) {
       final tunnelStatus = await _tryMoongateEndpoint(
           baseUrl: access.tunnelUrl!, access: access, isLan: false, tunnelReady: true);
+      _recordPollDiag({
+        'tunnel_url': access.tunnelUrl,
+        'tunnel_status': _lastEndpointReason ?? 'unknown',
+      });
       if (tunnelStatus != null) {
         if (!_disposed) _controller.add(tunnelStatus);
         return;
@@ -269,6 +285,10 @@ class PrinterStatusService {
       if (access.tunnelUrl != null) {
         final retry = await _tryMoongateEndpoint(
             baseUrl: access.tunnelUrl!, access: access, isLan: false, tunnelReady: true);
+        _recordPollDiag({
+          'tunnel_url': access.tunnelUrl,
+          'tunnel_status': _lastEndpointReason ?? 'unknown',
+        });
         if (retry != null) {
           if (!_disposed) _controller.add(retry);
           return;
@@ -625,6 +645,14 @@ class PrinterStatusService {
         // poll tries LAN first. Also persist to the registry for cold-start.
         _currentLanUrl = newLanUrl;
         PrinterRegistry.instance.updateLanUrl(config.id, newLanUrl).ignore();
+      }
+
+      // Record the Pi's plugin version in this poll's diagnostics so a bug
+      // report shows which plugin the printer is actually running (absent =
+      // pre-v0.6.4 plugin that doesn't report it yet — itself a useful signal).
+      final pluginVersion = moongateResult['plugin_version'] as String?;
+      if (pluginVersion != null && pluginVersion.isNotEmpty) {
+        _recordPollDiag({'plugin_version': pluginVersion});
       }
     }
 

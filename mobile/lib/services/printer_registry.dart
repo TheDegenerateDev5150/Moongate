@@ -141,12 +141,17 @@ class PrinterRegistry {
     // Reclaim ownership FIRST so the just-added printers resolve online on
     // their first poll. Best-effort: an invalid/expired code or a network
     // error just leaves them offline until re-paired.
-    var reconnected = false;
+    var reconnectedCount = 0;
+    final hadRestoreCode = restoreCode != null;
     if (restoreCode != null) {
       try {
         final reclaimed =
             await SupabaseService.instance.redeemRestoreGrant(restoreCode);
-        reconnected = reclaimed != null;
+        // redeemRestoreGrant returns null on 404 (invalid / expired / already
+        // used) and the re-homed count otherwise — which can legitimately be 0
+        // (a valid code that matched no live printers). Only a count > 0 means
+        // anything actually came back online.
+        reconnectedCount = reclaimed ?? 0;
       } catch (e) {
         _log('redeemRestoreGrant failed during import: $e');
       }
@@ -160,7 +165,11 @@ class PrinterRegistry {
         added++;
       }
     }
-    return ImportOutcome(added: added, reconnected: reconnected);
+    return ImportOutcome(
+      added: added,
+      reconnectedCount: reconnectedCount,
+      hadRestoreCode: hadRestoreCode,
+    );
   }
 
   /// Remove the local cache entry. Note: this does NOT delete the row
@@ -255,9 +264,26 @@ class ImportOutcome {
   /// Printers added to the local list (duplicates by id were skipped).
   final int added;
 
-  /// True when the backup carried a restore code that redeemed OK, so the
-  /// printers were re-bound to this identity and will come back online.
-  final bool reconnected;
+  /// How many printers the backup's restore code actually re-homed to THIS
+  /// identity. 0 if the backup had no code, the code was invalid / expired /
+  /// already-used, or it matched no live printers — in every one of those
+  /// cases nothing comes back online without a re-pair.
+  final int reconnectedCount;
 
-  const ImportOutcome({required this.added, required this.reconnected});
+  /// True when the backup carried a restore code at all (so a reconnect was
+  /// attempted). Lets the UI tell a "list-only backup" apart from "had a code
+  /// but it reclaimed nothing".
+  final bool hadRestoreCode;
+
+  /// True only when at least one printer was actually re-bound — i.e. printers
+  /// will come back online without a re-pair. Previously this was
+  /// `reclaimed != null`, which was ALSO true for a valid-but-0-printer redeem,
+  /// so the UI falsely claimed "reconnected".
+  bool get reconnected => reconnectedCount > 0;
+
+  const ImportOutcome({
+    required this.added,
+    required this.reconnectedCount,
+    required this.hadRestoreCode,
+  });
 }
