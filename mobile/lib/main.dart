@@ -5,6 +5,7 @@ import 'app.dart';
 import 'providers/custom_theme_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/lan_discovery_service.dart';
+import 'services/print_notification_service.dart';
 import 'services/printer_registry.dart';
 import 'services/supabase_service.dart';
 
@@ -35,6 +36,13 @@ void main() async {
   await container.read(appLockEnabledProvider.notifier).load();
   await container.read(biometricUnlockProvider.notifier).load();
   await container.read(autoLockTimeoutProvider.notifier).load();
+  await container.read(printNotificationsEnabledProvider.notifier).load();
+
+  // Bring the print-notification foreground service in line with the saved
+  // preference — starts it if the user left notifications on. Best-effort.
+  PrintNotificationService.instance
+      .sync(container.read(printNotificationsEnabledProvider))
+      .ignore();
 
   // v0.5.0: kick off the first mDNS browse in the background so the
   // LanDiscoveryService cache is (ideally) populated by the time the

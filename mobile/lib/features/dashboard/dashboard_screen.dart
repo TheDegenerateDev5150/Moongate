@@ -13,6 +13,7 @@ import '../../models/printer_config.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/update_provider.dart';
 import '../../providers/version_provider.dart';
+import '../../services/print_notification_service.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
@@ -142,6 +143,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
+  /// Toggle the opt-in print-notification service. Turning it ON first asks for
+  /// the Android 13+ notification permission; if denied, the toggle stays off.
+  Future<void> _togglePrintNotifications(bool enable) async {
+    if (enable) {
+      final granted =
+          await PrintNotificationService.instance.requestPermission();
+      if (!granted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content:
+                Text('Notification permission is needed to turn this on.'),
+          ));
+        }
+        return; // leave the toggle off
+      }
+    }
+    await ref.read(printNotificationsEnabledProvider.notifier).set(enable);
+    await PrintNotificationService.instance.sync(enable);
+  }
+
   Widget _buildDrawer(BuildContext context) {
     final l = AppLocalizations.of(context);
     final fontScale     = ref.watch(fontScaleProvider);
@@ -149,6 +170,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final gridColumns   = ref.watch(gridColumnsProvider);
     final allowRotation = ref.watch(allowRotationProvider);
     final cameraRefresh = ref.watch(dashboardCameraRefreshProvider);
+    final printNotifications = ref.watch(printNotificationsEnabledProvider);
 
     return Drawer(
       child: SafeArea(
@@ -407,6 +429,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             .read(dashboardCameraRefreshProvider.notifier)
                             .set(s.first),
                       ),
+                    ),
+
+                    const Divider(),
+
+                    // ── Print notifications ──────────────────────────────────
+                    // Opt-in foreground service: live progress + state alerts.
+                    // TODO(i18n): localise these strings + the first-run prompt
+                    // once the engine is verified on-device.
+                    SwitchListTile(
+                      dense: true,
+                      secondary:
+                          const Icon(Icons.notifications_active_outlined),
+                      title: const Text('Print notifications'),
+                      subtitle: const Text(
+                          'Live progress + status alerts while the app is in the background'),
+                      value: printNotifications,
+                      onChanged: _togglePrintNotifications,
                     ),
 
                     const Divider(),
