@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import '../../models/printer_config.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/print_control_service.dart';
+import '../../services/printer_status_registry.dart';
 import '../../services/printer_status_service.dart';
 
 class PrinterTile extends StatefulWidget {
@@ -63,6 +64,9 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
     // logo immediately — without waiting for the first detection round-trip.
     _uiType = widget.printer.uiType;
     _statusService.stream.listen((s) {
+      // Record the latest live status for the bug-report diagnostics, even if
+      // this tile is no longer mounted — it's the most useful triage signal.
+      PrinterStatusRegistry.instance.update(widget.printer.id, s);
       if (!mounted) return;
       final wasActive = _status.state == 'printing' || _status.state == 'paused';
       final isActive  = s.state == 'printing' || s.state == 'paused';

@@ -43,6 +43,11 @@ class LanDiscoveryService {
   /// it in this session. Synchronous — callers can use it without `await`.
   String? lookup(String printerId) => _discovered[printerId];
 
+  /// Snapshot of everything the current browse has resolved (printer_id →
+  /// URL). Used by the bug-report diagnostics so a "can't find my printer"
+  /// report shows whether mDNS surfaced anything at all.
+  Map<String, String> get discovered => Map.unmodifiable(_discovered);
+
   /// Start a 5 s browse cycle. Safe to call concurrently — a second call
   /// while a browse is already in flight is a no-op.
   Future<void> refresh() async {

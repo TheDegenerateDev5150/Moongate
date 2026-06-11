@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/printer_config.dart';
 import '../../providers/settings_provider.dart';
@@ -15,6 +16,7 @@ import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
 import '../../services/update_service.dart';
+import 'feedback_sheet.dart';
 import 'printer_tile.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -32,6 +34,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void initState() {
     super.initState();
     _load();
+    // Show the pairing/reinstall explainer on cold launch until the user opts
+    // out ("Don't show again"). Post-frame so the dialog has a mounted context.
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _maybeShowPairingHelp().ignore());
   }
 
   void _load() {
@@ -422,6 +428,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       },
                     ),
                     ListTile(
+                      leading: const Icon(Icons.help_outline),
+                      title: const Text('How pairing works'),
+                      subtitle: const Text('Pairing, reinstalling & restore'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showPairingHelp(context);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.bug_report_outlined),
+                      title: const Text('Report a problem'),
+                      subtitle: const Text('Send a bug report or feedback'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        showFeedbackSheet(context, _printers);
+                      },
+                    ),
+                    ListTile(
                       leading: const Icon(Icons.lock_outline),
                       title: const Text('App lock'),
                       subtitle: Text(ref.watch(appLockEnabledProvider)
@@ -491,8 +515,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// still needs a re-pair per printer to bind the new anon UID.
   Future<void> _exportConfig() async {
     final messenger = ScaffoldMessenger.of(context);
+    // Mint a single-use restore code so this backup can bring the printers
+    // back ONLINE after a reinstall (re-binds them to the new identity), not
+    // just restore the list. Best-effort — a list-only backup if it fails.
+    final restoreCode = await SupabaseService.instance.createRestoreGrant();
+    if (!mounted) return;
     final bytes = Uint8List.fromList(
-      utf8.encode(PrinterConfig.listToJson(_printers)),
+      utf8.encode(
+        PrinterConfig.toBackupJson(_printers, restoreCode: restoreCode),
+      ),
     );
     String? savedPath;
     try {
@@ -518,8 +549,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted || savedPath == null) return; // user cancelled
     messenger.showSnackBar(
       SnackBar(
-        content: Text('Backed up ${_printers.length} printer(s) to a file.'),
-        duration: const Duration(seconds: 4),
+        content: Text(restoreCode != null
+            ? 'Backed up ${_printers.length} printer(s). This file can restore '
+                'them on a new install — keep it private.'
+            : 'Backed up ${_printers.length} printer(s) (list only — couldn’t '
+                'reach the cloud for a restore code).'),
+        duration: const Duration(seconds: 5),
       ),
     );
   }
@@ -529,54 +564,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// duplicates (same id) are skipped.
   Future<void> _importConfig() async {
     final messenger = ScaffoldMessenger.of(context);
-    FilePickerResult? picked;
+    ImportOutcome? outcome;
     try {
-      // `withData: true` returns the bytes inline rather than a path we may
-      // not be able to read under scoped storage. We accept any file type
-      // (not a custom .json filter — Android's picker frequently greys those
-      // out) and validate by parsing instead.
-      picked = await FilePicker.platform.pickFiles(
-        dialogTitle: 'Select a Moongate backup',
-        withData: true,
-      );
-    } catch (_) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Could not open the file picker.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-    if (picked == null || !mounted) return; // user cancelled
-    final bytes = picked.files.single.bytes;
-    if (bytes == null) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Could not read that file.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-
-    try {
-      final printers = PrinterConfig.listFromJson(utf8.decode(bytes));
-      // Merge: add only printers not already in registry (match by id).
-      final existing = PrinterRegistry.instance.printers.map((p) => p.id).toSet();
-      var added = 0;
-      for (final p in printers) {
-        if (!existing.contains(p.id)) {
-          await PrinterRegistry.instance.add(p);
-          added++;
-        }
-      }
-      _load();
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('$added printer(s) restored.')),
-      );
+      outcome = await PrinterRegistry.instance.importFromBackupFile();
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -585,7 +575,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           backgroundColor: Colors.redAccent,
         ),
       );
+      return;
     }
+    if (outcome == null || !mounted) return; // user cancelled
+    _load();
+    final String msg;
+    if (outcome.reconnected) {
+      msg = '${outcome.added} printer(s) restored — '
+          '${outcome.reconnectedCount} reconnected and coming back online.';
+    } else if (outcome.hadRestoreCode) {
+      msg = '${outcome.added} printer(s) restored, but none reconnected — the '
+          'backup’s restore code didn’t match any printers (it may be from an '
+          'older backup, or already used). Re-pair them to bring them online.';
+    } else {
+      msg = '${outcome.added} printer(s) restored (list only). Re-pair each '
+          'printer to bring it online.';
+    }
+    messenger.showSnackBar(
+      SnackBar(content: Text(msg), duration: const Duration(seconds: 6)),
+    );
   }
 
   void _showRemoveSheet(BuildContext context) {
@@ -677,6 +685,114 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
     );
   }
+
+  // ── Pairing onboarding help ──────────────────────────────────────────────
+  static const _pairingHelpDismissedKey = 'pairing_help_dismissed';
+
+  /// On cold launch, show the "how pairing works" explainer unless the user
+  /// ticked "Don't show this again". Pressing OK without ticking shows it again
+  /// next launch — by design, so the workflow lands for users who skim it.
+  Future<void> _maybeShowPairingHelp() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_pairingHelpDismissedKey) ?? false) return;
+    if (!mounted) return;
+    await _showPairingHelp(context);
+  }
+
+  /// The pairing / reinstall explainer. Reachable on launch and from the menu
+  /// ("How pairing works"). The "Don't show again" tick persists the dismissal
+  /// so it never auto-shows again.
+  Future<void> _showPairingHelp(BuildContext context) async {
+    final cs = Theme.of(context).colorScheme;
+    var dontShowAgain = false;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.push_pin_outlined, color: cs.primary, size: 22),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('How pairing works')),
+            ],
+          ),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 440, maxWidth: 360),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _pairingHelpItem(ctx, Icons.qr_code_2, cs.primary,
+                      'Pair once',
+                      'Scan the QR (or enter the GATE code) to add a printer — that link is saved in this app.'),
+                  _pairingHelpItem(ctx, Icons.check_circle_outline, Colors.green,
+                      'App updates keep your printers',
+                      'Updating Moongate never needs a re-pair.'),
+                  _pairingHelpItem(ctx, Icons.cloud_download_outlined, cs.primary,
+                      'Reinstalling or new phone?',
+                      'Back up first (Menu → Back up config), then Restore brings your printers back online — no re-pairing.'),
+                  _pairingHelpItem(ctx, Icons.restart_alt, Colors.orangeAccent,
+                      'No backup?',
+                      "Run MOONGATE_RESET_OWNER on the printer's console, then pair again."),
+                  const SizedBox(height: 4),
+                  CheckboxListTile(
+                    value: dontShowAgain,
+                    onChanged: (v) => setLocal(() => dontShowAgain = v ?? false),
+                    title: const Text("Don't show this again"),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () async {
+                if (dontShowAgain) {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool(_pairingHelpDismissedKey, true);
+                }
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _pairingHelpItem(
+      BuildContext ctx, IconData icon, Color color, String title, String body) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title,
+                    style: Theme.of(ctx)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(body, style: Theme.of(ctx).textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ChangelogEntry {
@@ -687,6 +803,21 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.6.5', [
+    'New "How pairing works" guide on launch (and in the menu) — explains that you pair once, that app updates keep your printers, and how to bring printers back after a reinstall (Restore from a backup, or MOONGATE_RESET_OWNER then re-pair). Tick "Don\'t show this again" to hide it',
+  ]),
+  _ChangelogEntry('v0.6.4', [
+    'Fixed remote access over the internet — printers connect through the secure tunnel again (a v0.6.3 bug returned a server error when you were away from home). Update your Pi to get the fix',
+    'Restore is now honest about results — it tells you when printers actually reconnected vs when they still need a re-pair',
+    'Bug reports now include the remote (tunnel) connection result and your Pi’s plugin version, so problems are quicker to diagnose',
+  ]),
+  _ChangelogEntry('v0.6.3', [
+    'Restore now brings your printers back ONLINE after a reinstall or on a new phone — no re-pairing. Your backup carries a one-time code that re-links them to the freshly-installed app',
+    'Re-run the Pi installer so the printer recognises the restored app (needed for restore to reconnect)',
+    'Import config from the Add Printer screen — restore before you pair, handy when reinstalling',
+    'New "Report a problem" in the menu — sends a bug report with diagnostics (app, device, network, printer status) attached so issues are easier to fix',
+    'Plus a "Trouble pairing? Send a report" link on the Add Printer screen',
+  ]),
   _ChangelogEntry('v0.6.2', [
     'Set a printer\'s address by hand — a new "Advanced" option when adding a printer, and an address field in each printer\'s edit dialog. Handy when your printer is behind a reverse proxy (Traefik, Caddy, NPM) or in Docker and the app can\'t find it automatically — enter the address you\'d use to open its web page in a browser',
     'Clearer pairing — scanning the QR is marked as the instant method; typing the GATE code is flagged as the slower alternative',

@@ -10,6 +10,7 @@ import '../../models/printer_config.dart';
 import '../../services/lan_discovery_service.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
+import '../dashboard/feedback_sheet.dart';
 
 /// v0.3.0 pairing flow (with v0.4.2 manual-entry fallback):
 ///
@@ -337,6 +338,66 @@ class _PairingScreenState extends State<PairingScreen> {
     } catch (e) {
       if (mounted) setState(() { _error = 'Pairing failed: $e'; _loading = false; });
     }
+  }
+
+  // ── First-launch / reinstall restore ─────────────────────────────────────
+
+  /// Pick a backup file and merge its printers in, then head to the
+  /// dashboard. Restored printers come back offline — a reinstall gets a new
+  /// cloud identity, so the user re-pairs each Pi to bring it online. Shares
+  /// PrinterRegistry.importFromBackupFile with the drawer "Restore config".
+  Future<void> _importConfig() async {
+    final messenger = ScaffoldMessenger.of(context);
+    ImportOutcome? outcome;
+    try {
+      outcome = await PrinterRegistry.instance.importFromBackupFile();
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Invalid backup file — please pick a Moongate config file.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+    if (outcome == null || !mounted) return; // user cancelled
+    if (outcome.added == 0 && !outcome.reconnected) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No new printers found in that file.')),
+      );
+      return;
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(outcome.reconnected
+            ? '${outcome.added} printer(s) restored — ${outcome.reconnectedCount} reconnected, coming back online.'
+            : '${outcome.added} printer(s) restored — re-pair each Pi to bring it online.'),
+      ),
+    );
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/dashboard');
+    }
+  }
+
+  /// Open the bug-report sheet pre-loaded with the current pairing attempt's
+  /// state (method, scanned IP, manual address, last error, live mDNS) so a
+  /// user who can't pair can report it without ever reaching the dashboard.
+  void _reportPairingProblem() {
+    final method = _scannedEnrollmentToken != null
+        ? 'qr'
+        : (_manualEnrollmentToken != null ? 'gate_code' : 'none_yet');
+    final manual = _addressController.text.trim();
+    showFeedbackSheet(context, const [], pairingContext: {
+      'method': method,
+      'scanned_lan_url': _scannedLanUrl,
+      'has_scanned_ip': _scannedLanUrl != null,
+      'manual_address': manual.isEmpty ? null : manual,
+      'last_error': _error,
+      'mdns_discovered': LanDiscoveryService.instance.discovered,
+    });
   }
 
   // ── First-add LAN pre-warm ───────────────────────────────────────────────
@@ -686,6 +747,34 @@ class _PairingScreenState extends State<PairingScreen> {
                   _error!,
                   style: TextStyle(color: cs.onErrorContainer),
                 ),
+              ),
+            ],
+
+            // ── Restore from a backup file (reinstall / first launch) ──
+            if (!_scanning) ...[
+              const SizedBox(height: 24),
+              Divider(color: cs.onSurface.withValues(alpha: 0.12)),
+              const SizedBox(height: 8),
+              Text(
+                'Reinstalling? Restore your saved printers from a backup '
+                "file. You'll still re-pair each one to bring it online.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: cs.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: _loading ? null : _importConfig,
+                icon: const Icon(Icons.file_download_outlined),
+                label: const Text('Import config from file'),
+              ),
+              const SizedBox(height: 4),
+              TextButton.icon(
+                onPressed: _loading ? null : _reportPairingProblem,
+                icon: const Icon(Icons.bug_report_outlined, size: 18),
+                label: const Text('Trouble pairing? Send a report'),
               ),
             ],
           ],

@@ -8,6 +8,7 @@ import '../models/printer_config.dart';
 import 'lan_discovery_service.dart';
 import 'printer_access_cache.dart';
 import 'printer_registry.dart';
+import 'printer_status_registry.dart';
 import 'supabase_service.dart';
 
 /// Polls the Moongate plugin's /server/moongate/status endpoint for one
@@ -73,6 +74,23 @@ class PrinterStatusService {
   // tunnelReady stays false indefinitely) and used to sit on 'starting_up'.
   DateTime? _firstPollAt;
   static const Duration _startupGrace = Duration(seconds: 45);
+
+  /// Why the most recent /status attempt resolved as it did (ok / http_401 /
+  /// http_404 / timeout / error) — set inside _tryMoongateEndpoint and
+  /// captured by the bug-report diagnostics.
+  String? _lastEndpointReason;
+
+  /// Accumulates THIS poll's diagnostics (both the LAN and the tunnel attempt
+  /// outcomes) so a bug report shows the tunnel result too — not just LAN. The
+  /// old code only ever recorded the LAN attempt, which is exactly why a tunnel
+  /// 500 never surfaced in a report. Reset at the top of every poll.
+  Map<String, dynamic> _pollDiag = {};
+
+  void _recordPollDiag(Map<String, dynamic> updates) {
+    _pollDiag = {..._pollDiag, ...updates, 'at': DateTime.now().toIso8601String()};
+    PrinterStatusRegistry.instance.recordPoll(config.id, _pollDiag);
+  }
+
   bool get _withinStartupGrace =>
       _firstPollAt != null &&
       DateTime.now().difference(_firstPollAt!) < _startupGrace;
@@ -164,6 +182,7 @@ class PrinterStatusService {
 
   Future<void> _doPoll() async {
     _firstPollAt ??= DateTime.now();
+    _pollDiag = {};
     if (!SupabaseService.instance.ready) {
       // Supabase isn't authenticated yet (cold start, no network).
       if (!_disposed) _controller.add(PrinterStatus.offline);
@@ -225,8 +244,16 @@ class PrinterStatusService {
     final discoveredLanUrl = LanDiscoveryService.instance.lookup(config.id);
     final lanUrl = discoveredLanUrl ?? _currentLanUrl;
     if (lanUrl != null) {
+      _lastEndpointReason = null;
       final lan = await _tryMoongateEndpoint(
           baseUrl: lanUrl, access: access, isLan: true, tunnelReady: tunnelReady);
+      // Capture why this LAN /status attempt resolved as it did, for the
+      // bug-report diagnostics (ok / http_401 / http_404 / timeout / error).
+      _recordPollDiag({
+        'lan_url': lanUrl,
+        'lan_status': _lastEndpointReason ?? 'unknown',
+        if (discoveredLanUrl != null) 'discovered_url': discoveredLanUrl,
+      });
       if (lan != null) {
         if (!_disposed) _controller.add(lan);
         return;
@@ -237,6 +264,10 @@ class PrinterStatusService {
     if (access.tunnelUrl != null) {
       final tunnelStatus = await _tryMoongateEndpoint(
           baseUrl: access.tunnelUrl!, access: access, isLan: false, tunnelReady: true);
+      _recordPollDiag({
+        'tunnel_url': access.tunnelUrl,
+        'tunnel_status': _lastEndpointReason ?? 'unknown',
+      });
       if (tunnelStatus != null) {
         if (!_disposed) _controller.add(tunnelStatus);
         return;
@@ -254,6 +285,10 @@ class PrinterStatusService {
       if (access.tunnelUrl != null) {
         final retry = await _tryMoongateEndpoint(
             baseUrl: access.tunnelUrl!, access: access, isLan: false, tunnelReady: true);
+        _recordPollDiag({
+          'tunnel_url': access.tunnelUrl,
+          'tunnel_status': _lastEndpointReason ?? 'unknown',
+        });
         if (retry != null) {
           if (!_disposed) _controller.add(retry);
           return;
@@ -434,8 +469,14 @@ class PrinterStatusService {
           ? const Duration(seconds: 2)
           : const Duration(seconds: 8);
       final response = await http.get(uri).timeout(timeout);
-      if (response.statusCode == 401) return null;
-      if (response.statusCode != 200) return null;
+      if (response.statusCode == 401) {
+        _lastEndpointReason = 'http_401';
+        return null;
+      }
+      if (response.statusCode != 200) {
+        _lastEndpointReason = 'http_${response.statusCode}';
+        return null;
+      }
 
       final body   = jsonDecode(response.body) as Map<String, dynamic>;
       final result = body['result'] as Map<String, dynamic>;
@@ -464,6 +505,7 @@ class PrinterStatusService {
       // webcam is configured.
       if (!_uiTypeChecked) _detectUiType(baseUrl, access.accessToken, isLan: isLan);
 
+      _lastEndpointReason = 'ok';
       return _parseStatus(
         status: status,
         moongateResult: result,
@@ -472,7 +514,11 @@ class PrinterStatusService {
         accessToken: access.accessToken,
         tunnelReady: tunnelReady,
       );
+    } on TimeoutException {
+      _lastEndpointReason = 'timeout';
+      return null;
     } catch (_) {
+      _lastEndpointReason = 'error';
       return null;
     }
   }
@@ -599,6 +645,14 @@ class PrinterStatusService {
         // poll tries LAN first. Also persist to the registry for cold-start.
         _currentLanUrl = newLanUrl;
         PrinterRegistry.instance.updateLanUrl(config.id, newLanUrl).ignore();
+      }
+
+      // Record the Pi's plugin version in this poll's diagnostics so a bug
+      // report shows which plugin the printer is actually running (absent =
+      // pre-v0.6.4 plugin that doesn't report it yet — itself a useful signal).
+      final pluginVersion = moongateResult['plugin_version'] as String?;
+      if (pluginVersion != null && pluginVersion.isNotEmpty) {
+        _recordPollDiag({'plugin_version': pluginVersion});
       }
     }
 

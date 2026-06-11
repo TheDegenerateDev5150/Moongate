@@ -35,7 +35,7 @@ class SupabaseService {
     if (_initialized) return;
     await Supabase.initialize(
       url: _supabaseUrl,
-      anonKey: _supabaseAnonKey,
+      publishableKey: _supabaseAnonKey,
     );
     _initialized = true;
 
@@ -204,6 +204,77 @@ class SupabaseService {
               createdAt: DateTime.tryParse(r['created_at'] as String? ?? ''),
             ))
         .toList();
+  }
+
+  // ── Feedback / bug reports ─────────────────────────────────────────────────
+
+  /// Submit an in-app bug report / feedback. Routed through the
+  /// submit-feedback Edge Function — clients can't write the feedback table
+  /// directly (same lockdown as every other table in this project). The
+  /// destination is the feedback table only; a future version could forward
+  /// to GitHub from the function without an app change.
+  ///
+  /// [diagnostics] is a free-form JSON map (app/device info, printer list)
+  /// attached to help triage. Throws (FunctionException / network) on failure
+  /// so the caller can surface an error; success is silent.
+  Future<void> submitFeedback({
+    required String comment,
+    String? contact,
+    String? printerName,
+    String? appVersion,
+    String? platform,
+    Map<String, dynamic> diagnostics = const {},
+  }) async {
+    await client.functions.invoke(
+      'submit-feedback',
+      body: {
+        'comment': comment,
+        if (contact != null && contact.trim().isNotEmpty)
+          'contact': contact.trim(),
+        if (printerName != null && printerName.isNotEmpty)
+          'printer_name': printerName,
+        if (appVersion != null) 'app_version': appVersion,
+        if (platform != null) 'platform': platform,
+        'diagnostics': diagnostics,
+      },
+    );
+    _log('Feedback submitted');
+  }
+
+  // ── Backup restore grants ──────────────────────────────────────────────────
+
+  /// Mint a single-use restore code for the current identity (called when
+  /// exporting a backup). Returns the raw code to embed in the backup file, or
+  /// null on failure — export then falls back to a printer-list-only backup.
+  Future<String?> createRestoreGrant() async {
+    try {
+      final res  = await client.functions.invoke('create-restore-grant');
+      final data = res.data;
+      if (data is Map && data['restore_code'] is String) {
+        return data['restore_code'] as String;
+      }
+      return null;
+    } catch (e) {
+      _log('createRestoreGrant failed: $e');
+      return null;
+    }
+  }
+
+  /// Redeem a restore code after a reinstall: re-assigns the original
+  /// identity's printers to the current anonymous user. Returns the number of
+  /// printers reclaimed, or null if the code is invalid / expired / already
+  /// used (404) so the caller can fall back to re-pairing.
+  Future<int?> redeemRestoreGrant(String code) async {
+    try {
+      final res  = await client.functions
+          .invoke('redeem-restore-grant', body: {'restore_code': code});
+      final data  = res.data;
+      final count = (data is Map) ? data['count'] : null;
+      return count is int ? count : 0;
+    } on FunctionException catch (e) {
+      if (e.status == 404) return null; // invalid / expired / used code
+      rethrow;
+    }
   }
 }
 

@@ -169,6 +169,18 @@ class PrinterConfig {
 
   static String listToJson(List<PrinterConfig> printers) =>
       jsonEncode(printers.map((p) => p.toJson()).toList());
+
+  /// v2 backup envelope: the printer list plus an optional single-use restore
+  /// code that lets a reinstalled app reclaim these printers (re-bind them to
+  /// the new identity) without re-pairing. Legacy backups were a bare array;
+  /// PrinterRegistry.importFromBackupFile still reads those.
+  static String toBackupJson(List<PrinterConfig> printers,
+          {String? restoreCode}) =>
+      jsonEncode({
+        'backup_version': 2,
+        if (restoreCode != null) 'restore_code': restoreCode,
+        'printers': printers.map((p) => p.toJson()).toList(),
+      });
 }
 
 /// Live network path used by the last successful poll. v0.3.0 always
