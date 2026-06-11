@@ -160,26 +160,25 @@ class _PrintTaskHandler extends TaskHandler {
       await PrinterRegistry.instance.load();
       final printers = PrinterRegistry.instance.printers;
 
-      final lines = <String>[];
+      final entries = <(String, _Poll?)>[];
       var anyActive = false;
 
       for (final p in printers) {
         final s = await _poll(p);
-        if (s == null) continue;
 
-        final prev = _lastState[p.id];
-        if (prev != null && prev != s.state) {
-          _maybeAlert(p.name, prev, s.state);
+        if (s != null) {
+          final prev = _lastState[p.id];
+          if (prev != null && prev != s.state) {
+            _maybeAlert(p.name, prev, s.state);
+          }
+          _lastState[p.id] = s.state;
+          if (s.state == 'printing' || s.state == 'paused') anyActive = true;
         }
-        _lastState[p.id] = s.state;
 
-        if (s.state == 'printing' || s.state == 'paused') {
-          anyActive = true;
-          lines.add(_progressLine(p.name, s));
-        }
+        entries.add((p.name, s)); // every printer, online or not
       }
 
-      await _updatePersistent(lines);
+      await _updatePersistent(entries, anyActive);
       _wasActive = anyActive;
     } catch (e) {
       _log('tick failed: $e');
@@ -188,24 +187,28 @@ class _PrintTaskHandler extends TaskHandler {
     }
   }
 
-  Future<void> _updatePersistent(List<String> lines) async {
-    if (lines.isEmpty) {
-      await FlutterForegroundTask.updateService(
-        notificationTitle: 'Moongate',
-        notificationText: 'No active prints',
-      );
-    } else if (lines.length == 1) {
-      await FlutterForegroundTask.updateService(
-        notificationTitle: lines.first,
-        notificationText: '',
-      );
+  Future<void> _updatePersistent(
+      List<(String, _Poll?)> entries, bool anyActive) async {
+    final String title;
+    final String text;
+    if (entries.isEmpty) {
+      title = 'Moongate';
+      text = 'No printers';
+    } else if (entries.length == 1) {
+      // Single printer: emoji + full status on the title line.
+      title = _statusLine(entries.first.$1, entries.first.$2, withEmoji: true);
+      text = '';
     } else {
-      // Stack one line per active print; Android shows them all when expanded.
-      await FlutterForegroundTask.updateService(
-        notificationTitle: '${lines.length} printers printing',
-        notificationText: lines.join('\n'),
-      );
+      // Collapsed glance = just the status emojis (one per printer, in order).
+      // Expanded body = the full per-printer lines, with NO repeated emoji so
+      // it reads cleanly rather than busy.
+      title = entries.map((e) => _emoji(e.$2)).join(' ');
+      text = entries.map((e) => _statusLine(e.$1, e.$2)).join('\n');
     }
+    await FlutterForegroundTask.updateService(
+      notificationTitle: title,
+      notificationText: text,
+    );
   }
 
   // ── Polling ───────────────────────────────────────────────────────────────
@@ -226,7 +229,19 @@ class _PrintTaskHandler extends TaskHandler {
       final r = await _fetchStatus(base, access.accessToken);
       if (r != null) return r;
     }
-    return null;
+    // The Pi has a current tunnel (so it's heartbeating / online) but /status
+    // didn't answer — e.g. Klipper idle or the printer's power toggle is off.
+    // Show Idle, not Offline.
+    if (access.tunnelUrl != null && access.tunnelUrl!.isNotEmpty) {
+      return const _Poll(
+        state: 'waiting',
+        progress: 0,
+        printDurationSec: 0,
+        hotend: 0,
+        bed: 0,
+      );
+    }
+    return null; // genuinely unreachable
   }
 
   Future<_Poll?> _fetchStatus(String base, String token) async {
@@ -263,14 +278,67 @@ class _PrintTaskHandler extends TaskHandler {
 
   // ── Formatting ──────────────────────────────────────────────────────────────
 
-  String _progressLine(String name, _Poll s) {
-    final pct = (s.progress * 100).round();
+  /// One status line per printer for the persistent notification: Offline when
+  /// unreachable, the rich progress line while printing, otherwise a friendly
+  /// label (Ready / Idle / Paused / Complete / Error / Starting up).
+  String _statusLine(String name, _Poll? s, {bool withEmoji = false}) {
+    final e = withEmoji ? '${_emoji(s)} ' : '';
+    if (s == null) return '$e$name — Offline';
     final temps = '${s.hotend.round()}°/${s.bed.round()}°';
-    if (s.state == 'paused') return '$name — $pct% · paused · $temps';
-    final eta = _formatEta(s);
-    return eta != null
-        ? '$name — $pct% · ~$eta left · $temps'
-        : '$name — $pct% · $temps';
+    switch (s.state) {
+      case 'printing':
+        {
+          final pct = (s.progress * 100).round();
+          final eta = _formatEta(s);
+          return eta != null
+              ? '$e$name — $pct% · ~$eta · $temps'
+              : '$e$name — $pct% · $temps';
+        }
+      case 'paused':
+        {
+          final pct = (s.progress * 100).round();
+          return '$e$name — Paused $pct% · $temps';
+        }
+      case 'complete':
+        return '$e$name — Complete';
+      case 'cancelled':
+        return '$e$name — Cancelled';
+      case 'error':
+        return '$e$name — Error';
+      case 'startup':
+      case 'starting_up':
+      case 'connecting':
+        return '$e$name — Starting up';
+      case 'waiting':
+        return '$e$name — Idle';
+      case 'standby':
+      default:
+        return '$e$name — Ready';
+    }
+  }
+
+  /// Status emoji used as the line / summary prefix.
+  String _emoji(_Poll? s) {
+    if (s == null) return '⚫';
+    switch (s.state) {
+      case 'printing':
+        return '🖨️';
+      case 'paused':
+        return '⏸️';
+      case 'complete':
+        return '✅';
+      case 'error':
+        return '🔴';
+      case 'waiting':
+        return '🟡';
+      case 'startup':
+      case 'starting_up':
+      case 'connecting':
+        return '⏳';
+      case 'standby':
+      default:
+        return '🟢';
+    }
   }
 
   /// Remaining time estimated from elapsed/progress (no extra metadata call).
