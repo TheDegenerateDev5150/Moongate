@@ -93,10 +93,10 @@ Expect two rows.
 ```sql
 SELECT relname, relrowsecurity, relforcerowsecurity
 FROM pg_class
-WHERE relname IN ('printers', 'enrollment_tokens');
+WHERE relname IN ('printers', 'enrollment_tokens', 'feedback', 'restore_grants');
 ```
 
-Both rows should show `relrowsecurity = t`.
+All four rows should show `relrowsecurity = t`. (`feedback` and `restore_grants` were added in v0.6.x and are locked down the same way — RLS on, all client privileges revoked, writes only via Edge Functions.)
 
 ### 3.3 Cron job scheduled
 
