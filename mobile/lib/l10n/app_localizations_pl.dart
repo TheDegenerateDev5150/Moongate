@@ -1,0 +1,931 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Polish (`pl`).
+class AppLocalizationsPl extends AppLocalizations {
+  AppLocalizationsPl([String locale = 'pl']) : super(locale);
+
+  @override
+  String get appTitle => 'Moongate';
+
+  @override
+  String get languagePickerTitle => 'Wybierz język';
+
+  @override
+  String get languagePickerSubtitle =>
+      'Możesz to zmienić w dowolnej chwili w menu.';
+
+  @override
+  String get languagePickerContinue => 'Dalej';
+
+  @override
+  String get menuLanguage => 'Język';
+
+  @override
+  String get languageSystemDefault => 'Domyślny systemu';
+
+  @override
+  String get commonCancel => 'Anuluj';
+
+  @override
+  String get commonOk => 'OK';
+
+  @override
+  String get commonClose => 'Zamknij';
+
+  @override
+  String get commonSave => 'Zapisz';
+
+  @override
+  String get commonDone => 'Gotowe';
+
+  @override
+  String get commonRetry => 'Ponów';
+
+  @override
+  String get commonRemove => 'Usuń';
+
+  @override
+  String get commonDelete => 'Usuń';
+
+  @override
+  String get commonEnable => 'Włącz';
+
+  @override
+  String get commonDisable => 'Wyłącz';
+
+  @override
+  String get settingsTitle => 'Ustawienia';
+
+  @override
+  String get settingsRemoveAllTitle =>
+      'Usuń wszystkie drukarki z tego urządzenia';
+
+  @override
+  String get settingsRemoveAllSubtitle =>
+      'Czyści lokalną pamięć podręczną drukarek. Twoje konto Supabase pozostaje zachowane, dzięki czemu ponowne parowanie przebiega bezproblemowo.';
+
+  @override
+  String get settingsRemoveAllConfirmTitle => 'Usunąć wszystkie drukarki?';
+
+  @override
+  String get settingsRemoveAllConfirmBody =>
+      'Wszystkie sparowane drukarki zostaną usunięte z tego urządzenia. Możesz dodać je ponownie, uruchamiając MOONGATE_PAIR na drukarce.';
+
+  @override
+  String get settingsRemoveAllConfirmAction => 'Usuń wszystkie';
+
+  @override
+  String get dashboardAddPrinter => 'Dodaj drukarkę';
+
+  @override
+  String get dashboardRemovePrinter => 'Usuń drukarkę';
+
+  @override
+  String get dashboardMenuTooltip => 'Menu';
+
+  @override
+  String get dashboardRemovePrinterTitle => 'Usunąć drukarkę?';
+
+  @override
+  String dashboardRemovePrinterBody(String name) {
+    return 'Usunąć „$name” z Moongate?';
+  }
+
+  @override
+  String get dashboardRemoveSupabaseUnreachable =>
+      'Usunięto lokalnie, ale nie udało się połączyć z Supabase. Uruchom MOONGATE_RESET_OWNER na Pi, jeśli ponowne parowanie się nie powiedzie.';
+
+  @override
+  String get dashboardBackUpConfig => 'Utwórz kopię zapasową';
+
+  @override
+  String get dashboardBackUpConfigSubtitle =>
+      'Zapisz do pliku przed ponowną instalacją';
+
+  @override
+  String get dashboardRestoreConfig => 'Przywróć konfigurację';
+
+  @override
+  String get dashboardRestoreConfigSubtitle =>
+      'Wczytaj z pliku kopii zapasowej';
+
+  @override
+  String get dashboardThemeHeading => 'Motyw';
+
+  @override
+  String get dashboardThemeSystem => 'Domyślny systemu';
+
+  @override
+  String get dashboardThemeDark => 'Ciemny';
+
+  @override
+  String get dashboardThemeLight => 'Jasny';
+
+  @override
+  String get dashboardThemeCustom => 'Niestandardowy';
+
+  @override
+  String get dashboardCustomiseColours => 'Dostosuj kolory';
+
+  @override
+  String get dashboardCustomiseColoursSubtitle =>
+      'Edytuj pięć slotów motywu — HEX lub paleta';
+
+  @override
+  String get dashboardFontSizeHeading => 'Rozmiar czcionki';
+
+  @override
+  String get dashboardLayoutHeading => 'Układ pulpitu';
+
+  @override
+  String dashboardColumnCount(int count) {
+    return '$count kol.';
+  }
+
+  @override
+  String get dashboardRotateWithDevice => 'Obracaj z urządzeniem';
+
+  @override
+  String get dashboardRotateWithDeviceSubtitle =>
+      'Odblokowuje orientację poziomą';
+
+  @override
+  String get dashboardCameraFeedHeading => 'Podgląd kamery na pulpicie';
+
+  @override
+  String get dashboardCameraFeedSubtitle =>
+      'Jak często kafelki odświeżają obraz z kamery. Niższe częstotliwości zużywają znacznie mniej danych.';
+
+  @override
+  String get dashboardAboutHeading => 'Informacje';
+
+  @override
+  String get dashboardWhatsNew => 'Co nowego';
+
+  @override
+  String get dashboardWhatsNewSubtitle => 'Najnowsze zmiany w skrócie';
+
+  @override
+  String get dashboardHowPairingWorks => 'Jak działa parowanie';
+
+  @override
+  String get dashboardHowPairingWorksSubtitle =>
+      'Parowanie, ponowna instalacja i przywracanie';
+
+  @override
+  String get dashboardReportProblem => 'Zgłoś problem';
+
+  @override
+  String get dashboardReportProblemSubtitle =>
+      'Wyślij raport o błędzie lub opinię';
+
+  @override
+  String get dashboardAppLock => 'Blokada aplikacji';
+
+  @override
+  String get dashboardAppLockOn =>
+      'Wł. — odblokowanie wymagane przy uruchomieniu';
+
+  @override
+  String get dashboardAppLockOff => 'Wył.';
+
+  @override
+  String get dashboardBuyMeCoffee => 'Postaw mi kawę';
+
+  @override
+  String get dashboardBuyMeCoffeeSubtitle => 'Wesprzyj dewelopera przez PayPal';
+
+  @override
+  String get dashboardSettings => 'Ustawienia';
+
+  @override
+  String dashboardVersion(String version) {
+    return 'Moongate v$version';
+  }
+
+  @override
+  String get dashboardSaveBackupDialogTitle => 'Zapisz kopię zapasową Moongate';
+
+  @override
+  String get dashboardBackupFailed =>
+      'Tworzenie kopii zapasowej nie powiodło się — nie udało się zapisać pliku.';
+
+  @override
+  String dashboardBackupSuccess(int count) {
+    return 'Utworzono kopię zapasową $count drukarek. Ten plik pozwala przywrócić je po nowej instalacji — przechowuj go w bezpiecznym miejscu.';
+  }
+
+  @override
+  String dashboardBackupSuccessListOnly(int count) {
+    return 'Utworzono kopię zapasową $count drukarek (tylko lista — nie udało się połączyć z chmurą po kod przywracania).';
+  }
+
+  @override
+  String get dashboardInvalidBackupFile =>
+      'Nieprawidłowy plik kopii zapasowej — wybierz plik konfiguracji Moongate.';
+
+  @override
+  String dashboardRestoreReconnected(int added, int count) {
+    return 'Przywrócono $added drukarek — $count połączono ponownie i wracają online.';
+  }
+
+  @override
+  String dashboardRestoreNoneReconnected(int added) {
+    return 'Przywrócono $added drukarek, ale żadnej nie połączono ponownie — kod przywracania z kopii zapasowej nie pasował do żadnej drukarki (może pochodzić ze starszej kopii lub został już użyty). Sparuj je ponownie, aby przywrócić je online.';
+  }
+
+  @override
+  String dashboardRestoreListOnly(int added) {
+    return 'Przywrócono $added drukarek (tylko lista). Sparuj ponownie każdą drukarkę, aby przywrócić ją online.';
+  }
+
+  @override
+  String get dashboardRemoveSheetTitle => 'Usuń drukarkę';
+
+  @override
+  String dashboardPrinterIdShort(String id) {
+    return 'id $id…';
+  }
+
+  @override
+  String get dashboardPairingHelpPairOnceTitle => 'Sparuj raz';
+
+  @override
+  String get dashboardPairingHelpPairOnceBody =>
+      'Zeskanuj kod QR (lub wpisz kod GATE), aby dodać drukarkę — to powiązanie zostaje zapisane w tej aplikacji.';
+
+  @override
+  String get dashboardPairingHelpUpdatesTitle =>
+      'Aktualizacje aplikacji zachowują drukarki';
+
+  @override
+  String get dashboardPairingHelpUpdatesBody =>
+      'Aktualizacja Moongate nigdy nie wymaga ponownego parowania.';
+
+  @override
+  String get dashboardPairingHelpReinstallTitle =>
+      'Ponowna instalacja lub nowy telefon?';
+
+  @override
+  String get dashboardPairingHelpReinstallBody =>
+      'Najpierw utwórz kopię zapasową (Menu → Utwórz kopię zapasową), a następnie Przywróć przywraca drukarki online — bez ponownego parowania.';
+
+  @override
+  String get dashboardPairingHelpNoBackupTitle => 'Brak kopii zapasowej?';
+
+  @override
+  String get dashboardPairingHelpNoBackupBody =>
+      'Uruchom MOONGATE_RESET_OWNER w konsoli drukarki, a następnie sparuj ponownie.';
+
+  @override
+  String get dashboardDontShowAgain => 'Nie pokazuj ponownie';
+
+  @override
+  String dashboardUpdateAvailable(String version) {
+    return 'Dostępna aktualizacja — v$version';
+  }
+
+  @override
+  String get dashboardUpdateLater => 'Później';
+
+  @override
+  String get dashboardUpdate => 'Aktualizuj';
+
+  @override
+  String get dashboardEmptyTitle => 'Nie dodano jeszcze żadnych drukarek';
+
+  @override
+  String get dashboardEmptyBody =>
+      'Naciśnij przycisk poniżej, aby sparować pierwszą drukarkę.';
+
+  @override
+  String get pairingTitle => 'Dodaj drukarkę';
+
+  @override
+  String get pairingIntro =>
+      'Uruchom MOONGATE_PAIR w konsoli Klipper — zeskanuj kod QR lub wpisz kod GATE wyświetlony w konsoli.';
+
+  @override
+  String get pairingNameLabel => 'Nazwa drukarki';
+
+  @override
+  String get pairingNameHint => 'np. Voron 2.4';
+
+  @override
+  String get pairingScanButton => 'Zeskanuj kod QR';
+
+  @override
+  String get pairingScanRecommended => 'Zalecane — łączy natychmiast';
+
+  @override
+  String get pairingOr => 'LUB';
+
+  @override
+  String get pairingGateCodeLabel => 'Kod GATE';
+
+  @override
+  String get pairingGateCodeHint =>
+      'Wpisz 8-cyfrowy kod wyświetlony w konsoli Klipper.';
+
+  @override
+  String get pairingGateCodeValid => 'Kod wygląda poprawnie ✓';
+
+  @override
+  String get pairingGateCodeWarning =>
+      'Metoda alternatywna. Bez kodu QR drukarka może potrzebować kilku minut — czasem do ~10 — aby w pełni pojawić się online na pulpicie. Zeskanuj kod QR powyżej, aby połączyć się natychmiast.';
+
+  @override
+  String get pairingCameraPermissionNeeded => 'Wymagane uprawnienie do kamery';
+
+  @override
+  String get pairingCameraUnavailable => 'Kamera niedostępna';
+
+  @override
+  String get pairingCancelScan => 'Anuluj skanowanie';
+
+  @override
+  String pairingQrScanned(String code) {
+    return 'Zeskanowano kod QR — kod $code';
+  }
+
+  @override
+  String get pairingRescan => 'Skanuj ponownie';
+
+  @override
+  String get pairingAdvancedTitle =>
+      'Zaawansowane — drukarka w niestandardowej sieci?';
+
+  @override
+  String get pairingAdvancedBody =>
+      'Większość osób może pozostawić to pole puste. Jeśli Twoja drukarka działa za reverse proxy (Traefik, Caddy, NPM) lub w Dockerze, wpisz ten sam adres, którego używasz do otwierania jej strony WWW (Mainsail / Fluidd) w przeglądarce.';
+
+  @override
+  String get pairingAddressLabel => 'Adres drukarki';
+
+  @override
+  String get pairingAddressHint => '192.168.1.50:7125';
+
+  @override
+  String get pairingPairButton => 'Sparuj drukarkę';
+
+  @override
+  String get pairingRestoreHint =>
+      'Ponowna instalacja? Przywróć zapisane drukarki z pliku kopii zapasowej. Każdą z nich trzeba będzie sparować ponownie, aby przywrócić ją online.';
+
+  @override
+  String get pairingImportButton => 'Importuj konfigurację z pliku';
+
+  @override
+  String get pairingReportButton => 'Problem z parowaniem? Wyślij raport';
+
+  @override
+  String get pairingCameraPermissionTitle => 'Wymagane uprawnienie do kamery';
+
+  @override
+  String get pairingCameraPermissionBody =>
+      'Moongate potrzebuje dostępu do kamery, aby skanować kody QR.\n\nOtwórz Ustawienia → Aplikacje → Moongate → Uprawnienia i włącz Kamerę, a następnie wróć i spróbuj ponownie.';
+
+  @override
+  String get pairingOpenSettings => 'Otwórz ustawienia';
+
+  @override
+  String get pairingErrorNotMoongateQr =>
+      'To nie jest kod QR Moongate. Uruchom MOONGATE_PAIR na drukarce, aby go wygenerować.';
+
+  @override
+  String get pairingErrorOldQr =>
+      'Ten kod QR pochodzi ze starszej wersji Moongate. Najpierw zaktualizuj Pi do wersji v0.3.0.';
+
+  @override
+  String get pairingErrorNoCode =>
+      'Zeskanuj kod QR lub wpisz kod GATE z konsoli drukarki.';
+
+  @override
+  String get pairingErrorBadAddress =>
+      'Ten adres drukarki wygląda nieprawidłowo — spróbuj np. 192.168.1.50:7125';
+
+  @override
+  String pairingErrorFailed(String error) {
+    return 'Parowanie nie powiodło się: $error';
+  }
+
+  @override
+  String get pairingImportInvalidFile =>
+      'Nieprawidłowy plik kopii zapasowej — wybierz plik konfiguracji Moongate.';
+
+  @override
+  String get pairingImportNoNewPrinters =>
+      'Nie znaleziono nowych drukarek w tym pliku.';
+
+  @override
+  String pairingImportRestoredReconnected(int count, int reconnected) {
+    return 'Przywrócono $count drukarek — $reconnected połączono ponownie, wracają online.';
+  }
+
+  @override
+  String pairingImportRestoredRepair(int count) {
+    return 'Przywrócono $count drukarek — sparuj ponownie każde Pi, aby przywrócić je online.';
+  }
+
+  @override
+  String get customThemeTitle => 'Motyw niestandardowy';
+
+  @override
+  String get customThemeResetTooltip => 'Przywróć ustawienia domyślne';
+
+  @override
+  String get customThemeResetConfirmTitle => 'Zresetować motyw niestandardowy?';
+
+  @override
+  String get customThemeResetConfirmBody =>
+      'Wszystkie pięć slotów kolorów zostanie przywróconych do domyślnej palety fioletu na ciemnym tle.';
+
+  @override
+  String get customThemeReset => 'Resetuj';
+
+  @override
+  String get customThemePreview => 'Podgląd';
+
+  @override
+  String get customThemeAccent => 'Akcent';
+
+  @override
+  String get customThemeAccentDesc => 'Przyciski, FAB, paski postępu, linki';
+
+  @override
+  String get customThemeBackground => 'Tło strony';
+
+  @override
+  String get customThemeBackgroundDesc => 'Za każdym ekranem';
+
+  @override
+  String get customThemeSurface => 'Karty i kafelki';
+
+  @override
+  String get customThemeSurfaceDesc => 'Kafelki pulpitu, arkusze, panel boczny';
+
+  @override
+  String get customThemeText => 'Tekst';
+
+  @override
+  String get customThemeTextDesc =>
+      'Tekst treści i nagłówków na powierzchniach';
+
+  @override
+  String get customThemeError => 'Błąd / Stop';
+
+  @override
+  String get customThemeErrorDesc => 'Działania destrukcyjne, nakładki błędów';
+
+  @override
+  String get customThemePresets => 'Gotowe ustawienia';
+
+  @override
+  String get customThemeInvalidHex => 'Nieprawidłowy kolor szesnastkowy';
+
+  @override
+  String get customThemeSamplePrinter => 'Przykładowa drukarka';
+
+  @override
+  String get customThemePrinting => 'Drukowanie';
+
+  @override
+  String get tilePauseFailed =>
+      'Nie można połączyć z drukarką — wstrzymanie nie powiodło się';
+
+  @override
+  String get tileResumeFailed =>
+      'Nie można połączyć z drukarką — wznowienie nie powiodło się';
+
+  @override
+  String get tileStopAgainToCancel =>
+      'Naciśnij STOP ponownie, aby anulować wydruk';
+
+  @override
+  String get tileLocal => 'Lokalnie';
+
+  @override
+  String get tileTunnel => 'Tunel';
+
+  @override
+  String get tilePrinting => 'Drukowanie';
+
+  @override
+  String get tilePaused => 'Wstrzymano';
+
+  @override
+  String get tileResume => 'Wznów';
+
+  @override
+  String get tilePause => 'Wstrzymaj';
+
+  @override
+  String get tileConfirmStop => 'Potwierdź zatrzymanie';
+
+  @override
+  String get tileStopPrint => 'Zatrzymaj wydruk';
+
+  @override
+  String get tileFirmwareRestart => 'Restart firmware';
+
+  @override
+  String get tilePrintComplete => 'Wydruk ukończony';
+
+  @override
+  String get tilePrintCancelled => 'Wydruk anulowany';
+
+  @override
+  String get tilePrinterError => 'Błąd drukarki';
+
+  @override
+  String get tileKlipperStarting => 'Klipper uruchamia się';
+
+  @override
+  String get tileReady => 'Gotowa';
+
+  @override
+  String get tileOffline => 'Offline';
+
+  @override
+  String get tileStartingUp => 'Uruchamianie…';
+
+  @override
+  String get tileConnected => 'Połączono';
+
+  @override
+  String get tileConnecting => 'Łączenie…';
+
+  @override
+  String get tilePrinterUnreachable => 'Drukarka nieosiągalna';
+
+  @override
+  String get tileWaitingForHeartbeat => 'Oczekiwanie na pierwszy sygnał';
+
+  @override
+  String get tilePrinterIdle => 'Drukarka bezczynna';
+
+  @override
+  String get tileReachingPrinter => 'Łączenie z drukarką';
+
+  @override
+  String get tileRemoteReady => 'Zdalny dostęp gotowy';
+
+  @override
+  String get tileRemoteConnecting => 'Łączenie zdalne…';
+
+  @override
+  String get tileIdle => 'Bezczynna';
+
+  @override
+  String get tileDone => 'Gotowe';
+
+  @override
+  String get tileCancelled => 'Anulowano';
+
+  @override
+  String get tileError => 'Błąd';
+
+  @override
+  String get tileStarting => 'Uruchamianie';
+
+  @override
+  String get tileConnectingBadge => 'Łączenie';
+
+  @override
+  String get appLockTitle => 'Blokada aplikacji';
+
+  @override
+  String get appLockIntro =>
+      'Wymagaj kodu PIN — i opcjonalnie odcisku palca lub twarzy — zanim Moongate się otworzy. Blokada zawsze pojawia się przy świeżym uruchomieniu aplikacji.';
+
+  @override
+  String get appLockSubtitle => 'Kod PIN wymagany do otwarcia aplikacji';
+
+  @override
+  String get appLockBiometricTitle => 'Odblokowanie biometryczne';
+
+  @override
+  String get appLockBiometricSubtitle =>
+      'Użyj odcisku palca lub twarzy — PIN pozostaje opcją awaryjną';
+
+  @override
+  String get appLockChangePin => 'Zmień PIN';
+
+  @override
+  String get appLockAutoLock => 'Automatyczna blokada';
+
+  @override
+  String get appLockPinUpdated => 'Zaktualizowano PIN';
+
+  @override
+  String get appLockChoosePinTitle => 'Wybierz PIN';
+
+  @override
+  String get appLockChoosePinSubtitle => 'Wpisz od 4 do 6 cyfr';
+
+  @override
+  String get appLockConfirmPinTitle => 'Potwierdź PIN';
+
+  @override
+  String get appLockPinsDontMatch => 'Kody PIN nie pasują';
+
+  @override
+  String get appLockEnterCurrentPin => 'Wpisz bieżący PIN';
+
+  @override
+  String get appLockTimeoutImmediately => 'Natychmiast';
+
+  @override
+  String get appLockTimeoutOneMinute => 'Po 1 minucie';
+
+  @override
+  String get appLockTimeoutFiveMinutes => 'Po 5 minutach';
+
+  @override
+  String get appLockTimeoutFifteenMinutes => 'Po 15 minutach';
+
+  @override
+  String get appLockTimeoutColdLaunch => 'Tylko przy uruchomieniu aplikacji';
+
+  @override
+  String get lockEnterPin => 'Wpisz swój PIN';
+
+  @override
+  String get lockSubtitle => 'Moongate jest zablokowane';
+
+  @override
+  String lockTooManyAttempts(int seconds) {
+    return 'Zbyt wiele prób. Spróbuj ponownie za $seconds s';
+  }
+
+  @override
+  String get lockWrongPin => 'Nieprawidłowy PIN';
+
+  @override
+  String get lockUseBiometrics => 'Użyj biometrii';
+
+  @override
+  String get lockForgotPin => 'Nie pamiętasz PIN-u?';
+
+  @override
+  String get lockBiometricReason => 'Odblokuj Moongate';
+
+  @override
+  String get lockResetTitle => 'Zresetować Moongate?';
+
+  @override
+  String get lockResetBody =>
+      'Spowoduje to usunięcie blokady aplikacji i sparowanych drukarek z tego urządzenia, dzięki czemu możesz zacząć od nowa. Twoje drukarki nie zostaną usunięte — sparuj je ponownie, uruchamiając MOONGATE_PAIR na każdej z nich.';
+
+  @override
+  String get lockResetConfirm => 'Resetuj';
+
+  @override
+  String get pinContinue => 'Dalej';
+
+  @override
+  String printerStartingUpRetry(int seconds) {
+    return 'Drukarka się uruchamia. Ponawianie za $seconds s…';
+  }
+
+  @override
+  String printerCouldNotReach(String error) {
+    return 'Nie można połączyć z drukarką: $error';
+  }
+
+  @override
+  String get printerAddressCleared => 'Wyczyszczono niestandardowy adres';
+
+  @override
+  String get printerAddressUpdated => 'Zaktualizowano adres drukarki';
+
+  @override
+  String printerTunnelUnreachable(String description) {
+    return 'Tunel Cloudflare nieosiągalny.\n$description';
+  }
+
+  @override
+  String get printerEdit => 'Edytuj drukarkę';
+
+  @override
+  String get printerLocalNetwork => 'Sieć lokalna';
+
+  @override
+  String get printerTunnelVia => 'Tunel przez Moongate';
+
+  @override
+  String get printerUnreachable => 'Drukarka nieosiągalna';
+
+  @override
+  String get printerUseTunnel => 'Użyj tunelu';
+
+  @override
+  String get printerAddressInvalid => 'Spróbuj np. 192.168.1.50:7125';
+
+  @override
+  String get printerNameLabel => 'Nazwa drukarki';
+
+  @override
+  String get printerAddressLabel => 'Adres drukarki (zaawansowane)';
+
+  @override
+  String get printerAddressHint => '192.168.1.50:7125';
+
+  @override
+  String get printerAddressHelper =>
+      'Tylko dla konfiguracji z reverse proxy / Dockerem. Pozostaw puste, aby używać automatycznego wykrywania.';
+
+  @override
+  String get feedbackTitle => 'Zgłoś problem';
+
+  @override
+  String get feedbackTroublePairing => 'Problem z parowaniem?';
+
+  @override
+  String get feedbackDescription =>
+      'Powiedz nam, co się dzieje. Wersja aplikacji, urządzenie, sieć i szczegóły drukarki są dołączane automatycznie, aby pomóc nam zlokalizować problem.';
+
+  @override
+  String get feedbackPairingDescription =>
+      'Opisz, co się dzieje, gdy próbujesz dodać drukarkę. Szczegóły Twojej sieci i wykrywania są dołączane automatycznie, abyśmy mogli zobaczyć, dlaczego nie udaje się połączyć.';
+
+  @override
+  String get feedbackWhichPrinter => 'Której drukarki dotyczy? (opcjonalnie)';
+
+  @override
+  String get feedbackGeneralOption =>
+      'Ogólne / niezwiązane z konkretną drukarką';
+
+  @override
+  String get feedbackCommentLabel => 'Co poszło nie tak?';
+
+  @override
+  String get feedbackCommentHint =>
+      'np. „Drukarka pokazuje Połączono / bezczynna, ale tak naprawdę jest gotowa — otwiera się normalnie, gdy naciskam kafelek.”';
+
+  @override
+  String get feedbackContactLabel => 'E-mail lub kontakt (opcjonalnie)';
+
+  @override
+  String get feedbackContactHint => 'Tylko jeśli chcesz otrzymać odpowiedź';
+
+  @override
+  String get feedbackSending => 'Wysyłanie…';
+
+  @override
+  String get feedbackSend => 'Wyślij raport';
+
+  @override
+  String get feedbackSuccess => 'Dziękujemy — Twój raport został wysłany.';
+
+  @override
+  String get feedbackError =>
+      'Nie udało się wysłać — sprawdź połączenie i spróbuj ponownie.';
+
+  @override
+  String get splashTagline => 'Zdalne sterowanie Klipper';
+
+  @override
+  String get uiGuideTitle => 'Przewodnik po ikonach';
+
+  @override
+  String get uiGuideMenuSubtitle => 'Co oznaczają ikony na pulpicie';
+
+  @override
+  String get uiGuideIntro =>
+      'Krótki przewodnik po ikonach, które zobaczysz na pulpicie.';
+
+  @override
+  String get uiGuideSectionConnection => 'Połączenie';
+
+  @override
+  String get uiGuideSectionTemperatures => 'Temperatury';
+
+  @override
+  String get uiGuideSectionControls => 'Sterowanie wydrukiem';
+
+  @override
+  String get uiGuideSectionStatus => 'Stan';
+
+  @override
+  String get uiGuideSectionWebcam => 'Kamera i połączenie';
+
+  @override
+  String get uiGuideLocalTitle => 'Sieć lokalna';
+
+  @override
+  String get uiGuideLocalDesc =>
+      'Połączono bezpośrednio przez Twoje Wi-Fi — najszybsza ścieżka.';
+
+  @override
+  String get uiGuideTunnelTitle => 'Zdalnie (tunel)';
+
+  @override
+  String get uiGuideTunnelDesc =>
+      'Połączono z dowolnego miejsca przez bezpieczny tunel Cloudflare.';
+
+  @override
+  String get uiGuideTunnelReadyTitle => 'Zdalny dostęp gotowy';
+
+  @override
+  String get uiGuideTunnelReadyDesc =>
+      'Tunel jest aktywny, więc zdalny dostęp jest dostępny.';
+
+  @override
+  String get uiGuideTunnelConnectingTitle => 'Łączenie zdalne';
+
+  @override
+  String get uiGuideTunnelConnectingDesc => 'Zdalny tunel wciąż się nawiązuje.';
+
+  @override
+  String get uiGuideHotendTitle => 'Hotend / dysza';
+
+  @override
+  String get uiGuideHotendDesc => 'Bieżąca temperatura dyszy.';
+
+  @override
+  String get uiGuideBedTitle => 'Podgrzewany stół';
+
+  @override
+  String get uiGuideBedDesc => 'Bieżąca temperatura stołu.';
+
+  @override
+  String get uiGuideChamberTitle => 'Komora';
+
+  @override
+  String get uiGuideChamberDesc =>
+      'Temperatura komory — wyświetlana tylko, jeśli Twoja drukarka ją raportuje.';
+
+  @override
+  String get uiGuideResumeTitle => 'Wznów';
+
+  @override
+  String get uiGuideResumeDesc => 'Wznów wstrzymany wydruk.';
+
+  @override
+  String get uiGuidePauseTitle => 'Wstrzymaj';
+
+  @override
+  String get uiGuidePauseDesc => 'Wstrzymaj bieżący wydruk.';
+
+  @override
+  String get uiGuideStopTitle => 'Stop';
+
+  @override
+  String get uiGuideStopDesc =>
+      'Anuluj wydruk — naciśnij dwukrotnie, aby potwierdzić.';
+
+  @override
+  String get uiGuideFirmwareRestartTitle => 'Restart firmware';
+
+  @override
+  String get uiGuideFirmwareRestartDesc =>
+      'Zrestartuj Klipper, gdy drukarka jest bezczynna lub w stanie błędu.';
+
+  @override
+  String get uiGuideStatusReadyTitle => 'Gotowa / ukończono';
+
+  @override
+  String get uiGuideStatusReadyDesc =>
+      'Drukarka jest bezczynna lub ukończyła ostatni wydruk.';
+
+  @override
+  String get uiGuideStatusCancelledTitle => 'Anulowano';
+
+  @override
+  String get uiGuideStatusCancelledDesc => 'Ostatni wydruk został anulowany.';
+
+  @override
+  String get uiGuideStatusErrorTitle => 'Błąd';
+
+  @override
+  String get uiGuideStatusErrorDesc =>
+      'Klipper zgłosił błąd — otwórz drukarkę, aby zobaczyć szczegóły.';
+
+  @override
+  String get uiGuideStatusStartingTitle => 'Uruchamianie';
+
+  @override
+  String get uiGuideStatusStartingDesc =>
+      'Klipper się uruchamia; elementy sterujące pojawią się, gdy będzie gotowy.';
+
+  @override
+  String get uiGuideOfflineTitle => 'Offline';
+
+  @override
+  String get uiGuideOfflineDesc => 'Drukarka jest w tej chwili nieosiągalna.';
+
+  @override
+  String get uiGuideNoWebcamTitle => 'Brak kamery';
+
+  @override
+  String get uiGuideNoWebcamDesc =>
+      'Dla tej drukarki nie jest dostępny obraz z kamery.';
+
+  @override
+  String get uiGuideBack => 'Powrót do pulpitu';
+}

@@ -315,3 +315,45 @@ final autoLockTimeoutProvider =
     NotifierProvider<AutoLockTimeoutNotifier, AutoLockTimeout>(
   AutoLockTimeoutNotifier.new,
 );
+
+// ---------------------------------------------------------------------------
+// Language / locale
+// ---------------------------------------------------------------------------
+
+/// The user's chosen UI language, stored as a bare language code (e.g. 'de').
+///
+/// `null` means "follow the device's system language" — [app.dart] passes a
+/// null `locale` to MaterialApp, so Flutter resolves the system locale against
+/// `AppLocalizations.supportedLocales` and falls back to English when the
+/// device language isn't one we ship.
+///
+/// Whether the user has actually been shown the first-run language prompt is
+/// tracked separately by the `language_selected` flag in the dashboard
+/// onboarding flow — independent of which locale ends up active.
+class LocaleNotifier extends Notifier<String?> {
+  static const _key = 'app_locale';
+
+  @override
+  String? build() => null;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final code = prefs.getString(_key);
+    state = (code == null || code.isEmpty) ? null : code;
+  }
+
+  /// Set the active language code, or pass `null` to revert to the system
+  /// language. Persists to SharedPreferences.
+  Future<void> set(String? languageCode) async {
+    state = languageCode;
+    final prefs = await SharedPreferences.getInstance();
+    if (languageCode == null) {
+      await prefs.remove(_key);
+    } else {
+      await prefs.setString(_key, languageCode);
+    }
+  }
+}
+
+final localeProvider =
+    NotifierProvider<LocaleNotifier, String?>(LocaleNotifier.new);

@@ -1,0 +1,13 @@
+# Configuration for `flutter gen-l10n`.
+#
+# Turns the lib/l10n/*.arb resource bundles into a generated AppLocalizations
+# class written to lib/l10n/app_localizations.dart (output-dir), imported with
+# a normal relative import. `nullable-getter: false` makes
+# `AppLocalizations.of(context)` non-nullable — the delegate is always installed
+# in MaterialApp, so call sites stay clean (no trailing `!`).
+arb-dir: lib/l10n
+output-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

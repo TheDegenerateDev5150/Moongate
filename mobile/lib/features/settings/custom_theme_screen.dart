@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../providers/custom_theme_provider.dart';
 
 /// Full-screen colour editor for the Custom theme.
@@ -26,10 +27,11 @@ class CustomThemeScreen extends ConsumerWidget {
     final theme  = ref.watch(customThemeProvider);
     final notifier = ref.read(customThemeProvider.notifier);
     final cs = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom theme'),
+        title: Text(l.customThemeTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -37,23 +39,21 @@ class CustomThemeScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.restart_alt),
-            tooltip: 'Reset to defaults',
+            tooltip: l.customThemeResetTooltip,
             onPressed: () async {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: const Text('Reset custom theme?'),
-                  content: const Text(
-                      'All five colour slots will be reverted to the default '
-                      'purple-on-dark palette.'),
+                  title: Text(l.customThemeResetConfirmTitle),
+                  content: Text(l.customThemeResetConfirmBody),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Cancel'),
+                      child: Text(l.commonCancel),
                     ),
                     FilledButton(
                       onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('Reset'),
+                      child: Text(l.customThemeReset),
                     ),
                   ],
                 ),
@@ -72,7 +72,7 @@ class CustomThemeScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Text(
-              'Preview',
+              l.customThemePreview,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: cs.onSurface.withValues(alpha: 0.55),
                   ),
@@ -87,32 +87,32 @@ class CustomThemeScreen extends ConsumerWidget {
 
           // ── Colour slots ────────────────────────────────────────────────
           _ColourRow(
-            label: 'Accent',
-            description: 'Buttons, FAB, progress bars, links',
+            label: l.customThemeAccent,
+            description: l.customThemeAccentDesc,
             colour: theme.accent,
             onPick: (c) => notifier.setAccent(c),
           ),
           _ColourRow(
-            label: 'Page background',
-            description: 'Behind every screen',
+            label: l.customThemeBackground,
+            description: l.customThemeBackgroundDesc,
             colour: theme.background,
             onPick: (c) => notifier.setBackground(c),
           ),
           _ColourRow(
-            label: 'Cards & tiles',
-            description: 'Dashboard tiles, sheets, drawer',
+            label: l.customThemeSurface,
+            description: l.customThemeSurfaceDesc,
             colour: theme.surface,
             onPick: (c) => notifier.setSurface(c),
           ),
           _ColourRow(
-            label: 'Text',
-            description: 'Body and heading text on surfaces',
+            label: l.customThemeText,
+            description: l.customThemeTextDesc,
             colour: theme.text,
             onPick: (c) => notifier.setText(c),
           ),
           _ColourRow(
-            label: 'Error / Stop',
-            description: 'Destructive actions, error overlays',
+            label: l.customThemeError,
+            description: l.customThemeErrorDesc,
             colour: theme.error,
             onPick: (c) => notifier.setError(c),
           ),
@@ -263,7 +263,7 @@ class _ColourPickerSheetState extends State<_ColourPickerSheet> {
     setState(() {
       if (parsed == null) {
         _hexError = raw.replaceFirst('#', '').length == 6
-            ? 'Not a valid hex colour'
+            ? AppLocalizations.of(context).customThemeInvalidHex
             : null; // don't yell while user is still typing
       } else {
         _current = parsed;
@@ -276,6 +276,7 @@ class _ColourPickerSheetState extends State<_ColourPickerSheet> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final mq = MediaQuery.of(context);
+    final l = AppLocalizations.of(context);
     // `viewInsets.bottom`  → on-screen keyboard height (when open)
     // `padding.bottom`     → system navigation / gesture bar height
     // Add both so the Done button never sits under either.  The system nav
@@ -374,7 +375,7 @@ class _ColourPickerSheetState extends State<_ColourPickerSheet> {
 
             // Preset palette grid
             Text(
-              'Presets',
+              l.customThemePresets,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: cs.onSurface.withValues(alpha: 0.55),
                   ),
@@ -414,7 +415,7 @@ class _ColourPickerSheetState extends State<_ColourPickerSheet> {
               onPressed: _hexError != null
                   ? null
                   : () => Navigator.pop(context, _current),
-              child: const Text('Done'),
+              child: Text(l.commonDone),
             ),
           ],
         ),
@@ -436,6 +437,7 @@ class _PreviewTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: theme.background,
@@ -465,7 +467,7 @@ class _PreviewTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Sample printer',
+                  l.customThemeSamplePrinter,
                   style: TextStyle(
                     color: theme.text,
                     fontWeight: FontWeight.w600,
@@ -486,7 +488,7 @@ class _PreviewTile extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Printing',
+                          Text(l.customThemePrinting,
                               style: TextStyle(
                                   color: theme.accent, fontSize: 11)),
                           Text('42.0%',

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/printer_config.dart';
 import '../../services/lan_discovery_service.dart';
 import '../../services/printer_registry.dart';
@@ -219,20 +220,17 @@ class _PairingScreenState extends State<PairingScreen> {
   }
 
   void _showPermissionDeniedDialog() {
+    final l = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Camera permission required'),
-        content: const Text(
-          'Moongate needs camera access to scan QR codes.\n\n'
-          'Open Settings → Apps → Moongate → Permissions '
-          'and enable Camera, then come back and try again.',
-        ),
+        title: Text(l.pairingCameraPermissionTitle),
+        content: Text(l.pairingCameraPermissionBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.commonCancel)),
           FilledButton(
             onPressed: () { Navigator.pop(ctx); openAppSettings(); },
-            child: const Text('Open Settings'),
+            child: Text(l.pairingOpenSettings),
           ),
         ],
       ),
@@ -244,18 +242,17 @@ class _PairingScreenState extends State<PairingScreen> {
   /// Parses `moongate://pair?v=3&pk=<base64>&et=<raw>` and either stages
   /// the values for confirmation or surfaces an error.
   void _applyScannedCode(String raw) {
+    final l = AppLocalizations.of(context);
     final uri = Uri.tryParse(raw);
     if (uri == null || uri.scheme != 'moongate') {
-      setState(() => _error =
-          'Not a Moongate QR code. Run MOONGATE_PAIR on the printer to generate one.');
+      setState(() => _error = l.pairingErrorNotMoongateQr);
       return;
     }
     final version = uri.queryParameters['v'];
     final pk      = uri.queryParameters['pk'];
     final et      = uri.queryParameters['et'];
     if (version != '3' || pk == null || et == null || pk.isEmpty || et.isEmpty) {
-      setState(() => _error =
-          'This QR code is from an older Moongate version. Update the Pi to v0.3.0 first.');
+      setState(() => _error = l.pairingErrorOldQr);
       return;
     }
     // v0.5.1: optional LAN address embedded by v0.4.5+ Pis. Build the base
@@ -280,14 +277,14 @@ class _PairingScreenState extends State<PairingScreen> {
   // ── Claim ────────────────────────────────────────────────────────────────
 
   Future<void> _claim() async {
+    final l = AppLocalizations.of(context);
     // QR-scan path wins if present (it carries the pubkey for the
     // defense-in-depth server check). Manual path is the fallback.
     final scannedEt = _scannedEnrollmentToken;
     final manualEt  = _manualEnrollmentToken;
     final et = scannedEt ?? manualEt;
     if (et == null) {
-      setState(() => _error =
-          'Scan the QR code, or type the GATE code from the printer console.');
+      setState(() => _error = l.pairingErrorNoCode);
       return;
     }
     // Advanced override: an explicit address wins over the QR/mDNS one. A
@@ -295,8 +292,7 @@ class _PairingScreenState extends State<PairingScreen> {
     // than silently ignoring.
     final manualLanUrl = PrinterConfig.parseLanUrl(_addressController.text);
     if (_addressController.text.trim().isNotEmpty && manualLanUrl == null) {
-      setState(() => _error =
-          'That printer address doesn\'t look right — try e.g. 192.168.1.50:7125');
+      setState(() => _error = l.pairingErrorBadAddress);
       return;
     }
     final pk = scannedEt != null ? _scannedPubKey : null;
@@ -336,7 +332,7 @@ class _PairingScreenState extends State<PairingScreen> {
     } on PairingConflictException catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     } catch (e) {
-      if (mounted) setState(() { _error = 'Pairing failed: $e'; _loading = false; });
+      if (mounted) setState(() { _error = l.pairingErrorFailed(e.toString()); _loading = false; });
     }
   }
 
@@ -347,6 +343,7 @@ class _PairingScreenState extends State<PairingScreen> {
   /// cloud identity, so the user re-pairs each Pi to bring it online. Shares
   /// PrinterRegistry.importFromBackupFile with the drawer "Restore config".
   Future<void> _importConfig() async {
+    final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     ImportOutcome? outcome;
     try {
@@ -354,8 +351,8 @@ class _PairingScreenState extends State<PairingScreen> {
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Invalid backup file — please pick a Moongate config file.'),
+        SnackBar(
+          content: Text(l.pairingImportInvalidFile),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -364,15 +361,15 @@ class _PairingScreenState extends State<PairingScreen> {
     if (outcome == null || !mounted) return; // user cancelled
     if (outcome.added == 0 && !outcome.reconnected) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('No new printers found in that file.')),
+        SnackBar(content: Text(l.pairingImportNoNewPrinters)),
       );
       return;
     }
     messenger.showSnackBar(
       SnackBar(
         content: Text(outcome.reconnected
-            ? '${outcome.added} printer(s) restored — ${outcome.reconnectedCount} reconnected, coming back online.'
-            : '${outcome.added} printer(s) restored — re-pair each Pi to bring it online.'),
+            ? l.pairingImportRestoredReconnected(outcome.added, outcome.reconnectedCount)
+            : l.pairingImportRestoredRepair(outcome.added)),
       ),
     );
     if (context.canPop()) {
@@ -437,6 +434,7 @@ class _PairingScreenState extends State<PairingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l         = AppLocalizations.of(context);
     final cs        = Theme.of(context).colorScheme;
     final hasScan   = _scannedPubKey != null && _scannedEnrollmentToken != null;
     final hasManual = !hasScan && _manualEnrollmentToken != null;
@@ -444,7 +442,7 @@ class _PairingScreenState extends State<PairingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Printer'),
+        title: Text(l.pairingTitle),
         leading: PrinterRegistry.instance.printers.isNotEmpty
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -458,8 +456,7 @@ class _PairingScreenState extends State<PairingScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Run MOONGATE_PAIR in your Klipper console — scan the QR or '
-              'type the GATE code shown on the console.',
+              l.pairingIntro,
               style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6)),
             ),
             const SizedBox(height: 20),
@@ -468,10 +465,10 @@ class _PairingScreenState extends State<PairingScreen> {
             TextField(
               controller: _nameController,
               enabled: !_loading,
-              decoration: const InputDecoration(
-                labelText: 'Printer name',
-                hintText: 'e.g. Voron 2.4',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l.pairingNameLabel,
+                hintText: l.pairingNameHint,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -480,12 +477,12 @@ class _PairingScreenState extends State<PairingScreen> {
             if (!hasScan && !_scanning) ...[
               FilledButton.icon(
                 icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('Scan QR code'),
+                label: Text(l.pairingScanButton),
                 onPressed: _loading ? null : _openScanner,
               ),
               const SizedBox(height: 6),
               Text(
-                'Recommended — connects instantly',
+                l.pairingScanRecommended,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
@@ -498,7 +495,7 @@ class _PairingScreenState extends State<PairingScreen> {
                 Expanded(child: Divider(color: cs.outlineVariant)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text('OR',
+                  child: Text(l.pairingOr,
                       style: TextStyle(
                           color: cs.onSurface.withValues(alpha: 0.5),
                           fontWeight: FontWeight.w600)),
@@ -509,7 +506,7 @@ class _PairingScreenState extends State<PairingScreen> {
               Padding(
                 padding: const EdgeInsets.only(left: 4, bottom: 8),
                 child: Text(
-                  'GATE code',
+                  l.pairingGateCodeLabel,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -549,8 +546,8 @@ class _PairingScreenState extends State<PairingScreen> {
                 padding: const EdgeInsets.only(left: 4),
                 child: Text(
                   _manualEnrollmentToken == null
-                      ? 'Type the 8-digit code shown in your Klipper console.'
-                      : 'Code looks valid ✓',
+                      ? l.pairingGateCodeHint
+                      : l.pairingGateCodeValid,
                   style: TextStyle(
                     fontSize: 12,
                     color: _manualEnrollmentToken != null
@@ -574,10 +571,7 @@ class _PairingScreenState extends State<PairingScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Alternative method. Without the QR, the printer can take '
-                        'a few minutes — occasionally up to ~10 — to come fully '
-                        'online on the dashboard. Scan the QR code above for an '
-                        'instant connection.',
+                        l.pairingGateCodeWarning,
                         style: TextStyle(
                           fontSize: 12,
                           height: 1.35,
@@ -615,8 +609,8 @@ class _PairingScreenState extends State<PairingScreen> {
                             const SizedBox(height: 8),
                             Text(
                               isDenied
-                                  ? 'Camera permission needed'
-                                  : 'Camera unavailable',
+                                  ? l.pairingCameraPermissionNeeded
+                                  : l.pairingCameraUnavailable,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -626,8 +620,8 @@ class _PairingScreenState extends State<PairingScreen> {
                             OutlinedButton.icon(
                               onPressed: _restartScanner,
                               icon: const Icon(Icons.refresh, color: Colors.white70),
-                              label: const Text('Retry',
-                                  style: TextStyle(color: Colors.white70)),
+                              label: Text(l.commonRetry,
+                                  style: const TextStyle(color: Colors.white70)),
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: Colors.white30),
                               ),
@@ -642,7 +636,7 @@ class _PairingScreenState extends State<PairingScreen> {
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 icon: const Icon(Icons.close),
-                label: const Text('Cancel scan'),
+                label: Text(l.pairingCancelScan),
                 onPressed: _closeScanner,
               ),
             ],
@@ -661,7 +655,7 @@ class _PairingScreenState extends State<PairingScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'QR scanned — code ${_scannedEnrollmentToken!}',
+                        l.pairingQrScanned(_scannedEnrollmentToken!),
                         style: TextStyle(
                           color: cs.onPrimaryContainer,
                           fontWeight: FontWeight.w600,
@@ -670,7 +664,7 @@ class _PairingScreenState extends State<PairingScreen> {
                     ),
                     TextButton(
                       onPressed: _loading ? null : _resetScan,
-                      child: const Text('Rescan'),
+                      child: Text(l.pairingRescan),
                     ),
                   ],
                 ),
@@ -688,7 +682,7 @@ class _PairingScreenState extends State<PairingScreen> {
                   childrenPadding: const EdgeInsets.only(bottom: 4),
                   expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
                   title: Text(
-                    'Advanced — printer on a custom network?',
+                    l.pairingAdvancedTitle,
                     style: TextStyle(
                       fontSize: 13,
                       color: cs.onSurface.withValues(alpha: 0.7),
@@ -696,10 +690,7 @@ class _PairingScreenState extends State<PairingScreen> {
                   ),
                   children: [
                     Text(
-                      'Most people can leave this blank. If your printer is '
-                      'behind a reverse proxy (Traefik, Caddy, NPM) or in '
-                      'Docker, enter the same address you use to open its web '
-                      'page (Mainsail / Fluidd) in a browser.',
+                      l.pairingAdvancedBody,
                       style: TextStyle(
                         fontSize: 12,
                         color: cs.onSurface.withValues(alpha: 0.6),
@@ -711,10 +702,10 @@ class _PairingScreenState extends State<PairingScreen> {
                       enabled: !_loading,
                       keyboardType: TextInputType.url,
                       autocorrect: false,
-                      decoration: const InputDecoration(
-                        labelText: 'Printer address',
-                        hintText: '192.168.1.50:7125',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l.pairingAddressLabel,
+                        hintText: l.pairingAddressHint,
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                   ],
@@ -731,7 +722,7 @@ class _PairingScreenState extends State<PairingScreen> {
                         height: 20, width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Pair printer'),
+                    : Text(l.pairingPairButton),
               ),
             ],
 
@@ -756,8 +747,7 @@ class _PairingScreenState extends State<PairingScreen> {
               Divider(color: cs.onSurface.withValues(alpha: 0.12)),
               const SizedBox(height: 8),
               Text(
-                'Reinstalling? Restore your saved printers from a backup '
-                "file. You'll still re-pair each one to bring it online.",
+                l.pairingRestoreHint,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
@@ -768,13 +758,13 @@ class _PairingScreenState extends State<PairingScreen> {
               OutlinedButton.icon(
                 onPressed: _loading ? null : _importConfig,
                 icon: const Icon(Icons.file_download_outlined),
-                label: const Text('Import config from file'),
+                label: Text(l.pairingImportButton),
               ),
               const SizedBox(height: 4),
               TextButton.icon(
                 onPressed: _loading ? null : _reportPairingProblem,
                 icon: const Icon(Icons.bug_report_outlined, size: 18),
-                label: const Text('Trouble pairing? Send a report'),
+                label: Text(l.pairingReportButton),
               ),
             ],
           ],

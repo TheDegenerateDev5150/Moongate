@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
+
 /// A numeric PIN entry surface: a dot row plus an on-screen keypad. Shared by
 /// the lock screen and the set / confirm / verify flows (see [showPinSheet]).
 ///
@@ -88,6 +90,7 @@ class _PinEntryViewState extends State<PinEntryView> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context);
     final canContinue = widget.expectedLength == null &&
         _buffer.length >= widget.minLength &&
         _buffer.length <= widget.maxLength;
@@ -131,7 +134,7 @@ class _PinEntryViewState extends State<PinEntryView> {
             const SizedBox(height: 12),
             FilledButton(
               onPressed: canContinue && !_busy ? _submit : null,
-              child: const Text('Continue'),
+              child: Text(l.pinContinue),
             ),
           ],
           if (widget.belowKeypad != null) ...[

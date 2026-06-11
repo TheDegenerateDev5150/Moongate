@@ -11,6 +11,15 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Internationalization (i18n). flutter_localizations supplies the built-in
+  # Material/Cupertino/Widgets localizations; `flutter gen-l10n` turns the
+  # lib/l10n/*.arb bundles into the AppLocalizations class (see l10n.yaml),
+  # which the generated code imports `intl` for. Code-gen is switched on by
+  # `flutter: generate: true` further down.
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
   # Networking
   web_socket_channel: ^2.4.0
   http: ^1.2.0
@@ -95,6 +104,8 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+  # Enable `flutter gen-l10n` codegen (reads l10n.yaml + lib/l10n/*.arb).
+  generate: true
   assets:
     - assets/images/
     - assets/icons/
