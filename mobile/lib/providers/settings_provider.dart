@@ -206,6 +206,39 @@ final dashboardCameraRefreshProvider =
 );
 
 // ---------------------------------------------------------------------------
+// Print notifications  (opt-in foreground-service progress + state alerts)
+// ---------------------------------------------------------------------------
+
+/// Whether the background print-notification service is enabled. OFF by default.
+/// Turning it on (from the first-run prompt or the menu) requests the Android 13+
+/// POST_NOTIFICATIONS permission and starts the foreground service that polls
+/// /status to post the persistent progress notification + state-change alerts.
+/// This is just the persisted on/off preference — see `PrintNotificationService`
+/// for the runtime service.
+class PrintNotificationsEnabledNotifier extends Notifier<bool> {
+  static const _key = 'print_notifications_enabled';
+
+  @override
+  bool build() => false;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? false;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, enabled);
+  }
+}
+
+final printNotificationsEnabledProvider =
+    NotifierProvider<PrintNotificationsEnabledNotifier, bool>(
+  PrintNotificationsEnabledNotifier.new,
+);
+
+// ---------------------------------------------------------------------------
 // App lock  (optional biometric / PIN gate on launch)
 // ---------------------------------------------------------------------------
 

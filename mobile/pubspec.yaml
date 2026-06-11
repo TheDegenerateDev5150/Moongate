@@ -89,6 +89,13 @@ dependencies:
   # Salted SHA-256 hashing for the app-lock PIN (stored in flutter_secure_storage).
   crypto: ^3.0.0
 
+  # Print notifications (opt-in, off by default). A foreground service keeps a
+  # background isolate alive to poll /status (LAN-first, slow interval) and post
+  # the persistent progress notification; flutter_local_notifications posts the
+  # discrete state-change alerts (started / paused / complete / cancelled / error).
+  flutter_foreground_task: ^8.0.0
+  flutter_local_notifications: ^18.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
