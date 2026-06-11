@@ -40,6 +40,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -55,7 +56,7 @@ logger = logging.getLogger("moonraker.moongate")
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running — the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.5"
+MOONGATE_PLUGIN_VERSION = "0.6.6"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -426,6 +427,11 @@ class SupabaseClient:
     def __init__(self, url: str, anon_key: str) -> None:
         self.url      = url.rstrip("/")
         self.anon_key = anon_key
+        # Clock delta (local − server) in seconds, taken from the most recent
+        # response's Date header. Lets a 401 be explained as clock drift — the
+        # usual cause of "everything's running but remote never connects" — rather
+        # than a bald "signature or replay window failure". None until first seen.
+        self._server_skew: Optional[float] = None
 
     def _post(self, path: str, body: dict, timeout: float = 10.0) -> tuple[int, dict]:
         full_url = f"{self.url}/functions/v1{path}"
@@ -436,9 +442,11 @@ class SupabaseClient:
         )
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
+                self._note_server_date(resp.headers)
                 raw = resp.read().decode() if resp.length != 0 else ""
                 return resp.status, (json.loads(raw) if raw else {})
         except urllib.error.HTTPError as exc:
+            self._note_server_date(exc.headers)
             try:
                 body_dict = json.loads(exc.read().decode())
             except Exception:
@@ -447,6 +455,24 @@ class SupabaseClient:
         except Exception as exc:
             logger.warning("Supabase request %s failed: %s", path, exc)
             return 0, {"error": str(exc)}
+
+    def _note_server_date(self, headers: Any) -> None:
+        """Record clock skew (local − server, seconds) from a response's Date
+        header. Cheap and side-channel — every Edge Function response carries one,
+        so a later 401 can be attributed to a wrong Pi clock with no extra call."""
+        try:
+            date_hdr = headers.get("Date") if headers is not None else None
+            if not date_hdr:
+                return
+            server_epoch = parsedate_to_datetime(date_hdr).timestamp()
+        except (TypeError, ValueError, AttributeError):
+            return
+        self._server_skew = time.time() - server_epoch
+
+    def clock_skew_seconds(self) -> Optional[float]:
+        """Most recent (local − server) clock delta in seconds, or None if no
+        response has carried a parseable Date header yet."""
+        return self._server_skew
 
     def enroll_prepare(self, pi_public_key_b64: str, token_hash_b64: str) -> tuple[int, dict]:
         return self._post("/enroll-prepare", {
@@ -594,7 +620,17 @@ class HeartbeatLoop:
                     logger.warning("on_unpaired callback failed: %s", exc)
             return
         if status == 401:
-            logger.warning("Heartbeat 401 — signature or replay window failure")
+            skew = self.sb.clock_skew_seconds()
+            if skew is not None and abs(skew) > 60:
+                logger.warning(
+                    "Heartbeat 401: Pi clock is ~%+ds vs server time (limit ±60s) — "
+                    "remote access will keep failing until the clock is synced. A Pi "
+                    "has no battery clock; if NTP is blocked, sync over HTTPS (htpdate). "
+                    "Check with: timedatectl",
+                    int(skew),
+                )
+            else:
+                logger.warning("Heartbeat 401 — signature or replay window failure")
             return
         logger.warning("Heartbeat HTTP %s: %s", status, body)
 
