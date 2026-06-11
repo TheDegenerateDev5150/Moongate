@@ -55,6 +55,86 @@ KLIPPER_CFG_DIR="$PRINTER_DATA/config"
 [[ -d "$MOONRAKER_DIR" ]]  || die "Moonraker not found at $MOONRAKER_DIR. Set MOONRAKER_DIR= if installed elsewhere."
 [[ -f "$MOONRAKER_CONF" ]] || die "moonraker.conf not found at $MOONRAKER_CONF."
 
+# ── Clock sanity check ────────────────────────────────────────────────────────
+# Moongate's remote access is cryptographically time-bound: the Pi signs every
+# heartbeat with its clock and the cloud REJECTS anything more than 60s off its
+# own (replay protection); the short-lived access tokens are time-checked too. A
+# Raspberry Pi has no battery-backed clock, so when NTP (UDP/123) is blocked —
+# common on locked-down networks — the clock silently drifts and ALL remote
+# access fails with cryptic 401s while everything else looks perfectly fine.
+#
+# timedatectl can't be trusted here (it happily reports an active-but-never-synced
+# client), so measure the REAL skew against an HTTPS Date header — the same path
+# the Pi uses to reach Supabase. -k because a badly-wrong clock fails TLS validity
+# (chicken-and-egg) and we're only reading a timestamp, not trusting a secret.
+# When NTP can't sync, keep time honest with htpdate (HTTP-based, survives blocked
+# UDP/123). Runs before apt/cloudflared below so those don't trip over TLS dates.
+MG_TIME_HOST="${MG_TIME_HOST:-https://www.cloudflare.com}"
+MG_CLOCK_MAX_SKEW=30   # seconds; the server's hard cutoff is 60
+
+info "Checking the system clock (remote auth needs it within 60s of real time)..."
+MG_HTTP_DATE=$(curl -fsSI -k --max-time 10 "$MG_TIME_HOST" 2>/dev/null \
+               | grep -i '^date:' | head -n1 | cut -d' ' -f2- || true)
+MG_HTTP_DATE=${MG_HTTP_DATE%$'\r'}
+MG_HTTP_EPOCH=$(date -d "$MG_HTTP_DATE" +%s 2>/dev/null || true)
+
+if [[ -z "$MG_HTTP_DATE" || -z "$MG_HTTP_EPOCH" ]]; then
+    warn "Couldn't verify the clock against network time — skipping (non-fatal)."
+    warn "If remote access later fails with repeated 'Heartbeat 401', check 'timedatectl' first."
+else
+    MG_NOW_EPOCH=$(date +%s)
+    MG_SKEW=$(( MG_NOW_EPOCH > MG_HTTP_EPOCH ? MG_NOW_EPOCH - MG_HTTP_EPOCH : MG_HTTP_EPOCH - MG_NOW_EPOCH ))
+    if (( MG_SKEW <= MG_CLOCK_MAX_SKEW )); then
+        success "Clock is accurate (within ${MG_SKEW}s of network time)."
+    else
+        warn "Pi clock is off by ~${MG_SKEW}s — remote auth needs it within 60s, correcting now."
+        warn "(No battery clock + blocked NTP makes it drift; every signed heartbeat is then"
+        warn " rejected as a replay, so remote access silently fails.)"
+        if sudo date -s "$MG_HTTP_DATE" >/dev/null 2>&1; then
+            success "Clock set from network time: $(date '+%Y-%m-%d %H:%M:%S %Z')."
+        else
+            warn "Couldn't set the clock automatically. Run by hand: sudo date -s \"$MG_HTTP_DATE\""
+        fi
+
+        # Keep it correct across reboots. If NTP genuinely works, leave it alone;
+        # otherwise install htpdate + a small timer so it can't drift back.
+        if timedatectl show -p NTPSynchronized --value 2>/dev/null | grep -qi true; then
+            info "NTP is working — no extra time daemon needed."
+        elif sudo apt-get install -y htpdate >/dev/null 2>&1; then
+            MG_HTPDATE_BIN=$(command -v htpdate || echo /usr/sbin/htpdate)
+            sudo tee /etc/systemd/system/moongate-timesync.service >/dev/null <<UNIT
+[Unit]
+Description=Moongate HTTPS time sync (htpdate) — for networks where NTP is blocked
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=$MG_HTPDATE_BIN -s www.cloudflare.com www.google.com www.microsoft.com
+UNIT
+            sudo tee /etc/systemd/system/moongate-timesync.timer >/dev/null <<UNIT
+[Unit]
+Description=Keep the clock synced over HTTPS for Moongate remote auth
+
+[Timer]
+OnBootSec=45
+OnUnitActiveSec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+UNIT
+            sudo systemctl daemon-reload >/dev/null 2>&1 || true
+            sudo systemctl enable --now moongate-timesync.timer >/dev/null 2>&1 || true
+            sudo systemctl start moongate-timesync.service >/dev/null 2>&1 || true
+            success "htpdate installed + timer enabled — clock stays synced over HTTPS (NTP is blocked here)."
+        else
+            warn "Couldn't install htpdate. Open outbound UDP/123 (NTP) on your router, or"
+            warn "re-sync after each reboot with the 'sudo date -s' command above."
+        fi
+    fi
+fi
+
 ARCH=$(uname -m)
 
 # Pick the cloudflared deb that matches the dpkg system architecture.

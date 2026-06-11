@@ -35,6 +35,7 @@ echo "This will remove:"
 echo "  • moongate-tunnel systemd service (cloudflared tunnel)"
 echo "  • cloudflared itself — binary + cache (unless another service uses it)"
 echo "  • moongate-authproxy systemd service (v0.4 auth proxy)"
+echo "  • moongate-timesync service/timer (HTTPS clock sync, if installed)"
 echo "  • Moongate Moonraker plugin"
 echo "  • ~/moongate repository clone"
 echo "  • ~/.config/moongate (tokens + secret key + v0.4 backup dir)"
@@ -119,6 +120,22 @@ if [[ -f /etc/systemd/system/moongate-authproxy.service ]]; then
 fi
 
 sudo rm -f /run/moongate-authproxy.log
+
+# ── 1b-time. Remove the HTTPS time-sync timer/service (if this install added it) ─
+# Only present on Pis where NTP was blocked and install.sh fell back to htpdate.
+# The htpdate package is left installed (harmless); note how to drop it.
+info "Removing moongate-timesync (HTTPS clock sync)..."
+if systemctl is-active --quiet moongate-timesync.timer 2>/dev/null; then
+    sudo systemctl stop moongate-timesync.timer
+fi
+if systemctl is-enabled --quiet moongate-timesync.timer 2>/dev/null; then
+    sudo systemctl disable moongate-timesync.timer
+fi
+if [[ -f /etc/systemd/system/moongate-timesync.timer || -f /etc/systemd/system/moongate-timesync.service ]]; then
+    sudo rm -f /etc/systemd/system/moongate-timesync.timer /etc/systemd/system/moongate-timesync.service
+    sudo systemctl daemon-reload
+    success "moongate-timesync removed (htpdate left installed; drop it with: sudo apt-get remove htpdate)"
+fi
 
 # ── 1c. Restore v0.4 backups BEFORE wiping ~/.config/moongate ────────────────
 # Order matters: the backup dir lives inside ~/.config/moongate which step 4
