@@ -1,9 +1,12 @@
 """
 Moongate — single-file Moonraker component.
 
-Version shown in Mainsail's Software Update panel comes from the repo's git
-tags (this file does not self-report a version); see install.sh for the clone
-settings that make tag-based version detection work.
+The version Mainsail's Software Update panel shows is derived from the repo's
+git tags (the vX.Y.Z release tags), not from a version string in this file;
+see install.sh for the clone settings that make tag-based detection work. The
+MOONGATE_PLUGIN_VERSION constant below is separate — it is reported only in
+bug-report diagnostics to identify the exact plugin build, and does not drive
+the update panel.
 
 Replaces the v0.2.x Pi-issued HS256 JWT model with EdDSA tokens issued by
 Supabase Edge Functions. The Pi:

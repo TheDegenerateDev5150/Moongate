@@ -169,7 +169,7 @@ The usual cause: `http_port` points at **Moonraker directly (port 7125)**, which
 
 ## Software Update panel shows an `inferred` version for Moongate
 
-**Symptom:** In Mainsail/Fluidd → **Settings → Software Update**, the Moongate entry shows something like `v0.0.0-1-gff62f74f-inferred` or a bare commit hash instead of a clean `v0.6.2`.
+**Symptom:** In Mainsail/Fluidd → **Settings → Software Update**, the Moongate entry shows something like `v0.0.0-1-gff62f74f-inferred` or a bare commit hash instead of a clean `v0.6.5`.
 
 **Cause:** The Pi was set up with an older installer that did a **shallow clone** (`git clone --depth=1`). A shallow clone carries no git tags, and Moonraker derives a component's version from tags — with none present it falls back to an inferred placeholder. This is cosmetic: one-click updates still work (Moonraker compares your commit against `origin/master`, not the tag), and the plugin itself is unaffected.
 

@@ -295,7 +295,7 @@ In-app, users running an older version will see the update banner appear within 
 
 ### Plugin version (Pi side)
 
-The Pi-side plugin has **no separate version number** — Moonraker derives the version shown in Mainsail's **Software Update** panel from the repo's git **tags**, which are the same `vX.Y.Z` release tags CI creates. So the plugin and app share one version line; there's nothing extra to bump.
+The version shown in Mainsail's **Software Update** panel is derived from the repo's git **tags** — the same `vX.Y.Z` release tags CI creates — not from a number the plugin sets, so the panel tracks the project release with nothing extra to bump. (The plugin *does* define a `MOONGATE_PLUGIN_VERSION` constant, but it's reported only in **bug-report diagnostics** to pin down the exact plugin build; it doesn't drive the update panel.)
 
 For this to work the Pi's clone must carry tags. `install.sh` uses a **blobless** clone (`git clone --filter=blob:none`) — full ref/tag history, but without the large historical APK blobs — and converts any old shallow (`--depth=1`) clone on re-run. A shallow clone shows `v0.0.0-…-inferred` instead; see [TROUBLESHOOTING.md](TROUBLESHOOTING.md#software-update-panel-shows-an-inferred-version-for-moongate).
 
