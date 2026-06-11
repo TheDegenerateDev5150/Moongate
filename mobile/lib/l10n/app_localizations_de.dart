@@ -932,4 +932,76 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get uiGuideBack => 'Zurück zum Dashboard';
+
+  @override
+  String get printNotifTitle => 'Druckbenachrichtigungen';
+
+  @override
+  String get printNotifSubtitle =>
+      'Live-Fortschritt und Status, während die App im Hintergrund ist';
+
+  @override
+  String get printNotifPermissionNeeded =>
+      'Benachrichtigungen erlauben, um dies zu aktivieren.';
+
+  @override
+  String get printNotifPromptTitle => 'Druckbenachrichtigungen erhalten?';
+
+  @override
+  String get printNotifPromptBody =>
+      'Sieh den Live-Status deiner Drucker — Fortschritt, Temperaturen und Hinweise, wenn ein Druck startet, endet oder fehlschlägt. Du kannst dies jederzeit im Menü ändern.';
+
+  @override
+  String get printNotifPromptEnable => 'Aktivieren';
+
+  @override
+  String get printNotifPromptNotNow => 'Nicht jetzt';
+
+  @override
+  String get printNotifWatching => 'Drucker werden überwacht…';
+
+  @override
+  String get printNotifNoPrinters => 'Keine Drucker';
+
+  @override
+  String get printStatusReady => 'Bereit';
+
+  @override
+  String get printStatusIdle => 'Inaktiv';
+
+  @override
+  String get printStatusOffline => 'Offline';
+
+  @override
+  String get printStatusPaused => 'Pausiert';
+
+  @override
+  String get printStatusComplete => 'Fertig';
+
+  @override
+  String get printStatusCancelled => 'Abgebrochen';
+
+  @override
+  String get printStatusError => 'Fehler';
+
+  @override
+  String get printStatusStartingUp => 'Startet…';
+
+  @override
+  String get printAlertStarted => 'Druck gestartet';
+
+  @override
+  String get printAlertResumed => 'Druck fortgesetzt';
+
+  @override
+  String get printAlertPaused => 'Druck pausiert';
+
+  @override
+  String get printAlertComplete => 'Druck fertig';
+
+  @override
+  String get printAlertCancelled => 'Druck abgebrochen';
+
+  @override
+  String get printAlertError => 'Druckerfehler';
 }

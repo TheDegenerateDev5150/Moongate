@@ -6,7 +6,9 @@ import 'dart:ui' as ui;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/printer_config.dart';
 import 'printer_registry.dart';
 import 'supabase_service.dart';
@@ -23,6 +25,20 @@ const _serviceId          = 4711;
 // long print costs ~1-2 MB over cellular.
 const _pollIntervalMs   = 30000;
 const _idleSkipCycles   = 4;     // when idle: poll only every Nth 30s tick
+
+/// Load the user's chosen UI locale (or the system / English fallback) and
+/// return its AppLocalizations. Usable from the background isolate — it's a pure
+/// Dart load with no BuildContext — so the notification reads in the same
+/// language as the app even though it runs outside the widget tree.
+Future<AppLocalizations> _loadL10n() async {
+  var code = (await SharedPreferences.getInstance()).getString('app_locale');
+  code ??= ui.PlatformDispatcher.instance.locale.languageCode;
+  try {
+    return await AppLocalizations.delegate.load(ui.Locale(code));
+  } catch (_) {
+    return AppLocalizations.delegate.load(const ui.Locale('en'));
+  }
+}
 
 /// Main-isolate manager for the opt-in print-notification foreground service.
 /// The actual polling runs in a background isolate (`_PrintTaskHandler`) so it
@@ -71,10 +87,13 @@ class PrintNotificationService {
   Future<void> start() async {
     _configure();
     if (await FlutterForegroundTask.isRunningService) return;
+    final l = await _loadL10n();
     await FlutterForegroundTask.startService(
       serviceId: _serviceId,
       notificationTitle: 'Moongate',
-      notificationText: 'Watching your printers…',
+      notificationText: l.printNotifWatching,
+      notificationIcon: const NotificationIcon(
+          metaDataName: 'com.moongate.app.notification_icon'),
       callback: startPrintNotificationCallback,
     );
   }
@@ -106,6 +125,7 @@ class _PrintTaskHandler extends TaskHandler {
   bool _wasActive = true;   // poll on the first tick, then back off when idle
   int  _idleTick = 0;
   final Map<String, String> _lastState = {};
+  late AppLocalizations _l;
 
   void _log(String msg) => dev.log(msg, name: 'MOONGATE/NOTIF');
 
@@ -118,7 +138,7 @@ class _PrintTaskHandler extends TaskHandler {
     } catch (_) {}
 
     await _alerts.initialize(const InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      android: AndroidInitializationSettings('ic_stat_moongate'),
     ));
     await _alerts
         .resolvePlatformSpecificImplementation<
@@ -137,6 +157,8 @@ class _PrintTaskHandler extends TaskHandler {
     } catch (e) {
       _log('Supabase init failed in isolate: $e');
     }
+
+    _l = await _loadL10n(); // localise the notification to the app's language
 
     _tick(); // immediate first poll so the notification isn't empty for 30s
   }
@@ -193,7 +215,7 @@ class _PrintTaskHandler extends TaskHandler {
     final String text;
     if (entries.isEmpty) {
       title = 'Moongate';
-      text = 'No printers';
+      text = _l.printNotifNoPrinters;
     } else if (entries.length == 1) {
       // Single printer: emoji + full status on the title line.
       title = _statusLine(entries.first.$1, entries.first.$2, withEmoji: true);
@@ -283,7 +305,7 @@ class _PrintTaskHandler extends TaskHandler {
   /// label (Ready / Idle / Paused / Complete / Error / Starting up).
   String _statusLine(String name, _Poll? s, {bool withEmoji = false}) {
     final e = withEmoji ? '${_emoji(s)} ' : '';
-    if (s == null) return '$e$name — Offline';
+    if (s == null) return '$e$name — ${_l.printStatusOffline}';
     final temps = '${s.hotend.round()}°/${s.bed.round()}°';
     switch (s.state) {
       case 'printing':
@@ -297,23 +319,23 @@ class _PrintTaskHandler extends TaskHandler {
       case 'paused':
         {
           final pct = (s.progress * 100).round();
-          return '$e$name — Paused $pct% · $temps';
+          return '$e$name — ${_l.printStatusPaused} $pct% · $temps';
         }
       case 'complete':
-        return '$e$name — Complete';
+        return '$e$name — ${_l.printStatusComplete}';
       case 'cancelled':
-        return '$e$name — Cancelled';
+        return '$e$name — ${_l.printStatusCancelled}';
       case 'error':
-        return '$e$name — Error';
+        return '$e$name — ${_l.printStatusError}';
       case 'startup':
       case 'starting_up':
       case 'connecting':
-        return '$e$name — Starting up';
+        return '$e$name — ${_l.printStatusStartingUp}';
       case 'waiting':
-        return '$e$name — Idle';
+        return '$e$name — ${_l.printStatusIdle}';
       case 'standby':
       default:
-        return '$e$name — Ready';
+        return '$e$name — ${_l.printStatusReady}';
     }
   }
 
@@ -358,11 +380,11 @@ class _PrintTaskHandler extends TaskHandler {
 
   void _maybeAlert(String name, String from, String to) {
     final String? body = switch (to) {
-      'printing'  => from == 'paused' ? 'Resumed printing' : 'Started printing',
-      'paused'    => 'Print paused',
-      'complete'  => 'Print complete',
-      'cancelled' => 'Print cancelled',
-      'error'     => 'Printer error',
+      'printing'  => from == 'paused' ? _l.printAlertResumed : _l.printAlertStarted,
+      'paused'    => _l.printAlertPaused,
+      'complete'  => _l.printAlertComplete,
+      'cancelled' => _l.printAlertCancelled,
+      'error'     => _l.printAlertError,
       _           => null, // standby / startup / etc. — no alert
     };
     if (body == null) return;
@@ -376,6 +398,7 @@ class _PrintTaskHandler extends TaskHandler {
           _alertsChannelName,
           importance: Importance.high,
           priority: Priority.high,
+          icon: 'ic_stat_moongate',
         ),
       ),
     );

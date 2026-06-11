@@ -45,6 +45,12 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Small notification icon for the print-notifications foreground
+             service (referenced by NotificationIcon.metaDataName). -->
+        <meta-data
+            android:name="com.moongate.app.notification_icon"
+            android:resource="@drawable/ic_stat_moongate" />
+
         <!-- flutter_foreground_task: hosts the background isolate that polls
              /status for print notifications. specialUse (not dataSync) avoids
              Android 15's 6h/day cap on a long print; we sideload, so the Play

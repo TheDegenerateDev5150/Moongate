@@ -928,4 +928,76 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get uiGuideBack => 'Powrót do pulpitu';
+
+  @override
+  String get printNotifTitle => 'Powiadomienia o druku';
+
+  @override
+  String get printNotifSubtitle =>
+      'Postęp i status na żywo, gdy aplikacja działa w tle';
+
+  @override
+  String get printNotifPermissionNeeded =>
+      'Zezwól na powiadomienia, aby to włączyć.';
+
+  @override
+  String get printNotifPromptTitle => 'Otrzymywać powiadomienia o druku?';
+
+  @override
+  String get printNotifPromptBody =>
+      'Zobacz status drukarek na żywo — postęp, temperatury oraz alerty, gdy druk się rozpocznie, zakończy lub wystąpi błąd. Możesz to zmienić w dowolnej chwili w menu.';
+
+  @override
+  String get printNotifPromptEnable => 'Włącz';
+
+  @override
+  String get printNotifPromptNotNow => 'Nie teraz';
+
+  @override
+  String get printNotifWatching => 'Monitorowanie drukarek…';
+
+  @override
+  String get printNotifNoPrinters => 'Brak drukarek';
+
+  @override
+  String get printStatusReady => 'Gotowa';
+
+  @override
+  String get printStatusIdle => 'Bezczynna';
+
+  @override
+  String get printStatusOffline => 'Offline';
+
+  @override
+  String get printStatusPaused => 'Wstrzymana';
+
+  @override
+  String get printStatusComplete => 'Ukończono';
+
+  @override
+  String get printStatusCancelled => 'Anulowano';
+
+  @override
+  String get printStatusError => 'Błąd';
+
+  @override
+  String get printStatusStartingUp => 'Uruchamianie…';
+
+  @override
+  String get printAlertStarted => 'Rozpoczęto druk';
+
+  @override
+  String get printAlertResumed => 'Wznowiono druk';
+
+  @override
+  String get printAlertPaused => 'Druk wstrzymany';
+
+  @override
+  String get printAlertComplete => 'Druk ukończony';
+
+  @override
+  String get printAlertCancelled => 'Druk anulowany';
+
+  @override
+  String get printAlertError => 'Błąd drukarki';
 }

@@ -20,6 +20,7 @@ import '../../services/supabase_service.dart';
 import '../../services/update_service.dart';
 import '../info/ui_guide.dart';
 import '../language/language_picker.dart';
+import '../notifications/notifications_prompt.dart';
 import 'feedback_sheet.dart';
 import 'printer_tile.dart';
 
@@ -151,9 +152,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           await PrintNotificationService.instance.requestPermission();
       if (!granted) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content:
-                Text('Notification permission is needed to turn this on.'),
+                Text(AppLocalizations.of(context).printNotifPermissionNeeded),
           ));
         }
         return; // leave the toggle off
@@ -435,15 +436,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     // ── Print notifications ──────────────────────────────────
                     // Opt-in foreground service: live progress + state alerts.
-                    // TODO(i18n): localise these strings + the first-run prompt
-                    // once the engine is verified on-device.
                     SwitchListTile(
                       dense: true,
                       secondary:
                           const Icon(Icons.notifications_active_outlined),
-                      title: const Text('Print notifications'),
-                      subtitle: const Text(
-                          'Live progress + status alerts while the app is in the background'),
+                      title: Text(l.printNotifTitle),
+                      subtitle: Text(l.printNotifSubtitle),
                       value: printNotifications,
                       onChanged: _togglePrintNotifications,
                     ),
@@ -751,6 +749,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   // ── Pairing onboarding help ──────────────────────────────────────────────
   static const _pairingHelpDismissedKey = 'pairing_help_dismissed';
   static const _languageSelectedKey = 'language_selected';
+  static const _notifPromptedKey = 'notifications_prompted';
 
   /// First cold start: prompt for a language once, then run the pairing
   /// explainer. The language prompt is gated by [_languageSelectedKey] so it
@@ -764,6 +763,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       await prefs.setBool(_languageSelectedKey, true);
     }
     await _maybeShowPairingHelp();
+    await _maybeOfferNotifications();
+  }
+
+  /// Offer print notifications once — but only after the user actually has a
+  /// printer (an empty dashboard has nothing to notify about, and a fresh
+  /// install pairs first). Tapping "Turn on" requests the OS permission and
+  /// enables the service.
+  Future<void> _maybeOfferNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_notifPromptedKey) ?? false) return;
+    if (PrinterRegistry.instance.printers.isEmpty) return;
+    if (!mounted) return;
+    final wantsIt = await showPrintNotificationsPrompt(context);
+    await prefs.setBool(_notifPromptedKey, true);
+    if (!wantsIt) return;
+    final granted = await PrintNotificationService.instance.requestPermission();
+    if (!granted) return;
+    await ref.read(printNotificationsEnabledProvider.notifier).set(true);
+    await PrintNotificationService.instance.sync(true);
   }
 
   /// On cold launch, show the "how pairing works" explainer unless the user

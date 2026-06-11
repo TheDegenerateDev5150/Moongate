@@ -883,4 +883,74 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get uiGuideBack => '返回仪表盘';
+
+  @override
+  String get printNotifTitle => '打印通知';
+
+  @override
+  String get printNotifSubtitle => '应用在后台时显示实时进度和状态';
+
+  @override
+  String get printNotifPermissionNeeded => '需要允许通知才能开启。';
+
+  @override
+  String get printNotifPromptTitle => '接收打印通知？';
+
+  @override
+  String get printNotifPromptBody =>
+      '查看打印机的实时状态——进度、温度，以及打印开始、完成或出错时的提醒。你可以随时在菜单中更改。';
+
+  @override
+  String get printNotifPromptEnable => '开启';
+
+  @override
+  String get printNotifPromptNotNow => '暂不';
+
+  @override
+  String get printNotifWatching => '正在监控你的打印机…';
+
+  @override
+  String get printNotifNoPrinters => '没有打印机';
+
+  @override
+  String get printStatusReady => '就绪';
+
+  @override
+  String get printStatusIdle => '空闲';
+
+  @override
+  String get printStatusOffline => '离线';
+
+  @override
+  String get printStatusPaused => '已暂停';
+
+  @override
+  String get printStatusComplete => '已完成';
+
+  @override
+  String get printStatusCancelled => '已取消';
+
+  @override
+  String get printStatusError => '错误';
+
+  @override
+  String get printStatusStartingUp => '正在启动…';
+
+  @override
+  String get printAlertStarted => '开始打印';
+
+  @override
+  String get printAlertResumed => '已恢复打印';
+
+  @override
+  String get printAlertPaused => '打印已暂停';
+
+  @override
+  String get printAlertComplete => '打印完成';
+
+  @override
+  String get printAlertCancelled => '打印已取消';
+
+  @override
+  String get printAlertError => '打印机错误';
 }

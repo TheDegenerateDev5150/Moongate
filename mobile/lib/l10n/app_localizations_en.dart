@@ -917,4 +917,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiGuideBack => 'Back to dashboard';
+
+  @override
+  String get printNotifTitle => 'Print notifications';
+
+  @override
+  String get printNotifSubtitle =>
+      'Live progress and status while the app is in the background';
+
+  @override
+  String get printNotifPermissionNeeded =>
+      'Allow notifications to turn this on.';
+
+  @override
+  String get printNotifPromptTitle => 'Get print notifications?';
+
+  @override
+  String get printNotifPromptBody =>
+      'See live status for your printers — progress, temperatures, and alerts when a print starts, finishes or errors. You can change this any time in the menu.';
+
+  @override
+  String get printNotifPromptEnable => 'Turn on';
+
+  @override
+  String get printNotifPromptNotNow => 'Not now';
+
+  @override
+  String get printNotifWatching => 'Watching your printers…';
+
+  @override
+  String get printNotifNoPrinters => 'No printers';
+
+  @override
+  String get printStatusReady => 'Ready';
+
+  @override
+  String get printStatusIdle => 'Idle';
+
+  @override
+  String get printStatusOffline => 'Offline';
+
+  @override
+  String get printStatusPaused => 'Paused';
+
+  @override
+  String get printStatusComplete => 'Complete';
+
+  @override
+  String get printStatusCancelled => 'Cancelled';
+
+  @override
+  String get printStatusError => 'Error';
+
+  @override
+  String get printStatusStartingUp => 'Starting up';
+
+  @override
+  String get printAlertStarted => 'Started printing';
+
+  @override
+  String get printAlertResumed => 'Resumed printing';
+
+  @override
+  String get printAlertPaused => 'Print paused';
+
+  @override
+  String get printAlertComplete => 'Print complete';
+
+  @override
+  String get printAlertCancelled => 'Print cancelled';
+
+  @override
+  String get printAlertError => 'Printer error';
 }
