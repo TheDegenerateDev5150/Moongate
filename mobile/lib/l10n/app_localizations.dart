@@ -1814,6 +1814,18 @@ abstract class AppLocalizations {
   /// **'No printers'**
   String get printNotifNoPrinters;
 
+  /// Heading above the print-notification poll-interval picker (5s / 10s / 15s / 30s / 1m).
+  ///
+  /// In en, this message translates to:
+  /// **'Update frequency'**
+  String get notifPollIntervalTitle;
+
+  /// Pop-up alert when a printer recovers to ready after an error (e.g. a firmware restart).
+  ///
+  /// In en, this message translates to:
+  /// **'Printer ready'**
+  String get printAlertReady;
+
   /// Printer status in the notification: idle and ready to print.
   ///
   /// In en, this message translates to:

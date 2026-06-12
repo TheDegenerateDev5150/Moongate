@@ -20,11 +20,20 @@ const _alertsChannelId    = 'moongate_print_alerts';
 const _alertsChannelName   = 'Print status';
 const _serviceId          = 4711;
 
-// Poll every 30s while a print is active; back off to ~2 min when everything is
-// idle (just to catch a print starting). LAN-first, so it's free at home and a
-// long print costs ~1-2 MB over cellular.
-const _pollIntervalMs   = 30000;
-const _idleSkipCycles   = 4;     // when idle: poll only every Nth 30s tick
+// Default poll cadence, overridden by the user's "Update frequency" setting
+// (`notif_poll_interval`). The chosen interval is the ACTUAL poll rate — there
+// is no idle backoff, so a print start / error / recovery shows within one
+// tick. LAN-first, so it's free at home and a long print costs ~1-2 MB cellular.
+const _defaultPollIntervalMs = 30000;
+
+/// Map the persisted `notif_poll_interval` enum name to milliseconds.
+int _pollIntervalMsFromPref(String? name) => switch (name) {
+      's5'  => 5000,
+      's10' => 10000,
+      's15' => 15000,
+      'm1'  => 60000,
+      _     => _defaultPollIntervalMs, // 's30' / unset
+    };
 
 /// Load the user's chosen UI locale (or the system / English fallback) and
 /// return its AppLocalizations. Usable from the background isolate — it's a pure
@@ -49,9 +58,16 @@ class PrintNotificationService {
   static final PrintNotificationService instance = PrintNotificationService._();
 
   bool _configured = false;
+  int  _configuredIntervalMs = _defaultPollIntervalMs;
 
-  void _configure() {
-    if (_configured) return;
+  /// Read the user's chosen poll interval (ms) from SharedPreferences.
+  Future<int> _readPollIntervalMs() async {
+    final prefs = await SharedPreferences.getInstance();
+    return _pollIntervalMsFromPref(prefs.getString('notif_poll_interval'));
+  }
+
+  void _configure(int intervalMs) {
+    if (_configured && _configuredIntervalMs == intervalMs) return;
     FlutterForegroundTask.initCommunicationPort();
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
@@ -66,26 +82,27 @@ class PrintNotificationService {
       ),
       iosNotificationOptions: const IOSNotificationOptions(),
       foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(_pollIntervalMs),
+        eventAction: ForegroundTaskEventAction.repeat(intervalMs),
         autoRunOnBoot: false,
         allowWakeLock: true,
         allowWifiLock: true,
       ),
     );
     _configured = true;
+    _configuredIntervalMs = intervalMs;
   }
 
   /// Request the Android 13+ POST_NOTIFICATIONS permission. Returns true when
   /// granted. Safe to call before [start].
   Future<bool> requestPermission() async {
-    _configure();
+    _configure(await _readPollIntervalMs());
     final result = await FlutterForegroundTask.requestNotificationPermission();
     return result == NotificationPermission.granted;
   }
 
   /// Start the foreground service if it isn't already running.
   Future<void> start() async {
-    _configure();
+    _configure(await _readPollIntervalMs());
     if (await FlutterForegroundTask.isRunningService) return;
     final l = await _loadL10n();
     await FlutterForegroundTask.startService(
@@ -108,6 +125,25 @@ class PrintNotificationService {
   /// Align the running service with the persisted on/off toggle. Called at
   /// startup and whenever the toggle changes.
   Future<void> sync(bool enabled) => enabled ? start() : stop();
+
+  /// Re-read the poll interval and, if the service is running, restart it so a
+  /// new cadence takes effect at once (the repeat interval is fixed at service
+  /// start, so changing it needs a stop/start).
+  Future<void> reschedule() async {
+    if (await FlutterForegroundTask.isRunningService) {
+      await stop();
+      await start();
+    }
+  }
+
+  /// Poke the running background task to refresh the notification immediately —
+  /// call after the printer set changes (pair / remove / restore) so it updates
+  /// at once instead of waiting for the next poll. No-op when off.
+  Future<void> refreshNow() async {
+    if (await FlutterForegroundTask.isRunningService) {
+      FlutterForegroundTask.sendDataToTask('refresh');
+    }
+  }
 }
 
 /// Foreground-task isolate entry point. MUST be a top-level function.
@@ -122,8 +158,6 @@ void startPrintNotificationCallback() {
 class _PrintTaskHandler extends TaskHandler {
   final _alerts = FlutterLocalNotificationsPlugin();
   bool _busy = false;
-  bool _wasActive = true;   // poll on the first tick, then back off when idle
-  int  _idleTick = 0;
   final Map<String, String> _lastState = {};
   late AppLocalizations _l;
 
@@ -167,23 +201,24 @@ class _PrintTaskHandler extends TaskHandler {
   void onRepeatEvent(DateTime timestamp) => _tick();
 
   @override
+  void onReceiveData(Object data) {
+    // Main app signalled a printer add / remove / restore — refresh now rather
+    // than waiting for the next 30s/2min tick. _tick() reloads the registry
+    // from disk, so it picks up the change immediately.
+    _tick();
+  }
+
+  @override
   Future<void> onDestroy(DateTime timestamp) async {}
 
   Future<void> _tick() async {
     if (_busy) return;
-    // Idle backoff: when nothing was printing last tick, only poll every Nth
-    // 30s tick (~2 min) to save data; poll every tick while a print is active.
-    if (!_wasActive) {
-      _idleTick = (_idleTick + 1) % _idleSkipCycles;
-      if (_idleTick != 0) return;
-    }
     _busy = true;
     try {
       await PrinterRegistry.instance.load();
       final printers = PrinterRegistry.instance.printers;
 
       final entries = <(String, _Poll?)>[];
-      var anyActive = false;
 
       for (final p in printers) {
         final s = await _poll(p);
@@ -194,9 +229,6 @@ class _PrintTaskHandler extends TaskHandler {
             _maybeAlert(p.name, prev, s.state);
           }
           _lastState[p.id] = s.state;
-          if (s.state == 'printing' || s.state == 'paused' || _warming(s)) {
-            anyActive = true;
-          }
         }
 
         entries.add((p.name, s)); // every printer, online or not
@@ -212,8 +244,7 @@ class _PrintTaskHandler extends TaskHandler {
       });
       final sorted = [for (final r in ranked) r.$2];
 
-      await _updatePersistent(sorted, anyActive);
-      _wasActive = anyActive;
+      await _updatePersistent(sorted);
     } catch (e) {
       _log('tick failed: $e');
     } finally {
@@ -230,8 +261,7 @@ class _PrintTaskHandler extends TaskHandler {
     return printerStatusRank(s.state);
   }
 
-  Future<void> _updatePersistent(
-      List<(String, _Poll?)> entries, bool anyActive) async {
+  Future<void> _updatePersistent(List<(String, _Poll?)> entries) async {
     final String title;
     final String text;
     if (entries.isEmpty) {
@@ -458,7 +488,10 @@ class _PrintTaskHandler extends TaskHandler {
       'complete'  => _l.printAlertComplete,
       'cancelled' => _l.printAlertCancelled,
       'error'     => _l.printAlertError,
-      _           => null, // standby / startup / etc. — no alert
+      // Recovery: only when coming back from an error (e.g. a firmware restart),
+      // not on a normal idle/boot transition — those would be noise.
+      'standby'   => from == 'error' ? _l.printAlertReady : null,
+      _           => null,
     };
     if (body == null) return;
     _alerts.show(

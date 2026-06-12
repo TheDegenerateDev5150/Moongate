@@ -51,6 +51,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void _load() {
     final list = PrinterRegistry.instance.printers;
     if (mounted) setState(() => _printers = list);
+    // Keep the print-notification isolate's printer list in step — it reads a
+    // separate cached snapshot, so poke it whenever the set may have changed
+    // (pair / remove / restore). No-op when notifications are off.
+    PrintNotificationService.instance.refreshNow().ignore();
   }
 
   /// Stable-sort the printer list by live status priority (printerStatusRank,
@@ -204,6 +208,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final allowRotation = ref.watch(allowRotationProvider);
     final cameraRefresh = ref.watch(dashboardCameraRefreshProvider);
     final printNotifications = ref.watch(printNotificationsEnabledProvider);
+    final pollInterval = ref.watch(notifPollIntervalProvider);
 
     return Drawer(
       child: SafeArea(
@@ -477,6 +482,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       value: printNotifications,
                       onChanged: _togglePrintNotifications,
                     ),
+                    // Poll cadence — only relevant while notifications are on.
+                    if (printNotifications) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                        child: Text(l.notifPollIntervalTitle,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(color: Colors.white54)),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
+                        child: SegmentedButton<NotifPollInterval>(
+                          showSelectedIcon: false,
+                          style: SegmentedButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          segments: [
+                            for (final i in NotifPollInterval.values)
+                              ButtonSegment(value: i, label: Text(i.label)),
+                          ],
+                          selected: {pollInterval},
+                          onSelectionChanged: (s) {
+                            ref
+                                .read(notifPollIntervalProvider.notifier)
+                                .set(s.first);
+                            PrintNotificationService.instance
+                                .reschedule()
+                                .ignore();
+                          },
+                        ),
+                      ),
+                    ],
 
                     const Divider(),
 
@@ -956,6 +995,13 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.8.1', [
+    'Print notifications now refresh the moment you add, remove or restore a printer — no more "No printers" stuck in the notification after a restore',
+    'New "Update frequency" setting — choose how often notifications check your printers: 5s, 10s, 15s, 30s or 1 minute (Menu, under Print notifications)',
+    'Status now updates promptly when a printer errors or finishes, instead of lagging behind',
+    'New alert when a printer recovers and is ready again after an error (e.g. a firmware restart)',
+    'No Pi update needed — just update the app',
+  ]),
   _ChangelogEntry('v0.8.0', [
     'New optional print notifications — turn them on (Menu → Print notifications) for a live status of every printer in your notification shade: per-printer progress, ETA, temperatures and heat-up, plus alerts when a print starts, finishes, pauses or errors. Works with the app in the background; off by default',
     'Backup now keeps your settings too — theme and custom colours, dashboard columns, language and camera refresh ride along with your backup, not just the printer list (your app-lock PIN stays on the device for security)',

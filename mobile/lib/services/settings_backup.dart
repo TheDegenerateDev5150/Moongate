@@ -29,6 +29,7 @@ class SettingsBackup {
     'allow_rotation':              _Kind.boolean,
     'dashboard_camera_refresh':    _Kind.string,
     'print_notifications_enabled': _Kind.boolean,
+    'notif_poll_interval':         _Kind.string,
     'app_locale':                  _Kind.string,
   };
 

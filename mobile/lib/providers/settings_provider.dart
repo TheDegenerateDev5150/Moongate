@@ -390,3 +390,60 @@ class LocaleNotifier extends Notifier<String?> {
 
 final localeProvider =
     NotifierProvider<LocaleNotifier, String?>(LocaleNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Notification poll interval
+// ---------------------------------------------------------------------------
+
+/// How often the opt-in print-notification foreground service polls each
+/// printer's /status. The chosen value is the actual poll rate (no idle
+/// backoff) — faster reacts quicker but uses a little more data/battery.
+/// Default 30s. Changing it restarts the service (see
+/// `PrintNotificationService.reschedule`).
+enum NotifPollInterval { s5, s10, s15, s30, m1 }
+
+extension NotifPollIntervalX on NotifPollInterval {
+  int get ms => switch (this) {
+        NotifPollInterval.s5  => 5000,
+        NotifPollInterval.s10 => 10000,
+        NotifPollInterval.s15 => 15000,
+        NotifPollInterval.s30 => 30000,
+        NotifPollInterval.m1  => 60000,
+      };
+
+  /// Short segmented-picker label (universal — not localised).
+  String get label => switch (this) {
+        NotifPollInterval.s5  => '5s',
+        NotifPollInterval.s10 => '10s',
+        NotifPollInterval.s15 => '15s',
+        NotifPollInterval.s30 => '30s',
+        NotifPollInterval.m1  => '1m',
+      };
+}
+
+class NotifPollIntervalNotifier extends Notifier<NotifPollInterval> {
+  static const _key = 'notif_poll_interval';
+
+  @override
+  NotifPollInterval build() => NotifPollInterval.s30;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_key);
+    state = NotifPollInterval.values.firstWhere(
+      (e) => e.name == raw,
+      orElse: () => NotifPollInterval.s30,
+    );
+  }
+
+  Future<void> set(NotifPollInterval value) async {
+    state = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, value.name);
+  }
+}
+
+final notifPollIntervalProvider =
+    NotifierProvider<NotifPollIntervalNotifier, NotifPollInterval>(
+  NotifPollIntervalNotifier.new,
+);

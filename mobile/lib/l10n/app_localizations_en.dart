@@ -949,6 +949,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get printNotifNoPrinters => 'No printers';
 
   @override
+  String get notifPollIntervalTitle => 'Update frequency';
+
+  @override
+  String get printAlertReady => 'Printer ready';
+
+  @override
   String get printStatusReady => 'Ready';
 
   @override
