@@ -300,6 +300,7 @@
   "printNotifWatching": "Surveillance de vos imprimantes…",
   "printNotifNoPrinters": "Aucune imprimante",
   "printStatusReady": "Prête",
+  "printStatusHeating": "Chauffe",
   "printStatusIdle": "Inactive",
   "printStatusOffline": "Hors ligne",
   "printStatusPaused": "En pause",

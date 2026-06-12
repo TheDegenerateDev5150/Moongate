@@ -916,6 +916,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get printStatusReady => '就绪';
 
   @override
+  String get printStatusHeating => '加热中';
+
+  @override
   String get printStatusIdle => '空闲';
 
   @override

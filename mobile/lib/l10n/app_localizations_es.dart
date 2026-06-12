@@ -973,6 +973,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get printStatusReady => 'Lista';
 
   @override
+  String get printStatusHeating => 'Calentando';
+
+  @override
   String get printStatusIdle => 'Inactiva';
 
   @override

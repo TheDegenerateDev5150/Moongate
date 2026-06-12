@@ -586,6 +586,8 @@
   "@printNotifNoPrinters": {"description": "Persistent notification text when no printers are paired."},
   "printStatusReady": "Ready",
   "@printStatusReady": {"description": "Printer status in the notification: idle and ready to print."},
+  "printStatusHeating": "Heating",
+  "@printStatusHeating": {"description": "Printer status: a heater is ramping up to its target during pre-print warm-up; followed by current→target temps."},
   "printStatusIdle": "Idle",
   "@printStatusIdle": {"description": "Printer status: reachable but Klipper is not active (e.g. power toggle off)."},
   "printStatusOffline": "Offline",

@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/printer_config.dart';
+import 'settings_backup.dart';
 import 'supabase_service.dart';
 
 /// In v0.3.0 the source of truth is the Supabase `printers` table. The
@@ -118,11 +119,12 @@ class PrinterRegistry {
     final bytes = picked.files.single.bytes;
     if (bytes == null) throw const FormatException('unreadable_file');
 
-    // Two shapes: a legacy bare array (printers only) or the v2 envelope
-    // { backup_version, restore_code?, printers: [...] }.
+    // Two shapes: a legacy bare array (printers only) or the v2/v3 envelope
+    // { backup_version, restore_code?, printers: [...], settings? }.
     final decoded = jsonDecode(utf8.decode(bytes));
     final List<PrinterConfig> imported;
     String? restoreCode;
+    Map<String, dynamic>? backedUpSettings;
     if (decoded is List) {
       imported = decoded
           .map((e) => PrinterConfig.fromJson(e as Map<String, dynamic>))
@@ -134,6 +136,8 @@ class PrinterRegistry {
           .toList();
       final code = decoded['restore_code'];
       if (code is String && code.isNotEmpty) restoreCode = code;
+      final s = decoded['settings'];
+      if (s is Map<String, dynamic>) backedUpSettings = s;
     } else {
       throw const FormatException('unrecognised_backup');
     }
@@ -165,6 +169,14 @@ class PrinterRegistry {
         added++;
       }
     }
+
+    // Apply any global app settings the backup carried (theme, colours,
+    // columns, language, …). The allow-list inside SettingsBackup gates what
+    // can be written; the UI reloads the providers afterwards to show it live.
+    if (backedUpSettings != null) {
+      await SettingsBackup.apply(backedUpSettings);
+    }
+
     return ImportOutcome(
       added: added,
       reconnectedCount: reconnectedCount,

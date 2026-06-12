@@ -964,6 +964,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get printStatusReady => 'Готов';
 
   @override
+  String get printStatusHeating => 'Нагрев';
+
+  @override
   String get printStatusIdle => 'Ожидание';
 
   @override

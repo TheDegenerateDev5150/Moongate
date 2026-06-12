@@ -300,6 +300,7 @@
   "printNotifWatching": "Отслеживание принтеров…",
   "printNotifNoPrinters": "Нет принтеров",
   "printStatusReady": "Готов",
+  "printStatusHeating": "Нагрев",
   "printStatusIdle": "Ожидание",
   "printStatusOffline": "Офлайн",
   "printStatusPaused": "Пауза",

@@ -10,12 +10,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/printer_config.dart';
+import '../../providers/custom_theme_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/update_provider.dart';
 import '../../providers/version_provider.dart';
 import '../../services/print_notification_service.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
+import '../../services/printer_status_registry.dart';
+import '../../services/settings_backup.dart';
 import '../../services/supabase_service.dart';
 import '../../services/update_service.dart';
 import '../info/ui_guide.dart';
@@ -48,6 +51,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void _load() {
     final list = PrinterRegistry.instance.printers;
     if (mounted) setState(() => _printers = list);
+  }
+
+  /// Stable-sort the printer list by live status priority (printerStatusRank,
+  /// shared with the notification): Error → Printing → Ready → Idle → Offline,
+  /// keeping the added/dashboard order within each tier. A printer that hasn't
+  /// polled yet counts as 'connecting' (Idle tier). Recomputed on every status
+  /// change via the StreamBuilder in build().
+  List<PrinterConfig> _sortByStatus(List<PrinterConfig> list) {
+    final ranked = [
+      for (var i = 0; i < list.length; i++)
+        (
+          i,
+          list[i],
+          printerStatusRank(
+            PrinterStatusRegistry.instance.snapshot(list[i].id)?.state ??
+                'connecting',
+          ),
+        ),
+    ];
+    ranked.sort(
+        (a, b) => a.$3 != b.$3 ? a.$3.compareTo(b.$3) : a.$1.compareTo(b.$1));
+    return [for (final r in ranked) r.$2];
   }
 
   Future<void> _removePrinter(PrinterConfig printer) async {
@@ -97,13 +122,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final body = _printers.isEmpty
         ? _EmptyState(onAddPrinter: () => context.push('/pair').then((_) => _load()))
-        : _PrinterGrid(
-            printers: _printers,
-            columns:  gridColumns,
-            // Reload after the printer screen pops so any rename done in
-            // the app bar there propagates to the tile.
-            onTap:    (p) => context.push('/printer/${p.id}').then((_) => _load()),
-            onRemove: _removePrinter,
+        // Re-sort tiles by live status (active prints float up) whenever a
+        // printer's state changes — printerStatusRank, shared with the
+        // notification. Tiles are keyed by id so a reorder moves a tile (and
+        // its poller) rather than rebuilding it.
+        : StreamBuilder<void>(
+            stream: PrinterStatusRegistry.instance.changes,
+            builder: (context, _) => _PrinterGrid(
+              printers: _sortByStatus(_printers),
+              columns:  gridColumns,
+              // Reload after the printer screen pops so any rename done in
+              // the app bar there propagates to the tile.
+              onTap:    (p) => context.push('/printer/${p.id}').then((_) => _load()),
+              onRemove: _removePrinter,
+            ),
           );
 
     return Scaffold(
@@ -580,10 +612,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // back ONLINE after a reinstall (re-binds them to the new identity), not
     // just restore the list. Best-effort — a list-only backup if it fails.
     final restoreCode = await SupabaseService.instance.createRestoreGrant();
+    final settings = await SettingsBackup.snapshot();
     if (!mounted) return;
     final bytes = Uint8List.fromList(
       utf8.encode(
-        PrinterConfig.toBackupJson(_printers, restoreCode: restoreCode),
+        PrinterConfig.toBackupJson(_printers,
+            restoreCode: restoreCode, settings: settings),
       ),
     );
     String? savedPath;
@@ -639,6 +673,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
     if (outcome == null || !mounted) return; // user cancelled
     _load();
+    // A restored backup may carry global app settings (theme, colours, columns,
+    // language, …); the import wrote them to prefs, so reload the providers to
+    // apply them live and re-sync the notification service to the restored
+    // on/off preference.
+    await _reloadSettingsAfterRestore();
+    if (!mounted) return;
     final String msg;
     if (outcome.reconnected) {
       msg = l.dashboardRestoreReconnected(
@@ -651,6 +691,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     messenger.showSnackBar(
       SnackBar(content: Text(msg), duration: const Duration(seconds: 6)),
     );
+  }
+
+  /// Re-read the settings providers from prefs after a restore wrote new
+  /// values, so theme / colours / columns / language / etc. update without a
+  /// restart. Mirrors the startup loads in main.dart — minus the device-bound
+  /// app-lock, which a backup never carries.
+  Future<void> _reloadSettingsAfterRestore() async {
+    await ref.read(themeModeProvider.notifier).load();
+    await ref.read(localeProvider.notifier).load();
+    await ref.read(customThemeProvider.notifier).load();
+    await ref.read(fontScaleProvider.notifier).load();
+    await ref.read(gridColumnsProvider.notifier).load();
+    await ref.read(allowRotationProvider.notifier).load();
+    await ref.read(dashboardCameraRefreshProvider.notifier).load();
+    await ref.read(printNotificationsEnabledProvider.notifier).load();
+    await PrintNotificationService.instance
+        .sync(ref.read(printNotificationsEnabledProvider));
   }
 
   void _showRemoveSheet(BuildContext context) {
@@ -899,6 +956,12 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.8.0', [
+    'New optional print notifications — turn them on (Menu → Print notifications) for a live status of every printer in your notification shade: per-printer progress, ETA, temperatures and heat-up, plus alerts when a print starts, finishes, pauses or errors. Works with the app in the background; off by default',
+    'Backup now keeps your settings too — theme and custom colours, dashboard columns, language and camera refresh ride along with your backup, not just the printer list (your app-lock PIN stays on the device for security)',
+    'Printers now sort by activity — whatever\'s printing floats to the top, then Ready, Idle and Offline, on both the dashboard and the notification',
+    'No Pi update needed — just update the app',
+  ]),
   _ChangelogEntry('v0.7.0', [
     'Moongate now speaks your language — translations for German, French, Spanish, Italian, Simplified Chinese, Russian and Polish, alongside English. Pick your language on first launch, or change it anytime from Language at the bottom of the menu',
     'New icon guide — tap it to see what every dashboard icon means, with a Back to dashboard button',
@@ -1095,6 +1158,7 @@ class _PrinterGrid extends StatelessWidget {
         ),
         itemCount: printers.length,
         itemBuilder: (_, i) => PrinterTile(
+          key: ValueKey(printers[i].id),
           printer: printers[i],
           onTap: () => onTap(printers[i]),
         ),

@@ -1820,6 +1820,12 @@ abstract class AppLocalizations {
   /// **'Ready'**
   String get printStatusReady;
 
+  /// Printer status: a heater is ramping up to its target during pre-print warm-up; followed by current→target temps.
+  ///
+  /// In en, this message translates to:
+  /// **'Heating'**
+  String get printStatusHeating;
+
   /// Printer status: reachable but Klipper is not active (e.g. power toggle off).
   ///
   /// In en, this message translates to:

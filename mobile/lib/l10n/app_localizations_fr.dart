@@ -975,6 +975,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get printStatusReady => 'Prête';
 
   @override
+  String get printStatusHeating => 'Chauffe';
+
+  @override
   String get printStatusIdle => 'Inactive';
 
   @override

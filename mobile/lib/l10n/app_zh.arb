@@ -300,6 +300,7 @@
   "printNotifWatching": "正在监控你的打印机…",
   "printNotifNoPrinters": "没有打印机",
   "printStatusReady": "就绪",
+  "printStatusHeating": "加热中",
   "printStatusIdle": "空闲",
   "printStatusOffline": "离线",
   "printStatusPaused": "已暂停",

@@ -971,6 +971,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get printStatusReady => 'Pronta';
 
   @override
+  String get printStatusHeating => 'In riscaldamento';
+
+  @override
   String get printStatusIdle => 'Inattiva';
 
   @override

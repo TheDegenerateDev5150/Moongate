@@ -300,6 +300,7 @@
   "printNotifWatching": "Drucker werden überwacht…",
   "printNotifNoPrinters": "Keine Drucker",
   "printStatusReady": "Bereit",
+  "printStatusHeating": "Heizt auf",
   "printStatusIdle": "Inaktiv",
   "printStatusOffline": "Offline",
   "printStatusPaused": "Pausiert",
