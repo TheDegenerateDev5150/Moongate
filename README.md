@@ -20,6 +20,12 @@ Moongate is a free, open-source Android app for **full remote control of your Kl
   </tr>
 </table>
 
+<br/>
+
+<img src="docs/screenshots/notification.png" width="520" alt="Print notifications — live fleet status in the notification shade"/>
+
+<br/><sub><em>NEW · optional print notifications — live fleet status &amp; start / finish / error alerts, right in your notification shade.</em></sub>
+
 </div>
 
 ---
@@ -61,14 +67,22 @@ Moongate is a free, open-source Android app for **full remote control of your Kl
   <tr>
     <th>Custom theme editor</th>
     <th>Colour picker</th>
-    <th>Menu — top</th>
-    <th>Menu — bottom</th>
+    <th>Icon guide</th>
   </tr>
   <tr>
     <td><img src="docs/screenshots/custom-theme.png" alt="Custom theme editor"/></td>
     <td><img src="docs/screenshots/custom-theme-picker.png" alt="Colour picker"/></td>
+    <td><img src="docs/screenshots/icon-guide.png" alt="Icon guide — what every dashboard icon means"/></td>
+  </tr>
+  <tr>
+    <th>Menu — top</th>
+    <th>Menu — settings</th>
+    <th></th>
+  </tr>
+  <tr>
     <td><img src="docs/screenshots/drawer.png" alt="Menu — top"/></td>
-    <td><img src="docs/screenshots/drawer-bottom.png" alt="Menu — bottom"/></td>
+    <td><img src="docs/screenshots/drawer-bottom.png" alt="Menu — settings &amp; notifications"/></td>
+    <td></td>
   </tr>
 </table>
 
