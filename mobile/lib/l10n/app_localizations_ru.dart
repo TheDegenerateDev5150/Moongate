@@ -961,6 +961,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get printNotifNoPrinters => 'Нет принтеров';
 
   @override
+  String get notifPollIntervalTitle => 'Частота обновления';
+
+  @override
+  String get printAlertReady => 'Принтер готов';
+
+  @override
   String get printStatusReady => 'Готов';
 
   @override

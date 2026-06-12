@@ -37,6 +37,7 @@ void main() async {
   await container.read(biometricUnlockProvider.notifier).load();
   await container.read(autoLockTimeoutProvider.notifier).load();
   await container.read(printNotificationsEnabledProvider.notifier).load();
+  await container.read(notifPollIntervalProvider.notifier).load();
 
   // Bring the print-notification foreground service in line with the saved
   // preference — starts it if the user left notifications on. Best-effort.

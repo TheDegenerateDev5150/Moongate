@@ -299,6 +299,8 @@
   "printNotifPromptNotNow": "Plus tard",
   "printNotifWatching": "Surveillance de vos imprimantes…",
   "printNotifNoPrinters": "Aucune imprimante",
+  "notifPollIntervalTitle": "Fréquence de mise à jour",
+  "printAlertReady": "Imprimante prête",
   "printStatusReady": "Prête",
   "printStatusHeating": "Chauffe",
   "printStatusIdle": "Inactive",

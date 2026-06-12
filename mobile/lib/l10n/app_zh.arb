@@ -299,6 +299,8 @@
   "printNotifPromptNotNow": "暂不",
   "printNotifWatching": "正在监控你的打印机…",
   "printNotifNoPrinters": "没有打印机",
+  "notifPollIntervalTitle": "更新频率",
+  "printAlertReady": "打印机就绪",
   "printStatusReady": "就绪",
   "printStatusHeating": "加热中",
   "printStatusIdle": "空闲",

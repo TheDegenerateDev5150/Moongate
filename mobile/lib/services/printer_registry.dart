@@ -34,8 +34,18 @@ class PrinterRegistry {
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
+    // Pull the latest from disk before reading. The print-notification
+    // background isolate shares this registry but keeps its OWN cached
+    // SharedPreferences snapshot — and as a foreground service it survives UI
+    // restarts, so without a reload it never sees printers the main app
+    // added/restored after the isolate started (the notification stuck on
+    // "No Printers"). reload() also lets either side pick up removals.
+    await prefs.reload();
     final raw   = prefs.getString(_key);
-    if (raw == null || raw.isEmpty) return;
+    if (raw == null || raw.isEmpty) {
+      _printers = [];
+      return;
+    }
     try {
       _printers = PrinterConfig.listFromJson(raw);
     } on FormatException catch (e) {

@@ -299,6 +299,8 @@
   "printNotifPromptNotNow": "Не сейчас",
   "printNotifWatching": "Отслеживание принтеров…",
   "printNotifNoPrinters": "Нет принтеров",
+  "notifPollIntervalTitle": "Частота обновления",
+  "printAlertReady": "Принтер готов",
   "printStatusReady": "Готов",
   "printStatusHeating": "Нагрев",
   "printStatusIdle": "Ожидание",

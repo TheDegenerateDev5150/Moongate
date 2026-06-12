@@ -913,6 +913,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get printNotifNoPrinters => '没有打印机';
 
   @override
+  String get notifPollIntervalTitle => '更新频率';
+
+  @override
+  String get printAlertReady => '打印机就绪';
+
+  @override
   String get printStatusReady => '就绪';
 
   @override

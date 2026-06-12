@@ -968,6 +968,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get printNotifNoPrinters => 'Nessuna stampante';
 
   @override
+  String get notifPollIntervalTitle => 'Frequenza di aggiornamento';
+
+  @override
+  String get printAlertReady => 'Stampante pronta';
+
+  @override
   String get printStatusReady => 'Pronta';
 
   @override

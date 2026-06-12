@@ -964,6 +964,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get printNotifNoPrinters => 'Keine Drucker';
 
   @override
+  String get notifPollIntervalTitle => 'Aktualisierungsintervall';
+
+  @override
+  String get printAlertReady => 'Drucker bereit';
+
+  @override
   String get printStatusReady => 'Bereit';
 
   @override
