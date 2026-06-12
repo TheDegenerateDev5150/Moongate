@@ -936,4 +936,79 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get uiGuideBack => 'Torna alla dashboard';
+
+  @override
+  String get printNotifTitle => 'Notifiche di stampa';
+
+  @override
+  String get printNotifSubtitle =>
+      'Avanzamento e stato in tempo reale mentre l\'app è in background';
+
+  @override
+  String get printNotifPermissionNeeded =>
+      'Consenti le notifiche per attivarlo.';
+
+  @override
+  String get printNotifPromptTitle => 'Ricevere le notifiche di stampa?';
+
+  @override
+  String get printNotifPromptBody =>
+      'Vedi lo stato in tempo reale delle tue stampanti — avanzamento, temperature e avvisi quando una stampa inizia, finisce o va in errore. Puoi cambiarlo in qualsiasi momento dal menu.';
+
+  @override
+  String get printNotifPromptEnable => 'Attiva';
+
+  @override
+  String get printNotifPromptNotNow => 'Non ora';
+
+  @override
+  String get printNotifWatching => 'Monitoraggio delle stampanti…';
+
+  @override
+  String get printNotifNoPrinters => 'Nessuna stampante';
+
+  @override
+  String get printStatusReady => 'Pronta';
+
+  @override
+  String get printStatusHeating => 'In riscaldamento';
+
+  @override
+  String get printStatusIdle => 'Inattiva';
+
+  @override
+  String get printStatusOffline => 'Offline';
+
+  @override
+  String get printStatusPaused => 'In pausa';
+
+  @override
+  String get printStatusComplete => 'Completata';
+
+  @override
+  String get printStatusCancelled => 'Annullata';
+
+  @override
+  String get printStatusError => 'Errore';
+
+  @override
+  String get printStatusStartingUp => 'Avvio…';
+
+  @override
+  String get printAlertStarted => 'Stampa avviata';
+
+  @override
+  String get printAlertResumed => 'Stampa ripresa';
+
+  @override
+  String get printAlertPaused => 'Stampa in pausa';
+
+  @override
+  String get printAlertComplete => 'Stampa completata';
+
+  @override
+  String get printAlertCancelled => 'Stampa annullata';
+
+  @override
+  String get printAlertError => 'Errore stampante';
 }

@@ -1,0 +1,510 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:developer' as dev;
+import 'dart:ui' as ui;
+
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../l10n/app_localizations.dart';
+import '../models/printer_config.dart';
+import 'printer_registry.dart';
+import 'supabase_service.dart';
+
+// ── Tuning ────────────────────────────────────────────────────────────────
+const _serviceChannelId   = 'moongate_print_progress';
+const _serviceChannelName = 'Print progress';
+const _alertsChannelId    = 'moongate_print_alerts';
+const _alertsChannelName   = 'Print status';
+const _serviceId          = 4711;
+
+// Poll every 30s while a print is active; back off to ~2 min when everything is
+// idle (just to catch a print starting). LAN-first, so it's free at home and a
+// long print costs ~1-2 MB over cellular.
+const _pollIntervalMs   = 30000;
+const _idleSkipCycles   = 4;     // when idle: poll only every Nth 30s tick
+
+/// Load the user's chosen UI locale (or the system / English fallback) and
+/// return its AppLocalizations. Usable from the background isolate — it's a pure
+/// Dart load with no BuildContext — so the notification reads in the same
+/// language as the app even though it runs outside the widget tree.
+Future<AppLocalizations> _loadL10n() async {
+  var code = (await SharedPreferences.getInstance()).getString('app_locale');
+  code ??= ui.PlatformDispatcher.instance.locale.languageCode;
+  try {
+    return await AppLocalizations.delegate.load(ui.Locale(code));
+  } catch (_) {
+    return AppLocalizations.delegate.load(const ui.Locale('en'));
+  }
+}
+
+/// Main-isolate manager for the opt-in print-notification foreground service.
+/// The actual polling runs in a background isolate (`_PrintTaskHandler`) so it
+/// survives the UI being backgrounded. OFF by default — see
+/// `printNotificationsEnabledProvider`.
+class PrintNotificationService {
+  PrintNotificationService._();
+  static final PrintNotificationService instance = PrintNotificationService._();
+
+  bool _configured = false;
+
+  void _configure() {
+    if (_configured) return;
+    FlutterForegroundTask.initCommunicationPort();
+    FlutterForegroundTask.init(
+      androidNotificationOptions: AndroidNotificationOptions(
+        channelId: _serviceChannelId,
+        channelName: _serviceChannelName,
+        channelDescription: 'Live print progress while notifications are on.',
+        // LOW + onlyAlertOnce: a silent, persistent progress notification that
+        // updates in place without buzzing on every percent.
+        channelImportance: NotificationChannelImportance.LOW,
+        priority: NotificationPriority.LOW,
+        onlyAlertOnce: true,
+      ),
+      iosNotificationOptions: const IOSNotificationOptions(),
+      foregroundTaskOptions: ForegroundTaskOptions(
+        eventAction: ForegroundTaskEventAction.repeat(_pollIntervalMs),
+        autoRunOnBoot: false,
+        allowWakeLock: true,
+        allowWifiLock: true,
+      ),
+    );
+    _configured = true;
+  }
+
+  /// Request the Android 13+ POST_NOTIFICATIONS permission. Returns true when
+  /// granted. Safe to call before [start].
+  Future<bool> requestPermission() async {
+    _configure();
+    final result = await FlutterForegroundTask.requestNotificationPermission();
+    return result == NotificationPermission.granted;
+  }
+
+  /// Start the foreground service if it isn't already running.
+  Future<void> start() async {
+    _configure();
+    if (await FlutterForegroundTask.isRunningService) return;
+    final l = await _loadL10n();
+    await FlutterForegroundTask.startService(
+      serviceId: _serviceId,
+      notificationTitle: 'Moongate',
+      notificationText: l.printNotifWatching,
+      notificationIcon: const NotificationIcon(
+          metaDataName: 'com.moongate.app.notification_icon'),
+      callback: startPrintNotificationCallback,
+    );
+  }
+
+  /// Stop the foreground service if it is running.
+  Future<void> stop() async {
+    if (await FlutterForegroundTask.isRunningService) {
+      await FlutterForegroundTask.stopService();
+    }
+  }
+
+  /// Align the running service with the persisted on/off toggle. Called at
+  /// startup and whenever the toggle changes.
+  Future<void> sync(bool enabled) => enabled ? start() : stop();
+}
+
+/// Foreground-task isolate entry point. MUST be a top-level function.
+@pragma('vm:entry-point')
+void startPrintNotificationCallback() {
+  FlutterForegroundTask.setTaskHandler(_PrintTaskHandler());
+}
+
+/// Runs in the background isolate. On each tick it polls every printer's
+/// `/status`, refreshes the persistent progress notification (one line per
+/// active print), and fires one-shot alerts on state transitions.
+class _PrintTaskHandler extends TaskHandler {
+  final _alerts = FlutterLocalNotificationsPlugin();
+  bool _busy = false;
+  bool _wasActive = true;   // poll on the first tick, then back off when idle
+  int  _idleTick = 0;
+  final Map<String, String> _lastState = {};
+  late AppLocalizations _l;
+
+  void _log(String msg) => dev.log(msg, name: 'MOONGATE/NOTIF');
+
+  @override
+  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    // Background isolate: register plugins so http / shared_preferences /
+    // supabase channels work here.
+    try {
+      ui.DartPluginRegistrant.ensureInitialized();
+    } catch (_) {}
+
+    await _alerts.initialize(const InitializationSettings(
+      android: AndroidInitializationSettings('ic_stat_moongate'),
+    ));
+    await _alerts
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+          _alertsChannelId,
+          _alertsChannelName,
+          description: 'Print started / paused / finished / error alerts.',
+          importance: Importance.high,
+        ));
+
+    // Supabase in this isolate re-loads the persisted anon session, so it can
+    // mint the same per-printer access tokens the app uses.
+    try {
+      await SupabaseService.instance.initialize();
+    } catch (e) {
+      _log('Supabase init failed in isolate: $e');
+    }
+
+    _l = await _loadL10n(); // localise the notification to the app's language
+
+    _tick(); // immediate first poll so the notification isn't empty for 30s
+  }
+
+  @override
+  void onRepeatEvent(DateTime timestamp) => _tick();
+
+  @override
+  Future<void> onDestroy(DateTime timestamp) async {}
+
+  Future<void> _tick() async {
+    if (_busy) return;
+    // Idle backoff: when nothing was printing last tick, only poll every Nth
+    // 30s tick (~2 min) to save data; poll every tick while a print is active.
+    if (!_wasActive) {
+      _idleTick = (_idleTick + 1) % _idleSkipCycles;
+      if (_idleTick != 0) return;
+    }
+    _busy = true;
+    try {
+      await PrinterRegistry.instance.load();
+      final printers = PrinterRegistry.instance.printers;
+
+      final entries = <(String, _Poll?)>[];
+      var anyActive = false;
+
+      for (final p in printers) {
+        final s = await _poll(p);
+
+        if (s != null) {
+          final prev = _lastState[p.id];
+          if (prev != null && prev != s.state) {
+            _maybeAlert(p.name, prev, s.state);
+          }
+          _lastState[p.id] = s.state;
+          if (s.state == 'printing' || s.state == 'paused' || _warming(s)) {
+            anyActive = true;
+          }
+        }
+
+        entries.add((p.name, s)); // every printer, online or not
+      }
+
+      // Float active prints to the top — same ranking the dashboard uses
+      // (printerStatusRank), stable within a tier (original order preserved).
+      final ranked = [for (var i = 0; i < entries.length; i++) (i, entries[i])];
+      ranked.sort((a, b) {
+        final ra = _rank(a.$2.$2);
+        final rb = _rank(b.$2.$2);
+        return ra != rb ? ra.compareTo(rb) : a.$1.compareTo(b.$1);
+      });
+      final sorted = [for (final r in ranked) r.$2];
+
+      await _updatePersistent(sorted, anyActive);
+      _wasActive = anyActive;
+    } catch (e) {
+      _log('tick failed: $e');
+    } finally {
+      _busy = false;
+    }
+  }
+
+  /// Sort rank for a printer's notification line — shares printerStatusRank
+  /// with the dashboard so the two orderings stay identical. A warming printer
+  /// counts as 'heating' (Printing tier); an unreachable one as 'offline'.
+  int _rank(_Poll? s) {
+    if (s == null) return printerStatusRank('offline');
+    if (_warming(s)) return printerStatusRank('heating');
+    return printerStatusRank(s.state);
+  }
+
+  Future<void> _updatePersistent(
+      List<(String, _Poll?)> entries, bool anyActive) async {
+    final String title;
+    final String text;
+    if (entries.isEmpty) {
+      title = 'Moongate';
+      text = _l.printNotifNoPrinters;
+    } else if (entries.length == 1) {
+      // Single printer: emoji + full status on the title line.
+      title = _statusLine(entries.first.$1, entries.first.$2, withEmoji: true);
+      text = '';
+    } else {
+      // Collapsed glance = just the status emojis (one per printer, in order).
+      // Expanded body = the full per-printer lines, with NO repeated emoji so
+      // it reads cleanly rather than busy.
+      title = entries.map((e) => _emoji(e.$2)).join(' ');
+      text = entries.map((e) => _statusLine(e.$1, e.$2)).join('\n');
+    }
+    await FlutterForegroundTask.updateService(
+      notificationTitle: title,
+      notificationText: text,
+    );
+  }
+
+  // ── Polling ───────────────────────────────────────────────────────────────
+
+  Future<_Poll?> _poll(PrinterConfig p) async {
+    final PrinterAccess access;
+    try {
+      access = await SupabaseService.instance.getPrinterAccess(p.id);
+    } catch (_) {
+      return null; // offline / not yet heartbeated / network
+    }
+    final bases = <(String, bool)>[
+      if (p.lanUrl != null && p.lanUrl!.isNotEmpty) (p.lanUrl!, true),
+      if (access.tunnelUrl != null && access.tunnelUrl!.isNotEmpty)
+        (access.tunnelUrl!, false),
+    ];
+    for (final (base, isLan) in bases) {
+      final r = await _fetchStatus(base, access.accessToken, isLan);
+      if (r != null) return r;
+    }
+    // The Pi has a current tunnel (so it's heartbeating / online) but /status
+    // didn't answer — e.g. Klipper idle or the printer's power toggle is off.
+    // Show Idle, not Offline.
+    if (access.tunnelUrl != null && access.tunnelUrl!.isNotEmpty) {
+      return const _Poll(
+        state: 'waiting',
+        progress: 0,
+        printDurationSec: 0,
+        hotend: 0,
+        hotendTarget: 0,
+        bed: 0,
+        bedTarget: 0,
+      );
+    }
+    return null; // genuinely unreachable
+  }
+
+  Future<_Poll?> _fetchStatus(String base, String token, bool isLan) async {
+    try {
+      final uri = Uri.parse(
+          '$base/server/moongate/status?mg_token=${Uri.encodeComponent(token)}');
+      final resp = await http.get(uri).timeout(const Duration(seconds: 6));
+      if (resp.statusCode != 200) return null;
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      final result = body['result'] as Map<String, dynamic>?;
+      final status = result?['status'] as Map<String, dynamic>?;
+      if (status == null) return null;
+
+      final printStats = status['print_stats'] as Map<String, dynamic>? ?? const {};
+      final extruder   = status['extruder']     as Map<String, dynamic>? ?? const {};
+      final bed        = status['heater_bed']   as Map<String, dynamic>? ?? const {};
+
+      // The plugin's /status returns ONLY print_stats / heater_bed / extruder —
+      // progress lives in display_status & virtual_sdcard, which aren't in this
+      // payload. Mirror PrinterStatusService and pull them from a supplementary
+      // /printer/objects/query, otherwise % stays pinned at 0 the whole print.
+      var display = status['display_status'] as Map<String, dynamic>?;
+      var sdcard  = status['virtual_sdcard'] as Map<String, dynamic>?;
+      if (display == null || sdcard == null) {
+        final supp = await _fetchProgress(base, token, isLan: isLan);
+        display ??= supp?['display_status'] as Map<String, dynamic>?;
+        sdcard  ??= supp?['virtual_sdcard'] as Map<String, dynamic>?;
+      }
+
+      var progress = (display?['progress'] as num?)?.toDouble() ?? 0;
+      if (progress <= 0) progress = (sdcard?['progress'] as num?)?.toDouble() ?? 0;
+
+      return _Poll(
+        state:            (printStats['state'] as String?) ?? 'standby',
+        progress:         progress.clamp(0.0, 1.0),
+        printDurationSec: (printStats['print_duration'] as num?)?.toDouble() ?? 0,
+        hotend:           (extruder['temperature'] as num?)?.toDouble() ?? 0,
+        hotendTarget:     (extruder['target']      as num?)?.toDouble() ?? 0,
+        bed:              (bed['temperature']      as num?)?.toDouble() ?? 0,
+        bedTarget:        (bed['target']           as num?)?.toDouble() ?? 0,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Supplementary progress fetch. The moongate /status payload omits
+  /// display_status & virtual_sdcard, so read them straight from Moonraker:
+  /// LAN goes through nginx untouched (no auth header — Moonraker would reject
+  /// our EdDSA token as a bad JWT), the tunnel goes through the auth proxy
+  /// (Bearer). Best-effort — null on any failure just leaves progress at 0.
+  Future<Map<String, dynamic>?> _fetchProgress(String base, String token,
+      {required bool isLan}) async {
+    try {
+      final uri = Uri.parse(
+          '$base/printer/objects/query?display_status&virtual_sdcard');
+      final resp = await http
+          .get(uri, headers: isLan ? null : {'Authorization': 'Bearer $token'})
+          .timeout(const Duration(seconds: 5));
+      if (resp.statusCode != 200) return null;
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      return body['result']?['status'] as Map<String, dynamic>?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ── Formatting ──────────────────────────────────────────────────────────────
+
+  /// True while a heater is still ramping to a set target and we should show a
+  /// "Heating" line instead of the static Ready/Idle/0% label — i.e. pre-print
+  /// soak, or the start of a print before extrusion (progress still ~0). Not
+  /// for a paused print, where "Paused x%" is the more useful line.
+  bool _warming(_Poll s) =>
+      s.isHeating &&
+      s.state != 'paused' &&
+      (s.state != 'printing' || s.progress < 0.02);
+
+  /// One status line per printer for the persistent notification: Offline when
+  /// unreachable, Heating during warm-up, the rich progress line while printing,
+  /// otherwise a friendly label (Ready / Idle / Paused / Complete / Error).
+  String _statusLine(String name, _Poll? s, {bool withEmoji = false}) {
+    final e = withEmoji ? '${_emoji(s)} ' : '';
+    if (s == null) return '$e$name — ${_l.printStatusOffline}';
+    final temps = '${s.hotend.round()}°/${s.bed.round()}°';
+    if (_warming(s)) {
+      final parts = <String>[
+        if (s.hotendTarget > 0) '${s.hotend.round()}→${s.hotendTarget.round()}°',
+        if (s.bedTarget > 0) '${s.bed.round()}→${s.bedTarget.round()}°',
+      ];
+      return '$e$name — ${_l.printStatusHeating} · ${parts.join(' · ')}';
+    }
+    switch (s.state) {
+      case 'printing':
+        {
+          final pct = (s.progress * 100).round();
+          final eta = _formatEta(s);
+          return eta != null
+              ? '$e$name — $pct% · ~$eta · $temps'
+              : '$e$name — $pct% · $temps';
+        }
+      case 'paused':
+        {
+          final pct = (s.progress * 100).round();
+          return '$e$name — ${_l.printStatusPaused} $pct% · $temps';
+        }
+      case 'complete':
+        return '$e$name — ${_l.printStatusComplete}';
+      case 'cancelled':
+        return '$e$name — ${_l.printStatusCancelled}';
+      case 'error':
+        return '$e$name — ${_l.printStatusError}';
+      case 'startup':
+      case 'starting_up':
+      case 'connecting':
+        return '$e$name — ${_l.printStatusStartingUp}';
+      case 'waiting':
+        return '$e$name — ${_l.printStatusIdle}';
+      case 'standby':
+      default:
+        return '$e$name — ${_l.printStatusReady}';
+    }
+  }
+
+  /// Status emoji used as the line / summary prefix.
+  String _emoji(_Poll? s) {
+    if (s == null) return '⚫';
+    if (_warming(s)) return '🔥';
+    switch (s.state) {
+      case 'printing':
+        return '🖨️';
+      case 'paused':
+        return '⏸️';
+      case 'complete':
+        return '✅';
+      case 'error':
+        return '🔴';
+      case 'waiting':
+        return '🟡';
+      case 'startup':
+      case 'starting_up':
+      case 'connecting':
+        return '⏳';
+      case 'standby':
+      default:
+        return '🟢';
+    }
+  }
+
+  /// Remaining time estimated from elapsed/progress (no extra metadata call).
+  /// Null while it's too early to be meaningful.
+  String? _formatEta(_Poll s) {
+    if (s.state != 'printing') return null;
+    if (s.progress < 0.02 || s.printDurationSec < 30) return null;
+    final remaining = s.printDurationSec * (1 - s.progress) / s.progress;
+    if (remaining <= 0 || remaining > 100 * 3600) return null;
+    final d = Duration(seconds: remaining.round());
+    final h = d.inHours;
+    final m = d.inMinutes % 60;
+    return h > 0 ? '${h}h${m.toString().padLeft(2, '0')}m' : '${m}m';
+  }
+
+  // ── State-change alerts ─────────────────────────────────────────────────────
+
+  void _maybeAlert(String name, String from, String to) {
+    final String? body = switch (to) {
+      'printing'  => from == 'paused' ? _l.printAlertResumed : _l.printAlertStarted,
+      'paused'    => _l.printAlertPaused,
+      'complete'  => _l.printAlertComplete,
+      'cancelled' => _l.printAlertCancelled,
+      'error'     => _l.printAlertError,
+      _           => null, // standby / startup / etc. — no alert
+    };
+    if (body == null) return;
+    _alerts.show(
+      name.hashCode & 0x7fffffff, // one alert slot per printer (latest wins)
+      name,
+      body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _alertsChannelId,
+          _alertsChannelName,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: 'ic_stat_moongate',
+        ),
+      ),
+    );
+  }
+}
+
+/// A single printer's parsed status — just what the notification needs.
+class _Poll {
+  final String state;
+  final double progress;        // 0..1
+  final double printDurationSec;
+  final double hotend;
+  final double hotendTarget;
+  final double bed;
+  final double bedTarget;
+  const _Poll({
+    required this.state,
+    required this.progress,
+    required this.printDurationSec,
+    required this.hotend,
+    required this.hotendTarget,
+    required this.bed,
+    required this.bedTarget,
+  });
+
+  // A heater is actively ramping when it has a real target set and the current
+  // reading is still meaningfully below it. Drives the "Heating" line during
+  // pre-print soak / the start of a print before extrusion — when print_stats
+  // is still standby (or printing at 0%) and nothing about the heaters would
+  // otherwise show. `_heatTargetFloor` ignores low "keep-warm" trickle targets.
+  static const double _heatTargetFloor = 35;
+  static const double _heatMargin      = 3;
+  bool _ramping(double cur, double tgt) =>
+      tgt > _heatTargetFloor && (tgt - cur) > _heatMargin;
+  bool get isHeating => _ramping(hotend, hotendTarget) || _ramping(bed, bedTarget);
+}

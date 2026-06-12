@@ -170,16 +170,19 @@ class PrinterConfig {
   static String listToJson(List<PrinterConfig> printers) =>
       jsonEncode(printers.map((p) => p.toJson()).toList());
 
-  /// v2 backup envelope: the printer list plus an optional single-use restore
+  /// v3 backup envelope: the printer list, an optional single-use restore
   /// code that lets a reinstalled app reclaim these printers (re-bind them to
-  /// the new identity) without re-pairing. Legacy backups were a bare array;
-  /// PrinterRegistry.importFromBackupFile still reads those.
+  /// the new identity) without re-pairing, and an optional `settings` map of
+  /// the user's global app preferences (theme, colours, columns, language, …;
+  /// see [SettingsBackup]). Legacy backups were a bare array and v2 omitted
+  /// `settings`; PrinterRegistry.importFromBackupFile still reads both.
   static String toBackupJson(List<PrinterConfig> printers,
-          {String? restoreCode}) =>
+          {String? restoreCode, Map<String, dynamic>? settings}) =>
       jsonEncode({
-        'backup_version': 2,
+        'backup_version': 3,
         if (restoreCode != null) 'restore_code': restoreCode,
         'printers': printers.map((p) => p.toJson()).toList(),
+        if (settings != null && settings.isNotEmpty) 'settings': settings,
       });
 }
 
@@ -187,6 +190,20 @@ class PrinterConfig {
 /// goes via tunnel (Supabase mediates the URL), so [PrinterConnection.local]
 /// is no longer reported. Kept for backward-compat with the UI.
 enum PrinterConnection { local, remote, offline }
+
+/// Shared status → sort rank for BOTH the dashboard tiles and the print
+/// notification, so the two orderings can never drift. Lower sorts first; ties
+/// keep their original (added / dashboard) order via the callers' stable sort.
+/// Priority: Error (needs attention) → Printing (incl. heating / paused) →
+/// Ready → Idle → Offline.
+int printerStatusRank(String state) => switch (state) {
+      'error' => 0,
+      'printing' || 'heating' || 'paused' => 1,
+      'standby' || 'complete' || 'cancelled' => 2,
+      'waiting' || 'startup' || 'starting_up' || 'connecting' => 3,
+      'offline' => 4,
+      _ => 3,
+    };
 
 class PrinterStatus {
   /// Klipper print_stats state plus our synthetic states:

@@ -1759,6 +1759,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to dashboard'**
   String get uiGuideBack;
+
+  /// Drawer toggle label for the opt-in print-notification service.
+  ///
+  /// In en, this message translates to:
+  /// **'Print notifications'**
+  String get printNotifTitle;
+
+  /// Subtitle under the print-notifications drawer toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live progress and status while the app is in the background'**
+  String get printNotifSubtitle;
+
+  /// Snackbar shown when the user declines the notification permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications to turn this on.'**
+  String get printNotifPermissionNeeded;
+
+  /// Title of the first-run prompt offering to enable print notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Get print notifications?'**
+  String get printNotifPromptTitle;
+
+  /// Body of the first-run print-notifications prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'See live status for your printers — progress, temperatures, and alerts when a print starts, finishes or errors. You can change this any time in the menu.'**
+  String get printNotifPromptBody;
+
+  /// Button that enables print notifications from the first-run prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get printNotifPromptEnable;
+
+  /// Button that dismisses the first-run print-notifications prompt without enabling.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get printNotifPromptNotNow;
+
+  /// Persistent notification text shown before the first poll completes.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching your printers…'**
+  String get printNotifWatching;
+
+  /// Persistent notification text when no printers are paired.
+  ///
+  /// In en, this message translates to:
+  /// **'No printers'**
+  String get printNotifNoPrinters;
+
+  /// Printer status in the notification: idle and ready to print.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get printStatusReady;
+
+  /// Printer status: a heater is ramping up to its target during pre-print warm-up; followed by current→target temps.
+  ///
+  /// In en, this message translates to:
+  /// **'Heating'**
+  String get printStatusHeating;
+
+  /// Printer status: reachable but Klipper is not active (e.g. power toggle off).
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get printStatusIdle;
+
+  /// Printer status: unreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get printStatusOffline;
+
+  /// Printer status: a print is paused (followed by the percentage).
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get printStatusPaused;
+
+  /// Printer status: the print finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get printStatusComplete;
+
+  /// Printer status: the print was cancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get printStatusCancelled;
+
+  /// Printer status: the printer reported an error.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get printStatusError;
+
+  /// Printer status: connecting / Klipper starting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting up'**
+  String get printStatusStartingUp;
+
+  /// Pop-up alert when a print begins.
+  ///
+  /// In en, this message translates to:
+  /// **'Started printing'**
+  String get printAlertStarted;
+
+  /// Pop-up alert when a paused print resumes.
+  ///
+  /// In en, this message translates to:
+  /// **'Resumed printing'**
+  String get printAlertResumed;
+
+  /// Pop-up alert when a print is paused.
+  ///
+  /// In en, this message translates to:
+  /// **'Print paused'**
+  String get printAlertPaused;
+
+  /// Pop-up alert when a print finishes.
+  ///
+  /// In en, this message translates to:
+  /// **'Print complete'**
+  String get printAlertComplete;
+
+  /// Pop-up alert when a print is cancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Print cancelled'**
+  String get printAlertCancelled;
+
+  /// Pop-up alert when the printer errors.
+  ///
+  /// In en, this message translates to:
+  /// **'Printer error'**
+  String get printAlertError;
 }
 
 class _AppLocalizationsDelegate

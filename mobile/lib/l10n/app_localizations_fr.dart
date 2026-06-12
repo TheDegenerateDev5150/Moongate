@@ -939,4 +939,80 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get uiGuideBack => 'Retour au tableau de bord';
+
+  @override
+  String get printNotifTitle => 'Notifications d\'impression';
+
+  @override
+  String get printNotifSubtitle =>
+      'Progression et statut en direct lorsque l\'application est en arrière-plan';
+
+  @override
+  String get printNotifPermissionNeeded =>
+      'Autorisez les notifications pour activer ceci.';
+
+  @override
+  String get printNotifPromptTitle =>
+      'Recevoir les notifications d\'impression ?';
+
+  @override
+  String get printNotifPromptBody =>
+      'Voyez le statut en direct de vos imprimantes — progression, températures et alertes au démarrage, à la fin ou en cas d\'erreur d\'une impression. Vous pouvez changer cela à tout moment dans le menu.';
+
+  @override
+  String get printNotifPromptEnable => 'Activer';
+
+  @override
+  String get printNotifPromptNotNow => 'Plus tard';
+
+  @override
+  String get printNotifWatching => 'Surveillance de vos imprimantes…';
+
+  @override
+  String get printNotifNoPrinters => 'Aucune imprimante';
+
+  @override
+  String get printStatusReady => 'Prête';
+
+  @override
+  String get printStatusHeating => 'Chauffe';
+
+  @override
+  String get printStatusIdle => 'Inactive';
+
+  @override
+  String get printStatusOffline => 'Hors ligne';
+
+  @override
+  String get printStatusPaused => 'En pause';
+
+  @override
+  String get printStatusComplete => 'Terminée';
+
+  @override
+  String get printStatusCancelled => 'Annulée';
+
+  @override
+  String get printStatusError => 'Erreur';
+
+  @override
+  String get printStatusStartingUp => 'Démarrage…';
+
+  @override
+  String get printAlertStarted => 'Impression démarrée';
+
+  @override
+  String get printAlertResumed => 'Impression reprise';
+
+  @override
+  String get printAlertPaused => 'Impression en pause';
+
+  @override
+  String get printAlertComplete => 'Impression terminée';
+
+  @override
+  String get printAlertCancelled => 'Impression annulée';
+
+  @override
+  String get printAlertError => 'Erreur d\'imprimante';
 }

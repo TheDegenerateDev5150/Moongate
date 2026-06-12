@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../models/printer_config.dart';
 
 /// In-memory, last-known live status per printer id.
@@ -17,8 +19,16 @@ class PrinterStatusRegistry {
 
   final Map<String, PrinterStatus> _latest = {};
 
+  // Fires when a printer's Klipper/synthetic STATE changes (not on every poll),
+  // so the dashboard can re-sort tiles by status without polling itself — see
+  // printerStatusRank. Broadcast + best-effort; recomputing the order is cheap.
+  final StreamController<void> _changes = StreamController<void>.broadcast();
+  Stream<void> get changes => _changes.stream;
+
   void update(String printerId, PrinterStatus status) {
+    final changed = _latest[printerId]?.state != status.state;
     _latest[printerId] = status;
+    if (changed) _changes.add(null);
   }
 
   /// Latest known status for [printerId], or null if it hasn't polled yet.

@@ -938,4 +938,79 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get uiGuideBack => 'Volver al panel';
+
+  @override
+  String get printNotifTitle => 'Notificaciones de impresión';
+
+  @override
+  String get printNotifSubtitle =>
+      'Progreso y estado en vivo mientras la app está en segundo plano';
+
+  @override
+  String get printNotifPermissionNeeded =>
+      'Permite las notificaciones para activar esto.';
+
+  @override
+  String get printNotifPromptTitle => '¿Recibir notificaciones de impresión?';
+
+  @override
+  String get printNotifPromptBody =>
+      'Mira el estado en vivo de tus impresoras — progreso, temperaturas y avisos cuando una impresión empieza, termina o falla. Puedes cambiar esto cuando quieras en el menú.';
+
+  @override
+  String get printNotifPromptEnable => 'Activar';
+
+  @override
+  String get printNotifPromptNotNow => 'Ahora no';
+
+  @override
+  String get printNotifWatching => 'Vigilando tus impresoras…';
+
+  @override
+  String get printNotifNoPrinters => 'Sin impresoras';
+
+  @override
+  String get printStatusReady => 'Lista';
+
+  @override
+  String get printStatusHeating => 'Calentando';
+
+  @override
+  String get printStatusIdle => 'Inactiva';
+
+  @override
+  String get printStatusOffline => 'Sin conexión';
+
+  @override
+  String get printStatusPaused => 'En pausa';
+
+  @override
+  String get printStatusComplete => 'Completada';
+
+  @override
+  String get printStatusCancelled => 'Cancelada';
+
+  @override
+  String get printStatusError => 'Error';
+
+  @override
+  String get printStatusStartingUp => 'Iniciando…';
+
+  @override
+  String get printAlertStarted => 'Impresión iniciada';
+
+  @override
+  String get printAlertResumed => 'Impresión reanudada';
+
+  @override
+  String get printAlertPaused => 'Impresión en pausa';
+
+  @override
+  String get printAlertComplete => 'Impresión completada';
+
+  @override
+  String get printAlertCancelled => 'Impresión cancelada';
+
+  @override
+  String get printAlertError => 'Error de impresora';
 }

@@ -929,4 +929,79 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get uiGuideBack => 'Назад к панели';
+
+  @override
+  String get printNotifTitle => 'Уведомления о печати';
+
+  @override
+  String get printNotifSubtitle =>
+      'Прогресс и статус в реальном времени, когда приложение свёрнуто';
+
+  @override
+  String get printNotifPermissionNeeded =>
+      'Разрешите уведомления, чтобы включить это.';
+
+  @override
+  String get printNotifPromptTitle => 'Получать уведомления о печати?';
+
+  @override
+  String get printNotifPromptBody =>
+      'Смотрите статус принтеров в реальном времени — прогресс, температуры и оповещения о начале, завершении или ошибке печати. Это можно изменить в любой момент в меню.';
+
+  @override
+  String get printNotifPromptEnable => 'Включить';
+
+  @override
+  String get printNotifPromptNotNow => 'Не сейчас';
+
+  @override
+  String get printNotifWatching => 'Отслеживание принтеров…';
+
+  @override
+  String get printNotifNoPrinters => 'Нет принтеров';
+
+  @override
+  String get printStatusReady => 'Готов';
+
+  @override
+  String get printStatusHeating => 'Нагрев';
+
+  @override
+  String get printStatusIdle => 'Ожидание';
+
+  @override
+  String get printStatusOffline => 'Офлайн';
+
+  @override
+  String get printStatusPaused => 'Пауза';
+
+  @override
+  String get printStatusComplete => 'Завершено';
+
+  @override
+  String get printStatusCancelled => 'Отменено';
+
+  @override
+  String get printStatusError => 'Ошибка';
+
+  @override
+  String get printStatusStartingUp => 'Запуск…';
+
+  @override
+  String get printAlertStarted => 'Печать начата';
+
+  @override
+  String get printAlertResumed => 'Печать возобновлена';
+
+  @override
+  String get printAlertPaused => 'Печать приостановлена';
+
+  @override
+  String get printAlertComplete => 'Печать завершена';
+
+  @override
+  String get printAlertCancelled => 'Печать отменена';
+
+  @override
+  String get printAlertError => 'Ошибка принтера';
 }
