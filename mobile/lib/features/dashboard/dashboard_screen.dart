@@ -39,6 +39,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   List<PrinterConfig> _printers = [];
   bool _updateDismissed = false;
 
+  // Always-visible scrollbar for the drawer body so small-screen users can see
+  // there's more below the fold (user-reported — not obvious it scrolled).
+  final ScrollController _drawerScroll = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +51,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // out ("Don't show again"). Post-frame so the dialog has a mounted context.
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _runFirstRunOnboarding().ignore());
+  }
+
+  @override
+  void dispose() {
+    _drawerScroll.dispose();
+    super.dispose();
   }
 
   void _load() {
@@ -242,8 +252,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
             // ── Scrollable body (safe in landscape / small screens) ──────────
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
+              child: Scrollbar(
+                controller: _drawerScroll,
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  controller: _drawerScroll,
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
 
@@ -601,6 +615,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ],
                 ),
+              ),
               ),
             ),
 
