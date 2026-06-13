@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -37,6 +39,10 @@ class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
   String? _selected; // selected file's path, or null
   bool _starting = false;
 
+  /// In-flight / loaded thumbnail fetches keyed by file path, so scrolling the
+  /// list doesn't refetch as ListView rebuilds tiles.
+  final Map<String, Future<Uint8List?>> _thumbs = {};
+
   @override
   void initState() {
     super.initState();
@@ -46,8 +52,12 @@ class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
 
   void _reload() => setState(() {
         _selected = null;
+        _thumbs.clear();
         _future = _control.listGcodes();
       });
+
+  Future<Uint8List?> _thumb(GcodeFile f) =>
+      _thumbs.putIfAbsent(f.path, () => _control.fetchThumbnail(f));
 
   Future<void> _start() async {
     final path = _selected;
@@ -175,16 +185,15 @@ class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
                         selected: selected,
                         selectedTileColor:
                             theme.colorScheme.primary.withValues(alpha: 0.12),
-                        leading: Icon(
-                          selected
-                              ? Icons.radio_button_checked
-                              : Icons.description_outlined,
-                          color: selected ? theme.colorScheme.primary : null,
-                        ),
+                        leading: _GcodeThumb(future: _thumb(f)),
                         title: Text(f.name,
                             maxLines: 1, overflow: TextOverflow.ellipsis),
                         subtitle: Text(_subtitle(context, f),
                             maxLines: 1, overflow: TextOverflow.ellipsis),
+                        trailing: selected
+                            ? Icon(Icons.check_circle,
+                                color: theme.colorScheme.primary)
+                            : null,
                         onTap: () => setState(
                             () => _selected = selected ? null : f.path),
                       );
@@ -277,6 +286,41 @@ class _Message extends StatelessWidget {
             textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
         if (action != null) ...[const SizedBox(height: 16), action!],
       ],
+    );
+  }
+}
+
+/// Leading thumbnail for a G-code row: the slicer-embedded preview when the
+/// file has one, otherwise a legible file glyph. Always a fixed rounded box so
+/// the row height stays even whether or not a thumbnail loads.
+class _GcodeThumb extends StatelessWidget {
+  final Future<Uint8List?> future;
+  const _GcodeThumb({required this.future});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 46,
+        height: 46,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+        child: FutureBuilder<Uint8List?>(
+          future: future,
+          builder: (context, snap) {
+            final bytes = snap.data;
+            if (bytes != null && bytes.isNotEmpty) {
+              return Image.memory(bytes,
+                  fit: BoxFit.cover, gaplessPlayback: true);
+            }
+            // Loading, or the file has no embedded thumbnail — show a clear
+            // glyph rather than the faint outline icon it replaces.
+            return Icon(Icons.description,
+                size: 24, color: theme.colorScheme.onSurfaceVariant);
+          },
+        ),
+      ),
     );
   }
 }

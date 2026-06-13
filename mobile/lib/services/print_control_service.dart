@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -152,6 +153,51 @@ class PrintControlService {
     });
     return ok ?? false;
   }
+
+  /// Fetch a slicer-embedded thumbnail for [file] — the same PNG preview
+  /// Mainsail/Fluidd show. Reads the file's metadata for the largest available
+  /// thumbnail, then pulls it from the gcodes file store. Returns the image
+  /// bytes, an empty list when the file has no embedded thumbnail, or null on
+  /// failure. Both requests run against the same winning base (LAN or tunnel).
+  Future<Uint8List?> fetchThumbnail(GcodeFile file) =>
+      _viaLanThenTunnel((base, token, isLan) async {
+        try {
+          final headers = isLan ? null : {'Authorization': 'Bearer $token'};
+          final metaUri = Uri.parse('$base/server/files/metadata'
+              '?filename=${Uri.encodeComponent(file.path)}');
+          final metaResp = await http
+              .get(metaUri, headers: headers)
+              .timeout(Duration(seconds: isLan ? 4 : 12));
+          if (metaResp.statusCode != 200) return null;
+          final thumbs = (jsonDecode(metaResp.body)['result']?['thumbnails']
+                  as List<dynamic>?) ??
+              const [];
+          // Largest available — it downscales crisply into the small tile.
+          Map<String, dynamic>? best;
+          for (final t in thumbs.whereType<Map<String, dynamic>>()) {
+            final w = (t['width'] as num?)?.toInt() ?? 0;
+            if (best == null || w > ((best['width'] as num?)?.toInt() ?? 0)) {
+              best = t;
+            }
+          }
+          final rel = best?['relative_path'] as String?;
+          if (rel == null) return Uint8List(0); // success: no embedded thumbnail
+          // relative_path is relative to the gcode file's parent folder, so
+          // prepend that folder to get the path within the gcodes root.
+          final dir = file.folder;
+          final thumbPath = dir == null ? rel : '$dir/$rel';
+          final encoded =
+              thumbPath.split('/').map(Uri.encodeComponent).join('/');
+          final imgUri = Uri.parse('$base/server/files/gcodes/$encoded');
+          final imgResp = await http
+              .get(imgUri, headers: headers)
+              .timeout(Duration(seconds: isLan ? 5 : 15));
+          if (imgResp.statusCode != 200) return null;
+          return imgResp.bodyBytes;
+        } catch (_) {
+          return null;
+        }
+      });
 
   /// Resolve the freshest LAN base then the tunnel, running [call] against each
   /// until one returns non-null. Mirrors [sendAction]'s path order — including
