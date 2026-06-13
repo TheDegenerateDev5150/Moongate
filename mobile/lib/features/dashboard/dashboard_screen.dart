@@ -144,7 +144,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Moongate'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Brand mark beside the wordmark. Placeholder moon glyph for now —
+            // swap for the real Moongate logo asset once it's designed.
+            Icon(Icons.nightlight_round,
+                size: 22, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            const Text('Moongate'),
+          ],
+        ),
         actions: [
           Builder(
             builder: (ctx) => IconButton(

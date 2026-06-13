@@ -292,9 +292,6 @@ class _PrinterScreenState extends State<PrinterScreen>
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Moongate brand mark (the 🌙 of "Moongate") leading the bar.
-            Icon(Icons.nightlight_round, size: 20, color: cs.primary),
-            const SizedBox(width: 8),
             // Edit icon directly before the name (name + advanced address).
             IconButton(
               icon: const Icon(Icons.edit, size: 18),
