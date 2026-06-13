@@ -190,10 +190,22 @@ class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
                         selectedTileColor:
                             theme.colorScheme.primary.withValues(alpha: 0.12),
                         leading: _GcodeThumb(future: _thumb(f, listing)),
-                        title: Text(f.name,
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
-                        subtitle: Text(_subtitle(context, f),
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        title: Text(
+                          f.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          // Down from ListTile's default 16px titleMedium to a
+                          // more refined 14px medium for the file name.
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                        subtitle: Text(
+                          _subtitle(context, f),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ),
                         trailing: selected
                             ? Icon(Icons.check_circle,
                                 color: theme.colorScheme.primary)
