@@ -1005,6 +1005,11 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.8.2', [
+    'Print a stored file from the dashboard — tap the new folder button on a ready printer to browse the G-code files already on it (with slicer thumbnails), pick one and start it',
+    'A proper Moongate app icon at last — a red moon-gate on black — across the launcher, the dashboard bar and notifications',
+    'Notification fixes — a powered-off printer now shows Offline instead of Idle, and switching between Wi-Fi and cellular no longer re-fires a spurious "print cancelled" alert',
+  ]),
   _ChangelogEntry('v0.8.1', [
     'Print notifications now refresh the moment you add, remove or restore a printer — no more "No printers" stuck in the notification after a restore',
     'New "Update frequency" setting — choose how often notifications check your printers: 5s, 10s, 15s, 30s or 1 minute (Menu, under Print notifications)',
