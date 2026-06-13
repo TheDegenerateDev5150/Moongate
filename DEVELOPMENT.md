@@ -315,4 +315,4 @@ In-app, users running an older version will see the update banner appear within 
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — how the pieces fit together, data flow diagrams, key design decisions
 - [SECURITY.md](SECURITY.md) — auth, transport, threat model, audit references
-- [docs/setup-guide.md](docs/setup-guide.md) — end-user setup walkthrough (the friendlier version of [README.md](README.md#setup))
+- [docs/setup-guide.md](docs/setup-guide.md) — end-user setup walkthrough (the friendlier version of [README.md](README.md#quick-start))
