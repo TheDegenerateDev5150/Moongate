@@ -101,7 +101,7 @@
   "pairingGateCodeLabel": "GATE code",
   "pairingGateCodeHint": "输入您的 Klipper 控制台中显示的 8 位代码。",
   "pairingGateCodeValid": "代码有效 ✓",
-  "pairingGateCodeWarning": "替代方法。不使用二维码时，打印机可能需要几分钟 — 偶尔长达约 10 分钟 — 才能在仪表盘上完全上线。请扫描上方的二维码以即时连接。",
+  "pairingGateCodeWarning": "替代方法。不使用二维码时，打印机最多可能需要约一分钟才能连接——它正在等待安全隧道建立。请扫描上方的二维码以即时连接。",
   "pairingCameraPermissionNeeded": "需要摄像头权限",
   "pairingCameraUnavailable": "摄像头不可用",
   "pairingCancelScan": "取消扫描",

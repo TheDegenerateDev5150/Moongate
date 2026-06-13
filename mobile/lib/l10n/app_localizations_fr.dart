@@ -343,7 +343,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pairingGateCodeWarning =>
-      'Méthode alternative. Sans le QR, l\'imprimante peut mettre quelques minutes — parfois jusqu\'à ~10 — à apparaître entièrement en ligne sur le tableau de bord. Scannez le QR code ci-dessus pour une connexion instantanée.';
+      'Méthode alternative. Sans le QR, l\'imprimante peut mettre jusqu\'à une minute environ à se connecter — elle attend l\'établissement du tunnel sécurisé. Scannez le QR code ci-dessus pour une connexion instantanée.';
 
   @override
   String get pairingCameraPermissionNeeded => 'Autorisation caméra requise';

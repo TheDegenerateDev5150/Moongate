@@ -101,7 +101,7 @@
   "pairingGateCodeLabel": "Code GATE",
   "pairingGateCodeHint": "Saisissez le code à 8 chiffres affiché dans votre console Klipper.",
   "pairingGateCodeValid": "Le code semble valide ✓",
-  "pairingGateCodeWarning": "Méthode alternative. Sans le QR, l'imprimante peut mettre quelques minutes — parfois jusqu'à ~10 — à apparaître entièrement en ligne sur le tableau de bord. Scannez le QR code ci-dessus pour une connexion instantanée.",
+  "pairingGateCodeWarning": "Méthode alternative. Sans le QR, l'imprimante peut mettre jusqu'à une minute environ à se connecter — elle attend l'établissement du tunnel sécurisé. Scannez le QR code ci-dessus pour une connexion instantanée.",
   "pairingCameraPermissionNeeded": "Autorisation caméra requise",
   "pairingCameraUnavailable": "Caméra indisponible",
   "pairingCancelScan": "Annuler le scan",

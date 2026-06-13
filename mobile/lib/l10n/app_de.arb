@@ -101,7 +101,7 @@
   "pairingGateCodeLabel": "GATE-Code",
   "pairingGateCodeHint": "Gib den 8-stelligen Code aus deiner Klipper-Konsole ein.",
   "pairingGateCodeValid": "Code sieht gültig aus ✓",
-  "pairingGateCodeWarning": "Alternative Methode. Ohne den QR-Code kann es einige Minuten dauern — gelegentlich bis zu ~10 —, bis der Drucker vollständig auf dem Dashboard online ist. Scanne den QR-Code oben für eine sofortige Verbindung.",
+  "pairingGateCodeWarning": "Alternative Methode. Ohne den QR-Code kann es bis zu etwa einer Minute dauern, bis der Drucker online ist — er wartet auf die Verbindung des sicheren Tunnels. Scanne den QR-Code oben für eine sofortige Verbindung.",
   "pairingCameraPermissionNeeded": "Kameraberechtigung erforderlich",
   "pairingCameraUnavailable": "Kamera nicht verfügbar",
   "pairingCancelScan": "Scan abbrechen",

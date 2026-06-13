@@ -322,7 +322,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pairingGateCodeWarning =>
-      '替代方法。不使用二维码时，打印机可能需要几分钟 — 偶尔长达约 10 分钟 — 才能在仪表盘上完全上线。请扫描上方的二维码以即时连接。';
+      '替代方法。不使用二维码时，打印机最多可能需要约一分钟才能连接——它正在等待安全隧道建立。请扫描上方的二维码以即时连接。';
 
   @override
   String get pairingCameraPermissionNeeded => '需要摄像头权限';

@@ -341,7 +341,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pairingGateCodeWarning =>
-      'Método alternativo. Sin el QR, la impresora puede tardar unos minutos —a veces hasta ~10— en aparecer completamente en línea en el panel. Escanea el código QR de arriba para una conexión instantánea.';
+      'Método alternativo. Sin el QR, la impresora puede tardar hasta aproximadamente un minuto en conectarse — está esperando a que se establezca el túnel seguro. Escanea el código QR de arriba para una conexión instantánea.';
 
   @override
   String get pairingCameraPermissionNeeded => 'Se necesita permiso de cámara';

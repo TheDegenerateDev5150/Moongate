@@ -339,7 +339,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get pairingGateCodeWarning =>
-      'Metoda alternatywna. Bez kodu QR drukarka może potrzebować kilku minut — czasem do ~10 — aby w pełni pojawić się online na pulpicie. Zeskanuj kod QR powyżej, aby połączyć się natychmiast.';
+      'Metoda alternatywna. Bez kodu QR drukarka może potrzebować nawet około minuty, aby się połączyć — czeka na nawiązanie bezpiecznego tunelu. Zeskanuj kod QR powyżej, aby połączyć się natychmiast.';
 
   @override
   String get pairingCameraPermissionNeeded => 'Wymagane uprawnienie do kamery';
