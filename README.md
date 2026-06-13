@@ -7,24 +7,12 @@
 [![Latest release](https://img.shields.io/github/v/release/PEEKYPAUL/Moongate?label=latest%20release&color=6C63FF)](https://github.com/PEEKYPAUL/Moongate/releases/latest)
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)](#quick-start)
-[![Download APK](https://img.shields.io/badge/%E2%AC%87%20download-APK-success)](https://github.com/PEEKYPAUL/Moongate/releases/latest)
 
-Moongate is a free, open-source Android app for **full remote control of your Klipper 3D printer** — live webcam, print controls, temperatures, and the complete Mainsail/Fluidd UI — over your home WiFi and automatically over the internet when you're away. No Tailscale, no VPN setup, no subscriptions.
+<img src="docs/screenshots/generated/hero.png" width="820" alt="Moongate on Android — fleet dashboard, the full Mainsail UI in-app, and custom themes"/>
 
-<table>
-  <tr>
-    <td><img src="docs/screenshots/dashboard.png" width="180" alt="Dashboard"/></td>
-    <td><img src="docs/screenshots/printer-mainsail.png" width="180" alt="Mainsail UI in-app"/></td>
-    <td><img src="docs/screenshots/pairing.png" width="180" alt="Pairing"/></td>
-    <td><img src="docs/screenshots/drawer.png" width="180" alt="Menu"/></td>
-  </tr>
-</table>
+Free, open-source Android control for your **Klipper 3D printer** — live webcam, print controls, temperatures, and the complete Mainsail/Fluidd UI — over home WiFi and **automatically over the internet** when you're away. No Tailscale, no VPN, no port forwarding, no subscriptions.
 
-<br/>
-
-<img src="docs/screenshots/notification.png" width="520" alt="Print notifications — live fleet status in the notification shade"/>
-
-<br/><sub><em>NEW · optional print notifications — live fleet status &amp; start / finish / error alerts, right in your notification shade.</em></sub>
+<a href="https://github.com/PEEKYPAUL/Moongate/releases/latest"><img src="https://img.shields.io/badge/%E2%AC%87%20Download%20the%20APK-6C63FF?style=for-the-badge&logo=android&logoColor=white" alt="Download the APK"/></a>
 
 </div>
 
@@ -36,7 +24,6 @@ Moongate is a free, open-source Android app for **full remote control of your Kl
 - [Screenshots](#screenshots)
 - [Quick start](#quick-start)
 - [How it works](#how-it-works)
-- [Updating &amp; removing »](docs/managing-moongate.md)
 - [Documentation](#documentation)
 - [Buy me a coffee](#buy-me-a-coffee)
 - [License](#license)
@@ -45,46 +32,33 @@ Moongate is a free, open-source Android app for **full remote control of your Kl
 
 ## Features
 
-| | |
-|---|---|
-| **Dashboard at a glance** | Live webcam thumbnails (pick the refresh rate — Raw / 1s / 3s / 5s — to balance smoothness against data use), print progress matched to Mainsail's slicer estimate, temperatures, chamber sensor, and a per-printer status badge. |
-| **Print controls** | Pause, resume, and stop right from the tile (stop needs a confirm tap). Idle or errored printers get a one-tap firmware restart. |
-| **Full Mainsail / Fluidd UI** | Tap a tile to open the complete web UI in-app — auto-detects whichever you run. |
-| **Auto local / remote** | Tries home WiFi first on every poll; falls back to the Cloudflare tunnel within ~2s when you're away, and flips back to "Local" the moment you're home again. |
-| **App lock** | Optional PIN + biometric (fingerprint/face) lock on launch, with configurable auto-lock and screenshot protection. Off by default. |
-| **Hardened remote access** | Every internet-facing request is gated by a short-lived signed token. The tunnel URL alone gives an attacker nothing — just flat `401`s with no Mainsail/Moonraker fingerprint. |
-| **Secure, simple pairing** | One Klipper command makes a time-limited QR + code. LAN-only — no port forwarding, static IP, or DNS to manage. |
-| **Themes &amp; layout** | System / Light / Dark / fully **Custom** colours, a 1–3 column grid, font scaling, and optional landscape. |
-| **Backup &amp; restore** | Back up your printers to a file; restoring after a reinstall — or on a new phone — brings them **back online automatically, with no re-pairing** (run the Pi installer once so the printer recognises the restored app). |
-| **Report a problem** | Send a bug report from the menu — or the Add Printer screen if you can't pair — with diagnostics (app, device, network, per-printer status) attached, so issues are quick to fix. |
-| **In-app updates** | A one-tap prompt when a new release lands. |
+- 📊 **Fleet dashboard** — live webcam thumbnails (pick the refresh rate to balance smoothness vs. data), print progress matched to Mainsail's estimate, temperatures, chamber sensor, and a per-printer status badge.
+- 🎛️ **Print controls** — pause, resume, and stop from the tile, plus a one-tap firmware restart for idle or errored printers.
+- 🖥️ **Full Mainsail / Fluidd UI** — tap a tile to open the complete web UI in-app; whichever you run is auto-detected.
+- 📡 **Auto local ↔ remote** — tries home WiFi first every poll, falls back to the Cloudflare tunnel within ~2s when you're away, and flips back to "Local" the moment you're home.
+- 🔔 **Print notifications** — opt-in live fleet status in your notification shade, with start / finish / error alerts.
+- 🔒 **App lock** — optional PIN + biometric (fingerprint/face) on launch, with configurable auto-lock and screenshot protection. Off by default.
+- 🎨 **Themes & layout** — System / Light / Dark / fully **Custom** colours, a 1–3 column grid, font scaling, and optional landscape.
+- 💾 **Backup & restore** — restoring after a reinstall, or on a new phone, brings your printers **back online with no re-pairing**.
+
+> 🔐 **Hardened remote access** — every internet-facing request is gated by a short-lived signed token. Leaking the tunnel URL alone gives an attacker nothing but flat `401`s, with no Mainsail/Moonraker fingerprint. [How it works ›](#how-it-works)
 
 ---
 
 ## Screenshots
 
-<table>
-  <tr>
-    <th>Custom theme editor</th>
-    <th>Colour picker</th>
-    <th>Icon guide</th>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/custom-theme.png" alt="Custom theme editor"/></td>
-    <td><img src="docs/screenshots/custom-theme-picker.png" alt="Colour picker"/></td>
-    <td><img src="docs/screenshots/icon-guide.png" alt="Icon guide — what every dashboard icon means"/></td>
-  </tr>
-  <tr>
-    <th>Menu — top</th>
-    <th>Menu — settings</th>
-    <th></th>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/drawer.png" alt="Menu — top"/></td>
-    <td><img src="docs/screenshots/drawer-bottom.png" alt="Menu — settings &amp; notifications"/></td>
-    <td></td>
-  </tr>
-</table>
+<div align="center">
+  <img src="docs/screenshots/generated/framed-pairing.png" width="23%" alt="Secure LAN pairing"/>
+  <img src="docs/screenshots/generated/framed-drawer.png" width="23%" alt="Menu"/>
+  <img src="docs/screenshots/generated/framed-icon-guide.png" width="23%" alt="Icon guide — what every dashboard icon means"/>
+  <img src="docs/screenshots/generated/framed-custom-theme.png" width="23%" alt="Custom theme editor"/>
+</div>
+
+<div align="center">
+<br/>
+<img src="docs/screenshots/notification.png" width="640" alt="Print notifications in the Android notification shade"/>
+<br/><sub><em>Optional print notifications — live fleet status &amp; start / finish / error alerts, right in your notification shade.</em></sub>
+</div>
 
 ---
 
@@ -133,7 +107,7 @@ Android only. Enable **Install from unknown sources** for your browser or file m
 
 No working camera? Type the **`GATE-XXXX-XXXX`** code shown in the console instead.
 
-> Pairing is LAN-only by design: nothing to port-forward, no URL to share. Reinstalling or switching phones? **Back up your config first** — restoring it on the new install brings your printers back online without re-pairing (re-run the Pi installer once on each Pi so it recognises the restored app). See **[Updating &amp; removing](docs/managing-moongate.md)**.
+> Pairing is LAN-only by design: nothing to port-forward, no URL to share. Reinstalling or switching phones? **Back up your config first** — restoring it brings your printers back online without re-pairing. See **[Updating &amp; removing](docs/managing-moongate.md)**.
 
 ---
 
@@ -156,13 +130,9 @@ No working camera? Type the **`GATE-XXXX-XXXX`** code shown in the console inste
                                         └──────────────────────────────┘
 ```
 
-1. **Your Raspberry Pi** runs Klipper, Moonraker, the Moongate plugin, and an auth proxy. The proxy sits in front of everything reachable from the internet — any request without a valid, short-lived token gets a flat `401 Unauthorized` with no fingerprint hinting at what's underneath.
+Your Pi runs Klipper, Moonraker, the Moongate plugin, and an **auth proxy** that gates everything reachable from the internet. A minimal **cloud middleman** handles anonymous sign-in (no email, no password) and tracks the current tunnel URL; the app fetches a fresh signed token before each request and tries home WiFi first, then the tunnel.
 
-2. **A small cloud middleman** handles anonymous sign-in (no email, no password) and tells the app where to find your printer right now — the Cloudflare tunnel URL rotates each Pi reboot, and the middleman tracks the current one. The app fetches a fresh signed token before each request.
-
-3. **The Moongate app** tries home WiFi first (fast, no internet round-trip), then automatically falls back to the tunnel when you're away. Either path is gated by the same token, and both hit the same plugin on the same Pi.
-
-**The headline:** leaking the tunnel URL alone gives an attacker nothing — every path through it returns `401` without revealing what's there. Full threat model in [SECURITY.md](SECURITY.md).
+**The headline:** leaking the tunnel URL alone gives an attacker nothing — every path through it returns `401` without revealing what's underneath. Full threat model in [SECURITY.md](SECURITY.md); code-level detail in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
@@ -173,7 +143,7 @@ No working camera? Type the **`GATE-XXXX-XXXX`** code shown in the console inste
 | [Updating &amp; removing](docs/managing-moongate.md) | Updating the app &amp; plugin, reinstalling / moving to a new phone, full uninstall |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Building from source, repo layout, debugging, release signing, CI |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Code structure, state management, data-flow walkthroughs, design decisions |
-| [SECURITY.md](SECURITY.md) | Threat model, what the tunnel does and doesn't expose, the empirical 35-vector verification, vulnerability reporting |
+| [SECURITY.md](SECURITY.md) | Threat model, what the tunnel does and doesn't expose, the empirical verification, vulnerability reporting |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common failure modes — offline tiles, tunnel issues, pairing failures — each with copy-paste diagnostics |
 | [CHANGELOG.md](CHANGELOG.md) | Every release with a one-line summary of what changed and why |
 
@@ -183,7 +153,7 @@ No working camera? Type the **`GATE-XXXX-XXXX`** code shown in the console inste
 
 ## Buy me a coffee
 
-Moongate is free, open source, and built in my spare time for the Klipper community — no ads, no subscriptions, no data harvesting. If it's earned a spot on your phone, you can buy me a coffee to say thanks. Every contribution goes straight back into the project: test hardware, the cloud service that keeps remote access working, and the time to keep shipping features like these.
+Moongate is free, open source, and built in my spare time for the Klipper community — no ads, no subscriptions, no data harvesting. If it's earned a spot on your phone, you can buy me a coffee to say thanks. Every contribution goes straight back into the project: test hardware, the cloud service that keeps remote access working, and the time to keep shipping features.
 
 Thank you for being part of it 💜
 
@@ -197,16 +167,12 @@ Thank you for being part of it 💜
 
 ## License
 
-**PolyForm Noncommercial License 1.0.0** — see [LICENSE](LICENSE) for the full legal text.
+**PolyForm Noncommercial License 1.0.0** — see [LICENSE](LICENSE) for the full text.
 
-**Plain English:**
+- ✅ Free to read, build, self-host, modify, and share for **non-commercial** use — including charities, schools, and public / research / government institutions.
+- ❌ Selling Moongate, charging for access, or bundling it in a paid product needs a **separate written licence**.
 
-- ✅ Read the source, build it yourself, run it on your own printers — free, no permission needed
-- ✅ Modify it for your own use, share your fork for non-commercial purposes — free
-- ✅ Use at a charity, school, public research org, public safety / health org, environmental org, or government institution — free regardless of funding source
-- ❌ Selling Moongate, charging for access, including it in a paid product, or any other commercial use — **requires a separate written licence from me**
-
-If you'd like to use Moongate commercially, [open a GitHub issue](https://github.com/PEEKYPAUL/Moongate/issues/new) or contact [@PEEKYPAUL](https://github.com/PEEKYPAUL) directly to discuss terms.
+Want to use Moongate commercially? [Open an issue](https://github.com/PEEKYPAUL/Moongate/issues/new) or contact [@PEEKYPAUL](https://github.com/PEEKYPAUL) to discuss terms.
 
 ---
 
