@@ -63,7 +63,7 @@ logger = logging.getLogger("moonraker.moongate")
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running — the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.6"
+MOONGATE_PLUGIN_VERSION = "0.6.7"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -620,6 +620,13 @@ class HeartbeatLoop:
             return
         if status == 404:
             logger.warning("Heartbeat 404 — printer record gone server-side")
+            # The cloud row we knew is gone — typically a re-pair / reset-owner
+            # has created a NEW row. Drop back to the fast bootstrap cadence so
+            # we report our tunnel URL into that new row within ~5 s, instead of
+            # waiting up to a full heartbeat interval (5 min) for the next tick.
+            # Without this, re-pairing on a network that blocks mDNS left the
+            # tile "Starting up…" for minutes while the app waited on the tunnel.
+            self._last_url_reported = None
             if self.on_unpaired:
                 try:
                     self.on_unpaired()
