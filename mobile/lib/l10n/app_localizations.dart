@@ -182,6 +182,12 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get commonRetry;
 
+  /// Tooltip / accessibility label on the keyboard icon that re-opens the soft keyboard for a text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Show keyboard'**
+  String get commonShowKeyboard;
+
   /// Generic Remove button label.
   ///
   /// In en, this message translates to:

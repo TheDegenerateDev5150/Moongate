@@ -46,6 +46,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonRetry => 'Réessayer';
 
   @override
+  String get commonShowKeyboard => 'Afficher le clavier';
+
+  @override
   String get commonRemove => 'Retirer';
 
   @override

@@ -46,6 +46,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonRetry => 'Повторить';
 
   @override
+  String get commonShowKeyboard => 'Показать клавиатуру';
+
+  @override
   String get commonRemove => 'Удалить';
 
   @override

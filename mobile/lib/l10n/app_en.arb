@@ -27,6 +27,8 @@
   "@commonDone": {"description": "Generic Done button label."},
   "commonRetry": "Retry",
   "@commonRetry": {"description": "Generic Retry button label."},
+  "commonShowKeyboard": "Show keyboard",
+  "@commonShowKeyboard": {"description": "Tooltip / accessibility label on the keyboard icon that re-opens the soft keyboard for a text field."},
   "commonRemove": "Remove",
   "@commonRemove": {"description": "Generic Remove button label."},
   "commonDelete": "Delete",
