@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 import '../models/printer_config.dart';
@@ -95,4 +97,148 @@ class PrintControlService {
       return false;
     }
   }
+
+  // ── G-code library: list stored files + start a print ─────────────────────
+  //
+  // These talk to Moonraker directly (not the plugin's /control endpoint),
+  // mirroring how PrinterStatusService already pulls /printer/objects/query
+  // and /server/files/metadata: on LAN no auth header (Moonraker trusts the
+  // subnet), on the tunnel a Bearer token (the auth proxy gates it). So the
+  // feature needs no plugin update — it rides the same transparent proxy.
+
+  /// List the G-code files stored on the printer (Moonraker `gcodes` root),
+  /// newest first. Returns null when every path failed (caller shows an
+  /// error); an empty list means the printer simply has no files yet.
+  Future<List<GcodeFile>?> listGcodes() =>
+      _viaLanThenTunnel((base, token, isLan) async {
+        try {
+          final uri = Uri.parse('$base/server/files/list?root=gcodes');
+          final resp = await http
+              .get(uri,
+                  headers: isLan ? null : {'Authorization': 'Bearer $token'})
+              .timeout(Duration(seconds: isLan ? 4 : 12));
+          if (resp.statusCode != 200) return null;
+          final body = jsonDecode(resp.body) as Map<String, dynamic>;
+          final result = body['result'] as List<dynamic>? ?? const [];
+          final files = result
+              .whereType<Map<String, dynamic>>()
+              .map(GcodeFile.fromJson)
+              .where((f) => f.isGcode)
+              .toList()
+            ..sort((a, b) => b.modified.compareTo(a.modified));
+          return files;
+        } catch (_) {
+          return null;
+        }
+      });
+
+  /// Start printing a stored file by its `gcodes`-relative path. LAN-first,
+  /// then tunnel; returns true once Moonraker accepts the start.
+  Future<bool> startPrint(String filename) async {
+    final ok = await _viaLanThenTunnel((base, token, isLan) async {
+      try {
+        final uri = Uri.parse('$base/printer/print/start'
+            '?filename=${Uri.encodeComponent(filename)}');
+        final resp = await http
+            .post(uri,
+                headers: isLan ? null : {'Authorization': 'Bearer $token'})
+            .timeout(Duration(seconds: isLan ? 4 : 12));
+        // null (not false) on a non-200 so the next path is still tried — a LAN
+        // Moonraker that rejects an untrusted POST falls back to the tunnel.
+        return resp.statusCode == 200 ? true : null;
+      } catch (_) {
+        return null;
+      }
+    });
+    return ok ?? false;
+  }
+
+  /// Resolve the freshest LAN base then the tunnel, running [call] against each
+  /// until one returns non-null. Mirrors [sendAction]'s path order — including
+  /// the one-shot token refresh + tunnel retry — so a fresh-paired (tunnel-
+  /// less) printer still works on LAN and a stale token self-heals.
+  Future<T?> _viaLanThenTunnel<T>(
+      Future<T?> Function(String base, String token, bool isLan) call) async {
+    if (!SupabaseService.instance.ready) return null;
+
+    PrinterAccess access;
+    try {
+      access = await PrinterAccessCache.instance.get(config.id);
+    } catch (_) {
+      return null;
+    }
+
+    final discovered = LanDiscoveryService.instance.lookup(config.id);
+    final live = PrinterRegistry.instance.printers
+        .firstWhere((p) => p.id == config.id, orElse: () => config)
+        .lanUrl;
+    final lanUrl = discovered ?? live;
+    if (lanUrl != null) {
+      final r = await call(lanUrl, access.accessToken, true);
+      if (r != null) return r;
+    }
+
+    if (access.tunnelUrl != null) {
+      final r = await call(access.tunnelUrl!, access.accessToken, false);
+      if (r != null) return r;
+    }
+
+    // 401 / network blip — drop the cache, refresh the token, retry tunnel once.
+    PrinterAccessCache.instance.invalidate(config.id);
+    try {
+      access = await PrinterAccessCache.instance.get(config.id);
+    } catch (_) {
+      return null;
+    }
+    if (access.tunnelUrl != null) {
+      return call(access.tunnelUrl!, access.accessToken, false);
+    }
+    return null;
+  }
+}
+
+/// A G-code file stored on the printer, parsed from Moonraker's
+/// `/server/files/list?root=gcodes` response.
+class GcodeFile {
+  /// Path relative to the gcodes root, e.g. `calibration/benchy.gcode`.
+  final String path;
+
+  /// Last-modified time in unix seconds (0 when unknown).
+  final double modified;
+
+  /// File size in bytes (0 when unknown).
+  final int size;
+
+  const GcodeFile({
+    required this.path,
+    required this.modified,
+    required this.size,
+  });
+
+  factory GcodeFile.fromJson(Map<String, dynamic> j) => GcodeFile(
+        path:     (j['path'] as String?) ?? '',
+        modified: (j['modified'] as num?)?.toDouble() ?? 0,
+        size:     (j['size'] as num?)?.toInt() ?? 0,
+      );
+
+  bool get isGcode {
+    final p = path.toLowerCase();
+    return p.endsWith('.gcode') || p.endsWith('.gco') || p.endsWith('.g');
+  }
+
+  /// Just the filename, without any subdirectory prefix.
+  String get name {
+    final i = path.lastIndexOf('/');
+    return i >= 0 ? path.substring(i + 1) : path;
+  }
+
+  /// The subdirectory the file lives in, or null when it sits at the root.
+  String? get folder {
+    final i = path.lastIndexOf('/');
+    return i > 0 ? path.substring(0, i) : null;
+  }
+
+  DateTime? get modifiedAt => modified > 0
+      ? DateTime.fromMillisecondsSinceEpoch((modified * 1000).round())
+      : null;
 }

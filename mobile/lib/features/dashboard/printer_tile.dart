@@ -13,6 +13,7 @@ import '../../providers/settings_provider.dart';
 import '../../services/print_control_service.dart';
 import '../../services/printer_status_registry.dart';
 import '../../services/printer_status_service.dart';
+import 'gcode_files_overlay.dart';
 
 class PrinterTile extends StatefulWidget {
   final PrinterConfig printer;
@@ -243,6 +244,8 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                   onPause: _handlePause,
                   onResume: _handleResume,
                   onStop: _handleStop,
+                  onOpenFiles: () =>
+                      showGcodeFilesSheet(context, widget.printer),
                 ),
               ),
 
@@ -347,6 +350,7 @@ class _ActionRow extends StatelessWidget {
   final VoidCallback onPause;
   final VoidCallback onResume;
   final VoidCallback onStop;
+  final VoidCallback onOpenFiles;
 
   const _ActionRow({
     required this.status,
@@ -354,6 +358,7 @@ class _ActionRow extends StatelessWidget {
     required this.onPause,
     required this.onResume,
     required this.onStop,
+    required this.onOpenFiles,
   });
 
   @override
@@ -364,6 +369,13 @@ class _ActionRow extends StatelessWidget {
     final paused   = status.state == 'paused';
     final active   = printing || paused;
     final color    = paused ? Colors.orange : theme.colorScheme.primary;
+    // "Ready to accept a print": online and idle/finished — not while printing
+    // or paused (hide the folder then), and not on error/startup where Klipper
+    // can't take a job yet. So it disappears mid-print and returns on complete.
+    final ready = !active &&
+        (status.state == 'standby' ||
+         status.state == 'complete' ||
+         status.state == 'cancelled');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 6, 8, 4),
@@ -426,6 +438,16 @@ class _ActionRow extends StatelessWidget {
               tooltip: l.tilePause,
               onTap: onPause,
             ),
+          // Print a stored file — only when online and ready to accept a job.
+          if (ready) ...[
+            _Btn(
+              icon: Icons.folder_open_rounded,
+              color: theme.colorScheme.primary,
+              tooltip: l.tileOpenFiles,
+              onTap: onOpenFiles,
+            ),
+            const SizedBox(width: 4),
+          ],
           // Stop (active) / Firmware Restart (idle) — always shown for online printers.
           const SizedBox(width: 4),
           _Btn(

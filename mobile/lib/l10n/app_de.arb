@@ -315,5 +315,16 @@
   "printAlertPaused": "Druck pausiert",
   "printAlertComplete": "Druck fertig",
   "printAlertCancelled": "Druck abgebrochen",
-  "printAlertError": "Druckerfehler"
+  "printAlertError": "Druckerfehler",
+  "tileOpenFiles": "Datei drucken",
+  "gcodeSheetTitle": "Druck starten",
+  "gcodeLoading": "Dateien werden geladen …",
+  "gcodeEmpty": "Keine G-Code-Dateien auf diesem Drucker",
+  "gcodeError": "Dateien konnten nicht geladen werden",
+  "gcodeStartButton": "Druck starten",
+  "gcodeStartAction": "Starten",
+  "gcodeConfirmTitle": "Druck starten?",
+  "gcodeConfirmBody": "Druck von {file} starten?",
+  "gcodeStarted": "Druck von {file} gestartet",
+  "gcodeStartFailed": "Druck konnte nicht gestartet werden"
 }

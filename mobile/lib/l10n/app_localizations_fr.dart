@@ -1021,4 +1021,41 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get printAlertError => 'Erreur d\'imprimante';
+
+  @override
+  String get tileOpenFiles => 'Imprimer un fichier';
+
+  @override
+  String get gcodeSheetTitle => 'Démarrer une impression';
+
+  @override
+  String get gcodeLoading => 'Chargement des fichiers…';
+
+  @override
+  String get gcodeEmpty => 'Aucun fichier G-code sur cette imprimante';
+
+  @override
+  String get gcodeError => 'Impossible de charger les fichiers';
+
+  @override
+  String get gcodeStartButton => 'Lancer l\'impression';
+
+  @override
+  String get gcodeStartAction => 'Démarrer';
+
+  @override
+  String get gcodeConfirmTitle => 'Lancer l\'impression ?';
+
+  @override
+  String gcodeConfirmBody(String file) {
+    return 'Lancer l\'impression de $file ?';
+  }
+
+  @override
+  String gcodeStarted(String file) {
+    return 'Impression de $file lancée';
+  }
+
+  @override
+  String get gcodeStartFailed => 'Impossible de lancer l\'impression';
 }

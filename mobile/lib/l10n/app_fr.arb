@@ -315,5 +315,16 @@
   "printAlertPaused": "Impression en pause",
   "printAlertComplete": "Impression terminée",
   "printAlertCancelled": "Impression annulée",
-  "printAlertError": "Erreur d'imprimante"
+  "printAlertError": "Erreur d'imprimante",
+  "tileOpenFiles": "Imprimer un fichier",
+  "gcodeSheetTitle": "Démarrer une impression",
+  "gcodeLoading": "Chargement des fichiers…",
+  "gcodeEmpty": "Aucun fichier G-code sur cette imprimante",
+  "gcodeError": "Impossible de charger les fichiers",
+  "gcodeStartButton": "Lancer l'impression",
+  "gcodeStartAction": "Démarrer",
+  "gcodeConfirmTitle": "Lancer l'impression ?",
+  "gcodeConfirmBody": "Lancer l'impression de {file} ?",
+  "gcodeStarted": "Impression de {file} lancée",
+  "gcodeStartFailed": "Impossible de lancer l'impression"
 }

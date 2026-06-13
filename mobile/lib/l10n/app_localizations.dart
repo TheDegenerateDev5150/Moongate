@@ -1915,6 +1915,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Printer error'**
   String get printAlertError;
+
+  /// Tooltip for the folder button on a ready printer tile; opens the stored-G-code browser.
+  ///
+  /// In en, this message translates to:
+  /// **'Print a file'**
+  String get tileOpenFiles;
+
+  /// Title of the bottom sheet listing G-code files stored on the printer.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a print'**
+  String get gcodeSheetTitle;
+
+  /// Shown while the printer's file list is being fetched.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading files…'**
+  String get gcodeLoading;
+
+  /// Shown when the printer has no G-code files stored.
+  ///
+  /// In en, this message translates to:
+  /// **'No G-code files on this printer'**
+  String get gcodeEmpty;
+
+  /// Shown when the printer's file list could not be fetched.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load files'**
+  String get gcodeError;
+
+  /// Button at the bottom of the file sheet that starts the selected file.
+  ///
+  /// In en, this message translates to:
+  /// **'Start print'**
+  String get gcodeStartButton;
+
+  /// Confirm-dialog button that actually starts the print.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get gcodeStartAction;
+
+  /// Title of the confirm-before-printing dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Start print?'**
+  String get gcodeConfirmTitle;
+
+  /// Confirm-dialog body before starting a print. {file} is the file name.
+  ///
+  /// In en, this message translates to:
+  /// **'Start printing {file}?'**
+  String gcodeConfirmBody(String file);
+
+  /// Snackbar after a print is started. {file} is the file name.
+  ///
+  /// In en, this message translates to:
+  /// **'Started printing {file}'**
+  String gcodeStarted(String file);
+
+  /// Snackbar when starting the print failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the print'**
+  String get gcodeStartFailed;
 }
 
 class _AppLocalizationsDelegate
