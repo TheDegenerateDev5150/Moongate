@@ -112,9 +112,9 @@ Android only. Enable **Install from unknown sources** for your browser or file m
 
 No working camera? Type the **`GATE-XXXX-XXXX`** code shown in the console instead.
 
-> **How quickly does it connect?**
-> - ✅ **Scan the QR (recommended)** — a fast **local** connection by default: the printer lands on your dashboard within about a second, and remote (tunnel) access syncs in the background.
-> - ⚠️ **GATE code** — if your network blocks local discovery (or the Pi has just rebooted), the printer won't show as paired until the **Cloudflare tunnel** comes up — usually **10–30 seconds, occasionally up to a minute**. It isn't stuck; give it a moment.
+> **How quickly does it connect? Scanning the QR is instant.**
+> - ✅ **Scan the QR (recommended)** — an **instant local connection**: your printer is on the dashboard in about a second, because the QR hands the app your Pi's local address directly. Remote access over the secure tunnel keeps **building in the background** — you never wait on it.
+> - ⚠️ **GATE code** — there's no instant local hand-off, so the printer doesn't appear until the **Cloudflare tunnel** has finished building (that's what carries the connection). Usually under a minute — a little longer right after a Pi reboot. It isn't stuck; give it a moment, or scan the QR for an instant connection.
 
 > Pairing is LAN-only by design: nothing to port-forward, no URL to share. Reinstalling or switching phones? **Back up your config first** — restoring it brings your printers back online without re-pairing. See **[Updating &amp; removing](docs/managing-moongate.md)**.
 
