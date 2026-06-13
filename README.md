@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🌙 Moongate
+<img src="docs/moongate-icon.png" width="96" alt="Moongate logo"/>
+
+# Moongate
 
 ### One app. Your Klipper printer. Anywhere.
 
@@ -48,10 +50,11 @@ Free, open-source Android control for your **Klipper 3D printer** — live webca
 ## Screenshots
 
 <div align="center">
-  <img src="docs/screenshots/generated/framed-pairing.png" width="23%" alt="Secure LAN pairing"/>
-  <img src="docs/screenshots/generated/framed-drawer.png" width="23%" alt="Menu"/>
-  <img src="docs/screenshots/generated/framed-icon-guide.png" width="23%" alt="Icon guide — what every dashboard icon means"/>
-  <img src="docs/screenshots/generated/framed-custom-theme.png" width="23%" alt="Custom theme editor"/>
+  <img src="docs/screenshots/generated/framed-pairing.png" width="19%" alt="Secure LAN pairing"/>
+  <img src="docs/screenshots/generated/framed-drawer.png" width="19%" alt="Menu"/>
+  <img src="docs/screenshots/generated/framed-icon-guide.png" width="19%" alt="Icon guide — what every dashboard icon means"/>
+  <img src="docs/screenshots/generated/framed-custom-theme.png" width="19%" alt="Custom theme editor"/>
+  <img src="docs/screenshots/generated/framed-gcode-viewer.png" width="19%" alt="Print a stored G-code file"/>
 </div>
 
 <div align="center">

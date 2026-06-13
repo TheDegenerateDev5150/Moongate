@@ -127,9 +127,11 @@ def build_hero():
 
 
 def build_row():
-    # The README screenshot gallery — kept distinct from the hero trio
-    # (dashboard / Mainsail / custom theme) so the page doesn't repeat itself.
-    for name in ["pairing.png", "drawer.png", "icon-guide.png", "custom-theme.png"]:
+    # The README screenshot gallery. gcode-viewer.png also appears (fanned,
+    # partly obscured) in the hero — it's featured again here standalone so the
+    # print-from-stored-gcodes flow gets a clear, unobstructed showcase.
+    for name in ["pairing.png", "drawer.png", "icon-guide.png", "custom-theme.png",
+                 "gcode-viewer.png"]:
         phone = with_shadow(frame_phone(name, 460), alpha=90)
         phone = trim(phone, margin=10)
         phone.save(os.path.join(OUT, "framed-" + name))
