@@ -45,6 +45,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonRetry => '重试';
 
   @override
+  String get commonShowKeyboard => '显示键盘';
+
+  @override
   String get commonRemove => '移除';
 
   @override

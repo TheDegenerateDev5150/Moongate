@@ -46,6 +46,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commonRetry => 'Erneut versuchen';
 
   @override
+  String get commonShowKeyboard => 'Tastatur anzeigen';
+
+  @override
   String get commonRemove => 'Entfernen';
 
   @override

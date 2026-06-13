@@ -46,6 +46,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get commonRetry => 'Ponów';
 
   @override
+  String get commonShowKeyboard => 'Pokaż klawiaturę';
+
+  @override
   String get commonRemove => 'Usuń';
 
   @override

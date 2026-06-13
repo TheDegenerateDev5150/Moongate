@@ -11,6 +11,7 @@ import '../../models/printer_config.dart';
 import '../../services/lan_discovery_service.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
+import '../../widgets/keyboard_affordance.dart';
 import '../dashboard/feedback_sheet.dart';
 
 /// v0.3.0 pairing flow (with v0.4.2 manual-entry fallback):
@@ -36,12 +37,14 @@ class PairingScreen extends StatefulWidget {
 
 class _PairingScreenState extends State<PairingScreen> {
   final _nameController      = TextEditingController(text: 'My Printer');
+  final _nameFocus           = FocusNode();
 
   // Optional "Advanced — custom network" address. When non-blank it becomes
   // the printer's lanUrl, overriding the QR/mDNS-supplied address. The escape
   // hatch for reverse-proxy / Docker setups where auto-discovery can't find
   // the printer (see TROUBLESHOOTING.md → reverse proxy).
   final _addressController   = TextEditingController();
+  final _addressFocus        = FocusNode();
 
   // Two 4-digit boxes for the GATE code. Split lets us show a numpad
   // (TextInputType.number) instead of the full keyboard, and lets us
@@ -74,7 +77,9 @@ class _PairingScreenState extends State<PairingScreen> {
     _barcodeSub?.cancel();
     _scannerController?.dispose();
     _nameController.dispose();
+    _nameFocus.dispose();
     _addressController.dispose();
+    _addressFocus.dispose();
     _codeFirstController.dispose();
     _codeSecondController.dispose();
     _codeFirstFocus.dispose();
@@ -147,6 +152,7 @@ class _PairingScreenState extends State<PairingScreen> {
         LengthLimitingTextInputFormatter(4),
       ],
       onChanged: onChanged,
+      onTap: () => showKeyboardFor(focusNode),
       decoration: const InputDecoration(
         counterText: '',
         hintText: '0000',
@@ -464,11 +470,14 @@ class _PairingScreenState extends State<PairingScreen> {
             // ── Printer name ───────────────────────────────────────────
             TextField(
               controller: _nameController,
+              focusNode: _nameFocus,
               enabled: !_loading,
+              onTap: () => showKeyboardFor(_nameFocus),
               decoration: InputDecoration(
                 labelText: l.pairingNameLabel,
                 hintText: l.pairingNameHint,
                 border: const OutlineInputBorder(),
+                suffixIcon: _loading ? null : ShowKeyboardButton(_nameFocus),
               ),
             ),
             const SizedBox(height: 16),
@@ -699,13 +708,17 @@ class _PairingScreenState extends State<PairingScreen> {
                     const SizedBox(height: 12),
                     TextField(
                       controller: _addressController,
+                      focusNode: _addressFocus,
                       enabled: !_loading,
                       keyboardType: TextInputType.url,
                       autocorrect: false,
+                      onTap: () => showKeyboardFor(_addressFocus),
                       decoration: InputDecoration(
                         labelText: l.pairingAddressLabel,
                         hintText: l.pairingAddressHint,
                         border: const OutlineInputBorder(),
+                        suffixIcon:
+                            _loading ? null : ShowKeyboardButton(_addressFocus),
                       ),
                     ),
                   ],

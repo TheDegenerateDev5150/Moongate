@@ -11,6 +11,7 @@ import '../../services/lan_discovery_service.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
+import '../../widgets/keyboard_affordance.dart';
 
 /// Full-screen WebView showing the printer's Mainsail/Fluidd interface.
 ///
@@ -419,17 +420,21 @@ class _EditPrinterDialog extends StatefulWidget {
 class _EditPrinterDialogState extends State<_EditPrinterDialog> {
   late final TextEditingController _nameController =
       TextEditingController(text: widget.initialName);
+  final FocusNode _nameFocus = FocusNode();
   // Show the stored lanUrl without the scheme — the friendlier host:port
   // form people actually type.
   late final TextEditingController _addressController = TextEditingController(
     text: (widget.initialLanUrl ?? '').replaceFirst(RegExp(r'^https?://'), ''),
   );
+  final FocusNode _addressFocus = FocusNode();
   String? _addressError;
 
   @override
   void dispose() {
     _nameController.dispose();
+    _nameFocus.dispose();
     _addressController.dispose();
+    _addressFocus.dispose();
     super.dispose();
   }
 
@@ -456,19 +461,24 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
         children: [
           TextField(
             controller: _nameController,
+            focusNode: _nameFocus,
             autofocus: true,
             maxLength: 48,
             textCapitalization: TextCapitalization.words,
+            onTap: () => showKeyboardFor(_nameFocus),
             decoration: InputDecoration(
               labelText: l.printerNameLabel,
               border: const OutlineInputBorder(),
+              suffixIcon: ShowKeyboardButton(_nameFocus),
             ),
           ),
           const SizedBox(height: 4),
           TextField(
             controller: _addressController,
+            focusNode: _addressFocus,
             keyboardType: TextInputType.url,
             autocorrect: false,
+            onTap: () => showKeyboardFor(_addressFocus),
             decoration: InputDecoration(
               labelText: l.printerAddressLabel,
               hintText: l.printerAddressHint,
@@ -476,6 +486,7 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
               helperMaxLines: 2,
               errorText: _addressError,
               border: const OutlineInputBorder(),
+              suffixIcon: ShowKeyboardButton(_addressFocus),
             ),
             onChanged: (_) {
               if (_addressError != null) setState(() => _addressError = null);
