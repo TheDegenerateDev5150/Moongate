@@ -102,7 +102,7 @@ def build_hero():
     center = frame_phone("dashboard.png", center_w)
     left = frame_phone("printer-mainsail.png", side_w).rotate(8, expand=True,
                                                               resample=Image.BICUBIC)
-    right = frame_phone("custom-theme.png", side_w).rotate(-8, expand=True,
+    right = frame_phone("gcode-viewer.png", side_w).rotate(-8, expand=True,
                                                            resample=Image.BICUBIC)
 
     Wc, Hc = center.size
