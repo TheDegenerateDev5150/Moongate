@@ -175,7 +175,24 @@ info "Setting up Moongate repository at $MOONGATE_DIR..."
 
 if [[ -d "$MOONGATE_DIR/.git" ]]; then
     CURRENT_BRANCH="$(git -C "$MOONGATE_DIR" branch --show-current 2>/dev/null || echo unknown)"
-    if [[ "$CURRENT_BRANCH" == "master" ]]; then
+    if [[ "$CURRENT_BRANCH" != "master" ]]; then
+        warn "Repo on branch '$CURRENT_BRANCH' (not master) — skipping git pull."
+        warn "Run 'git pull' manually if you intended to update."
+    elif [[ -f "$MOONGATE_DIR/.git/shallow" ]]; then
+        # Older installs used `git clone --depth=1` — a shallow clone carries
+        # no git tags, so Moonraker can't determine a version and Mainsail's
+        # Software Update panel shows "v0.0.0-…-inferred" instead of vX.Y.Z.
+        # A shallow clone can't be cheaply converted in place, so re-clone.
+        # --filter=blob:none keeps it small AND skips the hundreds of MB of
+        # release APKs that lived in this repo's history before they moved to
+        # GitHub Release assets. Old clone preserved for safety.
+        BROKEN_DIR="${MOONGATE_DIR}.shallow-$(date +%Y%m%d-%H%M%S)"
+        warn "Existing clone is shallow — no tags, so the update panel can't show a version."
+        warn "Re-cloning with full tag history. Old clone preserved at $BROKEN_DIR"
+        mv "$MOONGATE_DIR" "$BROKEN_DIR"
+        git clone --filter=blob:none "$MOONGATE_REPO" "$MOONGATE_DIR"
+        success "Repository re-cloned with tags. Old clone preserved at $BROKEN_DIR"
+    else
         info "Repo on master — pulling latest..."
         # Robust update: `git pull --ff-only` can fail fatally for several
         # reasons — divergent history (force-push upstream), dirty working
@@ -184,7 +201,8 @@ if [[ -d "$MOONGATE_DIR/.git" ]]; then
         # then abort the installer mid-way. Fall back to re-cloning fresh,
         # preserving the broken clone for forensic inspection. (Git's own
         # error message printed above tells the user the specific cause.)
-        if git -C "$MOONGATE_DIR" fetch origin master \
+        # --tags pulls new release tags so the update panel's version keeps up.
+        if git -C "$MOONGATE_DIR" fetch origin master --tags \
             && git -C "$MOONGATE_DIR" merge --ff-only origin/master; then
             success "Repository updated."
         else
@@ -192,15 +210,12 @@ if [[ -d "$MOONGATE_DIR/.git" ]]; then
             warn "Local clone can't fast-forward to origin/master (see git error above)."
             warn "Moving aside to $BROKEN_DIR and re-cloning fresh."
             mv "$MOONGATE_DIR" "$BROKEN_DIR"
-            git clone --depth=1 "$MOONGATE_REPO" "$MOONGATE_DIR"
+            git clone --filter=blob:none "$MOONGATE_REPO" "$MOONGATE_DIR"
             success "Repository re-cloned. Old clone preserved at $BROKEN_DIR"
         fi
-    else
-        warn "Repo on branch '$CURRENT_BRANCH' (not master) — skipping git pull."
-        warn "Run 'git pull' manually if you intended to update."
     fi
 else
-    git clone --depth=1 "$MOONGATE_REPO" "$MOONGATE_DIR"
+    git clone --filter=blob:none "$MOONGATE_REPO" "$MOONGATE_DIR"
     success "Repository cloned to $MOONGATE_DIR"
 fi
 

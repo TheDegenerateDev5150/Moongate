@@ -184,6 +184,22 @@ The usual cause: `http_port` points at **Moonraker directly (port 7125)**, which
 
 **Fix:** point Moongate at the origin that serves the Mainsail/Fluidd page *and* proxies `/server`, `/websocket`, `/printer` to Moonraker. Quickest is in the app — open the printer, tap ✏️, and set **Printer address** to the address you open the web page at. Server-side, set `http_port` to that same port and restart Moonraker. Then re-open the printer.
 
+## Software Update panel shows an `inferred` version for Moongate
+
+**Symptom:** In Mainsail/Fluidd → **Settings → Software Update**, the Moongate entry shows something like `v0.0.0-1-gff62f74f-inferred` or a bare commit hash instead of a clean `v0.6.5`.
+
+**Cause:** The Pi was set up with an older installer that did a **shallow clone** (`git clone --depth=1`). A shallow clone carries no git tags, and Moonraker derives a component's version from tags — with none present it falls back to an inferred placeholder. This is cosmetic: one-click updates still work (Moonraker compares your commit against `origin/master`, not the tag), and the plugin itself is unaffected.
+
+**Fix:** Re-run the installer once. It detects the shallow clone and re-clones with full tag history (a small *blobless* clone), after which the panel shows a proper version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh | bash
+```
+
+Your pairing, owner state, and device key live in `~/.config/moongate/` and are **not** touched. The old clone is preserved alongside the new one (e.g. `~/moongate.shallow-<timestamp>/`); you can delete it once the panel looks right.
+
+> The version in the panel tracks the **whole-project release** (the same `vX.Y.Z` as the app), so it's the number to quote when reporting a plugin issue.
+
 ## Need to capture a fresh log
 
 For mobile-side issues:
