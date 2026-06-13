@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.8.1+61
+version: 0.8.2+62
 publish_to: none
 
 environment:
@@ -101,6 +101,11 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^4.0.0
 
+  # Generates the Android launcher icon (every mipmap density + adaptive icon)
+  # from the source PNGs in assets/icon/ (rendered by tool/make_icon.py).
+  # Run after changing the icon:  dart run flutter_launcher_icons
+  flutter_launcher_icons: ^0.14.1
+
 # supabase_flutter 2.x transitively depends on app_links for OAuth deep-link
 # callbacks. We only use anonymous sign-in, so the dep is unused at runtime,
 # but it has to resolve. app_links 7.x uses an AndroidLibrarySourceSet API
@@ -116,3 +121,14 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+
+# Launcher icon generation (see tool/make_icon.py for the source artwork).
+# Adaptive icon = solid near-black background + the red moon-gate foreground;
+# legacy launchers fall back to the full square icon.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon_full.png"
+  adaptive_icon_background: "#0E0E10"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  min_sdk_android: 24

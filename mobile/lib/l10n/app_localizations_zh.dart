@@ -962,4 +962,41 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get printAlertError => '打印机错误';
+
+  @override
+  String get tileOpenFiles => '打印文件';
+
+  @override
+  String get gcodeSheetTitle => '开始打印';
+
+  @override
+  String get gcodeLoading => '正在加载文件…';
+
+  @override
+  String get gcodeEmpty => '此打印机上没有 G-code 文件';
+
+  @override
+  String get gcodeError => '无法加载文件';
+
+  @override
+  String get gcodeStartButton => '开始打印';
+
+  @override
+  String get gcodeStartAction => '开始';
+
+  @override
+  String get gcodeConfirmTitle => '开始打印？';
+
+  @override
+  String gcodeConfirmBody(String file) {
+    return '要打印 $file 吗？';
+  }
+
+  @override
+  String gcodeStarted(String file) {
+    return '已开始打印 $file';
+  }
+
+  @override
+  String get gcodeStartFailed => '无法开始打印';
 }

@@ -223,7 +223,13 @@ class _PrintTaskHandler extends TaskHandler {
       for (final p in printers) {
         final s = await _poll(p);
 
-        if (s != null) {
+        // Only a LIVE /status read (a genuine Klipper state) drives alerts and
+        // updates the remembered state. A connectivity placeholder (synthetic
+        // Idle, live == false) or an offline tick (s == null) must NOT touch
+        // _lastState — otherwise a transient network blip rewrites it, and the
+        // return to the real state then looks like a fresh transition. That was
+        // the "repeated print-cancelled alert on every WiFi⇄cellular switch".
+        if (s != null && s.live) {
           final prev = _lastState[p.id];
           if (prev != null && prev != s.state) {
             _maybeAlert(p.name, prev, s.state);
@@ -302,10 +308,14 @@ class _PrintTaskHandler extends TaskHandler {
       final r = await _fetchStatus(base, access.accessToken, isLan);
       if (r != null) return r;
     }
-    // The Pi has a current tunnel (so it's heartbeating / online) but /status
-    // didn't answer — e.g. Klipper idle or the printer's power toggle is off.
-    // Show Idle, not Offline.
-    if (access.tunnelUrl != null && access.tunnelUrl!.isNotEmpty) {
+    // No /status answer on any path. Distinguish a Pi that's up but whose
+    // Moongate/Klipper stack isn't responding (Idle) from one that's genuinely
+    // unreachable / powered off (Offline). A stale tunnel URL lingers in the
+    // cloud after a Pi shuts down (printer-access still hands back the last
+    // known one), so "a tunnel URL exists" is NOT proof of life — probe like
+    // the dashboard does. The synthetic Idle is marked live: false so it never
+    // drives a state-change alert.
+    if (await _isReachable(p, access)) {
       return const _Poll(
         state: 'waiting',
         progress: 0,
@@ -314,9 +324,32 @@ class _PrintTaskHandler extends TaskHandler {
         hotendTarget: 0,
         bed: 0,
         bedTarget: 0,
+        live: false,
       );
     }
-    return null; // genuinely unreachable
+    return null; // genuinely unreachable → Offline
+  }
+
+  /// HEAD the LAN and tunnel bases: ANY HTTP answer (even a 401 / 502) proves
+  /// the host is up; only a thrown error means nothing is listening. Mirrors
+  /// [PrinterStatusService] `_isPiReachable` so the notification's
+  /// Idle-vs-Offline call matches the dashboard's. Used after every /status
+  /// path has failed, to avoid labelling a powered-off printer "Idle".
+  Future<bool> _isReachable(PrinterConfig p, PrinterAccess access) async {
+    final candidates = <String>[
+      if (p.lanUrl != null && p.lanUrl!.isNotEmpty) p.lanUrl!,
+      if (access.tunnelUrl != null && access.tunnelUrl!.isNotEmpty)
+        access.tunnelUrl!,
+    ];
+    for (final base in candidates) {
+      try {
+        await http.head(Uri.parse(base)).timeout(const Duration(seconds: 4));
+        return true;
+      } catch (_) {
+        // Refused / timeout / DNS — try the next candidate.
+      }
+    }
+    return false;
   }
 
   Future<_Poll?> _fetchStatus(String base, String token, bool isLan) async {
@@ -482,12 +515,19 @@ class _PrintTaskHandler extends TaskHandler {
   // ── State-change alerts ─────────────────────────────────────────────────────
 
   void _maybeAlert(String name, String from, String to) {
+    // A finished / failed print is only a real *event* when we were actually
+    // printing just before. Klipper keeps the last result in print_stats.state
+    // (it stays 'complete' / 'cancelled' / 'error' until the next print), so
+    // arriving at one of those from an idle state is a re-observation, not a
+    // new event — alerting on it produces duplicate buzzes (the cross-network
+    // "cancelled" spam). Genuine transitions always come from printing/paused.
+    final wasPrinting = from == 'printing' || from == 'paused';
     final String? body = switch (to) {
       'printing'  => from == 'paused' ? _l.printAlertResumed : _l.printAlertStarted,
-      'paused'    => _l.printAlertPaused,
-      'complete'  => _l.printAlertComplete,
-      'cancelled' => _l.printAlertCancelled,
-      'error'     => _l.printAlertError,
+      'paused'    => from == 'printing' ? _l.printAlertPaused : null,
+      'complete'  => wasPrinting ? _l.printAlertComplete  : null,
+      'cancelled' => wasPrinting ? _l.printAlertCancelled : null,
+      'error'     => wasPrinting ? _l.printAlertError     : null,
       // Recovery: only when coming back from an error (e.g. a firmware restart),
       // not on a normal idle/boot transition — those would be noise.
       'standby'   => from == 'error' ? _l.printAlertReady : null,
@@ -520,6 +560,11 @@ class _Poll {
   final double hotendTarget;
   final double bed;
   final double bedTarget;
+
+  /// True when this came from a real /status read (a genuine Klipper state).
+  /// False for the synthesized "reachable but /status didn't answer" Idle
+  /// placeholder — those must never drive a state-change alert (see _tick).
+  final bool live;
   const _Poll({
     required this.state,
     required this.progress,
@@ -528,6 +573,7 @@ class _Poll {
     required this.hotendTarget,
     required this.bed,
     required this.bedTarget,
+    this.live = true,
   });
 
   // A heater is actively ramping when it has a real target set and the current

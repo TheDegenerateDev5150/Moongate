@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:developer' as dev;
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
 
 import '../models/printer_config.dart';
@@ -95,4 +99,231 @@ class PrintControlService {
       return false;
     }
   }
+
+  // ── G-code library: list stored files + start a print ─────────────────────
+  //
+  // These talk to Moonraker directly (not the plugin's /control endpoint),
+  // mirroring how PrinterStatusService already pulls /printer/objects/query
+  // and /server/files/metadata: on LAN no auth header (Moonraker trusts the
+  // subnet), on the tunnel a Bearer token (the auth proxy gates it). So the
+  // feature needs no plugin update — it rides the same transparent proxy.
+
+  /// List the G-code files stored on the printer (Moonraker `gcodes` root),
+  /// newest first, together with the connection (LAN or tunnel) that answered
+  /// — so [fetchThumbnail] can reuse that exact path instead of re-probing LAN
+  /// on every row (the per-row LAN timeout is what stalled thumbnails on the
+  /// tunnel). Returns null when every path failed; the file list may be empty
+  /// when the printer simply has no files yet.
+  Future<GcodeListing?> listGcodes() async {
+    String? winBase;
+    var winLan = false;
+    final files = await _viaLanThenTunnel<List<GcodeFile>>(
+        (base, token, isLan) async {
+      try {
+        final uri = Uri.parse('$base/server/files/list?root=gcodes');
+        final resp = await http
+            .get(uri, headers: isLan ? null : {'Authorization': 'Bearer $token'})
+            .timeout(Duration(seconds: isLan ? 4 : 12));
+        if (resp.statusCode != 200) return null;
+        final result =
+            (jsonDecode(resp.body)['result'] as List<dynamic>?) ?? const [];
+        final files = result
+            .whereType<Map<String, dynamic>>()
+            .map(GcodeFile.fromJson)
+            .where((f) => f.isGcode)
+            .toList()
+          ..sort((a, b) => b.modified.compareTo(a.modified));
+        winBase = base;
+        winLan = isLan;
+        return files;
+      } catch (_) {
+        return null;
+      }
+    });
+    if (files == null || winBase == null) return null;
+    return GcodeListing(files: files, base: winBase!, isLan: winLan);
+  }
+
+  /// Start printing a stored file by its `gcodes`-relative path. LAN-first,
+  /// then tunnel; returns true once Moonraker accepts the start.
+  Future<bool> startPrint(String filename) async {
+    final ok = await _viaLanThenTunnel((base, token, isLan) async {
+      try {
+        final uri = Uri.parse('$base/printer/print/start'
+            '?filename=${Uri.encodeComponent(filename)}');
+        final resp = await http
+            .post(uri,
+                headers: isLan ? null : {'Authorization': 'Bearer $token'})
+            .timeout(Duration(seconds: isLan ? 4 : 12));
+        // null (not false) on a non-200 so the next path is still tried — a LAN
+        // Moonraker that rejects an untrusted POST falls back to the tunnel.
+        return resp.statusCode == 200 ? true : null;
+      } catch (_) {
+        return null;
+      }
+    });
+    return ok ?? false;
+  }
+
+  /// Fetch a slicer-embedded thumbnail for [file] over the already-resolved
+  /// [base]/[isLan] connection from [listGcodes] — no per-row LAN re-probe,
+  /// which is what stalled thumbnails on the tunnel. Reads the file's metadata
+  /// for a suitable thumbnail, then pulls it from the gcodes store. Returns the
+  /// image bytes, an empty list when the file has no embedded thumbnail, or
+  /// null on failure (logged for diagnosis).
+  Future<Uint8List?> fetchThumbnail(GcodeFile file,
+      {required String base, required bool isLan}) async {
+    final PrinterAccess access;
+    try {
+      access = await PrinterAccessCache.instance.get(config.id);
+    } catch (_) {
+      return null;
+    }
+    final headers =
+        isLan ? null : {'Authorization': 'Bearer ${access.accessToken}'};
+    final where = isLan ? 'lan' : 'tunnel';
+    try {
+      final metaUri = Uri.parse('$base/server/files/metadata'
+          '?filename=${Uri.encodeComponent(file.path)}');
+      final metaResp = await http
+          .get(metaUri, headers: headers)
+          .timeout(Duration(seconds: isLan ? 5 : 15));
+      if (metaResp.statusCode != 200) {
+        dev.log('thumb meta HTTP ${metaResp.statusCode} ($where) ${file.path}',
+            name: 'MOONGATE/THUMB');
+        return null;
+      }
+      final thumbs = (jsonDecode(metaResp.body)['result']?['thumbnails']
+              as List<dynamic>?) ??
+          const [];
+      int widthOf(Map<String, dynamic> t) => (t['width'] as num?)?.toInt() ?? 0;
+      final sized = thumbs.whereType<Map<String, dynamic>>().toList()
+        ..sort((a, b) => widthOf(a).compareTo(widthOf(b)));
+      if (sized.isEmpty) return Uint8List(0); // no embedded thumbnail
+      // Largest no wider than 400px (crisp in the tile, light over the tunnel);
+      // fall back to the smallest if every thumbnail is larger.
+      final capped = sized.where((t) => widthOf(t) <= 400).toList();
+      final best = capped.isNotEmpty ? capped.last : sized.first;
+      final rel = best['relative_path'] as String?;
+      if (rel == null) return Uint8List(0);
+      // relative_path is relative to the gcode file's parent folder, so prepend
+      // that folder to get the path within the gcodes root.
+      final dir = file.folder;
+      final thumbPath = dir == null ? rel : '$dir/$rel';
+      final encoded = thumbPath.split('/').map(Uri.encodeComponent).join('/');
+      final imgUri = Uri.parse('$base/server/files/gcodes/$encoded');
+      final imgResp = await http
+          .get(imgUri, headers: headers)
+          .timeout(Duration(seconds: isLan ? 6 : 20));
+      if (imgResp.statusCode != 200) {
+        dev.log('thumb img HTTP ${imgResp.statusCode} ($where) $thumbPath',
+            name: 'MOONGATE/THUMB');
+        return null;
+      }
+      return imgResp.bodyBytes;
+    } catch (e) {
+      dev.log('thumb error ($where) ${file.path}: $e', name: 'MOONGATE/THUMB');
+      return null;
+    }
+  }
+
+  /// Resolve the freshest LAN base then the tunnel, running [call] against each
+  /// until one returns non-null. Mirrors [sendAction]'s path order — including
+  /// the one-shot token refresh + tunnel retry — so a fresh-paired (tunnel-
+  /// less) printer still works on LAN and a stale token self-heals.
+  Future<T?> _viaLanThenTunnel<T>(
+      Future<T?> Function(String base, String token, bool isLan) call) async {
+    if (!SupabaseService.instance.ready) return null;
+
+    PrinterAccess access;
+    try {
+      access = await PrinterAccessCache.instance.get(config.id);
+    } catch (_) {
+      return null;
+    }
+
+    final discovered = LanDiscoveryService.instance.lookup(config.id);
+    final live = PrinterRegistry.instance.printers
+        .firstWhere((p) => p.id == config.id, orElse: () => config)
+        .lanUrl;
+    final lanUrl = discovered ?? live;
+    if (lanUrl != null) {
+      final r = await call(lanUrl, access.accessToken, true);
+      if (r != null) return r;
+    }
+
+    if (access.tunnelUrl != null) {
+      final r = await call(access.tunnelUrl!, access.accessToken, false);
+      if (r != null) return r;
+    }
+
+    // 401 / network blip — drop the cache, refresh the token, retry tunnel once.
+    PrinterAccessCache.instance.invalidate(config.id);
+    try {
+      access = await PrinterAccessCache.instance.get(config.id);
+    } catch (_) {
+      return null;
+    }
+    if (access.tunnelUrl != null) {
+      return call(access.tunnelUrl!, access.accessToken, false);
+    }
+    return null;
+  }
+}
+
+/// Result of [PrintControlService.listGcodes]: the files plus the connection
+/// (LAN or tunnel) that answered, reused for fetching each row's thumbnail so
+/// thumbnails don't re-probe LAN per row.
+class GcodeListing {
+  final List<GcodeFile> files;
+  final String base;
+  final bool isLan;
+  const GcodeListing(
+      {required this.files, required this.base, required this.isLan});
+}
+
+/// A G-code file stored on the printer, parsed from Moonraker's
+/// `/server/files/list?root=gcodes` response.
+class GcodeFile {
+  /// Path relative to the gcodes root, e.g. `calibration/benchy.gcode`.
+  final String path;
+
+  /// Last-modified time in unix seconds (0 when unknown).
+  final double modified;
+
+  /// File size in bytes (0 when unknown).
+  final int size;
+
+  const GcodeFile({
+    required this.path,
+    required this.modified,
+    required this.size,
+  });
+
+  factory GcodeFile.fromJson(Map<String, dynamic> j) => GcodeFile(
+        path:     (j['path'] as String?) ?? '',
+        modified: (j['modified'] as num?)?.toDouble() ?? 0,
+        size:     (j['size'] as num?)?.toInt() ?? 0,
+      );
+
+  bool get isGcode {
+    final p = path.toLowerCase();
+    return p.endsWith('.gcode') || p.endsWith('.gco') || p.endsWith('.g');
+  }
+
+  /// Just the filename, without any subdirectory prefix.
+  String get name {
+    final i = path.lastIndexOf('/');
+    return i >= 0 ? path.substring(i + 1) : path;
+  }
+
+  /// The subdirectory the file lives in, or null when it sits at the root.
+  String? get folder {
+    final i = path.lastIndexOf('/');
+    return i > 0 ? path.substring(0, i) : null;
+  }
+
+  DateTime? get modifiedAt => modified > 0
+      ? DateTime.fromMillisecondsSinceEpoch((modified * 1000).round())
+      : null;
 }

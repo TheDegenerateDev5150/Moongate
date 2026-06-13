@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -144,7 +145,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Moongate'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // The Moongate moon-gate logo beside the wordmark.
+            SvgPicture.asset('assets/icons/moongate_icon.svg',
+                width: 26, height: 26),
+            const SizedBox(width: 8),
+            const Text('Moongate'),
+          ],
+        ),
         actions: [
           Builder(
             builder: (ctx) => IconButton(
@@ -995,6 +1005,11 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.8.2', [
+    'Print a stored file from the dashboard — tap the new folder button on a ready printer to browse the G-code files already on it (with slicer thumbnails), pick one and start it',
+    'A proper Moongate app icon at last — a red moon-gate on black — across the launcher, the dashboard bar and notifications',
+    'Notification fixes — a powered-off printer now shows Offline instead of Idle, and switching between Wi-Fi and cellular no longer re-fires a spurious "print cancelled" alert',
+  ]),
   _ChangelogEntry('v0.8.1', [
     'Print notifications now refresh the moment you add, remove or restore a printer — no more "No printers" stuck in the notification after a restore',
     'New "Update frequency" setting — choose how often notifications check your printers: 5s, 10s, 15s, 30s or 1 minute (Menu, under Print notifications)',

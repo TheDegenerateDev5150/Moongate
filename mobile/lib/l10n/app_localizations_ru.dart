@@ -1010,4 +1010,41 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get printAlertError => 'Ошибка принтера';
+
+  @override
+  String get tileOpenFiles => 'Печать файла';
+
+  @override
+  String get gcodeSheetTitle => 'Начать печать';
+
+  @override
+  String get gcodeLoading => 'Загрузка файлов…';
+
+  @override
+  String get gcodeEmpty => 'На этом принтере нет файлов G-code';
+
+  @override
+  String get gcodeError => 'Не удалось загрузить файлы';
+
+  @override
+  String get gcodeStartButton => 'Начать печать';
+
+  @override
+  String get gcodeStartAction => 'Начать';
+
+  @override
+  String get gcodeConfirmTitle => 'Начать печать?';
+
+  @override
+  String gcodeConfirmBody(String file) {
+    return 'Напечатать $file?';
+  }
+
+  @override
+  String gcodeStarted(String file) {
+    return 'Печать $file начата';
+  }
+
+  @override
+  String get gcodeStartFailed => 'Не удалось начать печать';
 }

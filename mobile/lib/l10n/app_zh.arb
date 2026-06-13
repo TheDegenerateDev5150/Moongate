@@ -315,5 +315,16 @@
   "printAlertPaused": "打印已暂停",
   "printAlertComplete": "打印完成",
   "printAlertCancelled": "打印已取消",
-  "printAlertError": "打印机错误"
+  "printAlertError": "打印机错误",
+  "tileOpenFiles": "打印文件",
+  "gcodeSheetTitle": "开始打印",
+  "gcodeLoading": "正在加载文件…",
+  "gcodeEmpty": "此打印机上没有 G-code 文件",
+  "gcodeError": "无法加载文件",
+  "gcodeStartButton": "开始打印",
+  "gcodeStartAction": "开始",
+  "gcodeConfirmTitle": "开始打印？",
+  "gcodeConfirmBody": "要打印 {file} 吗？",
+  "gcodeStarted": "已开始打印 {file}",
+  "gcodeStartFailed": "无法开始打印"
 }

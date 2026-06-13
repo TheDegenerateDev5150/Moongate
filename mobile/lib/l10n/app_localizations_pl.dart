@@ -1009,4 +1009,41 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get printAlertError => 'Błąd drukarki';
+
+  @override
+  String get tileOpenFiles => 'Drukuj plik';
+
+  @override
+  String get gcodeSheetTitle => 'Rozpocznij druk';
+
+  @override
+  String get gcodeLoading => 'Wczytywanie plików…';
+
+  @override
+  String get gcodeEmpty => 'Brak plików G-code na tej drukarce';
+
+  @override
+  String get gcodeError => 'Nie udało się wczytać plików';
+
+  @override
+  String get gcodeStartButton => 'Rozpocznij druk';
+
+  @override
+  String get gcodeStartAction => 'Rozpocznij';
+
+  @override
+  String get gcodeConfirmTitle => 'Rozpocząć druk?';
+
+  @override
+  String gcodeConfirmBody(String file) {
+    return 'Wydrukować $file?';
+  }
+
+  @override
+  String gcodeStarted(String file) {
+    return 'Rozpoczęto druk $file';
+  }
+
+  @override
+  String get gcodeStartFailed => 'Nie udało się rozpocząć druku';
 }

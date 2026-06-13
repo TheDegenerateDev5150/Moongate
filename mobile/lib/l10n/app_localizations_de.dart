@@ -1013,4 +1013,41 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get printAlertError => 'Druckerfehler';
+
+  @override
+  String get tileOpenFiles => 'Datei drucken';
+
+  @override
+  String get gcodeSheetTitle => 'Druck starten';
+
+  @override
+  String get gcodeLoading => 'Dateien werden geladen …';
+
+  @override
+  String get gcodeEmpty => 'Keine G-Code-Dateien auf diesem Drucker';
+
+  @override
+  String get gcodeError => 'Dateien konnten nicht geladen werden';
+
+  @override
+  String get gcodeStartButton => 'Druck starten';
+
+  @override
+  String get gcodeStartAction => 'Starten';
+
+  @override
+  String get gcodeConfirmTitle => 'Druck starten?';
+
+  @override
+  String gcodeConfirmBody(String file) {
+    return 'Druck von $file starten?';
+  }
+
+  @override
+  String gcodeStarted(String file) {
+    return 'Druck von $file gestartet';
+  }
+
+  @override
+  String get gcodeStartFailed => 'Druck konnte nicht gestartet werden';
 }

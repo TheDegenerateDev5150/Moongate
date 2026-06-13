@@ -998,4 +998,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get printAlertError => 'Printer error';
+
+  @override
+  String get tileOpenFiles => 'Print a file';
+
+  @override
+  String get gcodeSheetTitle => 'Start a print';
+
+  @override
+  String get gcodeLoading => 'Loading files…';
+
+  @override
+  String get gcodeEmpty => 'No G-code files on this printer';
+
+  @override
+  String get gcodeError => 'Couldn\'t load files';
+
+  @override
+  String get gcodeStartButton => 'Start print';
+
+  @override
+  String get gcodeStartAction => 'Start';
+
+  @override
+  String get gcodeConfirmTitle => 'Start print?';
+
+  @override
+  String gcodeConfirmBody(String file) {
+    return 'Start printing $file?';
+  }
+
+  @override
+  String gcodeStarted(String file) {
+    return 'Started printing $file';
+  }
+
+  @override
+  String get gcodeStartFailed => 'Couldn\'t start the print';
 }

@@ -315,5 +315,16 @@
   "printAlertPaused": "Печать приостановлена",
   "printAlertComplete": "Печать завершена",
   "printAlertCancelled": "Печать отменена",
-  "printAlertError": "Ошибка принтера"
+  "printAlertError": "Ошибка принтера",
+  "tileOpenFiles": "Печать файла",
+  "gcodeSheetTitle": "Начать печать",
+  "gcodeLoading": "Загрузка файлов…",
+  "gcodeEmpty": "На этом принтере нет файлов G-code",
+  "gcodeError": "Не удалось загрузить файлы",
+  "gcodeStartButton": "Начать печать",
+  "gcodeStartAction": "Начать",
+  "gcodeConfirmTitle": "Начать печать?",
+  "gcodeConfirmBody": "Напечатать {file}?",
+  "gcodeStarted": "Печать {file} начата",
+  "gcodeStartFailed": "Не удалось начать печать"
 }
