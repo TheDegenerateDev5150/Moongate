@@ -34,14 +34,16 @@ Free, open-source Android control for your **Klipper 3D printer** — live webca
 
 ## Features
 
-- 📊 **Fleet dashboard** — live webcam thumbnails (pick the refresh rate to balance smoothness vs. data), print progress matched to Mainsail's estimate, temperatures, chamber sensor, and a per-printer status badge.
+- 📊 **Fleet dashboard** — live webcam thumbnails (pick the refresh rate to balance smoothness vs. data), print progress matched to Mainsail's estimate, temperatures, chamber sensor, and a per-printer status badge. Tiles auto-sort by activity, so whatever's printing floats to the top.
 - 🎛️ **Print controls** — pause, resume, and stop from the tile, plus a one-tap firmware restart for idle or errored printers.
+- 📂 **Print files on the printer** — tap the folder button on a ready printer to browse the G-code already saved on it, shown with slicer **thumbnails**, newest first. Pick one and **Start print** with a confirm tap — no slicer, no re-upload.
 - 🖥️ **Full Mainsail / Fluidd UI** — tap a tile to open the complete web UI in-app; whichever you run is auto-detected.
 - 📡 **Auto local ↔ remote** — tries home WiFi first every poll, falls back to the Cloudflare tunnel within ~2s when you're away, and flips back to "Local" the moment you're home.
-- 🔔 **Print notifications** — opt-in live fleet status in your notification shade, with start / finish / error alerts.
+- 🔔 **Print notifications** — opt-in live fleet status in your notification shade — per-printer progress, ETA, temperatures and heat-up — with start / finish / pause / error alerts, and a configurable refresh interval. Off by default.
 - 🔒 **App lock** — optional PIN + biometric (fingerprint/face) on launch, with configurable auto-lock and screenshot protection. Off by default.
+- 🌍 **8 languages** — fully translated into English, German, French, Spanish, Italian, Simplified Chinese, Russian, and Polish; choose on first launch or anytime from the menu.
 - 🎨 **Themes & layout** — System / Light / Dark / fully **Custom** colours, a 1–3 column grid, font scaling, and optional landscape.
-- 💾 **Backup & restore** — restoring after a reinstall, or on a new phone, brings your printers **back online with no re-pairing**.
+- 💾 **Backup & restore** — save your printers and settings to a file; restoring after a reinstall, or on a new phone, brings your printers **back online with no re-pairing**.
 
 > 🔐 **Hardened remote access** — every internet-facing request is gated by a short-lived signed token. Leaking the tunnel URL alone gives an attacker nothing but flat `401`s, with no Mainsail/Moonraker fingerprint. [How it works ›](#how-it-works)
 
@@ -109,6 +111,10 @@ Android only. Enable **Install from unknown sources** for your browser or file m
 3. In the app, tap **+ → Scan QR** and point the camera at it. Done — your printer lands on the dashboard.
 
 No working camera? Type the **`GATE-XXXX-XXXX`** code shown in the console instead.
+
+> **How quickly does it connect? Scanning the QR is instant.**
+> - ✅ **Scan the QR (recommended)** — an **instant local connection**: your printer is on the dashboard in about a second, because the QR hands the app your Pi's local address directly. Remote access over the secure tunnel keeps **building in the background** — you never wait on it.
+> - ⚠️ **GATE code** — there's no instant local hand-off, so the printer doesn't appear until the **Cloudflare tunnel** has finished building (that's what carries the connection). Usually under a minute — a little longer right after a Pi reboot. It isn't stuck; give it a moment, or scan the QR for an instant connection.
 
 > Pairing is LAN-only by design: nothing to port-forward, no URL to share. Reinstalling or switching phones? **Back up your config first** — restoring it brings your printers back online without re-pairing. See **[Updating &amp; removing](docs/managing-moongate.md)**.
 
