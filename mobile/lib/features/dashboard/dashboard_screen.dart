@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -147,10 +148,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Brand mark beside the wordmark. Placeholder moon glyph for now —
-            // swap for the real Moongate logo asset once it's designed.
-            Icon(Icons.nightlight_round,
-                size: 22, color: Theme.of(context).colorScheme.primary),
+            // The Moongate moon-gate logo beside the wordmark.
+            SvgPicture.asset('assets/icons/moongate_icon.svg',
+                width: 26, height: 26),
             const SizedBox(width: 8),
             const Text('Moongate'),
           ],
