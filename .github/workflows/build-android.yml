@@ -91,7 +91,7 @@ jobs:
             echo "Creating Release $TAG"
             gh release create "$TAG" "$ASSET" \
               --title "Moongate v${VERSION}" \
-              --notes "See the [changelog](https://github.com/${GITHUB_REPOSITORY}/blob/master/README.md#changelog) for what's in this release.
+              --notes "See the [changelog](https://github.com/${GITHUB_REPOSITORY}/blob/master/CHANGELOG.md) for what's in this release.
 
           **APK is signed with the project release key — installs cleanly over any previous CI build.**" \
               --latest
