@@ -439,15 +439,13 @@ class _ActionRow extends StatelessWidget {
               onTap: onPause,
             ),
           // Print a stored file — only when online and ready to accept a job.
-          if (ready) ...[
+          if (ready)
             _Btn(
               icon: Icons.folder_open_rounded,
               color: theme.colorScheme.primary,
               tooltip: l.tileOpenFiles,
               onTap: onOpenFiles,
             ),
-            const SizedBox(width: 4),
-          ],
           // Stop (active) / Firmware Restart (idle) — always shown for online printers.
           const SizedBox(width: 4),
           _Btn(
@@ -489,7 +487,17 @@ class _IdleLabel extends StatelessWidget {
       children: [
         Icon(icon, size: 13, color: color),
         const SizedBox(width: 4),
-        Text(label, style: theme.textTheme.labelSmall?.copyWith(color: color)),
+        // Flexible + ellipsis so a longer label ("Print complete", and longer
+        // still in other languages) shrinks instead of overflowing the row
+        // when the folder + restart buttons share a narrow multi-column tile.
+        Flexible(
+          child: Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(color: color),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }

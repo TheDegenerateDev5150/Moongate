@@ -35,7 +35,7 @@ class _GcodeFilesSheet extends StatefulWidget {
 
 class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
   late final PrintControlService _control;
-  late Future<List<GcodeFile>?> _future;
+  late Future<GcodeListing?> _future;
   String? _selected; // selected file's path, or null
   bool _starting = false;
 
@@ -56,8 +56,11 @@ class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
         _future = _control.listGcodes();
       });
 
-  Future<Uint8List?> _thumb(GcodeFile f) =>
-      _thumbs.putIfAbsent(f.path, () => _control.fetchThumbnail(f));
+  Future<Uint8List?> _thumb(GcodeFile f, GcodeListing listing) =>
+      _thumbs.putIfAbsent(
+          f.path,
+          () => _control.fetchThumbnail(f,
+              base: listing.base, isLan: listing.isLan));
 
   Future<void> _start() async {
     final path = _selected;
@@ -138,7 +141,7 @@ class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
 
             // ── File list / states ──────────────────────────────────────
             Expanded(
-              child: FutureBuilder<List<GcodeFile>?>(
+              child: FutureBuilder<GcodeListing?>(
                 future: _future,
                 builder: (context, snap) {
                   if (snap.connectionState != ConnectionState.done) {
@@ -154,8 +157,8 @@ class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
                       ),
                     );
                   }
-                  final files = snap.data;
-                  if (files == null) {
+                  final listing = snap.data;
+                  if (listing == null) {
                     return _Centered(
                       child: _Message(
                         icon: Icons.cloud_off,
@@ -167,6 +170,7 @@ class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
                       ),
                     );
                   }
+                  final files = listing.files;
                   if (files.isEmpty) {
                     return _Centered(
                       child: _Message(
@@ -185,7 +189,7 @@ class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
                         selected: selected,
                         selectedTileColor:
                             theme.colorScheme.primary.withValues(alpha: 0.12),
-                        leading: _GcodeThumb(future: _thumb(f)),
+                        leading: _GcodeThumb(future: _thumb(f, listing)),
                         title: Text(f.name,
                             maxLines: 1, overflow: TextOverflow.ellipsis),
                         subtitle: Text(_subtitle(context, f),
