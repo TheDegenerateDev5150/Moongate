@@ -49,6 +49,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonShowKeyboard => 'Afficher le clavier';
 
   @override
+  String get dashboardSignInRetrying =>
+      'Reconnexion au cloud — la connexion est occupée, nouvelle tentative. Vos imprimantes reviendront automatiquement.';
+
+  @override
   String get commonRemove => 'Retirer';
 
   @override

@@ -49,6 +49,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonShowKeyboard => 'Show keyboard';
 
   @override
+  String get dashboardSignInRetrying =>
+      'Reconnecting to the cloud — sign-in is busy, retrying. Your printers will come back automatically.';
+
+  @override
   String get commonRemove => 'Remove';
 
   @override

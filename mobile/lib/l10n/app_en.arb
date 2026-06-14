@@ -28,6 +28,8 @@
   "commonRetry": "Retry",
   "@commonRetry": {"description": "Generic Retry button label."},
   "commonShowKeyboard": "Show keyboard",
+  "dashboardSignInRetrying": "Reconnecting to the cloud — sign-in is busy, retrying. Your printers will come back automatically.",
+  "@dashboardSignInRetrying": {"description": "Dashboard banner shown while the app has no cloud session yet (anonymous sign-in rate-limited); it retries automatically and clears once connected."},
   "@commonShowKeyboard": {"description": "Tooltip / accessibility label on the keyboard icon that re-opens the soft keyboard for a text field."},
   "commonRemove": "Remove",
   "@commonRemove": {"description": "Generic Remove button label."},

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as dev;
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Wraps the Supabase client for Moongate v0.3.0:
@@ -26,6 +27,16 @@ class SupabaseService {
 
   bool _initialized = false;
 
+  /// Whether we currently hold a usable anonymous session. Listenable so the
+  /// dashboard can show a "reconnecting" banner instead of a silent screen of
+  /// offline tiles when the anonymous sign-in is rate-limited (common after
+  /// several reinstalls in a row). Flips true the instant a background retry
+  /// lands a session; the tiles then reconnect on their next poll.
+  final ValueNotifier<bool> signedIn = ValueNotifier<bool>(false);
+
+  Timer? _signInRetryTimer;
+  int _signInAttempt = 0;
+
   void _log(String msg) => dev.log(msg, name: 'MOONGATE/SUPABASE');
 
   /// Initialise the Supabase client and ensure there's an authenticated
@@ -39,19 +50,45 @@ class SupabaseService {
     );
     _initialized = true;
 
-    final existing = client.auth.currentSession;
-    if (existing == null) {
-      _log('No session yet — signing in anonymously');
-      try {
-        await client.auth.signInAnonymously();
-        _log('Anonymous sign-in OK, user_id=${client.auth.currentUser?.id}');
-      } catch (e) {
-        _log('signInAnonymously failed: $e');
-        rethrow;
-      }
-    } else {
-      _log('Existing session, user_id=${existing.user.id}');
+    if (client.auth.currentSession != null) {
+      _log('Existing session, user_id=${client.auth.currentUser?.id}');
+      signedIn.value = true;
+      return;
     }
+    _log('No session yet — signing in anonymously');
+    await _trySignIn();
+  }
+
+  /// One anonymous-sign-in attempt. NEVER throws: on success it flips
+  /// [signedIn] true and stops retrying; on failure (typically a 429 rate
+  /// limit after repeated reinstalls) it leaves [signedIn] false and schedules
+  /// a backoff retry — so the app still launches and self-heals once the limit
+  /// clears, instead of crashing on first frame or stranding every tile offline
+  /// with no explanation.
+  Future<void> _trySignIn() async {
+    try {
+      await client.auth.signInAnonymously();
+      _signInAttempt = 0;
+      _signInRetryTimer?.cancel();
+      signedIn.value = true;
+      _log('Anonymous sign-in OK, user_id=${client.auth.currentUser?.id}');
+    } catch (e) {
+      signedIn.value = false;
+      _log('signInAnonymously failed (will retry): $e');
+      _scheduleSignInRetry();
+    }
+  }
+
+  void _scheduleSignInRetry() {
+    _signInRetryTimer?.cancel();
+    // Anon-sign-in rate-limit windows clear within ~a minute; back off
+    // 5 -> 60 s, then keep retrying every 60 s so a stuck install recovers.
+    const steps = [5, 10, 20, 40, 60];
+    final delay = steps[_signInAttempt.clamp(0, steps.length - 1)];
+    _signInAttempt++;
+    _signInRetryTimer = Timer(Duration(seconds: delay), () {
+      if (!signedIn.value) _trySignIn();
+    });
   }
 
   /// The underlying client for direct table queries.

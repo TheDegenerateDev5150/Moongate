@@ -176,17 +176,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
       endDrawer: _buildDrawer(context),
-      body: update != null
-          ? Column(
-              children: [
-                _UpdateBanner(
-                  update: update,
-                  onDismiss: () => setState(() => _updateDismissed = true),
-                ),
-                Expanded(child: body),
-              ],
-            )
-          : body,
+      body: ValueListenableBuilder<bool>(
+        valueListenable: SupabaseService.instance.signedIn,
+        builder: (context, signedIn, _) {
+          final banners = <Widget>[
+            if (update != null)
+              _UpdateBanner(
+                update: update,
+                onDismiss: () => setState(() => _updateDismissed = true),
+              ),
+            if (!signedIn) const _SignInBanner(),
+          ];
+          if (banners.isEmpty) return body;
+          return Column(
+            children: [...banners, Expanded(child: body)],
+          );
+        },
+      ),
       floatingActionButton: _printers.isEmpty
           ? null
           : FloatingActionButton(
@@ -1020,6 +1026,10 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.8.5', [
+    'Clearer reconnect — if the app loses its cloud sign-in (usually rate-limited after several quick reinstalls), the dashboard now shows a "reconnecting, retrying" banner and keeps trying in the background, instead of silently showing every printer offline. Your printers come back on their own',
+    'No Pi update needed — just update the app',
+  ]),
   _ChangelogEntry('v0.8.4', [
     'Re-pairing a printer now reconnects in seconds instead of minutes — the Pi reports its connection to the cloud straight away instead of waiting for its next 5-minute check-in (re-run the Pi installer, or update via Mainsail → Software Updates, to get it)',
     'Clearer pairing-time hint — the GATE-code notice now says the printer can take up to about a minute (it\'s waiting for the secure tunnel), instead of the old "up to ~10 minutes". Scanning the QR is still an instant local connection',
@@ -1141,6 +1151,45 @@ const _changelog = <_ChangelogEntry>[
 ];
 
 // ── Update banner ─────────────────────────────────────────────────────────────
+
+/// Shown above the dashboard while the app has no cloud session yet — usually
+/// the anonymous sign-in being rate-limited after several reinstalls in a row.
+/// SupabaseService retries on its own, so this is purely informational and
+/// disappears once a session lands and the tiles reconnect.
+class _SignInBanner extends StatelessWidget {
+  const _SignInBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final l  = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
+    return Material(
+      color: cs.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: cs.onSecondaryContainer,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l.dashboardSignInRetrying,
+                style: TextStyle(color: cs.onSecondaryContainer, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _UpdateBanner extends StatelessWidget {
   final UpdateInfo update;

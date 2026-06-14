@@ -48,6 +48,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonShowKeyboard => '显示键盘';
 
   @override
+  String get dashboardSignInRetrying => '正在重新连接云端——登录繁忙，正在重试。您的打印机将自动恢复。';
+
+  @override
   String get commonRemove => '移除';
 
   @override
