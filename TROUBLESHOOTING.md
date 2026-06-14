@@ -81,6 +81,12 @@ In v0.4.0 the app retries LAN on every poll, so this should self-correct within 
   ```
 - The Cloudflare Quick Tunnel URL changes on **every** restart of `cloudflared`. The app fetches the latest URL automatically — you do not need to re-pair when this happens.
 
+## Re-pairing takes minutes to show online
+
+After re-pairing a printer (reinstalling the app, moving to a new phone, or running `MOONGATE_RESET_OWNER`), the tile can sit on "Starting up…" for several minutes before it connects — most noticeable on networks where the app can't reach the Pi directly over local WiFi.
+
+Fixed in **plugin 0.6.7+**: the Pi now reports its connection to the cloud within seconds of the re-pair, instead of waiting for its next 5-minute check-in. **Re-run the Pi installer** (or update via **Mainsail → Software Updates → Moongate**) to get it. Scanning the QR instead of typing the GATE code also connects instantly over local WiFi.
+
 ## Auth proxy returns 401 for me, not just attackers
 
 If your own app is getting 401s from the tunnel side (status tile is stuck offline, but LAN works):
