@@ -1,0 +1,55 @@
+name: Changelog guard
+
+# A version bump cuts a release and fires the in-app update banner, so every PR
+# that bumps mobile/pubspec.yaml's `version:` MUST carry its changelog in the
+# SAME PR — both the in-app source (mobile/assets/changelog.json, which feeds the
+# "What's new" dialog and the update overlay) and the public CHANGELOG.md. This
+# check fails the PR otherwise. PRs that don't bump the version (docs, plugin-
+# only, CI, etc.) are exempt and pass straight through.
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  changelog-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Require a changelog entry when the app version is bumped
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          # Only the changes THIS PR introduces (three-dot = since the merge base),
+          # so a PR that's merely behind master isn't blamed for master's bumps.
+          version_diff=$(git diff "${BASE_SHA}...${HEAD_SHA}" -- mobile/pubspec.yaml || true)
+          if ! echo "$version_diff" | grep -qE '^\+version:'; then
+            echo "No app version bump in this PR — changelog not required. ✓"
+            exit 0
+          fi
+
+          echo "This PR bumps the app version:"
+          echo "$version_diff" | grep -E '^[+-]version:' || true
+          echo ""
+
+          changed=$(git diff --name-only "${BASE_SHA}...${HEAD_SHA}")
+          missing=""
+          echo "$changed" | grep -qx "mobile/assets/changelog.json" || missing="${missing} mobile/assets/changelog.json"
+          echo "$changed" | grep -qx "CHANGELOG.md"                 || missing="${missing} CHANGELOG.md"
+
+          if [ -n "$missing" ]; then
+            echo "::error title=Changelog missing::This PR bumps the app version but does not update:${missing}"
+            echo "A version bump cuts a release and fires the in-app update banner, so the"
+            echo "changelog must ship in the same PR. Add the new version's entry to:"
+            echo "  - mobile/assets/changelog.json  (the in-app \"What's new\" + update overlay)"
+            echo "  - CHANGELOG.md                  (the public changelog table)"
+            exit 1
+          fi
+
+          echo "Version bump carries changelog.json + CHANGELOG.md. ✓"
