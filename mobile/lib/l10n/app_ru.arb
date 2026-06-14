@@ -1,6 +1,9 @@
 {
   "@@locale": "ru",
 
+  "updateNotesUnavailable": "Не удалось загрузить список изменений — проверьте подключение или посмотрите на GitHub.",
+  "updateViewOnGithub": "Посмотреть на GitHub",
+
   "cameraConfigTooltip": "Указать URL камеры",
   "cameraConfigTitle": "Своя камера",
   "cameraConfigDescription": "Показать камеру, не подключённую к Klipper, — например, старый телефон в роли веб-камеры. Введите адрес, указанный в настройках веб-камеры Mainsail.",

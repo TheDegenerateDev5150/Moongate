@@ -1,6 +1,9 @@
 {
   "@@locale": "zh",
 
+  "updateNotesUnavailable": "无法加载更新内容，请检查网络连接，或在 GitHub 上查看。",
+  "updateViewOnGithub": "在 GitHub 上查看",
+
   "cameraConfigTooltip": "设置摄像头网址",
   "cameraConfigTitle": "自定义摄像头",
   "cameraConfigDescription": "显示未连接到 Klipper 的摄像头，例如用作网络摄像头的旧手机。请输入 Mainsail 摄像头设置中显示的地址。",

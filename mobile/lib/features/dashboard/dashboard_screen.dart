@@ -15,6 +15,7 @@ import '../../providers/custom_theme_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/update_provider.dart';
 import '../../providers/version_provider.dart';
+import '../../services/changelog_service.dart';
 import '../../services/print_notification_service.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
@@ -184,6 +185,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               _UpdateBanner(
                 update: update,
                 onDismiss: () => setState(() => _updateDismissed = true),
+                onWhatsNew: () => _showUpdateNotes(context, update),
               ),
             if (!signedIn) const _SignInBanner(),
           ];
@@ -841,7 +843,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return 'XXL';
   }
 
-  void _showChangelog(BuildContext context) {
+  void _showChangelog(BuildContext context) =>
+      _showChangelogSheet(context, future: ChangelogService.loadBundled());
+
+  /// The "what's new in this update" overlay — entries from the user's installed
+  /// build up to the latest, fetched from master (the installed app can't carry
+  /// notes for a version newer than itself).
+  void _showUpdateNotes(BuildContext context, UpdateInfo update) =>
+      _showChangelogSheet(
+        context,
+        future: ChangelogService.entriesSinceInstalled(),
+        update: update,
+      );
+
+  /// Shared changelog dialog. With [update] set it's the update overlay — it
+  /// gains Update + View-on-GitHub actions and a fallback message when the
+  /// remote fetch returns nothing.
+  void _showChangelogSheet(
+    BuildContext context, {
+    required Future<List<ChangelogEntry>> future,
+    UpdateInfo? update,
+  }) {
     final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
     showDialog<void>(
@@ -850,37 +872,71 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         title: Text(l.dashboardWhatsNew),
         content: ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 380, maxWidth: 360),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final entry in _changelog) ...[
-                  Text(
-                    entry.version,
-                    style: Theme.of(ctx).textTheme.titleSmall?.copyWith(
-                          color: cs.primary,
-                          fontWeight: FontWeight.bold,
+          child: FutureBuilder<List<ChangelogEntry>>(
+            future: future,
+            builder: (ctx, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const SizedBox(
+                  height: 80,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final entries = snap.data ?? const <ChangelogEntry>[];
+              if (entries.isEmpty) {
+                // Only the update overlay reaches here (remote fetch failed) —
+                // the bundled list is never empty.
+                return Text(l.updateNotesUnavailable,
+                    style: Theme.of(ctx).textTheme.bodySmall);
+              }
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final entry in entries) ...[
+                      Text(
+                        entry.version,
+                        style: Theme.of(ctx).textTheme.titleSmall?.copyWith(
+                              color: cs.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      for (final bullet in entry.bullets)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4, top: 2),
+                          child: Text('• $bullet',
+                              style: Theme.of(ctx).textTheme.bodySmall),
                         ),
-                  ),
-                  const SizedBox(height: 4),
-                  for (final bullet in entry.bullets)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 4, top: 2),
-                      child: Text('• $bullet',
-                          style: Theme.of(ctx).textTheme.bodySmall),
-                    ),
-                  const SizedBox(height: 14),
-                ],
-              ],
-            ),
+                      const SizedBox(height: 14),
+                    ],
+                  ],
+                ),
+              );
+            },
           ),
         ),
         actions: [
+          if (update != null)
+            TextButton(
+              onPressed: () => launchUrl(
+                Uri.parse('https://github.com/PEEKYPAUL/Moongate/releases/latest'),
+                mode: LaunchMode.externalApplication,
+              ),
+              child: Text(l.updateViewOnGithub),
+            ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(l.commonClose),
           ),
+          if (update != null)
+            FilledButton(
+              onPressed: () => launchUrl(
+                Uri.parse(update.apkUrl),
+                mode: LaunchMode.externalApplication,
+              ),
+              child: Text(l.dashboardUpdate),
+            ),
         ],
       ),
     );
@@ -1031,137 +1087,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 }
 
-class _ChangelogEntry {
-  final String version;
-  final List<String> bullets;
-  const _ChangelogEntry(this.version, this.bullets);
-}
-
-// Top-level brief — bumped on each release. Newest first.
-const _changelog = <_ChangelogEntry>[
-  _ChangelogEntry('v0.8.5', [
-    'Clearer reconnect — if the app loses its cloud sign-in (usually rate-limited after several quick reinstalls), the dashboard now shows a "reconnecting, retrying" banner and keeps trying in the background, instead of silently showing every printer offline. Your printers come back on their own',
-    'No Pi update needed — just update the app',
-  ]),
-  _ChangelogEntry('v0.8.4', [
-    'Re-pairing a printer now reconnects in seconds instead of minutes — the Pi reports its connection to the cloud straight away instead of waiting for its next 5-minute check-in (re-run the Pi installer, or update via Mainsail → Software Updates, to get it)',
-    'Clearer pairing-time hint — the GATE-code notice now says the printer can take up to about a minute (it\'s waiting for the secure tunnel), instead of the old "up to ~10 minutes". Scanning the QR is still an instant local connection',
-    'The menu and the Add Printer screen now show a scrollbar, so it\'s obvious there\'s more to scroll on smaller screens',
-  ]),
-  _ChangelogEntry('v0.8.3', [
-    'Add Printer and rename: tapping a field now reliably re-opens the keyboard after you drop it, and the name and address fields gain a small keyboard button to bring it back — so you can always fix a typo',
-    'The moon-gate logo in the dashboard header now sits on a transparent background, so it looks clean against any theme',
-    'No Pi update needed — just update the app',
-  ]),
-  _ChangelogEntry('v0.8.2', [
-    'Print a stored file from the dashboard — tap the new folder button on a ready printer to browse the G-code files already on it (with slicer thumbnails), pick one and start it',
-    'A proper Moongate app icon at last — a red moon-gate on black — across the launcher, the dashboard bar and notifications',
-    'Notification fixes — a powered-off printer now shows Offline instead of Idle, and switching between Wi-Fi and cellular no longer re-fires a spurious "print cancelled" alert',
-  ]),
-  _ChangelogEntry('v0.8.1', [
-    'Print notifications now refresh the moment you add, remove or restore a printer — no more "No printers" stuck in the notification after a restore',
-    'New "Update frequency" setting — choose how often notifications check your printers: 5s, 10s, 15s, 30s or 1 minute (Menu, under Print notifications)',
-    'Status now updates promptly when a printer errors or finishes, instead of lagging behind',
-    'New alert when a printer recovers and is ready again after an error (e.g. a firmware restart)',
-    'No Pi update needed — just update the app',
-  ]),
-  _ChangelogEntry('v0.8.0', [
-    'New optional print notifications — turn them on (Menu → Print notifications) for a live status of every printer in your notification shade: per-printer progress, ETA, temperatures and heat-up, plus alerts when a print starts, finishes, pauses or errors. Works with the app in the background; off by default',
-    'Backup now keeps your settings too — theme and custom colours, dashboard columns, language and camera refresh ride along with your backup, not just the printer list (your app-lock PIN stays on the device for security)',
-    'Printers now sort by activity — whatever\'s printing floats to the top, then Ready, Idle and Offline, on both the dashboard and the notification',
-    'No Pi update needed — just update the app',
-  ]),
-  _ChangelogEntry('v0.7.0', [
-    'Moongate now speaks your language — translations for German, French, Spanish, Italian, Simplified Chinese, Russian and Polish, alongside English. Pick your language on first launch, or change it anytime from Language at the bottom of the menu',
-    'New icon guide — tap it to see what every dashboard icon means, with a Back to dashboard button',
-    'Tidier single-column dashboard — printer tiles are now square',
-    'Translations are a best-effort starting point; corrections are welcome',
-  ]),
-  _ChangelogEntry('v0.6.5', [
-    'New "How pairing works" guide on launch (and in the menu) — explains that you pair once, that app updates keep your printers, and how to bring printers back after a reinstall (Restore from a backup, or MOONGATE_RESET_OWNER then re-pair). Tick "Don\'t show this again" to hide it',
-  ]),
-  _ChangelogEntry('v0.6.4', [
-    'Fixed remote access over the internet — printers connect through the secure tunnel again (a v0.6.3 bug returned a server error when you were away from home). Update your Pi to get the fix',
-    'Restore is now honest about results — it tells you when printers actually reconnected vs when they still need a re-pair',
-    'Bug reports now include the remote (tunnel) connection result and your Pi’s plugin version, so problems are quicker to diagnose',
-  ]),
-  _ChangelogEntry('v0.6.3', [
-    'Restore now brings your printers back ONLINE after a reinstall or on a new phone — no re-pairing. Your backup carries a one-time code that re-links them to the freshly-installed app',
-    'Re-run the Pi installer so the printer recognises the restored app (needed for restore to reconnect)',
-    'Import config from the Add Printer screen — restore before you pair, handy when reinstalling',
-    'New "Report a problem" in the menu — sends a bug report with diagnostics (app, device, network, printer status) attached so issues are easier to fix',
-    'Plus a "Trouble pairing? Send a report" link on the Add Printer screen',
-  ]),
-  _ChangelogEntry('v0.6.2', [
-    'Set a printer\'s address by hand — a new "Advanced" option when adding a printer, and an address field in each printer\'s edit dialog. Handy when your printer is behind a reverse proxy (Traefik, Caddy, NPM) or in Docker and the app can\'t find it automatically — enter the address you\'d use to open its web page in a browser',
-    'Clearer pairing — scanning the QR is marked as the instant method; typing the GATE code is flagged as the slower alternative',
-    'Steadier first connection — a freshly-paired printer is less likely to show a premature "Offline", and recovers on its own when you return to the app',
-  ]),
-  _ChangelogEntry('v0.6.1', [
-    'Fixed a printer staying on "Starting up…" forever when it was paired while powered off (or went offline right after pairing) — it now settles to "Offline" once unreachable, with a short grace window for one that\'s genuinely still booting',
-  ]),
-  _ChangelogEntry('v0.6.0', [
-    'New optional App lock — protect Moongate with a PIN, plus fingerprint or face if your phone supports it (Menu → App lock)',
-    'The lock appears when you open the app; you can optionally re-lock after time in the background',
-    'Your PIN is stored encrypted on the device and wrong guesses are rate-limited',
-    'Slimmer app — removed unused VPN code, so Moongate no longer asks for VPN or special background permissions',
-  ]),
-  _ChangelogEntry('v0.5.2', [
-    'Back up & restore your printer list to a file — "Back up config" / "Restore config" now use a file you choose instead of the clipboard, so it survives reinstalling the app',
-    'Fixed missing print progress and chamber temperature when viewing a printer over local Wi-Fi',
-  ]),
-  _ChangelogEntry('v0.5.1', [
-    'Pairing is instant — scan the QR and the printer shows as Local right away',
-    'Remote (tunnel) access now syncs in the background; both icons appear once it\'s ready',
-    'No more sitting on "Starting up… waiting for first heartbeat" after you pair',
-    'New "Dashboard camera feed" setting — Raw / 1s / 3s / 5s (default 1s) to cut data use',
-    'Dashboard webcams pause while the app is in the background',
-    'Reinstalling or on a new phone? Run MOONGATE_RESET_OWNER on the Pi first, then re-pair',
-    'Re-run the Pi installer to enable instant pairing',
-  ]),
-  _ChangelogEntry('v0.5.0', [
-    'Dashboard tile stays "Local" when your Pi\'s IP changes — even if the internet is down',
-    'Finds your Pi on the local network via mDNS (pairs with the v0.4.4 Pi advertisement)',
-    'Print controls now read the live LAN URL too — no stale-IP gap after DHCP changes',
-    'Falls through to v0.4.x behaviour when discovery doesn\'t resolve (different WiFi, multicast blocked, etc.)',
-    'Re-run the Pi installer to enable the Pi-side advertisement',
-  ]),
-  _ChangelogEntry('v0.4.4', [
-    'Pi-side groundwork for LAN discovery — your Pi now advertises itself on the local network',
-    'No visible change yet on its own; pairs with the upcoming v0.5.0 app update',
-    'Re-run the Pi installer to pick up the change',
-  ]),
-  _ChangelogEntry('v0.4.3', [
-    'Webcam tile now works on slow camera servers (stock RatRig Micron+ / uv4l-mjpeg)',
-    'Self-throttles to whatever the camera can deliver instead of cancelling its own fetches',
-    'No Pi-side change needed — just update the app',
-  ]),
-  _ChangelogEntry('v0.4.2', [
-    'Re-pair after app reinstall just works — no more "already paired"',
-    'Pairing goes live within seconds, not up to 5 minutes',
-    'Mainsail through tunnel stays connected on cellular',
-    'Type the GATE code if the camera can\'t scan the QR',
-  ]),
-  _ChangelogEntry('v0.4.1', [
-    'Dashboard tile webcam preview works again on LAN and tunnel',
-    'No reinstall on the Pi needed — just this app update',
-  ]),
-  _ChangelogEntry('v0.4.0', [
-    'Hardened remote access — the tunnel URL alone grants nothing',
-    'Mainsail reachable through the tunnel from anywhere',
-    "Added 'Buy me a coffee' and this 'What's new'",
-  ]),
-  _ChangelogEntry('v0.3.0', [
-    'Cloud-mediated pairing — no more URL sharing required',
-    'LAN-first routing for snappier home use',
-    'Cleaner remove / re-pair flow',
-  ]),
-  _ChangelogEntry('v0.2.29', [
-    'Initial public release',
-    'Pi-issued JWT auth, dual-path local + tunnel',
-    'Mainsail / Fluidd WebView per printer',
-  ]),
-];
 
 // ── Update banner ─────────────────────────────────────────────────────────────
 
@@ -1207,8 +1132,13 @@ class _SignInBanner extends StatelessWidget {
 class _UpdateBanner extends StatelessWidget {
   final UpdateInfo update;
   final VoidCallback onDismiss;
+  final VoidCallback onWhatsNew;
 
-  const _UpdateBanner({required this.update, required this.onDismiss});
+  const _UpdateBanner({
+    required this.update,
+    required this.onDismiss,
+    required this.onWhatsNew,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1217,37 +1147,56 @@ class _UpdateBanner extends StatelessWidget {
     return Material(
       color: cs.primaryContainer,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.system_update_alt_rounded,
-                color: cs.onPrimaryContainer, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                l.dashboardUpdateAvailable(update.version),
-                style: TextStyle(
-                  color: cs.onPrimaryContainer,
-                  fontWeight: FontWeight.w600,
+            Row(
+              children: [
+                Icon(Icons.system_update_alt_rounded,
+                    color: cs.onPrimaryContainer, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l.dashboardUpdateAvailable(update.version),
+                    style: TextStyle(
+                      color: cs.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-            TextButton(
-              onPressed: onDismiss,
-              style: TextButton.styleFrom(foregroundColor: cs.onPrimaryContainer),
-              child: Text(l.dashboardUpdateLater),
-            ),
-            const SizedBox(width: 4),
-            FilledButton(
-              onPressed: () => launchUrl(
-                Uri.parse(update.apkUrl),
-                mode: LaunchMode.externalApplication,
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: cs.onPrimary,
-              ),
-              child: Text(l.dashboardUpdate),
+            // Actions on their own row so "What's new" + Later + Update always
+            // fit, even on a narrow phone.
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: onDismiss,
+                  style: TextButton.styleFrom(
+                      foregroundColor: cs.onPrimaryContainer),
+                  child: Text(l.dashboardUpdateLater),
+                ),
+                TextButton(
+                  onPressed: onWhatsNew,
+                  style: TextButton.styleFrom(
+                      foregroundColor: cs.onPrimaryContainer),
+                  child: Text(l.dashboardWhatsNew),
+                ),
+                const SizedBox(width: 4),
+                FilledButton(
+                  onPressed: () => launchUrl(
+                    Uri.parse(update.apkUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: cs.primary,
+                    foregroundColor: cs.onPrimary,
+                  ),
+                  child: Text(l.dashboardUpdate),
+                ),
+              ],
             ),
           ],
         ),

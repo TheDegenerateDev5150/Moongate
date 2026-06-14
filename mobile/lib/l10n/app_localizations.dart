@@ -110,6 +110,18 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// Shown in the update overlay when the changelog couldn't be fetched.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load what\'s new — check your connection, or view it on GitHub.'**
+  String get updateNotesUnavailable;
+
+  /// Button in the update overlay that opens the GitHub releases page.
+  ///
+  /// In en, this message translates to:
+  /// **'View on GitHub'**
+  String get updateViewOnGithub;
+
   /// Tooltip on the small gear shown in the corner of a dashboard tile's webcam.
   ///
   /// In en, this message translates to:

@@ -9,6 +9,13 @@ class AppLocalizationsIt extends AppLocalizations {
   AppLocalizationsIt([String locale = 'it']) : super(locale);
 
   @override
+  String get updateNotesUnavailable =>
+      'Impossibile caricare le novità — controlla la connessione o consultale su GitHub.';
+
+  @override
+  String get updateViewOnGithub => 'Vedi su GitHub';
+
+  @override
   String get cameraConfigTooltip => 'Imposta URL della telecamera';
 
   @override

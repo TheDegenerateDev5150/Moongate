@@ -1,6 +1,11 @@
 {
   "@@locale": "en",
 
+  "updateNotesUnavailable": "Couldn't load what's new — check your connection, or view it on GitHub.",
+  "@updateNotesUnavailable": {"description": "Shown in the update overlay when the changelog couldn't be fetched."},
+  "updateViewOnGithub": "View on GitHub",
+  "@updateViewOnGithub": {"description": "Button in the update overlay that opens the GitHub releases page."},
+
   "cameraConfigTooltip": "Set camera URL",
   "@cameraConfigTooltip": {"description": "Tooltip on the small gear shown in the corner of a dashboard tile's webcam."},
   "cameraConfigTitle": "Custom camera",
