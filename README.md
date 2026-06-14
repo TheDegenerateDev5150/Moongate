@@ -35,6 +35,7 @@ Free, open-source Android control for your **Klipper 3D printer** — live webca
 ## Features
 
 - 📊 **Fleet dashboard** — live webcam thumbnails (pick the refresh rate to balance smoothness vs. data), print progress matched to Mainsail's estimate, temperatures, chamber sensor, and a per-printer status badge. Tiles auto-sort by activity, so whatever's printing floats to the top.
+- 📷 **External cameras** — point a tile at a camera that isn't wired into Klipper (an old phone as a webcam, a network IP cam). Cameras already configured in Mainsail are auto-detected; or set one by hand with the tile's gear. Works on Wi-Fi and remotely through the tunnel (home-network cameras), and a menu toggle hides the gears.
 - 🎛️ **Print controls** — pause, resume, and stop from the tile, plus a one-tap firmware restart for idle or errored printers.
 - 📂 **Print files on the printer** — tap the folder button on a ready printer to browse the G-code already saved on it, shown with slicer **thumbnails**, newest first. Pick one and **Start print** with a confirm tap — no slicer, no re-upload.
 - 🖥️ **Full Mainsail / Fluidd UI** — tap a tile to open the complete web UI in-app; whichever you run is auto-detected.
