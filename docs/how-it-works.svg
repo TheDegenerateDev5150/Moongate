@@ -46,7 +46,7 @@
 
   <path d="M140,250 C140,210 158,184 188,172" fill="none" stroke="#6C63FF" stroke-width="2.4" stroke-dasharray="2 6" stroke-linecap="round" marker-start="url(#p3)" marker-end="url(#p3)"/>
   <g transform="translate(150,196)" stroke="#6C63FF" stroke-width="2" fill="none" stroke-linecap="round"><circle cx="4" cy="4" r="3.4"/><path d="M6.6,6.6 L14,14"/><path d="M11.2,11.2 L13.6,8.8 M13.6,13.6 L16,11.2"/></g>
-  <text x="200" y="206" font-size="12" font-weight="600" fill="#6C63FF">① signed token</text>
+  <text x="200" y="206" font-size="12" font-weight="600" fill="#6C63FF">signed token</text>
 
   <path d="M210,332 C320,300 400,232 486,176" fill="none" stroke="#FF9F0A" stroke-width="3" stroke-linecap="round" marker-start="url(#o3)"/>
   <path d="M614,176 C700,232 760,300 810,332" fill="none" stroke="#FF9F0A" stroke-width="3" stroke-linecap="round" marker-end="url(#o3)"/>
@@ -55,7 +55,7 @@
 
   <path d="M210,452 L810,452" fill="none" stroke="#34C759" stroke-width="3" marker-start="url(#g3)" marker-end="url(#g3)"/>
   <rect x="406" y="441" width="208" height="22" rx="11" fill="#eaf8ee"/>
-  <text x="510" y="457" font-size="12.5" font-weight="600" fill="#1e9e4a" text-anchor="middle">② home · direct over your LAN</text>
+  <text x="510" y="457" font-size="12.5" font-weight="600" fill="#1e9e4a" text-anchor="middle">① home · direct over your LAN</text>
 
   <rect x="350" y="552" width="420" height="40" rx="20" fill="#ffffff" stroke="#f0dede" stroke-width="1.2"/>
   <g transform="translate(372,564)"><rect x="0" y="6" width="17" height="13" rx="2.5" fill="#FF3B30"/><path d="M3,6 V3.2 a5.5,5.5 0 0 1 11,0 V6" fill="none" stroke="#FF3B30" stroke-width="2.3"/></g>
