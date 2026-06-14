@@ -49,6 +49,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get commonShowKeyboard => 'Pokaż klawiaturę';
 
   @override
+  String get dashboardSignInRetrying =>
+      'Ponowne łączenie z chmurą — logowanie jest zajęte, ponawianie. Twoje drukarki wrócą automatycznie.';
+
+  @override
   String get commonRemove => 'Usuń';
 
   @override

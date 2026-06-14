@@ -188,6 +188,12 @@ abstract class AppLocalizations {
   /// **'Show keyboard'**
   String get commonShowKeyboard;
 
+  /// Dashboard banner shown while the app has no cloud session yet (anonymous sign-in rate-limited); it retries automatically and clears once connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting to the cloud — sign-in is busy, retrying. Your printers will come back automatically.'**
+  String get dashboardSignInRetrying;
+
   /// Generic Remove button label.
   ///
   /// In en, this message translates to:

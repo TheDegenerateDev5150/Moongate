@@ -16,6 +16,7 @@
   "commonDone": "Gotowe",
   "commonRetry": "Ponów",
   "commonShowKeyboard": "Pokaż klawiaturę",
+  "dashboardSignInRetrying": "Ponowne łączenie z chmurą — logowanie jest zajęte, ponawianie. Twoje drukarki wrócą automatycznie.",
   "commonRemove": "Usuń",
   "commonDelete": "Usuń",
   "commonEnable": "Włącz",

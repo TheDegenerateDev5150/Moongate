@@ -49,6 +49,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonShowKeyboard => 'Mostrar teclado';
 
   @override
+  String get dashboardSignInRetrying =>
+      'Reconectando con la nube: el inicio de sesión está ocupado, reintentando. Tus impresoras volverán automáticamente.';
+
+  @override
   String get commonRemove => 'Quitar';
 
   @override

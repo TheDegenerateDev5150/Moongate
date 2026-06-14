@@ -16,6 +16,7 @@
   "commonDone": "Fatto",
   "commonRetry": "Riprova",
   "commonShowKeyboard": "Mostra tastiera",
+  "dashboardSignInRetrying": "Riconnessione al cloud — l'accesso è occupato, nuovo tentativo. Le tue stampanti torneranno automaticamente.",
   "commonRemove": "Rimuovi",
   "commonDelete": "Elimina",
   "commonEnable": "Attiva",

@@ -16,6 +16,7 @@
   "commonDone": "Fertig",
   "commonRetry": "Erneut versuchen",
   "commonShowKeyboard": "Tastatur anzeigen",
+  "dashboardSignInRetrying": "Verbindung zur Cloud wird wiederhergestellt – die Anmeldung ist ausgelastet, neuer Versuch. Deine Drucker kommen automatisch zurück.",
   "commonRemove": "Entfernen",
   "commonDelete": "Löschen",
   "commonEnable": "Aktivieren",

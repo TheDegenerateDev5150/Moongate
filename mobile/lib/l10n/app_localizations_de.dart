@@ -49,6 +49,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commonShowKeyboard => 'Tastatur anzeigen';
 
   @override
+  String get dashboardSignInRetrying =>
+      'Verbindung zur Cloud wird wiederhergestellt – die Anmeldung ist ausgelastet, neuer Versuch. Deine Drucker kommen automatisch zurück.';
+
+  @override
   String get commonRemove => 'Entfernen';
 
   @override

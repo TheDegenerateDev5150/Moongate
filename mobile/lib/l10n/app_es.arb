@@ -16,6 +16,7 @@
   "commonDone": "Listo",
   "commonRetry": "Reintentar",
   "commonShowKeyboard": "Mostrar teclado",
+  "dashboardSignInRetrying": "Reconectando con la nube: el inicio de sesión está ocupado, reintentando. Tus impresoras volverán automáticamente.",
   "commonRemove": "Quitar",
   "commonDelete": "Eliminar",
   "commonEnable": "Activar",

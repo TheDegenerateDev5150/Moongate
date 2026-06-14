@@ -49,6 +49,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonShowKeyboard => 'Показать клавиатуру';
 
   @override
+  String get dashboardSignInRetrying =>
+      'Повторное подключение к облаку — вход занят, повтор. Принтеры вернутся автоматически.';
+
+  @override
   String get commonRemove => 'Удалить';
 
   @override

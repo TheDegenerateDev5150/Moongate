@@ -16,6 +16,7 @@
   "commonDone": "Готово",
   "commonRetry": "Повторить",
   "commonShowKeyboard": "Показать клавиатуру",
+  "dashboardSignInRetrying": "Повторное подключение к облаку — вход занят, повтор. Принтеры вернутся автоматически.",
   "commonRemove": "Удалить",
   "commonDelete": "Удалить",
   "commonEnable": "Включить",
