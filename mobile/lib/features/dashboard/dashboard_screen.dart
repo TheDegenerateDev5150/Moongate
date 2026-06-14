@@ -1039,6 +1039,12 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.9.0', [
+    'External network cameras — point a tile at a camera that isn\'t connected to Klipper, like an old phone used as a webcam. Tap the gear on a tile\'s camera and enter its address (the same URL you use in Mainsail, e.g. http://192.168.0.107:8080/video)',
+    'Cameras already set up in Mainsail are detected automatically — they just appear, and the gear lets you override them',
+    'Works on Wi-Fi and remotely through your printer (for cameras on your home network). A "Camera config icons" toggle in the menu hides the gears if you don\'t use them',
+    'Re-run the Pi installer (or update via Mainsail → Software Updates) for auto-detect and remote cameras; a hand-set camera on Wi-Fi works without a Pi update',
+  ]),
   _ChangelogEntry('v0.8.5', [
     'Clearer reconnect — if the app loses its cloud sign-in (usually rate-limited after several quick reinstalls), the dashboard now shows a "reconnecting, retrying" banner and keeps trying in the background, instead of silently showing every printer offline. Your printers come back on their own',
     'No Pi update needed — just update the app',

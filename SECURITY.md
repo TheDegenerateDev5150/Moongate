@@ -84,6 +84,18 @@ If an attacker somehow obtains a *live, unexpired* token (e.g. they have root on
 
 The token IS the perimeter. We protect the token; the token protects the printer.
 
+### External-camera relay (`/mg-extcam`, v0.9.0+)
+
+Moongate can show a camera that isn't served by Klipper — e.g. an old phone running an IP-webcam app on the LAN. On the home network the app fetches that camera directly. To make it work **remotely**, the auth proxy gained one new route, `/mg-extcam`, which fetches a snapshot/stream from a camera URL the app supplies (`?u=...`) and relays it back.
+
+This is the one place the proxy forwards somewhere other than local nginx / Moonraker, so it's deliberately constrained:
+
+- It's behind the **same token gate** as everything else — an unauthenticated `/mg-extcam` request is just another flat 401.
+- The target is validated before any connection is opened (`_extcam_target_ok` in [`klipper-plugin/moongate_authproxy.py`](klipper-plugin/moongate_authproxy.py)): **plain http to a literal private IPv4 only** (RFC1918). Hostnames (no DNS lookup → no rebinding), loopback (no pivot to Moonraker / the proxy), link-local / cloud-metadata (`169.254/16`), and all public addresses are refused — so the relay can't reach localhost services or act as an open internet proxy.
+- Only `image/*` / `multipart/x-mixed-replace` responses are relayed, with a byte cap.
+
+Net effect: a holder of a valid owner token can pull camera frames from a **private LAN camera**, and nothing else.
+
 ---
 
 ## Pairing flow

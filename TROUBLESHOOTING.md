@@ -117,6 +117,16 @@ A bug report (see above) now shows the **Pi's plugin version**, so you can confi
 - Make sure your webcam is configured in Mainsail / Fluidd under Settings → Webcams, and the snapshot URL works in a browser on your LAN.
 - If you don't have a webcam, the tile falls back to the **Mainsail or Fluidd logo** (whichever you run). That's the expected v0.4 behaviour — it's not an error.
 
+## A custom / external camera isn't showing (v0.9.0+)
+
+You can point a tile at a camera that isn't connected to Klipper (e.g. an old phone running an IP-webcam app) via the **gear** in the corner of the tile's camera. If it doesn't appear:
+
+- **Use the camera's snapshot or stream URL** — the same address that works in a browser on your LAN (e.g. `http://192.168.0.107:8080/video`). The tile pulls one frame at a time, so a stream URL is fine; the camera's web-UI *page* URL is not.
+- **On Wi-Fi but blank?** Confirm the URL opens in your phone's browser while on the same network. The app fetches the camera directly on the LAN, so if the browser can't reach it, neither can the tile.
+- **Works on Wi-Fi but not remotely (cellular)?** Remote cameras go through the Pi, which needs the **v0.9.0 / plugin 0.6.8+** update — re-run the Pi installer (or *Mainsail → Software Updates*) and let it restart. Also note: only **home-network (private) cameras** can be reached remotely; a camera on a public address won't relay through the tunnel, by design.
+- **Auto-detected camera wrong or missing?** Moongate reads the *first* webcam from Mainsail's webcam list. If you have several, set the one you want by hand with the gear, or reorder them in Mainsail.
+- **Gears in the way?** Turn them off under **Menu → Camera config icons** — that hides every tile's gear without affecting the camera feed.
+
 ## QR scan won't work / camera fails
 
 - Grant camera permission when prompted, or via **Settings → Apps → Moongate → Permissions → Camera**.
