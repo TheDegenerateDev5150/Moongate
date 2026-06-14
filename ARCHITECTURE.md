@@ -132,6 +132,7 @@ Responsibilities:
 - Every request must carry a valid short-lived access token (via `Authorization: Bearer`, an `mg_token` cookie, or an `mg_token` query parameter — in that priority order).
 - Without a valid token: a flat `401 Unauthorized`, constant 13-byte body, no `WWW-Authenticate` challenge, no `Server` header, no fingerprint of what's behind it.
 - With a valid token: the request is forwarded to nginx (which then routes Mainsail / Moonraker / the webcam stream / the Moongate plugin endpoints exactly as it would on the LAN side).
+- One exception to "forward to nginx" (v0.9.0+): a request to **`/mg-extcam?u=...`** relays a snapshot/stream from an **external LAN camera** (e.g. a phone webcam Klipper can't see) so it works remotely. The target is SSRF-validated to a literal **private IPv4** only — loopback, link-local/metadata, public addresses, and hostnames are all refused (`_extcam_target_ok`). See [SECURITY.md](SECURITY.md) for the full ruleset.
 
 LAN traffic doesn't go through the proxy — nginx still listens on the LAN interface, so phones on the home network reach Moonraker the way they always have.
 
