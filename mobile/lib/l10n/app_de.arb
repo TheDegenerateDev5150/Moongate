@@ -1,6 +1,17 @@
 {
   "@@locale": "de",
 
+  "cameraConfigTooltip": "Kamera-URL festlegen",
+  "cameraConfigTitle": "Eigene Kamera",
+  "cameraConfigDescription": "Zeige eine Kamera, die nicht mit Klipper verbunden ist – etwa ein altes Handy als Webcam. Gib die Adresse ein, die in den Webcam-Einstellungen von Mainsail steht.",
+  "cameraConfigUrlLabel": "Kamera-URL",
+  "cameraConfigRemoteNote": "Funktioniert im WLAN und aus der Ferne über deinen Drucker. Aus der Ferne sind nur Kameras in deinem Heimnetzwerk (private Adressen) erreichbar.",
+  "cameraConfigInvalid": "Gib eine vollständige Adresse ein, z. B. http://192.168.0.107:8080/video",
+  "cameraConfigUseDefault": "Klipper-Kamera verwenden",
+  "cameraConfigApply": "Übernehmen",
+  "dashboardShowCameraIcons": "Kamera-Konfigsymbole",
+  "dashboardShowCameraIconsSubtitle": "Zahnrad auf jeder Kamera zum Festlegen einer eigenen URL anzeigen",
+
   "appTitle": "Moongate",
 
   "languagePickerTitle": "Sprache auswählen",

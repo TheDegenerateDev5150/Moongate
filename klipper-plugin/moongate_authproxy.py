@@ -37,11 +37,13 @@ Or as a systemd service — see moongate-authproxy.service.
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import logging
 import os
 import sys
 from pathlib import Path
 from typing import Optional, Tuple
+from urllib.parse import urlsplit
 
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
 
@@ -81,6 +83,14 @@ MOONRAKER_PATH_PREFIXES: Tuple[str, ...] = (
     "/api",
     "/websocket",
 )
+
+# v0.9.0: external-camera relay. A request to this exact path forwards a
+# snapshot / MJPEG-stream GET to a caller-supplied LAN camera URL (?u=...) —
+# e.g. an old phone running an IP-webcam app that Klipper can't see. Owner-
+# token gated like every other path; the target is SSRF-checked (literal
+# private IPv4 only) by _extcam_target_ok before any connection is opened.
+EXTCAM_PATH = "/mg-extcam"
+EXTCAM_MAX_BYTES = 16 * 1024 * 1024
 
 # RFC 7230 hop-by-hop headers — never forwarded.
 HOP_BY_HOP_HEADERS = frozenset({
@@ -315,6 +325,101 @@ async def _proxy_http(
         return web.Response(status=502, text="bad gateway\n")
 
 
+# ─── External-camera relay ──────────────────────────────────────────────────
+
+
+def _extcam_target_ok(raw: str) -> Optional[str]:
+    """Validate a client-supplied external-camera URL before the proxy will
+    fetch it. Returns the URL to forward to, or None if it fails the SSRF
+    allow-list.
+
+    Only plain http to a LITERAL private IPv4 is allowed — that's a camera on
+    the local network (a phone webcam, an IP cam). Everything that could turn
+    this relay into a weapon is refused:
+      • non-http schemes (file://, gopher://, …)
+      • hostnames (no DNS lookup at all → no DNS-rebinding window)
+      • loopback 127/8        → can't pivot to Moonraker / this proxy
+      • link-local 169.254/16 → can't reach cloud metadata (169.254.169.254)
+      • public / CGNAT / multicast / reserved / unspecified
+    """
+    if not raw:
+        return None
+    try:
+        parts = urlsplit(raw)
+    except ValueError:
+        return None
+    if parts.scheme != "http":
+        return None
+    host = parts.hostname
+    if not host:
+        return None
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return None  # not a bare IP literal → reject
+    if ip.version != 4 or not ip.is_private:
+        return None
+    if (ip.is_loopback or ip.is_link_local or ip.is_multicast
+            or ip.is_reserved or ip.is_unspecified):
+        return None
+    return raw
+
+
+async def _proxy_extcam(request: web.Request) -> web.StreamResponse:
+    """Relay a snapshot / MJPEG frame from a LAN camera the client points us
+    at. Auth was already enforced by _authorize. The app reads one frame then
+    disconnects; the byte cap is a backstop against a target that streams
+    forever, and the content-type gate stops us relaying arbitrary content
+    from whatever happens to answer on that host:port."""
+    target = _extcam_target_ok(request.query.get("u", ""))
+    if target is None:
+        return web.Response(status=400, text="bad target\n",
+                            headers={"Cache-Control": "no-store"})
+
+    client: ClientSession = request.app["client"]
+    headers = {
+        "User-Agent": "moongate-extcam",
+        "Accept": "image/jpeg, image/*, multipart/x-mixed-replace, */*",
+    }
+    try:
+        async with client.request(
+            "GET", target, headers=headers, allow_redirects=False,
+        ) as upstream:
+            if upstream.status != 200:
+                return web.Response(status=502, text="camera error\n")
+            ctype = upstream.headers.get("Content-Type", "")
+            low = ctype.lower()
+            if not (low.startswith("image/")
+                    or "multipart/x-mixed-replace" in low
+                    or low.startswith("application/octet-stream")):
+                return web.Response(status=415, text="unsupported\n")
+
+            response = web.StreamResponse(
+                status=200,
+                headers={
+                    "Content-Type": ctype or "application/octet-stream",
+                    "Cache-Control": "no-store",
+                },
+            )
+            await response.prepare(request)
+            sent = 0
+            async for chunk in upstream.content.iter_chunked(64 * 1024):
+                await response.write(chunk)
+                sent += len(chunk)
+                if sent >= EXTCAM_MAX_BYTES:
+                    break
+            await response.write_eof()
+            return response
+    except asyncio.CancelledError:
+        raise
+    except (ConnectionResetError, ConnectionAbortedError):
+        # App got its frame and closed the connection — normal.
+        return web.Response(status=499, text="")
+    except Exception as exc:
+        logger.warning("extcam %s failed: %s", target, exc)
+        return web.Response(status=502, text="camera unreachable\n")
+
+
 # ─── WebSocket proxy ────────────────────────────────────────────────────────
 
 # Per-direction frame buffer between the reader and writer halves of
@@ -492,6 +597,9 @@ async def handle(request: web.Request) -> web.StreamResponse:
     deny = await _authorize(request)
     if deny is not None:
         return deny
+
+    if request.path == EXTCAM_PATH:
+        return await _proxy_extcam(request)
 
     backend = _backend_for(request.path)
 

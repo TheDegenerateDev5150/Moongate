@@ -1,6 +1,17 @@
 {
   "@@locale": "zh",
 
+  "cameraConfigTooltip": "设置摄像头网址",
+  "cameraConfigTitle": "自定义摄像头",
+  "cameraConfigDescription": "显示未连接到 Klipper 的摄像头，例如用作网络摄像头的旧手机。请输入 Mainsail 摄像头设置中显示的地址。",
+  "cameraConfigUrlLabel": "摄像头网址",
+  "cameraConfigRemoteNote": "可在 Wi-Fi 下使用，也可通过打印机远程访问。远程时只能访问家庭网络中的摄像头（专用地址）。",
+  "cameraConfigInvalid": "请输入完整地址，例如 http://192.168.0.107:8080/video",
+  "cameraConfigUseDefault": "使用 Klipper 摄像头",
+  "cameraConfigApply": "应用",
+  "dashboardShowCameraIcons": "摄像头配置图标",
+  "dashboardShowCameraIconsSubtitle": "在每个摄像头上显示齿轮以设置自定义网址",
+
   "appTitle": "Moongate",
 
   "languagePickerTitle": "选择您的语言",

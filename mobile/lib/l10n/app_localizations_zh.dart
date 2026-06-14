@@ -9,6 +9,39 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get cameraConfigTooltip => '设置摄像头网址';
+
+  @override
+  String get cameraConfigTitle => '自定义摄像头';
+
+  @override
+  String get cameraConfigDescription =>
+      '显示未连接到 Klipper 的摄像头，例如用作网络摄像头的旧手机。请输入 Mainsail 摄像头设置中显示的地址。';
+
+  @override
+  String get cameraConfigUrlLabel => '摄像头网址';
+
+  @override
+  String get cameraConfigRemoteNote =>
+      '可在 Wi-Fi 下使用，也可通过打印机远程访问。远程时只能访问家庭网络中的摄像头（专用地址）。';
+
+  @override
+  String get cameraConfigInvalid =>
+      '请输入完整地址，例如 http://192.168.0.107:8080/video';
+
+  @override
+  String get cameraConfigUseDefault => '使用 Klipper 摄像头';
+
+  @override
+  String get cameraConfigApply => '应用';
+
+  @override
+  String get dashboardShowCameraIcons => '摄像头配置图标';
+
+  @override
+  String get dashboardShowCameraIconsSubtitle => '在每个摄像头上显示齿轮以设置自定义网址';
+
+  @override
   String get appTitle => 'Moongate';
 
   @override

@@ -228,6 +228,17 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Persist the user's custom camera URL override (set from the tile gear).
+  /// Pass null to clear it and fall back to the Pi-reported webcam.
+  Future<void> updateCustomCameraUrl(String printerId, String? url) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    if (_printers[idx].customCameraUrl == url) return;
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(customCameraUrl: url);
+    await _save();
+  }
+
   /// Persist the detected web UI type ('mainsail' | 'fluidd') so the tile
   /// can render the right logo on a cold launch — including when the
   /// printer is currently offline (power-off, Pi rebooting, etc.).

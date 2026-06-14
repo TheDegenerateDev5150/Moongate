@@ -91,6 +91,17 @@ class PrinterStatusService {
     PrinterStatusRegistry.instance.recordPoll(config.id, _pollDiag);
   }
 
+  /// The user's current custom camera URL for this printer, read LIVE from the
+  /// registry each poll — so a change made via the tile gear takes effect on
+  /// the next poll without recreating the service. Falls back to the snapshot
+  /// the service was constructed with.
+  String? get _liveCustomCameraUrl {
+    for (final p in PrinterRegistry.instance.printers) {
+      if (p.id == config.id) return p.customCameraUrl;
+    }
+    return config.customCameraUrl;
+  }
+
   bool get _withinStartupGrace =>
       _firstPollAt != null &&
       DateTime.now().difference(_firstPollAt!) < _startupGrace;
@@ -674,6 +685,37 @@ class PrinterStatusService {
       }
     }
 
+    // External / custom camera override.
+    // Precedence: user override (the tile gear) > a camera auto-detected from
+    // Mainsail's webcam config (the plugin reports its absolute URL because
+    // Moonraker can't snapshot it for us) > the normal Pi snapshot built
+    // above. These are absolute LAN URLs — typically an MJPEG stream from a
+    // phone webcam. On LAN we fetch them directly; remote we route through the
+    // Pi's /mg-extcam proxy, which only ever forwards to private LAN IPs (see
+    // klipper-plugin/moongate_authproxy.py).
+    final customUrl    = _liveCustomCameraUrl?.trim();
+    final autoSnapshot = (moongateResult?['webcam_snapshot_external'] as String?)?.trim();
+    final autoStream   = (moongateResult?['webcam_stream_external']   as String?)?.trim();
+    final externalUrl = (customUrl != null && customUrl.isNotEmpty)
+        ? customUrl
+        : (autoSnapshot != null && autoSnapshot.isNotEmpty)
+            ? autoSnapshot
+            : (autoStream != null && autoStream.isNotEmpty)
+                ? autoStream
+                : null;
+
+    bool webcamIsExternal = false;
+    if (externalUrl != null && externalUrl.isNotEmpty) {
+      webcamIsExternal = true;
+      if (isLan) {
+        webcamSnapshotUrl = externalUrl;
+      } else {
+        webcamSnapshotUrl =
+            '$baseUrl/mg-extcam?u=${Uri.encodeComponent(externalUrl)}'
+            '&mg_token=${Uri.encodeComponent(accessToken)}';
+      }
+    }
+
     return PrinterStatus(
       state:              state,
       progress:           progress,
@@ -691,6 +733,7 @@ class PrinterStatusService {
       webcamFlipV:     (moongateResult?['webcam_flip_vertical']   as bool?) ?? false,
       webcamRotation:  (moongateResult?['webcam_rotation']        as num?)?.toInt() ?? 0,
       webcamTargetFps: (moongateResult?['webcam_target_fps']      as num?)?.toInt() ?? 15,
+      webcamIsExternal: webcamIsExternal,
     );
   }
 }

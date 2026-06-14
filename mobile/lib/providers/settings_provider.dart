@@ -206,6 +206,36 @@ final dashboardCameraRefreshProvider =
 );
 
 // ---------------------------------------------------------------------------
+// Camera config icons  (show/hide the per-tile camera gear)
+// ---------------------------------------------------------------------------
+
+/// Whether the small camera-config gear is shown in the corner of each
+/// dashboard tile's webcam. On by default; users who don't set custom cameras
+/// can turn it off so it never overlaps the image feed. Travels in backups.
+class ShowCameraConfigIconsNotifier extends Notifier<bool> {
+  static const _key = 'show_camera_config_icons';
+
+  @override
+  bool build() => true;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? true;
+  }
+
+  Future<void> set(bool show) async {
+    state = show;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, show);
+  }
+}
+
+final showCameraConfigIconsProvider =
+    NotifierProvider<ShowCameraConfigIconsNotifier, bool>(
+  ShowCameraConfigIconsNotifier.new,
+);
+
+// ---------------------------------------------------------------------------
 // Print notifications  (opt-in foreground-service progress + state alerts)
 // ---------------------------------------------------------------------------
 

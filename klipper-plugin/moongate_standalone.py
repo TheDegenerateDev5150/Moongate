@@ -63,7 +63,7 @@ logger = logging.getLogger("moonraker.moongate")
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running — the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.7"
+MOONGATE_PLUGIN_VERSION = "0.6.8"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1183,6 +1183,12 @@ class MoongatePlugin:
         result["webcam_flip_vertical"]   = webcam["flip_vertical"]
         result["webcam_rotation"]        = webcam["rotation"]
         result["webcam_target_fps"]      = webcam["target_fps"]
+        # Absolute URL of a camera that lives on another device on the LAN
+        # (e.g. an old phone used as a webcam), read from Mainsail's webcam
+        # config; None for the normal Pi-served camera. The app auto-uses it
+        # — directly on LAN, or through the /mg-extcam proxy when remote.
+        result["webcam_stream_external"]   = webcam["stream_external"]
+        result["webcam_snapshot_external"] = webcam["snapshot_external"]
         return result
 
     async def _handle_control(self, webrequest: Any) -> dict:
@@ -1242,12 +1248,31 @@ class MoongatePlugin:
         _default_path = "/webcam/?action=snapshot"
         _default_fps  = 15
         _defaults = {
-            "snapshot_path":   _default_path,
-            "flip_horizontal": False,
-            "flip_vertical":   False,
-            "rotation":        0,
-            "target_fps":      _default_fps,
+            "snapshot_path":     _default_path,
+            "flip_horizontal":   False,
+            "flip_vertical":     False,
+            "rotation":          0,
+            "target_fps":        _default_fps,
+            "stream_external":   None,
+            "snapshot_external": None,
         }
+
+        def _ext(raw: Any) -> Optional[str]:
+            # An absolute http(s) URL whose host is some OTHER device on the
+            # network (not localhost / 127.x) — i.e. a camera Moonraker can't
+            # snapshot for us, e.g. an old phone running an IP-webcam app and
+            # configured in Mainsail as a stream_url like
+            # http://192.168.0.107:8080/video. Returns the URL, else None. The
+            # app uses it directly on LAN, or via the /mg-extcam proxy remote.
+            s = (raw or "").strip()
+            m = re.match(r"^https?://([^/:]+)", s, re.IGNORECASE)
+            if not m:
+                return None
+            host = m.group(1).lower()
+            if host == "localhost" or host.startswith("127."):
+                return None
+            return s
+
         try:
             req = HTTPRequest(
                 "http://127.0.0.1:7125/server/webcams/list",
@@ -1260,11 +1285,25 @@ class MoongatePlugin:
             webcams = data.get("result", {}).get("webcams", [])
             if not webcams:
                 return _defaults
-            cam  = webcams[0]
-            snap = (cam.get("snapshot_url") or "").strip()
-            if not snap:
-                return _defaults
-            snap = re.sub(r"^https?://(localhost|127\.0\.0\.1)(:\d+)?", "", snap)
+            cam = webcams[0]
+
+            stream_external   = _ext(cam.get("stream_url"))
+            snapshot_external = _ext(cam.get("snapshot_url"))
+
+            # Relative Pi-served snapshot path for the normal (Crowsnest /
+            # uv4l) case. An absolute EXTERNAL snapshot_url must NOT leak into
+            # snapshot_path — the app would build tunnel_base + absolute_url
+            # and get garbage — so fall back to the default and surface the
+            # external URL separately via snapshot_external instead.
+            snap_raw = (cam.get("snapshot_url") or "").strip()
+            if snapshot_external:
+                snap = _default_path
+            elif snap_raw:
+                snap = re.sub(
+                    r"^https?://(localhost|127\.0\.0\.1)(:\d+)?", "", snap_raw)
+            else:
+                snap = _default_path
+
             raw_fps = cam.get("target_fps", _default_fps)
             try:
                 tgt_fps = int(raw_fps)
@@ -1273,11 +1312,13 @@ class MoongatePlugin:
             except (TypeError, ValueError):
                 tgt_fps = _default_fps
             return {
-                "snapshot_path":   snap or _default_path,
-                "flip_horizontal": bool(cam.get("flip_horizontal", False)),
-                "flip_vertical":   bool(cam.get("flip_vertical",   False)),
-                "rotation":        int(cam.get("rotation", 0)),
-                "target_fps":      tgt_fps,
+                "snapshot_path":     snap or _default_path,
+                "flip_horizontal":   bool(cam.get("flip_horizontal", False)),
+                "flip_vertical":     bool(cam.get("flip_vertical",   False)),
+                "rotation":          int(cam.get("rotation", 0)),
+                "target_fps":        tgt_fps,
+                "stream_external":   stream_external,
+                "snapshot_external": snapshot_external,
             }
         except Exception:
             return _defaults

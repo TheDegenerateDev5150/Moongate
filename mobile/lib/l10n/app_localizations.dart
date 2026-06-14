@@ -110,6 +110,66 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// Tooltip on the small gear shown in the corner of a dashboard tile's webcam.
+  ///
+  /// In en, this message translates to:
+  /// **'Set camera URL'**
+  String get cameraConfigTooltip;
+
+  /// Title of the dialog for setting a tile's external camera URL.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom camera'**
+  String get cameraConfigTitle;
+
+  /// Explanatory text at the top of the custom-camera dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a camera that isn\'t connected to Klipper — like an old phone used as a webcam. Enter the address shown in Mainsail\'s webcam settings.'**
+  String get cameraConfigDescription;
+
+  /// Label for the camera URL text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera URL'**
+  String get cameraConfigUrlLabel;
+
+  /// Note under the URL field explaining LAN vs remote reachability.
+  ///
+  /// In en, this message translates to:
+  /// **'Works on Wi-Fi, and remotely through your printer. Only cameras on your home network (private addresses) can be reached remotely.'**
+  String get cameraConfigRemoteNote;
+
+  /// Validation error shown when the entered camera URL is not a valid http(s) address.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a full address, e.g. http://192.168.0.107:8080/video'**
+  String get cameraConfigInvalid;
+
+  /// Button that clears the custom camera and reverts to the Klipper/Pi camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Klipper camera'**
+  String get cameraConfigUseDefault;
+
+  /// Button that saves the entered custom camera URL.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get cameraConfigApply;
+
+  /// Drawer toggle title for showing/hiding the per-tile camera gear.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera config icons'**
+  String get dashboardShowCameraIcons;
+
+  /// Subtitle under the camera-config-icons toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the gear on each camera for setting a custom URL'**
+  String get dashboardShowCameraIconsSubtitle;
+
   /// The application name.
   ///
   /// In en, this message translates to:

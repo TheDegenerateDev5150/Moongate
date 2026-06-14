@@ -233,6 +233,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final gridColumns   = ref.watch(gridColumnsProvider);
     final allowRotation = ref.watch(allowRotationProvider);
     final cameraRefresh = ref.watch(dashboardCameraRefreshProvider);
+    final showCameraIcons = ref.watch(showCameraConfigIconsProvider);
     final printNotifications = ref.watch(printNotificationsEnabledProvider);
     final pollInterval = ref.watch(notifPollIntervalProvider);
 
@@ -497,6 +498,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             .read(dashboardCameraRefreshProvider.notifier)
                             .set(s.first),
                       ),
+                    ),
+                    // Show / hide the per-tile camera config gear.
+                    SwitchListTile(
+                      dense: true,
+                      secondary: const Icon(Icons.videocam_outlined),
+                      title: Text(l.dashboardShowCameraIcons),
+                      subtitle: Text(l.dashboardShowCameraIconsSubtitle),
+                      value: showCameraIcons,
+                      onChanged: (v) => ref
+                          .read(showCameraConfigIconsProvider.notifier)
+                          .set(v),
                     ),
 
                     const Divider(),
@@ -775,6 +787,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(gridColumnsProvider.notifier).load();
     await ref.read(allowRotationProvider.notifier).load();
     await ref.read(dashboardCameraRefreshProvider.notifier).load();
+    await ref.read(showCameraConfigIconsProvider.notifier).load();
     await ref.read(printNotificationsEnabledProvider.notifier).load();
     await PrintNotificationService.instance
         .sync(ref.read(printNotificationsEnabledProvider));
