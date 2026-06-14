@@ -9,6 +9,13 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get updateNotesUnavailable =>
+      'Не удалось загрузить список изменений — проверьте подключение или посмотрите на GitHub.';
+
+  @override
+  String get updateViewOnGithub => 'Посмотреть на GitHub';
+
+  @override
   String get cameraConfigTooltip => 'Указать URL камеры';
 
   @override

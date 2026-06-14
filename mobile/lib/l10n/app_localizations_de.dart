@@ -9,6 +9,13 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get updateNotesUnavailable =>
+      'Neuigkeiten konnten nicht geladen werden – prüfe deine Verbindung oder sieh sie dir auf GitHub an.';
+
+  @override
+  String get updateViewOnGithub => 'Auf GitHub ansehen';
+
+  @override
   String get cameraConfigTooltip => 'Kamera-URL festlegen';
 
   @override

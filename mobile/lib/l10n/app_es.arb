@@ -1,6 +1,9 @@
 {
   "@@locale": "es",
 
+  "updateNotesUnavailable": "No se pudieron cargar las novedades: revisa tu conexión o consúltalas en GitHub.",
+  "updateViewOnGithub": "Ver en GitHub",
+
   "cameraConfigTooltip": "Definir URL de la cámara",
   "cameraConfigTitle": "Cámara personalizada",
   "cameraConfigDescription": "Muestra una cámara que no está conectada a Klipper, como un teléfono antiguo usado como webcam. Introduce la dirección que aparece en los ajustes de webcam de Mainsail.",

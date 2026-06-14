@@ -9,6 +9,13 @@ class AppLocalizationsPl extends AppLocalizations {
   AppLocalizationsPl([String locale = 'pl']) : super(locale);
 
   @override
+  String get updateNotesUnavailable =>
+      'Nie udało się wczytać nowości — sprawdź połączenie lub zobacz je na GitHubie.';
+
+  @override
+  String get updateViewOnGithub => 'Zobacz na GitHubie';
+
+  @override
   String get cameraConfigTooltip => 'Ustaw adres URL kamery';
 
   @override

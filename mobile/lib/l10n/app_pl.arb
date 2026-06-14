@@ -1,6 +1,9 @@
 {
   "@@locale": "pl",
 
+  "updateNotesUnavailable": "Nie udało się wczytać nowości — sprawdź połączenie lub zobacz je na GitHubie.",
+  "updateViewOnGithub": "Zobacz na GitHubie",
+
   "cameraConfigTooltip": "Ustaw adres URL kamery",
   "cameraConfigTitle": "Własna kamera",
   "cameraConfigDescription": "Pokaż kamerę, która nie jest połączona z Klipperem — na przykład stary telefon używany jako kamera. Wpisz adres widoczny w ustawieniach kamery w Mainsail.",

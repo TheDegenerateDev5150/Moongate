@@ -9,6 +9,12 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get updateNotesUnavailable => '无法加载更新内容，请检查网络连接，或在 GitHub 上查看。';
+
+  @override
+  String get updateViewOnGithub => '在 GitHub 上查看';
+
+  @override
   String get cameraConfigTooltip => '设置摄像头网址';
 
   @override
