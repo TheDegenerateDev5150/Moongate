@@ -683,7 +683,7 @@ abstract class AppLocalizations {
   /// Warning that the manual GATE-code path is slower than scanning the QR.
   ///
   /// In en, this message translates to:
-  /// **'Alternative method. Without the QR, the printer can take a few minutes — occasionally up to ~10 — to come fully online on the dashboard. Scan the QR code above for an instant connection.'**
+  /// **'Alternative method. Without the QR, the printer can take up to about a minute to come online — it\'s waiting for the secure tunnel to connect. Scan the QR code above for an instant connection.'**
   String get pairingGateCodeWarning;
 
   /// Scanner overlay message when camera permission was denied.

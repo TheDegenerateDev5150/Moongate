@@ -39,6 +39,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   List<PrinterConfig> _printers = [];
   bool _updateDismissed = false;
 
+  // Always-visible scrollbar for the drawer body so small-screen users can see
+  // there's more below the fold (user-reported — not obvious it scrolled).
+  final ScrollController _drawerScroll = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +51,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // out ("Don't show again"). Post-frame so the dialog has a mounted context.
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _runFirstRunOnboarding().ignore());
+  }
+
+  @override
+  void dispose() {
+    _drawerScroll.dispose();
+    super.dispose();
   }
 
   void _load() {
@@ -242,8 +252,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
             // ── Scrollable body (safe in landscape / small screens) ──────────
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
+              child: Scrollbar(
+                controller: _drawerScroll,
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  controller: _drawerScroll,
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
 
@@ -601,6 +615,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ],
                 ),
+              ),
               ),
             ),
 
@@ -1005,6 +1020,16 @@ class _ChangelogEntry {
 
 // Top-level brief — bumped on each release. Newest first.
 const _changelog = <_ChangelogEntry>[
+  _ChangelogEntry('v0.8.4', [
+    'Re-pairing a printer now reconnects in seconds instead of minutes — the Pi reports its connection to the cloud straight away instead of waiting for its next 5-minute check-in (re-run the Pi installer, or update via Mainsail → Software Updates, to get it)',
+    'Clearer pairing-time hint — the GATE-code notice now says the printer can take up to about a minute (it\'s waiting for the secure tunnel), instead of the old "up to ~10 minutes". Scanning the QR is still an instant local connection',
+    'The menu and the Add Printer screen now show a scrollbar, so it\'s obvious there\'s more to scroll on smaller screens',
+  ]),
+  _ChangelogEntry('v0.8.3', [
+    'Add Printer and rename: tapping a field now reliably re-opens the keyboard after you drop it, and the name and address fields gain a small keyboard button to bring it back — so you can always fix a typo',
+    'The moon-gate logo in the dashboard header now sits on a transparent background, so it looks clean against any theme',
+    'No Pi update needed — just update the app',
+  ]),
   _ChangelogEntry('v0.8.2', [
     'Print a stored file from the dashboard — tap the new folder button on a ready printer to browse the G-code files already on it (with slicer thumbnails), pick one and start it',
     'A proper Moongate app icon at last — a red moon-gate on black — across the launcher, the dashboard bar and notifications',

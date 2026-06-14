@@ -54,6 +54,10 @@ class _PairingScreenState extends State<PairingScreen> {
   final _codeFirstFocus       = FocusNode();
   final _codeSecondFocus      = FocusNode();
 
+  // Drives the always-visible Scrollbar on the body so it's obvious the
+  // add-printer form scrolls on small screens (user-reported).
+  final _scrollController     = ScrollController();
+
   MobileScannerController? _scannerController;
   StreamSubscription<BarcodeCapture>? _barcodeSub;
 
@@ -84,6 +88,7 @@ class _PairingScreenState extends State<PairingScreen> {
     _codeSecondController.dispose();
     _codeFirstFocus.dispose();
     _codeSecondFocus.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -456,9 +461,13 @@ class _PairingScreenState extends State<PairingScreen> {
               )
             : null,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
+      body: Scrollbar(
+        controller: _scrollController,
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(24),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
@@ -782,6 +791,7 @@ class _PairingScreenState extends State<PairingScreen> {
             ],
           ],
         ),
+      ),
       ),
     );
   }
