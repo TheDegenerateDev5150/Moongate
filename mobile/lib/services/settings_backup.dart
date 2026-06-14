@@ -31,6 +31,7 @@ class SettingsBackup {
     'print_notifications_enabled': _Kind.boolean,
     'notif_poll_interval':         _Kind.string,
     'app_locale':                  _Kind.string,
+    'show_camera_config_icons':    _Kind.boolean,
   };
 
   /// Snapshot the currently-set preferences into a JSON-safe map. Unset keys

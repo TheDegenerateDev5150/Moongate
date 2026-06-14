@@ -1,6 +1,27 @@
 {
   "@@locale": "en",
 
+  "cameraConfigTooltip": "Set camera URL",
+  "@cameraConfigTooltip": {"description": "Tooltip on the small gear shown in the corner of a dashboard tile's webcam."},
+  "cameraConfigTitle": "Custom camera",
+  "@cameraConfigTitle": {"description": "Title of the dialog for setting a tile's external camera URL."},
+  "cameraConfigDescription": "Show a camera that isn't connected to Klipper — like an old phone used as a webcam. Enter the address shown in Mainsail's webcam settings.",
+  "@cameraConfigDescription": {"description": "Explanatory text at the top of the custom-camera dialog."},
+  "cameraConfigUrlLabel": "Camera URL",
+  "@cameraConfigUrlLabel": {"description": "Label for the camera URL text field."},
+  "cameraConfigRemoteNote": "Works on Wi-Fi, and remotely through your printer. Only cameras on your home network (private addresses) can be reached remotely.",
+  "@cameraConfigRemoteNote": {"description": "Note under the URL field explaining LAN vs remote reachability."},
+  "cameraConfigInvalid": "Enter a full address, e.g. http://192.168.0.107:8080/video",
+  "@cameraConfigInvalid": {"description": "Validation error shown when the entered camera URL is not a valid http(s) address."},
+  "cameraConfigUseDefault": "Use Klipper camera",
+  "@cameraConfigUseDefault": {"description": "Button that clears the custom camera and reverts to the Klipper/Pi camera."},
+  "cameraConfigApply": "Apply",
+  "@cameraConfigApply": {"description": "Button that saves the entered custom camera URL."},
+  "dashboardShowCameraIcons": "Camera config icons",
+  "@dashboardShowCameraIcons": {"description": "Drawer toggle title for showing/hiding the per-tile camera gear."},
+  "dashboardShowCameraIconsSubtitle": "Show the gear on each camera for setting a custom URL",
+  "@dashboardShowCameraIconsSubtitle": {"description": "Subtitle under the camera-config-icons toggle."},
+
   "appTitle": "Moongate",
   "@appTitle": {"description": "The application name."},
 

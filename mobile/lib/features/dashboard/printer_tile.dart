@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/printer_config.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/print_control_service.dart';
+import '../../services/printer_registry.dart';
 import '../../services/printer_status_registry.dart';
 import '../../services/printer_status_service.dart';
 import 'gcode_files_overlay.dart';
@@ -200,6 +201,7 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                     webcamFlipV:     _status.webcamFlipV,
                     webcamRotation:  _status.webcamRotation,
                     webcamTargetFps: _status.webcamTargetFps,
+                    webcamIsExternal: _status.webcamIsExternal,
                     uiType: _uiType,
                   ),
                   // Overlay shown while we don't yet have a usable
@@ -220,6 +222,18 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                       left: 8,
                       child: _StatusBadge(status: _status),
                     ),
+                  // Camera config gear (top-right). Lets the user point this
+                  // tile at an external camera (e.g. a phone webcam). The
+                  // button watches the "show camera icons" setting and renders
+                  // nothing when it's off, so it never overlaps the feed.
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: _CameraConfigButton(
+                      printer: widget.printer,
+                      onApplied: _statusService.pollNow,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -568,6 +582,10 @@ class _WebcamSnapshot extends ConsumerStatefulWidget {
   /// rate; the actual rate is bounded below by whatever the server can
   /// sustain (the fetch loop is strictly sequential).
   final int               webcamTargetFps;
+  /// True when the snapshot URL is an external camera (custom or auto-detected)
+  /// — the fetch loop then pulls a single frame from a (possibly MJPEG-stream)
+  /// source instead of doing a plain snapshot GET.
+  final bool              webcamIsExternal;
   /// 'mainsail' | 'fluidd' | null — shown as logo when no snapshot yet.
   final String?           uiType;
 
@@ -577,6 +595,7 @@ class _WebcamSnapshot extends ConsumerStatefulWidget {
     this.webcamFlipV     = false,
     this.webcamRotation  = 0,
     this.webcamTargetFps = 15,
+    this.webcamIsExternal = false,
     this.uiType,
   });
 
@@ -666,6 +685,13 @@ class _WebcamSnapshotState extends ConsumerState<_WebcamSnapshot>
   Future<void> _fetchOnce() async {
     final url = widget.webcamSnapshotUrl;
     if (url == null || url.isEmpty) return;
+    // External cameras (custom or auto-detected) usually expose an MJPEG
+    // stream, not a snapshot — a plain GET on `.../video` would never return.
+    // Pull a single frame from the (possibly multipart) response instead.
+    if (widget.webcamIsExternal) {
+      await _fetchFrameFromStream(url);
+      return;
+    }
     try {
       // 8 s timeout. Generous because uv4l-mjpeg has been observed to
       // take 3 s+ per snapshot on first wake. We'd rather block the
@@ -682,6 +708,68 @@ class _WebcamSnapshotState extends ConsumerState<_WebcamSnapshot>
       // Network blip / 401 / timeout / parse error. No state change —
       // the previous frame stays on screen.
     }
+  }
+
+  /// Pull ONE frame from an external camera URL and display it. Handles both a
+  /// plain snapshot (Content-Type image/*) and an MJPEG stream
+  /// (multipart/x-mixed-replace) — for a stream we read until the first
+  /// complete JPEG, then close the connection so we don't hold it open. Used
+  /// for custom / auto-detected external cameras (LAN-direct, or the Pi's
+  /// /mg-extcam proxy when remote).
+  Future<void> _fetchFrameFromStream(String url) async {
+    final client = http.Client();
+    try {
+      final req = http.Request('GET', Uri.parse(url));
+      final resp = await client.send(req).timeout(const Duration(seconds: 8));
+      if (resp.statusCode != 200) return;
+      final ctype = (resp.headers['content-type'] ?? '').toLowerCase();
+      final isMultipart = ctype.contains('multipart');
+      final buffer = BytesBuilder();
+      const maxBytes = 8 * 1024 * 1024; // safety cap
+      await for (final chunk
+          in resp.stream.timeout(const Duration(seconds: 8))) {
+        buffer.add(chunk);
+        if (isMultipart) {
+          final frame = _extractJpeg(buffer.toBytes());
+          if (frame != null) {
+            if (mounted) setState(() => _currentBytes = frame);
+            return; // got a frame — finally closes the still-open stream
+          }
+        }
+        if (buffer.length > maxBytes) break;
+      }
+      // Non-multipart snapshot (or a multipart that ended without a clean
+      // frame): use whatever bytes we collected if they look usable.
+      if (!isMultipart) {
+        final bytes = buffer.toBytes();
+        if (bytes.isNotEmpty && mounted) {
+          setState(() => _currentBytes = bytes);
+        }
+      }
+    } catch (_) {
+      // Blip / timeout — keep the last frame on screen.
+    } finally {
+      client.close(); // aborts an MJPEG stream still in flight
+    }
+  }
+
+  /// Find the first complete JPEG (SOI ff d8 … EOI ff d9) in [d], or null if
+  /// one isn't present yet. Carves a single frame out of an MJPEG stream.
+  static Uint8List? _extractJpeg(Uint8List d) {
+    int start = -1;
+    for (int i = 0; i + 1 < d.length; i++) {
+      if (d[i] == 0xFF && d[i + 1] == 0xD8) {
+        start = i;
+        break;
+      }
+    }
+    if (start < 0) return null;
+    for (int i = start + 2; i + 1 < d.length; i++) {
+      if (d[i] == 0xFF && d[i + 1] == 0xD9) {
+        return Uint8List.sublistView(d, start, i + 2);
+      }
+    }
+    return null;
   }
 
   @override
@@ -988,4 +1076,144 @@ class _TempChip extends StatelessWidget {
       ],
     );
   }
+}
+
+// ── Camera config button + dialog ─────────────────────────────────────────────
+//
+// A small, semi-transparent gear in the corner of the webcam. Tapping it lets
+// the user point this tile at a camera that isn't connected to Klipper — e.g.
+// an old phone running an IP-webcam app. Watches the "show camera icons"
+// setting and renders nothing when it's off, so it never overlaps the feed.
+
+class _CameraConfigButton extends ConsumerWidget {
+  final PrinterConfig printer;
+  final VoidCallback onApplied;
+
+  const _CameraConfigButton({required this.printer, required this.onApplied});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(showCameraConfigIconsProvider)) {
+      return const SizedBox.shrink();
+    }
+    final l = AppLocalizations.of(context);
+    return Tooltip(
+      message: l.cameraConfigTooltip,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.35),
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () async {
+            final changed = await showCameraConfigDialog(context, printer);
+            if (changed == true) onApplied();
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Icon(
+              Icons.settings,
+              size: 17,
+              color: Colors.white.withValues(alpha: 0.85),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Edit dialog for a tile's custom camera URL. Returns true if the URL was
+/// changed (set or cleared), false/null if the user cancelled. Persists the
+/// change to [PrinterRegistry]; the caller pokes the status service to refresh.
+Future<bool?> showCameraConfigDialog(
+    BuildContext context, PrinterConfig printer) {
+  final controller = TextEditingController(text: printer.customCameraUrl ?? '');
+  return showDialog<bool>(
+    context: context,
+    builder: (context) {
+      final l = AppLocalizations.of(context);
+      String? error;
+      return StatefulBuilder(
+        builder: (context, setState) {
+          Future<void> apply() async {
+            final raw = controller.text.trim();
+            if (raw.isEmpty) {
+              // Empty = clear the override (fall back to the Klipper camera).
+              await PrinterRegistry.instance
+                  .updateCustomCameraUrl(printer.id, null);
+              if (context.mounted) Navigator.pop(context, true);
+              return;
+            }
+            final uri = Uri.tryParse(raw);
+            final ok = uri != null &&
+                (uri.scheme == 'http' || uri.scheme == 'https') &&
+                uri.host.isNotEmpty;
+            if (!ok) {
+              setState(() => error = l.cameraConfigInvalid);
+              return;
+            }
+            await PrinterRegistry.instance
+                .updateCustomCameraUrl(printer.id, raw);
+            if (context.mounted) Navigator.pop(context, true);
+          }
+
+          return AlertDialog(
+            title: Text(l.cameraConfigTitle),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l.cameraConfigDescription,
+                    style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  keyboardType: TextInputType.url,
+                  autocorrect: false,
+                  decoration: InputDecoration(
+                    labelText: l.cameraConfigUrlLabel,
+                    hintText: 'http://192.168.0.107:8080/video',
+                    errorText: error,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (_) {
+                    if (error != null) setState(() => error = null);
+                  },
+                  onSubmitted: (_) => apply(),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  l.cameraConfigRemoteNote,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: Theme.of(context).hintColor),
+                ),
+              ],
+            ),
+            actions: [
+              if ((printer.customCameraUrl ?? '').isNotEmpty)
+                TextButton(
+                  onPressed: () async {
+                    await PrinterRegistry.instance
+                        .updateCustomCameraUrl(printer.id, null);
+                    if (context.mounted) Navigator.pop(context, true);
+                  },
+                  child: Text(l.cameraConfigUseDefault),
+                ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(l.commonCancel),
+              ),
+              FilledButton(
+                onPressed: apply,
+                child: Text(l.cameraConfigApply),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
 }

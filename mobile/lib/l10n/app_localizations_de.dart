@@ -9,6 +9,40 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get cameraConfigTooltip => 'Kamera-URL festlegen';
+
+  @override
+  String get cameraConfigTitle => 'Eigene Kamera';
+
+  @override
+  String get cameraConfigDescription =>
+      'Zeige eine Kamera, die nicht mit Klipper verbunden ist – etwa ein altes Handy als Webcam. Gib die Adresse ein, die in den Webcam-Einstellungen von Mainsail steht.';
+
+  @override
+  String get cameraConfigUrlLabel => 'Kamera-URL';
+
+  @override
+  String get cameraConfigRemoteNote =>
+      'Funktioniert im WLAN und aus der Ferne über deinen Drucker. Aus der Ferne sind nur Kameras in deinem Heimnetzwerk (private Adressen) erreichbar.';
+
+  @override
+  String get cameraConfigInvalid =>
+      'Gib eine vollständige Adresse ein, z. B. http://192.168.0.107:8080/video';
+
+  @override
+  String get cameraConfigUseDefault => 'Klipper-Kamera verwenden';
+
+  @override
+  String get cameraConfigApply => 'Übernehmen';
+
+  @override
+  String get dashboardShowCameraIcons => 'Kamera-Konfigsymbole';
+
+  @override
+  String get dashboardShowCameraIconsSubtitle =>
+      'Zahnrad auf jeder Kamera zum Festlegen einer eigenen URL anzeigen';
+
+  @override
   String get appTitle => 'Moongate';
 
   @override

@@ -1,6 +1,17 @@
 {
   "@@locale": "ru",
 
+  "cameraConfigTooltip": "Указать URL камеры",
+  "cameraConfigTitle": "Своя камера",
+  "cameraConfigDescription": "Показать камеру, не подключённую к Klipper, — например, старый телефон в роли веб-камеры. Введите адрес, указанный в настройках веб-камеры Mainsail.",
+  "cameraConfigUrlLabel": "URL камеры",
+  "cameraConfigRemoteNote": "Работает по Wi-Fi и удалённо через ваш принтер. Удалённо доступны только камеры в домашней сети (частные адреса).",
+  "cameraConfigInvalid": "Введите полный адрес, например http://192.168.0.107:8080/video",
+  "cameraConfigUseDefault": "Камера Klipper",
+  "cameraConfigApply": "Применить",
+  "dashboardShowCameraIcons": "Значки настройки камеры",
+  "dashboardShowCameraIconsSubtitle": "Показывать шестерёнку на каждой камере для своего URL",
+
   "appTitle": "Moongate",
 
   "languagePickerTitle": "Выберите язык",

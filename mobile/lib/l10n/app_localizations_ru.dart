@@ -9,6 +9,40 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get cameraConfigTooltip => 'Указать URL камеры';
+
+  @override
+  String get cameraConfigTitle => 'Своя камера';
+
+  @override
+  String get cameraConfigDescription =>
+      'Показать камеру, не подключённую к Klipper, — например, старый телефон в роли веб-камеры. Введите адрес, указанный в настройках веб-камеры Mainsail.';
+
+  @override
+  String get cameraConfigUrlLabel => 'URL камеры';
+
+  @override
+  String get cameraConfigRemoteNote =>
+      'Работает по Wi-Fi и удалённо через ваш принтер. Удалённо доступны только камеры в домашней сети (частные адреса).';
+
+  @override
+  String get cameraConfigInvalid =>
+      'Введите полный адрес, например http://192.168.0.107:8080/video';
+
+  @override
+  String get cameraConfigUseDefault => 'Камера Klipper';
+
+  @override
+  String get cameraConfigApply => 'Применить';
+
+  @override
+  String get dashboardShowCameraIcons => 'Значки настройки камеры';
+
+  @override
+  String get dashboardShowCameraIconsSubtitle =>
+      'Показывать шестерёнку на каждой камере для своего URL';
+
+  @override
   String get appTitle => 'Moongate';
 
   @override

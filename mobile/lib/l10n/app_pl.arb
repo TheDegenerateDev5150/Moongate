@@ -1,6 +1,17 @@
 {
   "@@locale": "pl",
 
+  "cameraConfigTooltip": "Ustaw adres URL kamery",
+  "cameraConfigTitle": "Własna kamera",
+  "cameraConfigDescription": "Pokaż kamerę, która nie jest połączona z Klipperem — na przykład stary telefon używany jako kamera. Wpisz adres widoczny w ustawieniach kamery w Mainsail.",
+  "cameraConfigUrlLabel": "Adres URL kamery",
+  "cameraConfigRemoteNote": "Działa w sieci Wi-Fi oraz zdalnie przez drukarkę. Zdalnie dostępne są tylko kamery w sieci domowej (adresy prywatne).",
+  "cameraConfigInvalid": "Wpisz pełny adres, np. http://192.168.0.107:8080/video",
+  "cameraConfigUseDefault": "Użyj kamery Klipper",
+  "cameraConfigApply": "Zastosuj",
+  "dashboardShowCameraIcons": "Ikony konfiguracji kamery",
+  "dashboardShowCameraIconsSubtitle": "Pokaż koło zębate na każdej kamerze do ustawienia własnego URL",
+
   "appTitle": "Moongate",
 
   "languagePickerTitle": "Wybierz język",

@@ -44,6 +44,16 @@ class PrinterConfig {
   /// be a blank spinner).
   final String? uiType;
 
+  /// User-supplied camera override, set from the gear on the dashboard tile.
+  /// An absolute URL to a camera on the LAN that Klipper doesn't serve — e.g.
+  /// an old phone running an IP-webcam app at
+  /// `http://192.168.0.107:8080/video`. When set it takes priority over the
+  /// Pi-reported webcam: fetched directly on LAN, or routed through the Pi's
+  /// `/mg-extcam` proxy (private-IP targets only) when remote. Null = use
+  /// whatever the Pi reports (which may itself be an auto-detected external
+  /// camera from Mainsail's webcam config).
+  final String? customCameraUrl;
+
   const PrinterConfig({
     required this.id,
     required this.name,
@@ -53,6 +63,7 @@ class PrinterConfig {
     this.webcamRotation  = 0,
     this.webcamTargetFps = 15,
     this.uiType,
+    this.customCameraUrl,
   });
 
   PrinterConfig copyWith({
@@ -63,6 +74,7 @@ class PrinterConfig {
     int?    webcamRotation,
     int?    webcamTargetFps,
     String? uiType,
+    Object? customCameraUrl = _sentinel,
   }) =>
       PrinterConfig(
         id:              id,
@@ -73,6 +85,9 @@ class PrinterConfig {
         webcamRotation:  webcamRotation  ?? this.webcamRotation,
         webcamTargetFps: webcamTargetFps ?? this.webcamTargetFps,
         uiType:          uiType          ?? this.uiType,
+        customCameraUrl: identical(customCameraUrl, _sentinel)
+            ? this.customCameraUrl
+            : customCameraUrl as String?,
       );
 
   /// Normalise a user-typed printer address into a base [lanUrl] such as
@@ -141,6 +156,7 @@ class PrinterConfig {
         'webcamRotation':  webcamRotation,
         'webcamTargetFps': webcamTargetFps,
         if (uiType != null) 'uiType': uiType,
+        if (customCameraUrl != null) 'customCameraUrl': customCameraUrl,
       };
 
   factory PrinterConfig.fromJson(Map<String, dynamic> j) {
@@ -157,6 +173,7 @@ class PrinterConfig {
       webcamRotation:  j['webcamRotation']  as int?  ?? 0,
       webcamTargetFps: j['webcamTargetFps'] as int?  ?? 15,
       uiType:          j['uiType']          as String?,
+      customCameraUrl: j['customCameraUrl'] as String?,
     );
   }
 
@@ -243,6 +260,13 @@ class PrinterStatus {
   final int     webcamRotation;
   final int     webcamTargetFps;
 
+  /// True when [webcamSnapshotUrl] points at an external camera (a user
+  /// override, or one auto-detected from Mainsail's webcam config) rather than
+  /// the normal Pi snapshot endpoint. The tile then uses an MJPEG-aware
+  /// fetcher that can pull a single frame from a stream URL, since these
+  /// cameras usually expose only a stream (e.g. .../video), not a snapshot.
+  final bool webcamIsExternal;
+
   const PrinterStatus({
     required this.state,
     required this.progress,
@@ -260,6 +284,7 @@ class PrinterStatus {
     this.webcamFlipV    = false,
     this.webcamRotation = 0,
     this.webcamTargetFps = 15,
+    this.webcamIsExternal = false,
   });
 
   bool get isPrinting => state == 'printing' || state == 'paused';
