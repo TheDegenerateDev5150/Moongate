@@ -123,24 +123,11 @@ No working camera? Type the **`GATE-XXXX-XXXX`** code shown in the console inste
 
 ## How it works
 
-```
-                        ┌──────────────────────┐
-                        │   Cloud middleman    │   anonymous sign-in;
-                        │   (identity & lookup)│   tells the app where
-                        └──────────┬───────────┘   your printer is right now
-                                   │ short-lived
-                                   │ access token
-                                   ▼
-   ┌─────────────────┐                  ┌──────────────────────────────┐
-   │  Moongate App   │◄──── LAN ───────►│  Raspberry Pi                │
-   │   (Android)     │      (home)      │   • Klipper + Moonraker      │
-   │                 │◄── Cloudflare ──►│   • Moongate plugin          │
-   │                 │   tunnel (away)  │   • Auth proxy — gates every │
-   └─────────────────┘                  │     internet-facing request  │
-                                        └──────────────────────────────┘
-```
+<div align="center">
+<img src="docs/how-it-works.svg" width="820" alt="Moongate infrastructure: the app gets a short-lived signed token from the access broker, then reaches the Raspberry Pi directly over your LAN at home or through Cloudflare's tunnel away; the Pi's auth proxy admits only broker-signed requests, so a leaked tunnel URL returns only 401s.">
+</div>
 
-Your Pi runs Klipper, Moonraker, the Moongate plugin, and an **auth proxy** that gates everything reachable from the internet. A minimal **cloud middleman** handles anonymous sign-in (no email, no password) and tracks the current tunnel URL; the app fetches a fresh signed token before each request and tries home WiFi first, then the tunnel.
+Your Pi runs Klipper, Moonraker, the Moongate plugin, and an **auth proxy** that gates everything reachable from the internet. A minimal **access broker** handles anonymous sign-in (no email, no password) and tracks the current tunnel URL; the app fetches a fresh signed token before each request and tries home WiFi first, then the tunnel.
 
 **The headline:** leaking the tunnel URL alone gives an attacker nothing — every path through it returns `401` without revealing what's underneath. Full threat model in [SECURITY.md](SECURITY.md); code-level detail in [ARCHITECTURE.md](ARCHITECTURE.md).
 
