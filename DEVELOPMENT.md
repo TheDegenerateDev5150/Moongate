@@ -289,12 +289,12 @@ So **the only thing you commit by hand is code + screenshots + docs**. The relea
 1. Edit `mobile/pubspec.yaml`:
 
    ```yaml
-   version: 0.4.X+Y     # X = semver patch, Y = monotonic build number
+   version: 0.9.X+Y     # X = semver patch, Y = monotonic build number
    ```
 
 2. Add a row to the changelog table in [CHANGELOG.md](CHANGELOG.md) (newest first). User-facing language only — see the existing entries for the tone.
 
-3. Update the in-app changelog dialog if you want this version to surface there. The data lives as `_changelog` near the bottom of [`mobile/lib/features/dashboard/dashboard_screen.dart`](mobile/lib/features/dashboard/dashboard_screen.dart).
+3. Add the version's entry to [`mobile/assets/changelog.json`](mobile/assets/changelog.json) (newest first). This single file feeds **both** the in-app "What's new" dialog (bundled) **and** the update banner's "What's new" overlay (fetched from `master`, so users can preview a pending update's notes before installing). Keep it in step with the CHANGELOG.md row above.
 
 4. Commit and push to `master`. CI does the rest — versioned APK + `latest_version.json` update + commit-back happens automatically.
 
