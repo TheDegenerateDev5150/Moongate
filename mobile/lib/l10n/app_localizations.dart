@@ -458,6 +458,36 @@ abstract class AppLocalizations {
   /// **'Unlocks landscape orientation'**
   String get dashboardRotateWithDeviceSubtitle;
 
+  /// Drawer switch title: auto-sort tiles by live status vs. a manual order.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-arrange by status'**
+  String get dashboardAutoArrange;
+
+  /// Subtitle under the auto-arrange switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort tiles by activity. Turn off to drag tiles into your own order.'**
+  String get dashboardAutoArrangeSubtitle;
+
+  /// Hint shown above the dashboard grid when manual drag-to-reorder is active.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold and drag a tile to reorder'**
+  String get dashboardReorderHint;
+
+  /// Bottom-left button to enter manual tile-reorder mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder'**
+  String get dashboardReorderStart;
+
+  /// Bottom-left button to finish reordering and lock the tile order.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get dashboardReorderDone;
+
   /// Section heading for the dashboard webcam refresh setting.
   ///
   /// In en, this message translates to:
@@ -541,6 +571,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tip the dev via PayPal'**
   String get dashboardBuyMeCoffeeSubtitle;
+
+  /// Title of the one-time first-run donation prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoying Moongate?'**
+  String get donationPromptTitle;
+
+  /// Body text of the one-time first-run donation prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Moongate is a free side-project I build in my spare time. If it\'s useful to you, a small tip helps keep it going — no pressure, and I won\'t ask again.'**
+  String get donationPromptBody;
+
+  /// Dismiss button on the donation prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get donationPromptLater;
 
   /// Drawer item that opens the settings screen.
   ///

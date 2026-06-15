@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.9.3+72
+version: 0.9.4+73
 publish_to: none
 
 environment:
@@ -95,6 +95,12 @@ dependencies:
   # discrete state-change alerts (started / paused / complete / cancelled / error).
   flutter_foreground_task: ^8.0.0
   flutter_local_notifications: ^18.0.0
+
+  # Drag-to-reorder for the dashboard grid (manual tile order). Flutter's
+  # built-in ReorderableListView is single-axis only; this pure-Dart package
+  # adds the same long-press-drag + reflow animation to a multi-column grid.
+  # Only used when the "Auto-arrange by status" setting is turned off.
+  reorderable_grid_view: ^2.2.8
 
 dev_dependencies:
   flutter_test:

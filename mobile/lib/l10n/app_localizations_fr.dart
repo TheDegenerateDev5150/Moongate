@@ -203,6 +203,23 @@ class AppLocalizationsFr extends AppLocalizations {
       'Déverrouille l\'orientation paysage';
 
   @override
+  String get dashboardAutoArrange => 'Trier automatiquement par état';
+
+  @override
+  String get dashboardAutoArrangeSubtitle =>
+      'Trie les tuiles par activité. Désactivez pour glisser les tuiles dans votre ordre.';
+
+  @override
+  String get dashboardReorderHint =>
+      'Maintenez et glissez une tuile pour réorganiser';
+
+  @override
+  String get dashboardReorderStart => 'Réorganiser';
+
+  @override
+  String get dashboardReorderDone => 'Terminé';
+
+  @override
   String get dashboardCameraFeedHeading => 'Flux caméra du tableau de bord';
 
   @override
@@ -249,6 +266,16 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get dashboardBuyMeCoffeeSubtitle =>
       'Soutenez le développeur via PayPal';
+
+  @override
+  String get donationPromptTitle => 'Vous aimez Moongate ?';
+
+  @override
+  String get donationPromptBody =>
+      'Moongate est un projet perso gratuit que je développe sur mon temps libre. S\'il vous est utile, un petit pourboire aide à le faire vivre — sans pression, et je ne le redemanderai pas.';
+
+  @override
+  String get donationPromptLater => 'Plus tard';
 
   @override
   String get dashboardSettings => 'Paramètres';

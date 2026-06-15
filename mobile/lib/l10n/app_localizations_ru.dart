@@ -202,6 +202,23 @@ class AppLocalizationsRu extends AppLocalizations {
       'Разблокирует альбомную ориентацию';
 
   @override
+  String get dashboardAutoArrange => 'Автосортировка по статусу';
+
+  @override
+  String get dashboardAutoArrangeSubtitle =>
+      'Сортировать плитки по активности. Выключите, чтобы перетаскивать их в своём порядке.';
+
+  @override
+  String get dashboardReorderHint =>
+      'Удерживайте и перетащите плитку, чтобы изменить порядок';
+
+  @override
+  String get dashboardReorderStart => 'Изменить порядок';
+
+  @override
+  String get dashboardReorderDone => 'Готово';
+
+  @override
   String get dashboardCameraFeedHeading => 'Камера на панели';
 
   @override
@@ -246,6 +263,16 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get dashboardBuyMeCoffeeSubtitle =>
       'Поддержать разработчика через PayPal';
+
+  @override
+  String get donationPromptTitle => 'Нравится Moongate?';
+
+  @override
+  String get donationPromptBody =>
+      'Moongate — это бесплатный личный проект, который я делаю в свободное время. Если он вам полезен, небольшой донат помогает развивать его — без всякого давления, и я спрошу только один раз.';
+
+  @override
+  String get donationPromptLater => 'Может позже';
 
   @override
   String get dashboardSettings => 'Настройки';

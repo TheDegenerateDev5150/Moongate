@@ -200,6 +200,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unlocks landscape orientation';
 
   @override
+  String get dashboardAutoArrange => 'Auto-arrange by status';
+
+  @override
+  String get dashboardAutoArrangeSubtitle =>
+      'Sort tiles by activity. Turn off to drag tiles into your own order.';
+
+  @override
+  String get dashboardReorderHint => 'Hold and drag a tile to reorder';
+
+  @override
+  String get dashboardReorderStart => 'Reorder';
+
+  @override
+  String get dashboardReorderDone => 'Done';
+
+  @override
   String get dashboardCameraFeedHeading => 'Dashboard camera feed';
 
   @override
@@ -242,6 +258,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardBuyMeCoffeeSubtitle => 'Tip the dev via PayPal';
+
+  @override
+  String get donationPromptTitle => 'Enjoying Moongate?';
+
+  @override
+  String get donationPromptBody =>
+      'Moongate is a free side-project I build in my spare time. If it\'s useful to you, a small tip helps keep it going — no pressure, and I won\'t ask again.';
+
+  @override
+  String get donationPromptLater => 'Maybe later';
 
   @override
   String get dashboardSettings => 'Settings';

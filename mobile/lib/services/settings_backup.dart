@@ -13,7 +13,9 @@ enum _Kind { string, boolean, integer, real }
 ///     without a PIN would lock the user out on another device, and writing the
 ///     PIN hash into a file would defeat its at-rest encryption.
 ///   • first-run onboarding flags (`language_selected`, `notifications_prompted`,
-///     `pairing_help_dismissed`) — transient UI state, not preferences.
+///     `pairing_help_dismissed`, `donation_prompted`) — transient UI state, not
+///     preferences (so the donation nudge can still appear once on a fresh
+///     install even after restoring a backup).
 /// The printer list is carried separately, by the backup envelope itself.
 ///
 /// The allow-list also gates [apply], so a hand-edited backup can only ever set
@@ -27,6 +29,7 @@ class SettingsBackup {
     'font_scale':                  _Kind.real,
     'grid_columns':                _Kind.integer,
     'allow_rotation':              _Kind.boolean,
+    'auto_arrange_by_status':      _Kind.boolean,
     'dashboard_camera_refresh':    _Kind.string,
     'print_notifications_enabled': _Kind.boolean,
     'notif_poll_interval':         _Kind.string,
