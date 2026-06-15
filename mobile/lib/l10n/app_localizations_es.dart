@@ -774,6 +774,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String get printerTunnelVia => 'Túnel vía Moongate';
 
   @override
+  String get printerCameraTooltip => 'Cámara';
+
+  @override
+  String get cameraConnecting => 'Conectando con la cámara…';
+
+  @override
+  String get cameraNoCamera =>
+      'No hay ninguna cámara configurada para esta impresora.';
+
+  @override
+  String get cameraHintBody =>
+      'La cámara no se carga aquí en remoto — abre la cámara de Moongate.';
+
+  @override
+  String get cameraHintOpen => 'Abrir';
+
+  @override
   String get printerUnreachable => 'Impresora inaccesible';
 
   @override

@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.2",
+    "bullets": [
+      "Webcam on the printer page now works remotely — open a printer and tap the new camera icon in the top bar for a full-screen live view. An external camera (like a phone used as a webcam) that only loaded at home in the embedded Mainsail page now streams over the tunnel too, the same way the dashboard preview does",
+      "A one-time hint points you to it when a printer's camera can't load remotely in the page",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.1",
     "bullets": [
       "See what's new before you update — the update banner now has a \"What's new\" button that shows every change from your installed version up to the latest, right in the app",

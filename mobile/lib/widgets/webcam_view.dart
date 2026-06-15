@@ -1,0 +1,301 @@
+import 'dart:async';
+import 'dart:math' as math;
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
+
+import '../providers/settings_provider.dart';
+
+// ── Shared webcam renderer ────────────────────────────────────────────────────
+//
+// Self-paced snapshot-fetch loop, shared between the dashboard tile preview and
+// the full-screen printer camera view. We pull each snapshot ourselves with
+// `http.get` and only schedule the next fetch *after* the current one resolves
+// — successful, errored, or timed out. The effective frame rate self-adapts to
+// whatever the webcam server can actually deliver: fast Crowsnest setups still
+// hit the configured 15–30 FPS, slow uv4l-mjpeg and cellular-tunnel paths drop
+// to whatever they can sustain, but they never sit on the placeholder forever.
+//
+// Crucially, the snapshot URL is whatever PrinterStatusService resolved for the
+// path it's currently winning on — LAN-direct at home, or the Pi's /mg-extcam
+// proxy when remote — so an external phone-cam keeps working over the tunnel.
+//
+// Used by both the dashboard tile preview (BoxFit.cover, optionally throttled
+// by the dashboard refresh setting) and the full-screen printer camera view
+// (BoxFit.contain, target-FPS) — one renderer, no drift between the two.
+
+class WebcamView extends ConsumerStatefulWidget {
+  /// Absolute, ready-to-fetch snapshot URL (already includes mg_token for
+  /// tunnel mode). Built by PrinterStatusService each poll. Null while no
+  /// webcam is configured or the printer hasn't been reached yet — build()
+  /// then falls back to the UI-type logo placeholder.
+  final String? webcamSnapshotUrl;
+  final bool webcamFlipH;
+  final bool webcamFlipV;
+  final int webcamRotation; // 0 | 90 | 180 | 270
+  /// Crowsnest / Mainsail Target FPS. Acts as the ceiling on the fetch rate;
+  /// the actual rate is bounded below by whatever the server can sustain.
+  final int webcamTargetFps;
+  /// True when the snapshot URL is an external camera (custom or auto-detected)
+  /// — the fetch loop then pulls a single frame from a (possibly MJPEG-stream)
+  /// source instead of doing a plain snapshot GET.
+  final bool webcamIsExternal;
+  /// 'mainsail' | 'fluidd' | null — shown as a logo while there's no frame yet.
+  final String? uiType;
+
+  /// How a frame fills its box. The dashboard tile crops to fill
+  /// ([BoxFit.cover]); the full-screen camera letterboxes the whole frame
+  /// ([BoxFit.contain]).
+  final BoxFit fit;
+
+  /// When true (the dashboard tile), the global dashboard camera-refresh
+  /// setting caps the frame rate to save data. When false (the full-screen
+  /// camera, which the user is actively watching), the rate is bounded only by
+  /// the printer's own target FPS and what the upstream can actually deliver.
+  final bool respectDashboardThrottle;
+
+  const WebcamView({
+    super.key,
+    this.webcamSnapshotUrl,
+    this.webcamFlipH = false,
+    this.webcamFlipV = false,
+    this.webcamRotation = 0,
+    this.webcamTargetFps = 15,
+    this.webcamIsExternal = false,
+    this.uiType,
+    this.fit = BoxFit.cover,
+    this.respectDashboardThrottle = true,
+  });
+
+  @override
+  ConsumerState<WebcamView> createState() => _WebcamViewState();
+}
+
+class _WebcamViewState extends ConsumerState<WebcamView>
+    with WidgetsBindingObserver {
+  /// Bytes of the most recent successful snapshot. Null until the first fetch
+  /// lands; build() shows the UI-type logo placeholder in that window. After
+  /// the first frame, `Image.memory(gaplessPlayback: true)` keeps the last
+  /// decoded frame on screen across re-fetches — no flicker between updates.
+  Uint8List? _currentBytes;
+
+  /// True while the app is backgrounded — the fetch loop idles instead of
+  /// pulling frames over the network. Resumes on foreground.
+  bool _appPaused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loop();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appPaused = state != AppLifecycleState.resumed;
+  }
+
+  /// Sequential snapshot-fetch loop. One in flight at a time; the next
+  /// `_fetchOnce` only starts after the previous has fully resolved, so a slow
+  /// upstream naturally throttles the effective frame rate.
+  Future<void> _loop() async {
+    while (mounted) {
+      if (_appPaused) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        continue;
+      }
+
+      final start = DateTime.now();
+      await _fetchOnce();
+      if (!mounted) return;
+
+      // The dashboard refresh setting caps the rate ONLY for the tile preview.
+      // The full-screen view ignores it and runs at the printer's target FPS.
+      final fixed = widget.respectDashboardThrottle
+          ? ref.read(dashboardCameraRefreshProvider).intervalMs
+          : null;
+      final int intervalMs;
+      if (fixed != null) {
+        intervalMs = fixed;
+      } else {
+        final fps = widget.webcamTargetFps.clamp(1, 60);
+        intervalMs = (1000 / fps).round();
+      }
+
+      final elapsedMs = DateTime.now().difference(start).inMilliseconds;
+      final remaining = intervalMs - elapsedMs;
+      if (remaining > 0) {
+        await Future.delayed(Duration(milliseconds: remaining));
+      }
+    }
+  }
+
+  /// One GET to the snapshot URL. Success → store bytes; failure → swallow
+  /// silently so gaplessPlayback keeps the previous frame (or the placeholder).
+  Future<void> _fetchOnce() async {
+    final url = widget.webcamSnapshotUrl;
+    if (url == null || url.isEmpty) return;
+    // External cameras usually expose an MJPEG stream, not a snapshot — a plain
+    // GET on `.../video` would never return. Pull a single frame instead.
+    if (widget.webcamIsExternal) {
+      await _fetchFrameFromStream(url);
+      return;
+    }
+    try {
+      // Generous 8 s timeout — uv4l-mjpeg has been observed to take 3 s+ per
+      // snapshot on first wake. Better to block the loop briefly and get a
+      // frame than spin-fail and never display anything.
+      final resp =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+      if (!mounted) return;
+      if (resp.statusCode == 200 && resp.bodyBytes.isNotEmpty) {
+        setState(() => _currentBytes = resp.bodyBytes);
+      }
+    } catch (_) {
+      // Network blip / 401 / timeout / parse error — previous frame stays.
+    }
+  }
+
+  /// Pull ONE frame from an external camera URL. Handles both a plain snapshot
+  /// (Content-Type image/*) and an MJPEG stream (multipart/x-mixed-replace) —
+  /// for a stream we read until the first complete JPEG, then close the
+  /// connection. Used for custom / auto-detected external cameras (LAN-direct,
+  /// or the Pi's /mg-extcam proxy when remote).
+  Future<void> _fetchFrameFromStream(String url) async {
+    final client = http.Client();
+    try {
+      final req = http.Request('GET', Uri.parse(url));
+      final resp = await client.send(req).timeout(const Duration(seconds: 8));
+      if (resp.statusCode != 200) return;
+      final ctype = (resp.headers['content-type'] ?? '').toLowerCase();
+      final isMultipart = ctype.contains('multipart');
+      final buffer = BytesBuilder();
+      const maxBytes = 8 * 1024 * 1024; // safety cap
+      await for (final chunk
+          in resp.stream.timeout(const Duration(seconds: 8))) {
+        buffer.add(chunk);
+        if (isMultipart) {
+          final frame = _extractJpeg(buffer.toBytes());
+          if (frame != null) {
+            if (mounted) setState(() => _currentBytes = frame);
+            return; // got a frame — finally closes the still-open stream
+          }
+        }
+        if (buffer.length > maxBytes) break;
+      }
+      // Non-multipart snapshot (or a multipart that ended without a clean
+      // frame): use whatever bytes we collected if they look usable.
+      if (!isMultipart) {
+        final bytes = buffer.toBytes();
+        if (bytes.isNotEmpty && mounted) {
+          setState(() => _currentBytes = bytes);
+        }
+      }
+    } catch (_) {
+      // Blip / timeout — keep the last frame on screen.
+    } finally {
+      client.close(); // aborts an MJPEG stream still in flight
+    }
+  }
+
+  /// Find the first complete JPEG (SOI ff d8 … EOI ff d9) in [d], or null if
+  /// one isn't present yet. Carves a single frame out of an MJPEG stream.
+  static Uint8List? _extractJpeg(Uint8List d) {
+    int start = -1;
+    for (int i = 0; i + 1 < d.length; i++) {
+      if (d[i] == 0xFF && d[i + 1] == 0xD8) {
+        start = i;
+        break;
+      }
+    }
+    if (start < 0) return null;
+    for (int i = start + 2; i + 1 < d.length; i++) {
+      if (d[i] == 0xFF && d[i + 1] == 0xD9) {
+        return Uint8List.sublistView(d, start, i + 2);
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = _currentBytes;
+    Widget image = bytes != null
+        ? Image.memory(bytes, fit: widget.fit, gaplessPlayback: true)
+        : Container(
+            color: Colors.black54,
+            child: Center(child: _WebcamPlaceholder(uiType: widget.uiType)),
+          );
+
+    // Apply the webcam display transforms Mainsail has configured, so the image
+    // matches the orientation shown in the web UI in both places.
+    final needsRotate = widget.webcamRotation != 0;
+    final needsFlip = widget.webcamFlipH || widget.webcamFlipV;
+
+    if (needsRotate) {
+      image = Transform.rotate(
+        angle: widget.webcamRotation * math.pi / 180,
+        child: image,
+      );
+    }
+    if (needsFlip) {
+      image = Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.diagonal3Values(
+          widget.webcamFlipH ? -1.0 : 1.0,
+          widget.webcamFlipV ? -1.0 : 1.0,
+          1.0,
+        ),
+        child: image,
+      );
+    }
+
+    return image;
+  }
+}
+
+// ── Webcam placeholder ────────────────────────────────────────────────────────
+//
+// Shown while there's no frame yet (no webcam configured, camera service not
+// running, or the first fetch still in flight). Displays the Mainsail or Fluidd
+// logo when the UI type is known, otherwise a generic icon.
+
+class _WebcamPlaceholder extends StatelessWidget {
+  final String? uiType; // 'mainsail' | 'fluidd' | null
+
+  const _WebcamPlaceholder({this.uiType});
+
+  @override
+  Widget build(BuildContext context) {
+    if (uiType == 'mainsail') {
+      return Opacity(
+        opacity: 0.35,
+        child: SvgPicture.asset(
+          'assets/icons/mainsail_logo.svg',
+          width: 130,
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+    if (uiType == 'fluidd') {
+      return Opacity(
+        opacity: 0.35,
+        child: SvgPicture.asset(
+          'assets/icons/fluidd_logo.svg',
+          width: 130,
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+    return const Icon(Icons.videocam_off, color: Colors.white30, size: 40);
+  }
+}
