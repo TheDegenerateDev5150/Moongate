@@ -397,102 +397,103 @@ class _PrinterScreenState extends State<PrinterScreen>
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          if (_webController != null)
-            WebViewWidget(controller: _webController!),
-
-          if (_loading && _errorMsg == null)
-            const Center(child: CircularProgressIndicator()),
-
-          if (_errorMsg != null && !_loading)
-            Container(
-              color: cs.surface,
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.cloud_off_outlined, size: 64, color: cs.error),
-                  const SizedBox(height: 20),
-                  Text(
-                    l.printerUnreachable,
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(color: cs.error),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _errorMsg!,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: cs.onSurface.withValues(alpha: 0.7)),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
-                  FilledButton.icon(
-                    onPressed: () {
-                      PrinterAccessCache.instance.invalidate(widget.printer.id);
-                      _start();
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: Text(l.commonRetry),
-                  ),
-                  if (_usingLan && _tunnelUrl != null) ...[
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: _retryViaTunnel,
-                      icon: const Icon(Icons.cloud_outlined),
-                      label: Text(l.printerUseTunnel),
+          // Camera-discoverability hint — a full-width strip directly under the
+          // app bar (Moongate's own chrome), so it never overlaps the embedded
+          // Mainsail page or the system nav bar. Gated to tunnel + external
+          // camera (see _maybeShowCameraHint). Dismissible, one-time.
+          if (_showCameraHint)
+            Material(
+              color: cs.secondaryContainer,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.videocam_outlined,
+                        size: 20, color: cs.onSecondaryContainer),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l.cameraHintBody,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: cs.onSecondaryContainer),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _openCamera,
+                      child: Text(l.cameraHintOpen),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 18),
+                      color: cs.onSecondaryContainer,
+                      onPressed: _dismissCameraHint,
                     ),
                   ],
-                ],
-              ),
-            ),
-
-          // Camera-discoverability hint — gated to tunnel + external camera
-          // (see _maybeShowCameraHint). Dismissible, one-time.
-          if (_showCameraHint)
-            Positioned(
-              left: 12,
-              right: 12,
-              bottom: 12,
-              child: Material(
-                elevation: 6,
-                borderRadius: BorderRadius.circular(10),
-                color: cs.secondaryContainer,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
-                  child: Row(
-                    children: [
-                      Icon(Icons.videocam_outlined,
-                          size: 20, color: cs.onSecondaryContainer),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          l.cameraHintBody,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: cs.onSecondaryContainer),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: _openCamera,
-                        child: Text(l.cameraHintOpen),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 18),
-                        color: cs.onSecondaryContainer,
-                        onPressed: _dismissCameraHint,
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
+          Expanded(
+            child: Stack(
+              children: [
+                if (_webController != null)
+                  WebViewWidget(controller: _webController!),
+
+                if (_loading && _errorMsg == null)
+                  const Center(child: CircularProgressIndicator()),
+
+                if (_errorMsg != null && !_loading)
+                  Container(
+                    color: cs.surface,
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.cloud_off_outlined,
+                            size: 64, color: cs.error),
+                        const SizedBox(height: 20),
+                        Text(
+                          l.printerUnreachable,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(color: cs.error),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _errorMsg!,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                  color: cs.onSurface.withValues(alpha: 0.7)),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 32),
+                        FilledButton.icon(
+                          onPressed: () {
+                            PrinterAccessCache.instance
+                                .invalidate(widget.printer.id);
+                            _start();
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: Text(l.commonRetry),
+                        ),
+                        if (_usingLan && _tunnelUrl != null) ...[
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            onPressed: _retryViaTunnel,
+                            icon: const Icon(Icons.cloud_outlined),
+                            label: Text(l.printerUseTunnel),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
