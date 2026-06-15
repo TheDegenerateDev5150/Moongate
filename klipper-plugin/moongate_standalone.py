@@ -63,7 +63,7 @@ logger = logging.getLogger("moonraker.moongate")
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running — the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.8"
+MOONGATE_PLUGIN_VERSION = "0.6.9"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -140,9 +140,22 @@ def _get_local_ip() -> str:
         return "localhost"
 
 
+# Cloudflare's tunnel-provisioning API lives on the same trycloudflare.com
+# domain but is NOT a tunnel — cloudflared prints it in its own output/logs, and
+# the loose regex below otherwise matches it (seen in the wild as a bogus
+# reported URL, https://api.trycloudflare.com). Never treat it as our tunnel.
+_NON_TUNNEL_URLS = {"https://api.trycloudflare.com"}
+
+
 def _get_tunnel_url() -> Optional[str]:
     """Return the active Cloudflare Quick Tunnel URL or None."""
     pattern = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com")
+
+    def _pick(text: str, *, last: bool) -> Optional[str]:
+        urls = [u for u in pattern.findall(text) if u not in _NON_TUNNEL_URLS]
+        if not urls:
+            return None
+        return urls[-1] if last else urls[0]
 
     # 1. cloudflared local REST API — always-live URL
     for port in (20241, 2000):
@@ -150,9 +163,9 @@ def _get_tunnel_url() -> Optional[str]:
             try:
                 with urllib.request.urlopen(f"http://localhost:{port}{path}", timeout=2) as resp:
                     body = resp.read().decode(errors="replace")
-                    m = pattern.search(body)
-                    if m:
-                        return m.group(0)
+                    url = _pick(body, last=False)
+                    if url:
+                        return url
             except Exception:
                 pass
 
@@ -160,9 +173,9 @@ def _get_tunnel_url() -> Optional[str]:
     for p in (Path("/run/moongate-tunnel.log"), Path("/tmp/moongate-tunnel.log")):
         if p.exists():
             try:
-                matches = pattern.findall(p.read_text())
-                if matches:
-                    return matches[-1]
+                url = _pick(p.read_text(), last=True)
+                if url:
+                    return url
             except Exception:
                 pass
 
@@ -173,9 +186,9 @@ def _get_tunnel_url() -> Optional[str]:
                 ["journalctl", "-u", unit, "--no-pager", "-n", "500"],
                 capture_output=True, text=True, timeout=5,
             )
-            matches = pattern.findall(result.stdout)
-            if matches:
-                return matches[-1]
+            url = _pick(result.stdout, last=True)
+            if url:
+                return url
         except Exception:
             pass
     return None
@@ -540,6 +553,10 @@ class HeartbeatLoop:
         self.on_unpaired = on_unpaired_cb
         self._task: Optional[asyncio.Task] = None
         self._last_url_reported: Optional[str] = None
+        # Wall-clock deadline until which we hold the fast bootstrap cadence
+        # after a pairing poke, so a transient send failure (e.g. flaky WiFi)
+        # doesn't drop us to the 5-minute interval mid-pair. 0 = not active.
+        self._fast_deadline: float = 0.0
         # Created in _run() so it binds to the running loop. None until
         # the loop has started; request_immediate_send() is a no-op in
         # that window.
@@ -562,6 +579,13 @@ class HeartbeatLoop:
     # seconds of cloudflared publishing it.
     _BOOTSTRAP_INTERVAL = 5
 
+    # After a pairing poke, keep the 5 s bootstrap cadence until a report
+    # actually succeeds — but no longer than this, so a genuinely-offline Pi
+    # eventually falls back to the steady interval instead of retrying forever.
+    # This is what stops a one-off "No route to host" during pairing from
+    # costing a full 5-minute heartbeat cycle (flaky-WiFi boards like the CB1).
+    _FAST_WINDOW_SECONDS = 180
+
     async def _run(self) -> None:
         # First heartbeat after a brief delay so cloudflared has time to come up
         await asyncio.sleep(5)
@@ -575,9 +599,15 @@ class HeartbeatLoop:
             # so the cloud picks up the tunnel within seconds of
             # cloudflared coming online. After the first successful
             # heartbeat, drop to the configured cadence.
+            # Fast cadence while we still owe a report: before the first
+            # successful report at all (bootstrap), OR within the post-poke
+            # window where a transient failure must not cost a full interval.
+            fast = (
+                self._last_url_reported is None
+                or time.time() < self._fast_deadline
+            )
             effective_interval = (
-                self.interval if self._last_url_reported is not None
-                else self._BOOTSTRAP_INTERVAL
+                self._BOOTSTRAP_INTERVAL if fast else self.interval
             )
             # Wait for either the scheduled interval OR a poke from
             # MOONGATE_PAIR. Poke wakes the loop early so the cloud sees
@@ -594,10 +624,18 @@ class HeartbeatLoop:
                 return
 
     def request_immediate_send(self) -> None:
-        """Wake the heartbeat loop to send NOW instead of waiting for the
-        next scheduled interval. Idempotent — calling repeatedly between
-        sends collapses into a single early send. No-op until the loop
-        has started (the first 5 s post-boot)."""
+        """Wake the heartbeat loop to send NOW, and hold the fast bootstrap
+        cadence until the report succeeds (bounded by [_FAST_WINDOW_SECONDS]).
+
+        This is what makes re-pairing resilient to a transient network blip: a
+        single failed heartbeat (e.g. 'No route to host' on flaky WiFi) used to
+        drop the loop back to the 5-minute interval, so the freshly-created cloud
+        row didn't get its tunnel URL for minutes — a long "Starting up…" wait.
+        Now we keep retrying every few seconds until the cloud accepts it.
+
+        Idempotent; the poke itself is a no-op until the loop has started (the
+        first 5 s post-boot), but the fast window is still armed."""
+        self._fast_deadline = time.time() + self._FAST_WINDOW_SECONDS
         if self._poke_event is not None:
             self._poke_event.set()
 
@@ -614,6 +652,9 @@ class HeartbeatLoop:
 
         status, body = self.sb.heartbeat(pk_b64, tunnel, ts, sig_b64)
         if status in (200, 204):
+            # Got through — drop out of the post-poke fast window and resume the
+            # steady cadence.
+            self._fast_deadline = 0.0
             if tunnel != self._last_url_reported:
                 logger.info("Heartbeat: reported tunnel URL %s", tunnel)
                 self._last_url_reported = tunnel
