@@ -1472,6 +1472,18 @@ abstract class AppLocalizations {
   /// **'No camera configured for this printer.'**
   String get cameraNoCamera;
 
+  /// Dismissible hint on the printer page, shown only over the tunnel for an external camera, pointing the user to the native full-screen camera view.
+  ///
+  /// In en, this message translates to:
+  /// **'Webcam won\'t load here remotely — open the Moongate camera.'**
+  String get cameraHintBody;
+
+  /// Button on the camera-discoverability hint that opens the full-screen Moongate camera view.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get cameraHintOpen;
+
   /// Heading on the full-screen error overlay when the printer cannot be loaded.
   ///
   /// In en, this message translates to:

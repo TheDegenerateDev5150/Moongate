@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -10,6 +11,7 @@ import '../../models/printer_config.dart';
 import '../../services/lan_discovery_service.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
+import '../../services/printer_status_registry.dart';
 import '../../services/supabase_service.dart';
 import '../../widgets/keyboard_affordance.dart';
 import 'printer_camera_screen.dart';
@@ -50,6 +52,14 @@ class _PrinterScreenState extends State<PrinterScreen>
   String? _tunnelUrl;
   Timer?  _retryTimer;
   Timer?  _cookieRefreshTimer;
+
+  // Discoverability hint pointing at the camera icon. Shown ONLY when this
+  // printer is loaded over the tunnel AND its webcam is an external (absolute
+  // LAN-URL) camera — the one case where the embedded Mainsail webcam panel
+  // can't load remotely. One-time: dismissing it (or opening the camera) sets
+  // a persisted flag so it never shows again. A normal relative-URL webcam is
+  // never flagged external, so a standard setup never sees this.
+  bool _showCameraHint = false;
 
   // Local copy of the printer name so the app bar reflects renames
   // immediately, without waiting for a dashboard rebuild.
@@ -130,6 +140,7 @@ class _PrinterScreenState extends State<PrinterScreen>
 
       _initControllerIfNeeded();
       await _webController!.loadRequest(Uri.parse('$useUrl/'));
+      _maybeShowCameraHint();
     } on PrinterUnavailableException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -143,6 +154,44 @@ class _PrinterScreenState extends State<PrinterScreen>
       if (!mounted) return;
       setState(() { _loading = false; _errorMsg = l.printerCouldNotReach('$e'); });
     }
+  }
+
+  static const _cameraHintSeenKey = 'camera_hint_seen';
+
+  /// Show the camera-discoverability hint iff we're on the tunnel, the webcam
+  /// is an external (absolute-LAN-URL) camera the Mainsail panel can't load
+  /// remotely, and the user hasn't already discovered/dismissed it. Reads the
+  /// latest webcam classification from the dashboard tile's last poll.
+  Future<void> _maybeShowCameraHint() async {
+    if (_usingLan || _showCameraHint) return;
+    final snap = PrinterStatusRegistry.instance.snapshot(widget.printer.id);
+    if (snap?.webcamIsExternal != true) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_cameraHintSeenKey) ?? false) return;
+    if (mounted) setState(() => _showCameraHint = true);
+  }
+
+  Future<void> _markCameraHintSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_cameraHintSeenKey, true);
+  }
+
+  /// Open the full-screen native camera view. Also marks the hint as seen — if
+  /// the user found the camera (via the app-bar icon or the hint), there's no
+  /// need to nudge them again.
+  void _openCamera() {
+    _markCameraHintSeen();
+    if (_showCameraHint) setState(() => _showCameraHint = false);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PrinterCameraScreen(printer: widget.printer),
+      ),
+    );
+  }
+
+  void _dismissCameraHint() {
+    _markCameraHintSeen();
+    setState(() => _showCameraHint = false);
   }
 
   Future<void> _showEditPrinterDialog() async {
@@ -336,11 +385,7 @@ class _PrinterScreenState extends State<PrinterScreen>
           IconButton(
             icon: const Icon(Icons.videocam_outlined),
             tooltip: l.printerCameraTooltip,
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => PrinterCameraScreen(printer: widget.printer),
-              ),
-            ),
+            onPressed: _openCamera,
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -404,6 +449,48 @@ class _PrinterScreenState extends State<PrinterScreen>
                     ),
                   ],
                 ],
+              ),
+            ),
+
+          // Camera-discoverability hint — gated to tunnel + external camera
+          // (see _maybeShowCameraHint). Dismissible, one-time.
+          if (_showCameraHint)
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: 12,
+              child: Material(
+                elevation: 6,
+                borderRadius: BorderRadius.circular(10),
+                color: cs.secondaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.videocam_outlined,
+                          size: 20, color: cs.onSecondaryContainer),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          l.cameraHintBody,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: cs.onSecondaryContainer),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _openCamera,
+                        child: Text(l.cameraHintOpen),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        color: cs.onSecondaryContainer,
+                        onPressed: _dismissCameraHint,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
         ],

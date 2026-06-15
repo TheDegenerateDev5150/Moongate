@@ -780,6 +780,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get cameraNoCamera => 'No camera configured for this printer.';
 
   @override
+  String get cameraHintBody =>
+      'Webcam won\'t load here remotely — open the Moongate camera.';
+
+  @override
+  String get cameraHintOpen => 'Open';
+
+  @override
   String get printerUnreachable => 'Stampante irraggiungibile';
 
   @override
