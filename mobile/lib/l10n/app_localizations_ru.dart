@@ -767,6 +767,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get printerTunnelVia => 'Туннель через Moongate';
 
   @override
+  String get printerCameraTooltip => 'Camera';
+
+  @override
+  String get cameraConnecting => 'Connecting to camera…';
+
+  @override
+  String get cameraNoCamera => 'No camera configured for this printer.';
+
+  @override
   String get printerUnreachable => 'Принтер недоступен';
 
   @override

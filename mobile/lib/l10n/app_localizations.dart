@@ -1454,6 +1454,24 @@ abstract class AppLocalizations {
   /// **'Tunnel via Moongate'**
   String get printerTunnelVia;
 
+  /// Tooltip on the printer detail screen's app-bar button that opens the full-screen Moongate camera view.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get printerCameraTooltip;
+
+  /// Shown on the full-screen camera view while the first status poll is in flight.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to camera…'**
+  String get cameraConnecting;
+
+  /// Shown on the full-screen camera view when the printer reports no webcam and no custom camera is set.
+  ///
+  /// In en, this message translates to:
+  /// **'No camera configured for this printer.'**
+  String get cameraNoCamera;
+
   /// Heading on the full-screen error overlay when the printer cannot be loaded.
   ///
   /// In en, this message translates to:

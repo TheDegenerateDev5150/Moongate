@@ -12,6 +12,7 @@ import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
 import '../../services/supabase_service.dart';
 import '../../widgets/keyboard_affordance.dart';
+import 'printer_camera_screen.dart';
 
 /// Full-screen WebView showing the printer's Mainsail/Fluidd interface.
 ///
@@ -328,6 +329,19 @@ class _PrinterScreenState extends State<PrinterScreen>
           onPressed: () => context.pop(),
         ),
         actions: [
+          // Native Moongate camera view. Unlike the Mainsail webcam panel in
+          // this WebView (which hits the camera's absolute LAN URL and so fails
+          // for an external phone-cam when remote), this renders through the
+          // resolved snapshot URL — /mg-extcam-proxied over the tunnel.
+          IconButton(
+            icon: const Icon(Icons.videocam_outlined),
+            tooltip: l.printerCameraTooltip,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => PrinterCameraScreen(printer: widget.printer),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {

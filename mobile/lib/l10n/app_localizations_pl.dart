@@ -766,6 +766,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get printerTunnelVia => 'Tunel przez Moongate';
 
   @override
+  String get printerCameraTooltip => 'Camera';
+
+  @override
+  String get cameraConnecting => 'Connecting to camera…';
+
+  @override
+  String get cameraNoCamera => 'No camera configured for this printer.';
+
+  @override
   String get printerUnreachable => 'Drukarka nieosiągalna';
 
   @override
