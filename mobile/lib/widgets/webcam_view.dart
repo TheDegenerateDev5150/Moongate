@@ -23,10 +23,9 @@ import '../providers/settings_provider.dart';
 // path it's currently winning on — LAN-direct at home, or the Pi's /mg-extcam
 // proxy when remote — so an external phone-cam keeps working over the tunnel.
 //
-// NOTE: the fetch loop below is, for this iteration, duplicated from the
-// dashboard tile's private `_WebcamSnapshot` in features/dashboard/printer_tile
-// .dart. They should be unified onto THIS widget once the full-screen camera
-// view is finalised; kept separate for now so the proven tile path is untouched.
+// Used by both the dashboard tile preview (BoxFit.cover, optionally throttled
+// by the dashboard refresh setting) and the full-screen printer camera view
+// (BoxFit.contain, target-FPS) — one renderer, no drift between the two.
 
 class WebcamView extends ConsumerStatefulWidget {
   /// Absolute, ready-to-fetch snapshot URL (already includes mg_token for

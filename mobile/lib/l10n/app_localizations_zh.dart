@@ -733,20 +733,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get printerTunnelVia => '通过 Moongate 隧道';
 
   @override
-  String get printerCameraTooltip => 'Camera';
+  String get printerCameraTooltip => '摄像头';
 
   @override
-  String get cameraConnecting => 'Connecting to camera…';
+  String get cameraConnecting => '正在连接摄像头…';
 
   @override
-  String get cameraNoCamera => 'No camera configured for this printer.';
+  String get cameraNoCamera => '未为此打印机配置摄像头。';
 
   @override
-  String get cameraHintBody =>
-      'Webcam won\'t load here remotely — open the Moongate camera.';
+  String get cameraHintBody => '网络摄像头在此处无法远程加载 — 打开 Moongate 摄像头。';
 
   @override
-  String get cameraHintOpen => 'Open';
+  String get cameraHintOpen => '打开';
 
   @override
   String get printerUnreachable => '无法连接打印机';

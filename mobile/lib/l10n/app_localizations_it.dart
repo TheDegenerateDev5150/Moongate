@@ -771,20 +771,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String get printerTunnelVia => 'Tunnel tramite Moongate';
 
   @override
-  String get printerCameraTooltip => 'Camera';
+  String get printerCameraTooltip => 'Telecamera';
 
   @override
-  String get cameraConnecting => 'Connecting to camera…';
+  String get cameraConnecting => 'Connessione alla telecamera…';
 
   @override
-  String get cameraNoCamera => 'No camera configured for this printer.';
+  String get cameraNoCamera =>
+      'Nessuna telecamera configurata per questa stampante.';
 
   @override
   String get cameraHintBody =>
-      'Webcam won\'t load here remotely — open the Moongate camera.';
+      'La webcam non si carica qui da remoto — apri la telecamera Moongate.';
 
   @override
-  String get cameraHintOpen => 'Open';
+  String get cameraHintOpen => 'Apri';
 
   @override
   String get printerUnreachable => 'Stampante irraggiungibile';
