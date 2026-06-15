@@ -458,6 +458,24 @@ abstract class AppLocalizations {
   /// **'Unlocks landscape orientation'**
   String get dashboardRotateWithDeviceSubtitle;
 
+  /// Drawer switch title: auto-sort tiles by live status vs. a manual order.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-arrange by status'**
+  String get dashboardAutoArrange;
+
+  /// Subtitle under the auto-arrange switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort tiles by activity. Turn off to drag tiles into your own order.'**
+  String get dashboardAutoArrangeSubtitle;
+
+  /// Hint shown above the dashboard grid when manual drag-to-reorder is active.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold and drag a tile to reorder'**
+  String get dashboardReorderHint;
+
   /// Section heading for the dashboard webcam refresh setting.
   ///
   /// In en, this message translates to:

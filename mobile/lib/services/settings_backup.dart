@@ -27,6 +27,7 @@ class SettingsBackup {
     'font_scale':                  _Kind.real,
     'grid_columns':                _Kind.integer,
     'allow_rotation':              _Kind.boolean,
+    'auto_arrange_by_status':      _Kind.boolean,
     'dashboard_camera_refresh':    _Kind.string,
     'print_notifications_enabled': _Kind.boolean,
     'notif_poll_interval':         _Kind.string,

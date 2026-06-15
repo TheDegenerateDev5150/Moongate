@@ -202,6 +202,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'Разблокирует альбомную ориентацию';
 
   @override
+  String get dashboardAutoArrange => 'Автосортировка по статусу';
+
+  @override
+  String get dashboardAutoArrangeSubtitle =>
+      'Сортировать плитки по активности. Выключите, чтобы перетаскивать их в своём порядке.';
+
+  @override
+  String get dashboardReorderHint =>
+      'Удерживайте и перетащите плитку, чтобы изменить порядок';
+
+  @override
   String get dashboardCameraFeedHeading => 'Камера на панели';
 
   @override

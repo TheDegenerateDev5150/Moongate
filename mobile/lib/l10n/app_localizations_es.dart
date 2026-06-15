@@ -202,6 +202,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Permite la orientación horizontal';
 
   @override
+  String get dashboardAutoArrange => 'Ordenar automáticamente por estado';
+
+  @override
+  String get dashboardAutoArrangeSubtitle =>
+      'Ordena las casillas por actividad. Desactívalo para arrastrarlas a tu propio orden.';
+
+  @override
+  String get dashboardReorderHint =>
+      'Mantén y arrastra una casilla para reordenar';
+
+  @override
   String get dashboardCameraFeedHeading => 'Cámara del panel';
 
   @override

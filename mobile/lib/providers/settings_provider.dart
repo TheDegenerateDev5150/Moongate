@@ -138,6 +138,40 @@ final allowRotationProvider = NotifierProvider<AllowRotationNotifier, bool>(
 );
 
 // ---------------------------------------------------------------------------
+// Auto-arrange by status  (true = sort tiles by live status; false = manual)
+// ---------------------------------------------------------------------------
+
+/// Whether the dashboard re-sorts tiles by live status (Error → Printing →
+/// Ready → Idle → Offline) on every status change. ON by default — the
+/// historic behaviour, which floats active prints to the top.
+///
+/// Turning it OFF freezes the tiles in the user's own order and unlocks
+/// long-press drag-to-reorder on the dashboard grid (the order is persisted by
+/// [PrinterRegistry] and rides backups). Without this, a printer coming online
+/// or starting a print would yank a hand-placed tile out from under the user.
+/// Travels in backups.
+class AutoArrangeNotifier extends Notifier<bool> {
+  static const _key = 'auto_arrange_by_status';
+
+  @override
+  bool build() => true;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? true;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, enabled);
+  }
+}
+
+final autoArrangeProvider =
+    NotifierProvider<AutoArrangeNotifier, bool>(AutoArrangeNotifier.new);
+
+// ---------------------------------------------------------------------------
 // Dashboard camera refresh rate
 // ---------------------------------------------------------------------------
 

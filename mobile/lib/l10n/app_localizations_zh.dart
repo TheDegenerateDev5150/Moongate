@@ -193,6 +193,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardRotateWithDeviceSubtitle => '解锁横屏方向';
 
   @override
+  String get dashboardAutoArrange => '按状态自动排列';
+
+  @override
+  String get dashboardAutoArrangeSubtitle => '按活动状态排序磁贴。关闭后可拖动磁贴自定义顺序。';
+
+  @override
+  String get dashboardReorderHint => '按住并拖动磁贴即可重新排序';
+
+  @override
   String get dashboardCameraFeedHeading => '仪表盘摄像头画面';
 
   @override

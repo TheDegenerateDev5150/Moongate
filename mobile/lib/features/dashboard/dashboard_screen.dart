@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -67,6 +68,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // separate cached snapshot, so poke it whenever the set may have changed
     // (pair / remove / restore). No-op when notifications are off.
     PrintNotificationService.instance.refreshNow().ignore();
+  }
+
+  /// Persist a drag-to-reorder from the dashboard grid (manual mode only).
+  /// reorderable_grid_view reports the *final* index directly, so this is a
+  /// plain removeAt/insert — no ReorderableListView-style `-1` fix-up. The new
+  /// order is written through the registry (which is the dashboard's order of
+  /// record and rides backups).
+  void _onReorder(int oldIndex, int newIndex) {
+    final reordered = List<PrinterConfig>.of(_printers);
+    final moved = reordered.removeAt(oldIndex);
+    reordered.insert(newIndex, moved);
+    setState(() => _printers = reordered);
+    PrinterRegistry.instance
+        .setOrder([for (final p in reordered) p.id])
+        .ignore();
   }
 
   /// Stable-sort the printer list by live status priority (printerStatusRank,
@@ -135,24 +151,50 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final update = _updateDismissed ? null : updateAsync.valueOrNull;
 
     final gridColumns = ref.watch(gridColumnsProvider);
+    final autoArrange = ref.watch(autoArrangeProvider);
 
-    final body = _printers.isEmpty
-        ? _EmptyState(onAddPrinter: () => context.push('/pair').then((_) => _load()))
-        // Re-sort tiles by live status (active prints float up) whenever a
-        // printer's state changes — printerStatusRank, shared with the
-        // notification. Tiles are keyed by id so a reorder moves a tile (and
-        // its poller) rather than rebuilding it.
-        : StreamBuilder<void>(
-            stream: PrinterStatusRegistry.instance.changes,
-            builder: (context, _) => _PrinterGrid(
-              printers: _sortByStatus(_printers),
-              columns:  gridColumns,
-              // Reload after the printer screen pops so any rename done in
-              // the app bar there propagates to the tile.
-              onTap:    (p) => context.push('/printer/${p.id}').then((_) => _load()),
-              onRemove: _removePrinter,
+    // Reload after the printer screen pops so any rename done in the app bar
+    // there propagates to the tile.
+    void openPrinter(PrinterConfig p) =>
+        context.push('/printer/${p.id}').then((_) => _load());
+
+    final Widget body;
+    if (_printers.isEmpty) {
+      body = _EmptyState(
+          onAddPrinter: () => context.push('/pair').then((_) => _load()));
+    } else if (autoArrange) {
+      // Re-sort tiles by live status (active prints float up) whenever a
+      // printer's state changes — printerStatusRank, shared with the
+      // notification. Tiles are keyed by id so a reorder moves a tile (and
+      // its poller) rather than rebuilding it.
+      body = StreamBuilder<void>(
+        stream: PrinterStatusRegistry.instance.changes,
+        builder: (context, _) => _PrinterGrid(
+          printers: _sortByStatus(_printers),
+          columns: gridColumns,
+          onTap: openPrinter,
+        ),
+      );
+    } else {
+      // Manual order: tiles stay where the user put them and can be dragged to
+      // reorder (long-press to pick up). Deliberately NOT wrapped in the status
+      // StreamBuilder — re-sorting is exactly what the user turned off here, and
+      // a rebuild mid-drag would fight the gesture. Each tile still refreshes
+      // its own content through its internal status stream.
+      body = Column(
+        children: [
+          if (_printers.length > 1) const _ReorderHint(),
+          Expanded(
+            child: _PrinterGrid(
+              printers: _printers,
+              columns: gridColumns,
+              onTap: openPrinter,
+              onReorder: _onReorder,
             ),
-          );
+          ),
+        ],
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -234,6 +276,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final themeMode     = ref.watch(themeModeProvider);
     final gridColumns   = ref.watch(gridColumnsProvider);
     final allowRotation = ref.watch(allowRotationProvider);
+    final autoArrange   = ref.watch(autoArrangeProvider);
     final cameraRefresh = ref.watch(dashboardCameraRefreshProvider);
     final showCameraIcons = ref.watch(showCameraConfigIconsProvider);
     final printNotifications = ref.watch(printNotificationsEnabledProvider);
@@ -455,6 +498,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       value: allowRotation,
                       onChanged: (v) =>
                           ref.read(allowRotationProvider.notifier).set(v),
+                    ),
+                    // Auto-arrange vs. manual drag-to-reorder. ON (default)
+                    // keeps the historic status sort; OFF freezes the order and
+                    // unlocks long-press drag on the grid.
+                    SwitchListTile(
+                      dense: true,
+                      secondary: const Icon(Icons.swap_vert),
+                      title: Text(l.dashboardAutoArrange),
+                      subtitle: Text(l.dashboardAutoArrangeSubtitle),
+                      value: autoArrange,
+                      onChanged: (v) =>
+                          ref.read(autoArrangeProvider.notifier).set(v),
                     ),
 
                     const Divider(),
@@ -788,6 +843,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(fontScaleProvider.notifier).load();
     await ref.read(gridColumnsProvider.notifier).load();
     await ref.read(allowRotationProvider.notifier).load();
+    await ref.read(autoArrangeProvider.notifier).load();
     await ref.read(dashboardCameraRefreshProvider.notifier).load();
     await ref.read(showCameraConfigIconsProvider.notifier).load();
     await ref.read(printNotificationsEnabledProvider.notifier).load();
@@ -1210,18 +1266,22 @@ class _UpdateBanner extends StatelessWidget {
 class _PrinterGrid extends StatelessWidget {
   final List<PrinterConfig> printers;
   final void Function(PrinterConfig) onTap;
-  final void Function(PrinterConfig) onRemove;
 
   /// Portrait column count chosen by the user (1, 2, or 3).
   /// When the device rotates to landscape, one extra column is added
   /// automatically so the extra horizontal space is used well.
   final int columns;
 
+  /// When non-null, the grid is in manual-order mode: tiles can be long-pressed
+  /// and dragged to reorder, and this fires with the new (old, new) indices.
+  /// Null in the default auto-arrange mode, where the grid is a plain GridView.
+  final void Function(int oldIndex, int newIndex)? onReorder;
+
   const _PrinterGrid({
     required this.printers,
     required this.onTap,
-    required this.onRemove,
     required this.columns,
+    this.onReorder,
   });
 
   @override
@@ -1245,22 +1305,71 @@ class _PrinterGrid extends StatelessWidget {
         _ => 0.55,  // four columns in landscape from a 3-col portrait pref
       };
 
-      return GridView.builder(
-        padding: const EdgeInsets.all(12),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: effectiveCols,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: aspectRatio,
-        ),
+      final gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: effectiveCols,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: aspectRatio,
+      );
+      const padding = EdgeInsets.all(12);
+
+      // Keyed by id so a reorder (or a status re-sort) moves a tile and its
+      // poller rather than rebuilding it. The key is also what the reorderable
+      // grid tracks while dragging.
+      Widget tileAt(int i) => PrinterTile(
+            key: ValueKey(printers[i].id),
+            printer: printers[i],
+            onTap: () => onTap(printers[i]),
+          );
+
+      if (onReorder == null) {
+        return GridView.builder(
+          padding: padding,
+          gridDelegate: gridDelegate,
+          itemCount: printers.length,
+          itemBuilder: (_, i) => tileAt(i),
+        );
+      }
+
+      // Manual-order mode: long-press a tile to lift it, drag it into place;
+      // the reflow animates and the dropped order is persisted by the caller.
+      return ReorderableGridView.builder(
+        padding: padding,
+        gridDelegate: gridDelegate,
         itemCount: printers.length,
-        itemBuilder: (_, i) => PrinterTile(
-          key: ValueKey(printers[i].id),
-          printer: printers[i],
-          onTap: () => onTap(printers[i]),
-        ),
+        onReorder: onReorder!,
+        itemBuilder: (_, i) => tileAt(i),
       );
     });
+  }
+}
+
+/// Subtle strip shown above the grid in manual-order mode so the user knows the
+/// tiles are now draggable (the gesture isn't otherwise discoverable). Only
+/// rendered when there's more than one printer to reorder.
+class _ReorderHint extends StatelessWidget {
+  const _ReorderHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final faint =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.drag_indicator, size: 15, color: faint),
+          const SizedBox(width: 4),
+          Text(
+            l.dashboardReorderHint,
+            style:
+                Theme.of(context).textTheme.bodySmall?.copyWith(color: faint),
+          ),
+        ],
+      ),
+    );
   }
 }
 

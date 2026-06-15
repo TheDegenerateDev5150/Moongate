@@ -201,6 +201,17 @@ class AppLocalizationsIt extends AppLocalizations {
       'Sblocca l\'orientamento orizzontale';
 
   @override
+  String get dashboardAutoArrange => 'Disponi automaticamente per stato';
+
+  @override
+  String get dashboardAutoArrangeSubtitle =>
+      'Ordina i riquadri per attività. Disattiva per trascinarli nel tuo ordine.';
+
+  @override
+  String get dashboardReorderHint =>
+      'Tieni premuto e trascina un riquadro per riordinare';
+
+  @override
   String get dashboardCameraFeedHeading => 'Feed camera dashboard';
 
   @override

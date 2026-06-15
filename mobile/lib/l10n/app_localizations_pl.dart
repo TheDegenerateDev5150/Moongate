@@ -202,6 +202,17 @@ class AppLocalizationsPl extends AppLocalizations {
       'Odblokowuje orientację poziomą';
 
   @override
+  String get dashboardAutoArrange => 'Automatyczne sortowanie wg statusu';
+
+  @override
+  String get dashboardAutoArrangeSubtitle =>
+      'Sortuj kafelki wg aktywności. Wyłącz, aby przeciągać je we własnej kolejności.';
+
+  @override
+  String get dashboardReorderHint =>
+      'Przytrzymaj i przeciągnij kafelek, aby zmienić kolejność';
+
+  @override
   String get dashboardCameraFeedHeading => 'Podgląd kamery na pulpicie';
 
   @override

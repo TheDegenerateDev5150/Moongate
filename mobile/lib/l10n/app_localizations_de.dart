@@ -201,6 +201,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dashboardRotateWithDeviceSubtitle => 'Aktiviert das Querformat';
 
   @override
+  String get dashboardAutoArrange => 'Automatisch nach Status anordnen';
+
+  @override
+  String get dashboardAutoArrangeSubtitle =>
+      'Kacheln nach Aktivität sortieren. Zum eigenen Anordnen ausschalten und Kacheln ziehen.';
+
+  @override
+  String get dashboardReorderHint => 'Kachel halten und ziehen zum Umsortieren';
+
+  @override
   String get dashboardCameraFeedHeading => 'Dashboard-Kamerabild';
 
   @override

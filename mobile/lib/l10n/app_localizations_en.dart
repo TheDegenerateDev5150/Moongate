@@ -200,6 +200,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unlocks landscape orientation';
 
   @override
+  String get dashboardAutoArrange => 'Auto-arrange by status';
+
+  @override
+  String get dashboardAutoArrangeSubtitle =>
+      'Sort tiles by activity. Turn off to drag tiles into your own order.';
+
+  @override
+  String get dashboardReorderHint => 'Hold and drag a tile to reorder';
+
+  @override
   String get dashboardCameraFeedHeading => 'Dashboard camera feed';
 
   @override

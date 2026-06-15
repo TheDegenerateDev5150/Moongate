@@ -203,6 +203,35 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Persist a user-defined ordering of the printer list (set by drag-to-reorder
+  /// on the dashboard when auto-arrange is off). The persisted list order *is*
+  /// the dashboard order, so this just re-sequences and saves — it rides backups
+  /// for free.
+  ///
+  /// [orderedIds] is the full set of printer ids in the desired order. Defensive
+  /// against a concurrent pair/remove: ids we don't know are skipped, and any
+  /// printer the list omits is appended in its current relative order so it can
+  /// never be dropped. No-op when nothing actually moved.
+  Future<void> setOrder(List<String> orderedIds) async {
+    final byId = {for (final p in _printers) p.id: p};
+    final reordered = <PrinterConfig>[];
+    for (final id in orderedIds) {
+      final p = byId.remove(id);
+      if (p != null) reordered.add(p);
+    }
+    // Whatever wasn't named (e.g. paired on another isolate mid-drag) keeps its
+    // original relative position rather than vanishing.
+    for (final p in _printers) {
+      if (byId.containsKey(p.id)) reordered.add(p);
+    }
+    final unchanged = reordered.length == _printers.length &&
+        Iterable<int>.generate(reordered.length)
+            .every((i) => reordered[i].id == _printers[i].id);
+    if (unchanged) return;
+    _printers = reordered;
+    await _save();
+  }
+
   /// Rename a printer locally. Note: the Supabase row's `name` field is
   /// left unchanged — the local rename is cosmetic only. Re-pairing would
   /// reset to whatever name was sent during the claim.

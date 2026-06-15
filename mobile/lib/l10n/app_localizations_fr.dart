@@ -203,6 +203,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Déverrouille l\'orientation paysage';
 
   @override
+  String get dashboardAutoArrange => 'Trier automatiquement par état';
+
+  @override
+  String get dashboardAutoArrangeSubtitle =>
+      'Trie les tuiles par activité. Désactivez pour glisser les tuiles dans votre ordre.';
+
+  @override
+  String get dashboardReorderHint =>
+      'Maintenez et glissez une tuile pour réorganiser';
+
+  @override
   String get dashboardCameraFeedHeading => 'Flux caméra du tableau de bord';
 
   @override
