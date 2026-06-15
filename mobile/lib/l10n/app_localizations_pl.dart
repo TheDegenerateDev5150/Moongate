@@ -259,6 +259,16 @@ class AppLocalizationsPl extends AppLocalizations {
   String get dashboardBuyMeCoffeeSubtitle => 'Wesprzyj dewelopera przez PayPal';
 
   @override
+  String get donationPromptTitle => 'Podoba Ci się Moongate?';
+
+  @override
+  String get donationPromptBody =>
+      'Moongate to darmowy projekt, który tworzę po godzinach. Jeśli jest dla Ciebie przydatny, drobny napiwek pomaga go rozwijać — bez presji, zapytam tylko ten jeden raz.';
+
+  @override
+  String get donationPromptLater => 'Może później';
+
+  @override
   String get dashboardSettings => 'Ustawienia';
 
   @override

@@ -260,6 +260,16 @@ class AppLocalizationsEs extends AppLocalizations {
       'Da una propina al desarrollador vía PayPal';
 
   @override
+  String get donationPromptTitle => '¿Te gusta Moongate?';
+
+  @override
+  String get donationPromptBody =>
+      'Moongate es un proyecto personal gratuito que hago en mi tiempo libre. Si te resulta útil, una pequeña propina ayuda a mantenerlo — sin presión, y no volveré a preguntar.';
+
+  @override
+  String get donationPromptLater => 'Quizás luego';
+
+  @override
   String get dashboardSettings => 'Ajustes';
 
   @override

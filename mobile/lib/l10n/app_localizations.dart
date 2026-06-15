@@ -560,6 +560,24 @@ abstract class AppLocalizations {
   /// **'Tip the dev via PayPal'**
   String get dashboardBuyMeCoffeeSubtitle;
 
+  /// Title of the one-time first-run donation prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoying Moongate?'**
+  String get donationPromptTitle;
+
+  /// Body text of the one-time first-run donation prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Moongate is a free side-project I build in my spare time. If it\'s useful to you, a small tip helps keep it going — no pressure, and I won\'t ask again.'**
+  String get donationPromptBody;
+
+  /// Dismiss button on the donation prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get donationPromptLater;
+
   /// Drawer item that opens the settings screen.
   ///
   /// In en, this message translates to:

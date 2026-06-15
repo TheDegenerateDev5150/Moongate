@@ -24,6 +24,7 @@ import '../../services/printer_status_registry.dart';
 import '../../services/settings_backup.dart';
 import '../../services/supabase_service.dart';
 import '../../services/update_service.dart';
+import '../donation/donation_prompt.dart';
 import '../info/ui_guide.dart';
 import '../language/language_picker.dart';
 import '../notifications/notifications_prompt.dart';
@@ -682,8 +683,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       onTap: () async {
                         Navigator.pop(context);
                         await launchUrl(
-                          Uri.parse(
-                              'https://www.paypal.com/donate/?hosted_button_id=WCWAZKQ7WKQB4'),
+                          Uri.parse(kDonationUrl),
                           mode: LaunchMode.externalApplication,
                         );
                       },
@@ -1002,6 +1002,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   static const _pairingHelpDismissedKey = 'pairing_help_dismissed';
   static const _languageSelectedKey = 'language_selected';
   static const _notifPromptedKey = 'notifications_prompted';
+  static const _donationPromptedKey = 'donation_prompted';
 
   /// First cold start: prompt for a language once, then run the pairing
   /// explainer. The language prompt is gated by [_languageSelectedKey] so it
@@ -1016,6 +1017,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
     await _maybeShowPairingHelp();
     await _maybeOfferNotifications();
+    await _maybeShowDonationPrompt();
+  }
+
+  /// A one-time, low-pressure nudge to support the project, shown on a cold
+  /// start. Gated on having at least one printer so it never interrupts a brand
+  /// new user mid-pairing (the donation ask lands once they're actually set up,
+  /// not before they've seen the app work). Shown exactly once — the
+  /// [_donationPromptedKey] flag is a first-run flag, so it's excluded from
+  /// backups and can't carry over to a fresh install.
+  Future<void> _maybeShowDonationPrompt() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_donationPromptedKey) ?? false) return;
+    if (PrinterRegistry.instance.printers.isEmpty) return;
+    if (!mounted) return;
+    final wantsToDonate = await showDonationPrompt(context);
+    await prefs.setBool(_donationPromptedKey, true);
+    if (!wantsToDonate) return;
+    await launchUrl(Uri.parse(kDonationUrl),
+        mode: LaunchMode.externalApplication);
   }
 
   /// Offer print notifications once — but only after the user actually has a

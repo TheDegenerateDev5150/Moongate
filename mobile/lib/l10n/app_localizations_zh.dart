@@ -244,6 +244,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardBuyMeCoffeeSubtitle => '通过 PayPal 给开发者打赏';
 
   @override
+  String get donationPromptTitle => '喜欢 Moongate 吗？';
+
+  @override
+  String get donationPromptBody =>
+      'Moongate 是我利用业余时间开发的免费项目。如果它对你有帮助，一点小小的打赏能帮助它继续发展——绝不强求，而且我只会问这一次。';
+
+  @override
+  String get donationPromptLater => '以后再说';
+
+  @override
   String get dashboardSettings => '设置';
 
   @override
