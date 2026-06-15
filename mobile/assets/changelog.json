@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.4",
+    "bullets": [
+      "Arrange your printers your way — turn off \"Auto-arrange by status\" in the menu and drag the dashboard tiles into any order you like. Tap the drag-drop button (bottom-left) to start, rearrange the tiles, then tap the green check to lock them in",
+      "Your custom order and the auto-arrange choice are saved, and included in backups",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.3",
     "bullets": [
       "Clearer notification settings — the two notification categories were named backwards. The always-on list of your printers is now \"Print status\", and the start / finish / cancel pop-ups are now \"Print alerts\" (they were \"Print progress\" and \"Print status\"). Your on/off choices carry over",
