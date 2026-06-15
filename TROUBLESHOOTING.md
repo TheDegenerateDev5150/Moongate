@@ -25,6 +25,28 @@ The app gives every printer up to one full poll cycle (4 s) before falling back 
 
 All four (`moonraker`, `klipper`, `moongate-authproxy`, `moongate-tunnel`) need to be `active (running)` for the tile to flip from "Connecting…" to a live status.
 
+## KlipperScreen: "Cannot connect to Moonraker — Connection refused"
+
+Moongate binds Moonraker to `127.0.0.1` (localhost) during install, so the only thing exposed on your network is the EdDSA-gated tunnel proxy — not Moonraker itself. Any client **on the Pi** that reaches Moonraker by its **LAN IP** (instead of localhost) therefore stops working and shows `[Errno 111] Connection refused`. KlipperScreen is the usual one to break, since it's often configured with the Pi's IP.
+
+Point it at `127.0.0.1`. Edit `~/printer_data/config/KlipperScreen.conf`, find the `[printer <name>]` section, and set the Moonraker host to localhost:
+
+```ini
+[printer My Printer]
+moonraker_host: 127.0.0.1
+moonraker_port: 7125
+```
+
+This lives under `[printer …]`, **not** `[server]` — KlipperScreen has no `[server]` section and rejects the file with *"Section [server] not recognized"* if you add one. If there's no `moonraker_host` line, add it under the existing `[printer …]` header. Then restart KlipperScreen — over SSH:
+
+```bash
+sudo systemctl restart KlipperScreen
+```
+
+…or restart it from the **Services** panel in Mainsail / Fluidd (no SSH needed).
+
+`127.0.0.1` is also sturdier than a LAN IP — it survives the Pi's address changing on a DHCP renewal. A client on a **separate device** (a standalone KlipperScreen tablet, a second Pi) can't use localhost and is fundamentally incompatible with the rebind; run it on the printer Pi instead.
+
 ## Tile shows "Connected — Printer idle"
 
 This is **not** an error — it's the v0.4 way of saying "the Pi is reachable, but Klipper isn't producing usable status right now". Common causes:
