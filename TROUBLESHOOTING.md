@@ -37,11 +37,13 @@ moonraker_host: 127.0.0.1
 moonraker_port: 7125
 ```
 
-This lives under `[printer …]`, **not** `[server]` — KlipperScreen has no `[server]` section and rejects the file with *"Section [server] not recognized"* if you add one. If there's no `moonraker_host` line, add it under the existing `[printer …]` header. Then restart it:
+This lives under `[printer …]`, **not** `[server]` — KlipperScreen has no `[server]` section and rejects the file with *"Section [server] not recognized"* if you add one. If there's no `moonraker_host` line, add it under the existing `[printer …]` header. Then restart KlipperScreen — over SSH:
 
 ```bash
 sudo systemctl restart KlipperScreen
 ```
+
+…or restart it from the **Services** panel in Mainsail / Fluidd (no SSH needed).
 
 `127.0.0.1` is also sturdier than a LAN IP — it survives the Pi's address changing on a DHCP renewal. A client on a **separate device** (a standalone KlipperScreen tablet, a second Pi) can't use localhost and is fundamentally incompatible with the rebind; run it on the printer Pi instead.
 
