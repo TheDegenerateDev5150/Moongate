@@ -202,6 +202,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardReorderHint => '按住并拖动磁贴即可重新排序';
 
   @override
+  String get dashboardReorderStart => '重新排序';
+
+  @override
+  String get dashboardReorderDone => '完成';
+
+  @override
   String get dashboardCameraFeedHeading => '仪表盘摄像头画面';
 
   @override

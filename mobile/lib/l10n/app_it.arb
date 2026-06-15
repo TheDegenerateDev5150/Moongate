@@ -68,6 +68,8 @@
   "dashboardAutoArrange": "Disponi automaticamente per stato",
   "dashboardAutoArrangeSubtitle": "Ordina i riquadri per attività. Disattiva per trascinarli nel tuo ordine.",
   "dashboardReorderHint": "Tieni premuto e trascina un riquadro per riordinare",
+  "dashboardReorderStart": "Riordina",
+  "dashboardReorderDone": "Fatto",
   "dashboardCameraFeedHeading": "Feed camera dashboard",
   "dashboardCameraFeedSubtitle": "Con quale frequenza i riquadri aggiornano la camera. Frequenze più basse usano molti meno dati.",
   "dashboardAboutHeading": "Informazioni",

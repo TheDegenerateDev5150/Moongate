@@ -42,6 +42,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   List<PrinterConfig> _printers = [];
   bool _updateDismissed = false;
 
+  /// Transient (not persisted) manual-reorder editing state. Only meaningful
+  /// when auto-arrange is off: true = tiles draggable + hint shown ("arranging");
+  /// false = tiles locked in their saved order, dashboard clean ("settled").
+  /// Toggled by the bottom-left Reorder/Done button.
+  bool _reordering = false;
+
   // Always-visible scrollbar for the drawer body so small-screen users can see
   // there's more below the fold (user-reported — not obvious it scrolled).
   final ScrollController _drawerScroll = ScrollController();
@@ -84,6 +90,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     PrinterRegistry.instance
         .setOrder([for (final p in reordered) p.id])
         .ignore();
+  }
+
+  /// Flip the auto-arrange setting from the drawer. Turning it OFF drops the
+  /// dashboard straight into arranging mode (tiles immediately draggable, so the
+  /// feature is right there); turning it back ON ends any arranging session.
+  void _setAutoArrange(bool enabled) {
+    ref.read(autoArrangeProvider.notifier).set(enabled);
+    setState(() => _reordering = !enabled);
   }
 
   /// Stable-sort the printer list by live status priority (printerStatusRank,
@@ -147,6 +161,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
     // Check for update — runs once per session, silently ignored on failure.
     final updateAsync = ref.watch(updateProvider);
     final update = _updateDismissed ? null : updateAsync.valueOrNull;
@@ -184,13 +199,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       // its own content through its internal status stream.
       body = Column(
         children: [
-          if (_printers.length > 1) const _ReorderHint(),
+          if (_reordering && _printers.length > 1) const _ReorderHint(),
           Expanded(
             child: _PrinterGrid(
               printers: _printers,
               columns: gridColumns,
               onTap: openPrinter,
-              onReorder: _onReorder,
+              // Draggable only while actively arranging; otherwise a plain grid
+              // in the saved order so tiles can't be nudged by accident.
+              onReorder: _reordering ? _onReorder : null,
             ),
           ),
         ],
@@ -240,14 +257,57 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       floatingActionButton: _printers.isEmpty
           ? null
-          : FloatingActionButton(
-              onPressed: () async {
-                await context.push('/pair');
-                _load();
-              },
-              tooltip: l.dashboardAddPrinter,
-              child: const Icon(Icons.add),
+          : SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Bottom-left: enter / leave manual reorder mode. Only shown
+                    // in manual mode when there's more than one tile to move.
+                    // "Done" settles the arrangement and clears the drag hint;
+                    // "Reorder" re-enters it. The order itself is already saved
+                    // on every drop — this button is purely the editing UI.
+                    if (!autoArrange && _printers.length > 1)
+                      FloatingActionButton(
+                        heroTag: 'reorderFab',
+                        onPressed: () =>
+                            setState(() => _reordering = !_reordering),
+                        backgroundColor: _reordering ? Colors.green : null,
+                        foregroundColor: _reordering ? Colors.white : null,
+                        // Tooltips keep the action labelled (for accessibility +
+                        // long-press) now that the button itself is icon-only.
+                        tooltip: _reordering
+                            ? l.dashboardReorderDone
+                            : l.dashboardReorderStart,
+                        child: _reordering
+                            ? const Icon(Icons.check)
+                            : SvgPicture.asset(
+                                'assets/icons/drag_drop.svg',
+                                width: 24,
+                                height: 24,
+                                colorFilter: ColorFilter.mode(
+                                    cs.onPrimaryContainer, BlendMode.srcIn),
+                              ),
+                      )
+                    else
+                      const SizedBox.shrink(),
+                    // Bottom-right: add a printer.
+                    FloatingActionButton(
+                      heroTag: 'addFab',
+                      onPressed: () async {
+                        await context.push('/pair');
+                        _load();
+                      },
+                      tooltip: l.dashboardAddPrinter,
+                      child: const Icon(Icons.add),
+                    ),
+                  ],
+                ),
+              ),
             ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -509,8 +569,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       title: Text(l.dashboardAutoArrange),
                       subtitle: Text(l.dashboardAutoArrangeSubtitle),
                       value: autoArrange,
-                      onChanged: (v) =>
-                          ref.read(autoArrangeProvider.notifier).set(v),
+                      onChanged: _setAutoArrange,
                     ),
 
                     const Divider(),

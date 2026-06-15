@@ -213,6 +213,12 @@ class AppLocalizationsPl extends AppLocalizations {
       'Przytrzymaj i przeciągnij kafelek, aby zmienić kolejność';
 
   @override
+  String get dashboardReorderStart => 'Zmień kolejność';
+
+  @override
+  String get dashboardReorderDone => 'Gotowe';
+
+  @override
   String get dashboardCameraFeedHeading => 'Podgląd kamery na pulpicie';
 
   @override

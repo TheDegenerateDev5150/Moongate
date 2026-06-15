@@ -68,6 +68,8 @@
   "dashboardAutoArrange": "Ordenar automáticamente por estado",
   "dashboardAutoArrangeSubtitle": "Ordena las casillas por actividad. Desactívalo para arrastrarlas a tu propio orden.",
   "dashboardReorderHint": "Mantén y arrastra una casilla para reordenar",
+  "dashboardReorderStart": "Reordenar",
+  "dashboardReorderDone": "Listo",
   "dashboardCameraFeedHeading": "Cámara del panel",
   "dashboardCameraFeedSubtitle": "Con qué frecuencia las casillas actualizan la cámara. Las frecuencias más bajas usan muchos menos datos.",
   "dashboardAboutHeading": "Acerca de",

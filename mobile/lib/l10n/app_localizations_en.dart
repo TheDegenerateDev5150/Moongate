@@ -210,6 +210,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardReorderHint => 'Hold and drag a tile to reorder';
 
   @override
+  String get dashboardReorderStart => 'Reorder';
+
+  @override
+  String get dashboardReorderDone => 'Done';
+
+  @override
   String get dashboardCameraFeedHeading => 'Dashboard camera feed';
 
   @override

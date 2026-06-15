@@ -68,6 +68,8 @@
   "dashboardAutoArrange": "Automatyczne sortowanie wg statusu",
   "dashboardAutoArrangeSubtitle": "Sortuj kafelki wg aktywności. Wyłącz, aby przeciągać je we własnej kolejności.",
   "dashboardReorderHint": "Przytrzymaj i przeciągnij kafelek, aby zmienić kolejność",
+  "dashboardReorderStart": "Zmień kolejność",
+  "dashboardReorderDone": "Gotowe",
   "dashboardCameraFeedHeading": "Podgląd kamery na pulpicie",
   "dashboardCameraFeedSubtitle": "Jak często kafelki odświeżają obraz z kamery. Niższe częstotliwości zużywają znacznie mniej danych.",
   "dashboardAboutHeading": "Informacje",

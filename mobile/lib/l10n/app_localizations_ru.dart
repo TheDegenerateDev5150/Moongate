@@ -213,6 +213,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Удерживайте и перетащите плитку, чтобы изменить порядок';
 
   @override
+  String get dashboardReorderStart => 'Изменить порядок';
+
+  @override
+  String get dashboardReorderDone => 'Готово';
+
+  @override
   String get dashboardCameraFeedHeading => 'Камера на панели';
 
   @override

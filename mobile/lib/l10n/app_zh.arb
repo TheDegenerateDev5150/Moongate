@@ -68,6 +68,8 @@
   "dashboardAutoArrange": "按状态自动排列",
   "dashboardAutoArrangeSubtitle": "按活动状态排序磁贴。关闭后可拖动磁贴自定义顺序。",
   "dashboardReorderHint": "按住并拖动磁贴即可重新排序",
+  "dashboardReorderStart": "重新排序",
+  "dashboardReorderDone": "完成",
   "dashboardCameraFeedHeading": "仪表盘摄像头画面",
   "dashboardCameraFeedSubtitle": "磁贴刷新摄像头的频率。频率越低，流量消耗越少。",
   "dashboardAboutHeading": "关于",

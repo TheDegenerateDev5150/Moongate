@@ -68,6 +68,8 @@
   "dashboardAutoArrange": "Trier automatiquement par état",
   "dashboardAutoArrangeSubtitle": "Trie les tuiles par activité. Désactivez pour glisser les tuiles dans votre ordre.",
   "dashboardReorderHint": "Maintenez et glissez une tuile pour réorganiser",
+  "dashboardReorderStart": "Réorganiser",
+  "dashboardReorderDone": "Terminé",
   "dashboardCameraFeedHeading": "Flux caméra du tableau de bord",
   "dashboardCameraFeedSubtitle": "Fréquence de rafraîchissement de la caméra sur les tuiles. Une fréquence plus basse consomme beaucoup moins de données.",
   "dashboardAboutHeading": "À propos",

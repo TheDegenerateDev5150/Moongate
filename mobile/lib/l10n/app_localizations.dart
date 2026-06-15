@@ -476,6 +476,18 @@ abstract class AppLocalizations {
   /// **'Hold and drag a tile to reorder'**
   String get dashboardReorderHint;
 
+  /// Bottom-left button to enter manual tile-reorder mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder'**
+  String get dashboardReorderStart;
+
+  /// Bottom-left button to finish reordering and lock the tile order.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get dashboardReorderDone;
+
   /// Section heading for the dashboard webcam refresh setting.
   ///
   /// In en, this message translates to:

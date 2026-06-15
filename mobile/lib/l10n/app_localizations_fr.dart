@@ -214,6 +214,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Maintenez et glissez une tuile pour réorganiser';
 
   @override
+  String get dashboardReorderStart => 'Réorganiser';
+
+  @override
+  String get dashboardReorderDone => 'Terminé';
+
+  @override
   String get dashboardCameraFeedHeading => 'Flux caméra du tableau de bord';
 
   @override

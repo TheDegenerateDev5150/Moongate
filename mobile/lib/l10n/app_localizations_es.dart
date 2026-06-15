@@ -213,6 +213,12 @@ class AppLocalizationsEs extends AppLocalizations {
       'Mantén y arrastra una casilla para reordenar';
 
   @override
+  String get dashboardReorderStart => 'Reordenar';
+
+  @override
+  String get dashboardReorderDone => 'Listo';
+
+  @override
   String get dashboardCameraFeedHeading => 'Cámara del panel';
 
   @override

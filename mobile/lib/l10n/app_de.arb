@@ -68,6 +68,8 @@
   "dashboardAutoArrange": "Automatisch nach Status anordnen",
   "dashboardAutoArrangeSubtitle": "Kacheln nach Aktivität sortieren. Zum eigenen Anordnen ausschalten und Kacheln ziehen.",
   "dashboardReorderHint": "Kachel halten und ziehen zum Umsortieren",
+  "dashboardReorderStart": "Anordnen",
+  "dashboardReorderDone": "Fertig",
   "dashboardCameraFeedHeading": "Dashboard-Kamerabild",
   "dashboardCameraFeedSubtitle": "Wie oft Kacheln das Kamerabild aktualisieren. Niedrigere Raten verbrauchen deutlich weniger Daten.",
   "dashboardAboutHeading": "Über",

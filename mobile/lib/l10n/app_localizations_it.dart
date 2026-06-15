@@ -212,6 +212,12 @@ class AppLocalizationsIt extends AppLocalizations {
       'Tieni premuto e trascina un riquadro per riordinare';
 
   @override
+  String get dashboardReorderStart => 'Riordina';
+
+  @override
+  String get dashboardReorderDone => 'Fatto';
+
+  @override
   String get dashboardCameraFeedHeading => 'Feed camera dashboard';
 
   @override

@@ -211,6 +211,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dashboardReorderHint => 'Kachel halten und ziehen zum Umsortieren';
 
   @override
+  String get dashboardReorderStart => 'Anordnen';
+
+  @override
+  String get dashboardReorderDone => 'Fertig';
+
+  @override
   String get dashboardCameraFeedHeading => 'Dashboard-Kamerabild';
 
   @override

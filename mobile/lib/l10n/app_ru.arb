@@ -68,6 +68,8 @@
   "dashboardAutoArrange": "Автосортировка по статусу",
   "dashboardAutoArrangeSubtitle": "Сортировать плитки по активности. Выключите, чтобы перетаскивать их в своём порядке.",
   "dashboardReorderHint": "Удерживайте и перетащите плитку, чтобы изменить порядок",
+  "dashboardReorderStart": "Изменить порядок",
+  "dashboardReorderDone": "Готово",
   "dashboardCameraFeedHeading": "Камера на панели",
   "dashboardCameraFeedSubtitle": "Как часто плитки обновляют камеру. Меньшая частота заметно экономит трафик.",
   "dashboardAboutHeading": "О приложении",
