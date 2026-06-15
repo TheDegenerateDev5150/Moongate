@@ -791,3 +791,48 @@ fi
 echo ""
 echo -e "  Run ${YELLOW}MOONGATE_PAIR${NC} in Klipper console to pair."
 echo ""
+
+# ── 10. KlipperScreen heads-up ────────────────────────────────────────────────
+# The 127.0.0.1 rebind in step 2e hides Moonraker from the LAN, which breaks any
+# ON-DEVICE client that reaches it by IP — most commonly KlipperScreen, which then
+# shows "Cannot connect to Moonraker — Connection refused". Pointing such a client
+# at 127.0.0.1 fixes it (and survives future DHCP IP changes). We only PROMPT when
+# a real terminal is attached: an interactive `curl | bash` can still read the
+# answer from /dev/tty even though its stdin is the pipe, while a headless / KIAUH
+# / MOONGATE_YES run has none — there we just print the notice so it's never lost,
+# and never block on a `read` under `set -e`.
+mg_klipperscreen_box() {
+    local line
+    printf -v line '#%.0s' {1..70}
+    echo -e "${YELLOW}"
+    echo "$line"
+    printf '# %-66s #\n' ""
+    printf '# %-66s #\n' "USING KLIPPERSCREEN (or another on-device Moonraker client)?"
+    printf '# %-66s #\n' ""
+    printf '# %-66s #\n' "Moongate just bound Moonraker to 127.0.0.1 (localhost) so only"
+    printf '# %-66s #\n' "its secure tunnel is exposed. A client that reaches Moonraker"
+    printf '# %-66s #\n' "by its LAN IP now fails with:"
+    printf '# %-66s #\n' "    Cannot connect to Moonraker - Connection refused"
+    printf '# %-66s #\n' ""
+    printf '# %-66s #\n' "FIX: edit  ~/printer_data/config/KlipperScreen.conf , find the"
+    printf '# %-66s #\n' "[printer ...] section, and point it at localhost:"
+    printf '# %-66s #\n' ""
+    printf '# %-66s #\n' "    moonraker_host: 127.0.0.1"
+    printf '# %-66s #\n' "    moonraker_port: 7125"
+    printf '# %-66s #\n' ""
+    printf '# %-66s #\n' "then:  sudo systemctl restart KlipperScreen"
+    printf '# %-66s #\n' ""
+    echo "$line"
+    echo -e "${NC}"
+}
+
+if [[ -z "${MOONGATE_YES:-}" && -r /dev/tty ]]; then
+    printf '%b' "${YELLOW}[moongate]${NC} Do you use KlipperScreen on this Pi? [y/N] "
+    read -r MG_KS_ANS < /dev/tty || MG_KS_ANS=""
+    case "$MG_KS_ANS" in
+        [Yy]*) mg_klipperscreen_box ;;
+        *)     info "No KlipperScreen — nothing else to do." ;;
+    esac
+else
+    mg_klipperscreen_box
+fi
