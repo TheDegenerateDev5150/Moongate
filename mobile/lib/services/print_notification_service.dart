@@ -14,10 +14,16 @@ import 'printer_registry.dart';
 import 'supabase_service.dart';
 
 // ── Tuning ────────────────────────────────────────────────────────────────
+// The persistent foreground notification is the live STATUS list of every
+// printer, so its user-facing channel is named "Print status"; the discrete
+// one-shot pop-ups are "Print alerts". The channel IDs keep their original
+// 'progress'/'alerts' slugs so existing users' on/off choices carry over —
+// only the display names changed (v0.9.3; were "Print progress" / "Print
+// status", which read backwards relative to what each one controlled).
 const _serviceChannelId   = 'moongate_print_progress';
-const _serviceChannelName = 'Print progress';
+const _serviceChannelName = 'Print status';
 const _alertsChannelId    = 'moongate_print_alerts';
-const _alertsChannelName   = 'Print status';
+const _alertsChannelName   = 'Print alerts';
 const _serviceId          = 4711;
 
 // Default poll cadence, overridden by the user's "Update frequency" setting
@@ -73,7 +79,7 @@ class PrintNotificationService {
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: _serviceChannelId,
         channelName: _serviceChannelName,
-        channelDescription: 'Live print progress while notifications are on.',
+        channelDescription: 'A live, at-a-glance status of all your printers.',
         // LOW + onlyAlertOnce: a silent, persistent progress notification that
         // updates in place without buzzing on every percent.
         channelImportance: NotificationChannelImportance.LOW,

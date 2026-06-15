@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.3",
+    "bullets": [
+      "Clearer notification settings — the two notification categories were named backwards. The always-on list of your printers is now \"Print status\", and the start / finish / cancel pop-ups are now \"Print alerts\" (they were \"Print progress\" and \"Print status\"). Your on/off choices carry over",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.2",
     "bullets": [
       "Webcam on the printer page now works remotely — open a printer and tap the new camera icon in the top bar for a full-screen live view. An external camera (like a phone used as a webcam) that only loaded at home in the embedded Mainsail page now streams over the tunnel too, the same way the dashboard preview does",
