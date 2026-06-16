@@ -182,11 +182,7 @@ class _PrinterScreenState extends State<PrinterScreen>
   void _openCamera() {
     _markCameraHintSeen();
     if (_showCameraHint) setState(() => _showCameraHint = false);
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PrinterCameraScreen(printer: widget.printer),
-      ),
-    );
+    showPrinterCameraOverlay(context, widget.printer);
   }
 
   void _dismissCameraHint() {

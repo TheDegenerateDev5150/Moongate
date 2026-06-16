@@ -12,6 +12,7 @@ import '../../services/printer_registry.dart';
 import '../../services/printer_status_registry.dart';
 import '../../services/printer_status_service.dart';
 import '../../widgets/webcam_view.dart';
+import '../printer/printer_camera_screen.dart';
 import 'gcode_files_overlay.dart';
 
 class PrinterTile extends StatefulWidget {
@@ -232,6 +233,18 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                       onApplied: _statusService.pollNow,
                     ),
                   ),
+                  // Expand-to-full-screen camera (bottom-right). Shown only
+                  // when there's actually a live feed to open. Pushes the same
+                  // native camera view the printer page uses (pinch-to-zoom,
+                  // LAN-direct / tunnel-proxied snapshot URL) — a one-tap
+                  // shortcut from the dashboard. The tile's own tap still opens
+                  // the printer page; this button absorbs its own tap.
+                  if ((_status.webcamSnapshotUrl ?? '').isNotEmpty)
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: _CameraExpandButton(printer: widget.printer),
+                    ),
                 ],
               ),
             ),
@@ -813,6 +826,46 @@ class _CameraConfigButton extends ConsumerWidget {
               Icons.settings,
               size: 17,
               color: Colors.white.withValues(alpha: 0.85),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Expand-camera button ──────────────────────────────────────────────────────
+//
+// A small, semi-transparent eye in the bottom-right corner of the webcam,
+// rendered only when the tile has a live feed. Tapping it opens the centred
+// camera overlay (pinch-to-zoom, landscape rotation, floating back arrow) over
+// the same LAN-direct / tunnel-proxied snapshot URL the tile uses — as a
+// one-tap shortcut straight from the dashboard, without going into the printer
+// page first. Matches the corner-gear's chrome (same dark chip), eye dimmed so
+// it sits quietly over the feed.
+
+class _CameraExpandButton extends StatelessWidget {
+  final PrinterConfig printer;
+
+  const _CameraExpandButton({required this.printer});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Tooltip(
+      message: l.printerCameraTooltip,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.38),
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => showPrinterCameraOverlay(context, printer),
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Icon(
+              Icons.visibility_outlined,
+              size: 18,
+              color: Colors.white.withValues(alpha: 0.6),
             ),
           ),
         ),
