@@ -268,6 +268,19 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Persist the user's favourited macros for a printer — the ones starred in
+  /// the macro sheet to pin them to the top of the list. The full set is stored
+  /// each time (not a delta), so passing an empty list clears them. Rides
+  /// backups for free via [PrinterConfig.favouriteMacros].
+  Future<void> updateFavouriteMacros(
+      String printerId, List<String> macros) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(favouriteMacros: macros);
+    await _save();
+  }
+
   /// Persist the detected web UI type ('mainsail' | 'fluidd') so the tile
   /// can render the right logo on a cold launch — including when the
   /// printer is currently offline (power-off, Pi rebooting, etc.).

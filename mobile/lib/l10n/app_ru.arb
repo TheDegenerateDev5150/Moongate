@@ -355,5 +355,17 @@
   "gcodeConfirmTitle": "Начать печать?",
   "gcodeConfirmBody": "Напечатать {file}?",
   "gcodeStarted": "Печать {file} начата",
-  "gcodeStartFailed": "Не удалось начать печать"
+  "gcodeStartFailed": "Не удалось начать печать",
+  "tileMacros": "Макросы",
+  "macrosSheetTitle": "Макросы",
+  "macrosLoading": "Загрузка макросов…",
+  "macrosError": "Не удалось загрузить макросы",
+  "macrosEmpty": "На этом принтере нет макросов",
+  "macroFavourite": "Закрепить вверху",
+  "macroUnfavourite": "Открепить",
+  "macroConfirmTitle": "Выполнить макрос?",
+  "macroConfirmBody": "Выполнить {macro} на этом принтере?",
+  "macroRunAction": "Выполнить",
+  "macroSent": "{macro} отправлен",
+  "macroFailed": "Не удалось отправить {macro}"
 }

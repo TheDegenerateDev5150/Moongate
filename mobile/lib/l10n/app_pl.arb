@@ -355,5 +355,17 @@
   "gcodeConfirmTitle": "Rozpocząć druk?",
   "gcodeConfirmBody": "Wydrukować {file}?",
   "gcodeStarted": "Rozpoczęto druk {file}",
-  "gcodeStartFailed": "Nie udało się rozpocząć druku"
+  "gcodeStartFailed": "Nie udało się rozpocząć druku",
+  "tileMacros": "Makra",
+  "macrosSheetTitle": "Makra",
+  "macrosLoading": "Ładowanie makr…",
+  "macrosError": "Nie można załadować makr",
+  "macrosEmpty": "Brak makr na tej drukarce",
+  "macroFavourite": "Przypnij na górze",
+  "macroUnfavourite": "Odepnij",
+  "macroConfirmTitle": "Uruchomić makro?",
+  "macroConfirmBody": "Uruchomić {macro} na tej drukarce?",
+  "macroRunAction": "Uruchom",
+  "macroSent": "Wysłano {macro}",
+  "macroFailed": "Nie można wysłać {macro}"
 }

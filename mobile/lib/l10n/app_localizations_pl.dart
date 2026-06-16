@@ -1137,4 +1137,46 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get gcodeStartFailed => 'Nie udało się rozpocząć druku';
+
+  @override
+  String get tileMacros => 'Makra';
+
+  @override
+  String get macrosSheetTitle => 'Makra';
+
+  @override
+  String get macrosLoading => 'Ładowanie makr…';
+
+  @override
+  String get macrosError => 'Nie można załadować makr';
+
+  @override
+  String get macrosEmpty => 'Brak makr na tej drukarce';
+
+  @override
+  String get macroFavourite => 'Przypnij na górze';
+
+  @override
+  String get macroUnfavourite => 'Odepnij';
+
+  @override
+  String get macroConfirmTitle => 'Uruchomić makro?';
+
+  @override
+  String macroConfirmBody(String macro) {
+    return 'Uruchomić $macro na tej drukarce?';
+  }
+
+  @override
+  String get macroRunAction => 'Uruchom';
+
+  @override
+  String macroSent(String macro) {
+    return 'Wysłano $macro';
+  }
+
+  @override
+  String macroFailed(String macro) {
+    return 'Nie można wysłać $macro';
+  }
 }

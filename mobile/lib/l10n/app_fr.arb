@@ -355,5 +355,17 @@
   "gcodeConfirmTitle": "Lancer l'impression ?",
   "gcodeConfirmBody": "Lancer l'impression de {file} ?",
   "gcodeStarted": "Impression de {file} lancée",
-  "gcodeStartFailed": "Impossible de lancer l'impression"
+  "gcodeStartFailed": "Impossible de lancer l'impression",
+  "tileMacros": "Macros",
+  "macrosSheetTitle": "Macros",
+  "macrosLoading": "Chargement des macros…",
+  "macrosError": "Impossible de charger les macros",
+  "macrosEmpty": "Aucune macro sur cette imprimante",
+  "macroFavourite": "Épingler en haut",
+  "macroUnfavourite": "Désépingler",
+  "macroConfirmTitle": "Exécuter la macro ?",
+  "macroConfirmBody": "Exécuter {macro} sur cette imprimante ?",
+  "macroRunAction": "Exécuter",
+  "macroSent": "{macro} envoyée",
+  "macroFailed": "Impossible d'envoyer {macro}"
 }

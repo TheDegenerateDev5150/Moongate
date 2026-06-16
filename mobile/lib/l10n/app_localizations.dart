@@ -2143,6 +2143,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t start the print'**
   String get gcodeStartFailed;
+
+  /// Tooltip for the macro button on an online printer tile; opens the macro list.
+  ///
+  /// In en, this message translates to:
+  /// **'Macros'**
+  String get tileMacros;
+
+  /// Title of the bottom sheet listing the printer's Klipper macros.
+  ///
+  /// In en, this message translates to:
+  /// **'Macros'**
+  String get macrosSheetTitle;
+
+  /// Shown while the printer's macro list is being fetched.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading macros…'**
+  String get macrosLoading;
+
+  /// Shown when the macro list couldn't be fetched.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load macros'**
+  String get macrosError;
+
+  /// Shown when the printer defines no user macros.
+  ///
+  /// In en, this message translates to:
+  /// **'No macros on this printer'**
+  String get macrosEmpty;
+
+  /// Tooltip on the star of a non-favourited macro row; pins it to the top of the list.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to top'**
+  String get macroFavourite;
+
+  /// Tooltip on the star of a favourited macro row; removes it from the pinned top.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get macroUnfavourite;
+
+  /// Title of the confirm-before-running-a-macro dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Run macro?'**
+  String get macroConfirmTitle;
+
+  /// Confirm-dialog body before running a macro. {macro} is the macro name.
+  ///
+  /// In en, this message translates to:
+  /// **'Run {macro} on this printer?'**
+  String macroConfirmBody(String macro);
+
+  /// Confirm-dialog button that actually runs the macro.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get macroRunAction;
+
+  /// Snackbar after a macro is sent. {macro} is the macro name.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent {macro}'**
+  String macroSent(String macro);
+
+  /// Snackbar when sending the macro failed. {macro} is the macro name.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send {macro}'**
+  String macroFailed(String macro);
 }
 
 class _AppLocalizationsDelegate

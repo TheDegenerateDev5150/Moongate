@@ -14,6 +14,7 @@ import '../../services/printer_status_service.dart';
 import '../../widgets/webcam_view.dart';
 import '../printer/printer_camera_screen.dart';
 import 'gcode_files_overlay.dart';
+import 'macros_overlay.dart';
 
 class PrinterTile extends StatefulWidget {
   final PrinterConfig printer;
@@ -271,6 +272,7 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                   onStop: _handleStop,
                   onOpenFiles: () =>
                       showGcodeFilesSheet(context, widget.printer),
+                  onOpenMacros: () => showMacrosSheet(context, widget.printer),
                 ),
               ),
 
@@ -376,6 +378,7 @@ class _ActionRow extends StatelessWidget {
   final VoidCallback onResume;
   final VoidCallback onStop;
   final VoidCallback onOpenFiles;
+  final VoidCallback onOpenMacros;
 
   const _ActionRow({
     required this.status,
@@ -384,6 +387,7 @@ class _ActionRow extends StatelessWidget {
     required this.onResume,
     required this.onStop,
     required this.onOpenFiles,
+    required this.onOpenMacros,
   });
 
   @override
@@ -401,6 +405,13 @@ class _ActionRow extends StatelessWidget {
         (status.state == 'standby' ||
          status.state == 'complete' ||
          status.state == 'cancelled');
+    // Macros can run whenever Klipper is operational — idle/finished OR
+    // mid-print (e.g. SET_PAUSE_NEXT_LAYER) — but not in error/startup where it
+    // can't accept gcode. Sits beside the folder; a tap runs after a confirm.
+    final canRunMacros = active ||
+        status.state == 'standby' ||
+        status.state == 'complete' ||
+        status.state == 'cancelled';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 6, 8, 4),
@@ -471,22 +482,38 @@ class _ActionRow extends StatelessWidget {
               tooltip: l.tileOpenFiles,
               onTap: onOpenFiles,
             ),
-          // Stop (active) / Firmware Restart (idle) — always shown for online printers.
-          const SizedBox(width: 4),
-          _Btn(
-            icon: active
-                ? (stopConfirmPending
-                    ? Icons.stop_circle_rounded
-                    : Icons.stop_rounded)
-                : Icons.restart_alt,
-            color: active
-                ? (stopConfirmPending ? Colors.red : Colors.redAccent)
-                : Colors.orange,
-            tooltip: active
-                ? (stopConfirmPending ? l.tileConfirmStop : l.tileStopPrint)
-                : l.tileFirmwareRestart,
-            onTap: onStop,
-          ),
+          // Run a Klipper macro — whenever Klipper can accept gcode.
+          if (canRunMacros) ...[
+            const SizedBox(width: 4),
+            _Btn(
+              icon: Icons.code_rounded,
+              color: theme.colorScheme.primary,
+              tooltip: l.tileMacros,
+              onTap: onOpenMacros,
+            ),
+          ],
+          // Stop while printing/paused (cancel the job); firmware-restart ONLY
+          // when Klipper has errored — the one time a restart is the fix. Hidden
+          // across the healthy idle states (Ready / complete / cancelled) so a
+          // resting tile stays uncluttered; the recovery action returns the
+          // moment something actually goes wrong.
+          if (active || status.state == 'error') ...[
+            const SizedBox(width: 4),
+            _Btn(
+              icon: active
+                  ? (stopConfirmPending
+                      ? Icons.stop_circle_rounded
+                      : Icons.stop_rounded)
+                  : Icons.restart_alt,
+              color: active
+                  ? (stopConfirmPending ? Colors.red : Colors.redAccent)
+                  : Colors.orange,
+              tooltip: active
+                  ? (stopConfirmPending ? l.tileConfirmStop : l.tileStopPrint)
+                  : l.tileFirmwareRestart,
+              onTap: onStop,
+            ),
+          ],
         ],
       ),
     );
