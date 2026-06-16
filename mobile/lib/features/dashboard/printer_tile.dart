@@ -492,22 +492,28 @@ class _ActionRow extends StatelessWidget {
               onTap: onOpenMacros,
             ),
           ],
-          // Stop (active) / Firmware Restart (idle) — always shown for online printers.
-          const SizedBox(width: 4),
-          _Btn(
-            icon: active
-                ? (stopConfirmPending
-                    ? Icons.stop_circle_rounded
-                    : Icons.stop_rounded)
-                : Icons.restart_alt,
-            color: active
-                ? (stopConfirmPending ? Colors.red : Colors.redAccent)
-                : Colors.orange,
-            tooltip: active
-                ? (stopConfirmPending ? l.tileConfirmStop : l.tileStopPrint)
-                : l.tileFirmwareRestart,
-            onTap: onStop,
-          ),
+          // Stop while printing/paused (cancel the job); firmware-restart ONLY
+          // when Klipper has errored — the one time a restart is the fix. Hidden
+          // across the healthy idle states (Ready / complete / cancelled) so a
+          // resting tile stays uncluttered; the recovery action returns the
+          // moment something actually goes wrong.
+          if (active || status.state == 'error') ...[
+            const SizedBox(width: 4),
+            _Btn(
+              icon: active
+                  ? (stopConfirmPending
+                      ? Icons.stop_circle_rounded
+                      : Icons.stop_rounded)
+                  : Icons.restart_alt,
+              color: active
+                  ? (stopConfirmPending ? Colors.red : Colors.redAccent)
+                  : Colors.orange,
+              tooltip: active
+                  ? (stopConfirmPending ? l.tileConfirmStop : l.tileStopPrint)
+                  : l.tileFirmwareRestart,
+              onTap: onStop,
+            ),
+          ],
         ],
       ),
     );

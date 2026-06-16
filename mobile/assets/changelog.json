@@ -5,6 +5,7 @@
       "Run your printer's macros from the dashboard — a new macro button (next to the folder) on any online printer tile opens the list of Klipper macros defined on that machine. Tap one to run it, with a quick confirm since some macros heat or move the printer",
       "Star your favourites to pin them to the top — handy when a machine has dozens of macros but you only use a handful. Your stars are saved per printer and included in backups",
       "Helper macros (names starting with _) and Moongate's own pairing macros are hidden, to keep the list to the ones you'd actually run",
+      "Tidier tile controls — the firmware-restart button now appears only when a printer has errored (where a restart is the fix), instead of sitting on every idle tile",
       "No Pi update needed — just update the app"
     ]
   },
