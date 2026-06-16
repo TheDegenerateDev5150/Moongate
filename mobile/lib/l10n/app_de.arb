@@ -355,5 +355,17 @@
   "gcodeConfirmTitle": "Druck starten?",
   "gcodeConfirmBody": "Druck von {file} starten?",
   "gcodeStarted": "Druck von {file} gestartet",
-  "gcodeStartFailed": "Druck konnte nicht gestartet werden"
+  "gcodeStartFailed": "Druck konnte nicht gestartet werden",
+  "tileMacros": "Makros",
+  "macrosSheetTitle": "Makros",
+  "macrosLoading": "Makros werden geladen…",
+  "macrosError": "Makros konnten nicht geladen werden",
+  "macrosEmpty": "Keine Makros auf diesem Drucker",
+  "macroFavourite": "Oben anheften",
+  "macroUnfavourite": "Nicht mehr anheften",
+  "macroConfirmTitle": "Makro ausführen?",
+  "macroConfirmBody": "{macro} auf diesem Drucker ausführen?",
+  "macroRunAction": "Ausführen",
+  "macroSent": "{macro} gesendet",
+  "macroFailed": "{macro} konnte nicht gesendet werden"
 }

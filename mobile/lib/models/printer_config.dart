@@ -54,6 +54,13 @@ class PrinterConfig {
   /// camera from Mainsail's webcam config).
   final String? customCameraUrl;
 
+  /// Macro names the user has starred in the macro sheet to pin them to the
+  /// top of the list (per-printer — some machines have dozens of macros and
+  /// only a handful are run often). Stored as the raw Klipper macro names.
+  /// Additive and optional, so it rides the v3 backup envelope without a
+  /// schema bump. Empty when nothing is starred.
+  final List<String> favouriteMacros;
+
   const PrinterConfig({
     required this.id,
     required this.name,
@@ -64,6 +71,7 @@ class PrinterConfig {
     this.webcamTargetFps = 15,
     this.uiType,
     this.customCameraUrl,
+    this.favouriteMacros = const [],
   });
 
   PrinterConfig copyWith({
@@ -75,6 +83,7 @@ class PrinterConfig {
     int?    webcamTargetFps,
     String? uiType,
     Object? customCameraUrl = _sentinel,
+    List<String>? favouriteMacros,
   }) =>
       PrinterConfig(
         id:              id,
@@ -88,6 +97,7 @@ class PrinterConfig {
         customCameraUrl: identical(customCameraUrl, _sentinel)
             ? this.customCameraUrl
             : customCameraUrl as String?,
+        favouriteMacros: favouriteMacros ?? this.favouriteMacros,
       );
 
   /// Normalise a user-typed printer address into a base [lanUrl] such as
@@ -157,6 +167,7 @@ class PrinterConfig {
         'webcamTargetFps': webcamTargetFps,
         if (uiType != null) 'uiType': uiType,
         if (customCameraUrl != null) 'customCameraUrl': customCameraUrl,
+        if (favouriteMacros.isNotEmpty) 'favouriteMacros': favouriteMacros,
       };
 
   factory PrinterConfig.fromJson(Map<String, dynamic> j) {
@@ -174,6 +185,10 @@ class PrinterConfig {
       webcamTargetFps: j['webcamTargetFps'] as int?  ?? 15,
       uiType:          j['uiType']          as String?,
       customCameraUrl: j['customCameraUrl'] as String?,
+      favouriteMacros: (j['favouriteMacros'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
   }
 

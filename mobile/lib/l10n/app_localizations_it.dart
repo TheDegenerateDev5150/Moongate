@@ -1146,4 +1146,46 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get gcodeStartFailed => 'Impossibile avviare la stampa';
+
+  @override
+  String get tileMacros => 'Macro';
+
+  @override
+  String get macrosSheetTitle => 'Macro';
+
+  @override
+  String get macrosLoading => 'Caricamento macro…';
+
+  @override
+  String get macrosError => 'Impossibile caricare le macro';
+
+  @override
+  String get macrosEmpty => 'Nessuna macro su questa stampante';
+
+  @override
+  String get macroFavourite => 'Fissa in alto';
+
+  @override
+  String get macroUnfavourite => 'Rimuovi dall\'alto';
+
+  @override
+  String get macroConfirmTitle => 'Eseguire la macro?';
+
+  @override
+  String macroConfirmBody(String macro) {
+    return 'Eseguire $macro su questa stampante?';
+  }
+
+  @override
+  String get macroRunAction => 'Esegui';
+
+  @override
+  String macroSent(String macro) {
+    return '$macro inviata';
+  }
+
+  @override
+  String macroFailed(String macro) {
+    return 'Impossibile inviare $macro';
+  }
 }

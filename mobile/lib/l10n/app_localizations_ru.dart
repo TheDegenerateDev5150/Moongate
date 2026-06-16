@@ -1138,4 +1138,46 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get gcodeStartFailed => 'Не удалось начать печать';
+
+  @override
+  String get tileMacros => 'Макросы';
+
+  @override
+  String get macrosSheetTitle => 'Макросы';
+
+  @override
+  String get macrosLoading => 'Загрузка макросов…';
+
+  @override
+  String get macrosError => 'Не удалось загрузить макросы';
+
+  @override
+  String get macrosEmpty => 'На этом принтере нет макросов';
+
+  @override
+  String get macroFavourite => 'Закрепить вверху';
+
+  @override
+  String get macroUnfavourite => 'Открепить';
+
+  @override
+  String get macroConfirmTitle => 'Выполнить макрос?';
+
+  @override
+  String macroConfirmBody(String macro) {
+    return 'Выполнить $macro на этом принтере?';
+  }
+
+  @override
+  String get macroRunAction => 'Выполнить';
+
+  @override
+  String macroSent(String macro) {
+    return '$macro отправлен';
+  }
+
+  @override
+  String macroFailed(String macro) {
+    return 'Не удалось отправить $macro';
+  }
 }

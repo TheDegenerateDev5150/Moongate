@@ -1084,4 +1084,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gcodeStartFailed => '无法开始打印';
+
+  @override
+  String get tileMacros => '宏';
+
+  @override
+  String get macrosSheetTitle => '宏';
+
+  @override
+  String get macrosLoading => '正在加载宏…';
+
+  @override
+  String get macrosError => '无法加载宏';
+
+  @override
+  String get macrosEmpty => '此打印机上没有宏';
+
+  @override
+  String get macroFavourite => '置顶';
+
+  @override
+  String get macroUnfavourite => '取消置顶';
+
+  @override
+  String get macroConfirmTitle => '运行宏？';
+
+  @override
+  String macroConfirmBody(String macro) {
+    return '在此打印机上运行 $macro？';
+  }
+
+  @override
+  String get macroRunAction => '运行';
+
+  @override
+  String macroSent(String macro) {
+    return '已发送 $macro';
+  }
+
+  @override
+  String macroFailed(String macro) {
+    return '无法发送 $macro';
+  }
 }

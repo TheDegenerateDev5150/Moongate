@@ -355,5 +355,17 @@
   "gcodeConfirmTitle": "开始打印？",
   "gcodeConfirmBody": "要打印 {file} 吗？",
   "gcodeStarted": "已开始打印 {file}",
-  "gcodeStartFailed": "无法开始打印"
+  "gcodeStartFailed": "无法开始打印",
+  "tileMacros": "宏",
+  "macrosSheetTitle": "宏",
+  "macrosLoading": "正在加载宏…",
+  "macrosError": "无法加载宏",
+  "macrosEmpty": "此打印机上没有宏",
+  "macroFavourite": "置顶",
+  "macroUnfavourite": "取消置顶",
+  "macroConfirmTitle": "运行宏？",
+  "macroConfirmBody": "在此打印机上运行 {macro}？",
+  "macroRunAction": "运行",
+  "macroSent": "已发送 {macro}",
+  "macroFailed": "无法发送 {macro}"
 }

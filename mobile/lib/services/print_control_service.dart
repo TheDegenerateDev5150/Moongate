@@ -165,6 +165,71 @@ class PrintControlService {
     return ok ?? false;
   }
 
+  // ── Klipper macros: list the defined macros + run one ──────────────────────
+  //
+  // Same transparent-proxy story as the G-code calls above: `printer/objects/
+  // list` and `printer/gcode/script` are core Moonraker endpoints, so on LAN
+  // they go header-less and on the tunnel they carry the Bearer token the auth
+  // proxy gates — no plugin update needed. `objects/query` is already used by
+  // PrinterStatusService over the tunnel, and `gcode/script` is just an action
+  // POST like `print/start`, so both are known to pass the proxy.
+
+  /// List the Klipper macros defined on the printer — the `[gcode_macro …]`
+  /// sections, read from Moonraker's `printer/objects/list` and filtered to the
+  /// `gcode_macro ` objects. Hidden: `_`-prefixed helpers (Klipper's private-
+  /// macro convention) and Moongate's own plumbing macros (`MOONGATE_*` — one
+  /// of which unpairs the printer). Returns the bare macro names, alphabetised
+  /// (case-insensitively); null when every path failed, an empty list when the
+  /// printer simply defines no user macros.
+  Future<List<String>?> listMacros() async {
+    const prefix = 'gcode_macro ';
+    return _viaLanThenTunnel<List<String>>((base, token, isLan) async {
+      try {
+        final uri = Uri.parse('$base/printer/objects/list');
+        final resp = await http
+            .get(uri, headers: isLan ? null : {'Authorization': 'Bearer $token'})
+            .timeout(Duration(seconds: isLan ? 4 : 12));
+        if (resp.statusCode != 200) return null;
+        final objects =
+            (jsonDecode(resp.body)['result']?['objects'] as List<dynamic>?) ??
+                const [];
+        return objects
+            .whereType<String>()
+            .where((o) => o.startsWith(prefix))
+            .map((o) => o.substring(prefix.length))
+            .where((name) =>
+                !name.startsWith('_') &&
+                !name.toUpperCase().startsWith('MOONGATE_'))
+            .toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      } catch (_) {
+        return null;
+      }
+    });
+  }
+
+  /// Run a Klipper macro by name via Moonraker's `printer/gcode/script`. Klipper
+  /// uppercases the command token before dispatch, so the name is sent verbatim
+  /// from the object list. LAN-first, then tunnel; returns true once Moonraker
+  /// accepts it (200).
+  Future<bool> runMacro(String macro) async {
+    final ok = await _viaLanThenTunnel((base, token, isLan) async {
+      try {
+        final uri = Uri.parse('$base/printer/gcode/script'
+            '?script=${Uri.encodeComponent(macro)}');
+        final resp = await http
+            .post(uri,
+                headers: isLan ? null : {'Authorization': 'Bearer $token'})
+            .timeout(Duration(seconds: isLan ? 4 : 12));
+        // null (not false) on non-200 so the next path is still tried.
+        return resp.statusCode == 200 ? true : null;
+      } catch (_) {
+        return null;
+      }
+    });
+    return ok ?? false;
+  }
+
   /// Fetch a slicer-embedded thumbnail for [file] over the already-resolved
   /// [base]/[isLan] connection from [listGcodes] — no per-row LAN re-probe,
   /// which is what stalled thumbnails on the tunnel. Reads the file's metadata

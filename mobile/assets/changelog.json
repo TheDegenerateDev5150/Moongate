@@ -1,5 +1,14 @@
 [
   {
+    "version": "v0.9.6",
+    "bullets": [
+      "Run your printer's macros from the dashboard — a new macro button (next to the folder) on any online printer tile opens the list of Klipper macros defined on that machine. Tap one to run it, with a quick confirm since some macros heat or move the printer",
+      "Star your favourites to pin them to the top — handy when a machine has dozens of macros but you only use a handful. Your stars are saved per printer and included in backups",
+      "Helper macros (names starting with _) and Moongate's own pairing macros are hidden, to keep the list to the ones you'd actually run",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.5",
     "bullets": [
       "Tap to watch a camera full-screen — printer tiles showing a camera now have a small eye button in the corner. Tap it for a centred, full-screen live view you can pinch to zoom (the same view also opens from the camera icon on the printer page)",
