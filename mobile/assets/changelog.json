@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.5",
+    "bullets": [
+      "Tap to watch a camera full-screen — printer tiles showing a camera now have a small eye button in the corner. Tap it for a centred, full-screen live view you can pinch to zoom (the same view also opens from the camera icon on the printer page)",
+      "Turn your phone sideways for a widescreen view — the camera rotates to landscape even if the rest of the app stays in portrait, and goes back when you close it",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.4",
     "bullets": [
       "Arrange your printers your way — turn off \"Auto-arrange by status\" in the menu and drag the dashboard tiles into any order you like. Tap the drag-drop button (bottom-left) to start, rearrange the tiles, then tap the green check to lock them in",
