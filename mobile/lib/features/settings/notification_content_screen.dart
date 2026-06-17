@@ -91,8 +91,11 @@ class _PreviewCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final shown =
         cfg.order.where(cfg.enabled.contains).map(notifFieldExample).toList();
+    // Generic placeholder for the preview; the live notification uses the
+    // printer's real name.
+    final name = '(${l.printerNameLabel})';
     final line =
-        shown.isEmpty ? '🖨️ MadMax' : '🖨️ MadMax — ${shown.join(' · ')}';
+        shown.isEmpty ? '🖨️ $name' : '🖨️ $name — ${shown.join(' · ')}';
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
