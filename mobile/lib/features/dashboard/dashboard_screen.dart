@@ -21,6 +21,7 @@ import '../../services/print_notification_service.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
 import '../../services/printer_status_registry.dart';
+import '../../services/printer_webview_cache.dart';
 import '../../services/settings_backup.dart';
 import '../../services/supabase_service.dart';
 import '../../services/update_service.dart';
@@ -147,6 +148,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final released = await SupabaseService.instance.releasePrinter(printer.id);
     await PrinterRegistry.instance.remove(printer.id);
     PrinterAccessCache.instance.invalidate(printer.id);
+    PrinterWebViewCache.instance.invalidate(printer.id);
 
     if (!released && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

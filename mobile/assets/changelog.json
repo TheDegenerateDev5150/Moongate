@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.8",
+    "bullets": [
+      "Re-opening a printer is now instant — the full Mainsail/Fluidd page stays loaded in the background when you go back to the dashboard, so opening a printer again no longer replays Mainsail's \"Initializing…\" every time. The difference is biggest over the tunnel, away from home",
+      "The first time you open each printer still loads it fresh; after that it's kept warm. If your phone runs low on memory, the least-recently-used pages are released automatically",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.7",
     "bullets": [
       "Squarer camera feeds on the dashboard — each printer tile's live view is now a clean 1:1 square instead of an odd wide, short crop, with the printer's name and temperatures tucked neatly underneath",

@@ -12,28 +12,36 @@ import '../../services/lan_discovery_service.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
 import '../../services/printer_status_registry.dart';
+import '../../services/printer_webview_cache.dart';
 import '../../services/supabase_service.dart';
 import '../../widgets/keyboard_affordance.dart';
 import 'printer_camera_screen.dart';
 
 /// Full-screen WebView showing the printer's Mainsail/Fluidd interface.
 ///
-/// Flow:
-///   1. On init, fetch a fresh `{tunnel_url, access_token}` from Supabase
-///      via [PrinterAccessCache].
-///   2. v0.4: before navigation, set an `mg_token` cookie on the WebView
-///      scoped to the tunnel host. The auth proxy on the Pi reads it on
-///      every request the WebView makes (static assets + WebSocket upgrade),
-///      verifies the EdDSA signature, and only then proxies to nginx /
-///      Moonraker. On v0.3 Pis the cookie is set anyway but ignored.
-///   3. Refresh the cookie at ~4 min (token TTL is 5 min) so an open
-///      WebView session never falls off the cliff.
-///   4. Load the LAN URL when one is cached (faster); fall back to tunnel
-///      on error. Cookie scope is tunnel-host, so LAN requests don't carry
-///      it — but LAN doesn't need it (nginx is unauth'd on LAN).
-///   5. On 503 from /printer-access (Pi hasn't heartbeated yet, fresh
-///      pairing) retry after a short delay. On other errors surface an
-///      in-app overlay with a Retry button.
+/// The [WebViewController] is NOT owned by this screen — it lives in
+/// [PrinterWebViewCache], keyed by printer id, so popping back to the dashboard
+/// leaves the loaded SPA and its Moonraker WebSocket alive and re-opening is
+/// instant (no Mainsail "Initializing…", which is slow over the tunnel).
+///
+/// Cold flow (first open / after invalidation):
+///   1. Fetch a fresh `{tunnel_url, access_token}` from Supabase via
+///      [PrinterAccessCache].
+///   2. v0.4: set an `mg_token` cookie on the WebView scoped to the tunnel
+///      host. The auth proxy on the Pi reads it on every request (static
+///      assets + WebSocket upgrade), verifies the EdDSA signature, and only
+///      then proxies to nginx / Moonraker. On v0.3 Pis the cookie is set but
+///      ignored. The cache refreshes it at ~4 min (TTL 5 min) so even a
+///      backgrounded warm session never falls off the cliff.
+///   3. Load the LAN URL when one is reachable (Mainsail loads dramatically
+///      faster on direct LAN); fall back to the tunnel otherwise. The loaded
+///      controller is then stored warm for next time.
+///   4. On 503 from /printer-access (Pi hasn't heartbeated yet, fresh pairing)
+///      retry after a short delay. On other errors surface an in-app overlay
+///      with a Retry button.
+///
+/// Warm flow (re-open): re-attach to the cached controller instantly, then
+/// revalidate a LAN session in the background (it's stale if you've left home).
 class PrinterScreen extends StatefulWidget {
   final PrinterConfig printer;
   const PrinterScreen({super.key, required this.printer});
@@ -51,7 +59,6 @@ class _PrinterScreenState extends State<PrinterScreen>
   String? _errorMsg;
   String? _tunnelUrl;
   Timer?  _retryTimer;
-  Timer?  _cookieRefreshTimer;
 
   // Discoverability hint pointing at the camera icon. Shown ONLY when this
   // printer is loaded over the tunnel AND its webcam is an external (absolute
@@ -75,21 +82,40 @@ class _PrinterScreenState extends State<PrinterScreen>
   @override
   void dispose() {
     _retryTimer?.cancel();
-    _cookieRefreshTimer?.cancel();
+    // The WebViewController is intentionally NOT disposed here — it lives on in
+    // [PrinterWebViewCache] so the next open is instant.
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _tunnelUrl != null) {
-      // Refresh in case the tunnel URL rotated while we were backgrounded.
+    // On resume re-run _start: a warm session re-attaches instantly and then
+    // revalidates (the network may have changed while we were backgrounded); a
+    // session the cache dropped (tunnel rotation) cold-reloads.
+    if (state == AppLifecycleState.resumed && _webController != null) {
       _start();
     }
   }
 
   Future<void> _start() async {
     final l = AppLocalizations.of(context);
+
+    // Warm? Re-attach to the live controller — instant, no reload, no
+    // "Initializing…". Re-point the navigation delegate at this screen, then
+    // revalidate in the background (a LAN session is dead if you've left home).
+    final warm = PrinterWebViewCache.instance.lookup(widget.printer.id);
+    if (warm != null) {
+      _webController = warm.controller;
+      _webController!.setNavigationDelegate(_navDelegate());
+      _usingLan  = warm.usingLan;
+      _tunnelUrl = warm.tunnelUrl;
+      setState(() { _loading = false; _errorMsg = null; });
+      _revalidateWarm(warm);
+      _maybeShowCameraHint();
+      return;
+    }
+
     setState(() { _loading = true; _errorMsg = null; });
     try {
       final access = await PrinterAccessCache.instance.get(widget.printer.id);
@@ -97,20 +123,16 @@ class _PrinterScreenState extends State<PrinterScreen>
       _tunnelUrl = access.tunnelUrl;
 
       // v0.4: prime the EdDSA cookie before navigation so the auth proxy
-      // accepts every WebView request (HTML, JS, XHR, WS upgrade). Schedule
-      // a periodic refresh so a long-open session never sends an expired
-      // token. Both no-ops on v0.3 Pis.
-      await _setMgTokenCookie(access);
-      _scheduleCookieRefresh();
+      // accepts every WebView request (HTML, JS, XHR, WS upgrade). The cache
+      // keeps it refreshed once the session is stored. No-op on v0.3 Pis.
+      await PrinterWebViewCache.setMgTokenCookie(access);
 
-      // Prefer the LAN URL when present — Mainsail loads dramatically
-      // faster on direct LAN than through Cloudflare. v0.5.0: try the
-      // mDNS-discovered address first (survives DHCP changes), then the
-      // persisted one. Pre-flight a quick HEAD-style probe with a 2s
-      // timeout: on cellular the phone has no route to RFC1918 addresses,
-      // but the WebView would block silently (no `onWebResourceError`,
-      // just a forever spinner) because it relies on the OS to time the
-      // connect out. The probe gives us a fast decision and a clean
+      // Prefer the LAN URL when reachable — Mainsail loads dramatically faster
+      // on direct LAN than through Cloudflare. Try the mDNS-discovered address
+      // first (survives DHCP changes), then the persisted one. Pre-flight a
+      // quick 2s probe: on cellular the phone has no route to RFC1918 addresses
+      // but the WebView would block silently (no `onWebResourceError`, just a
+      // forever spinner). The probe gives a fast decision and a clean
       // fall-through to the tunnel.
       final lanUrl = LanDiscoveryService.instance.lookup(widget.printer.id)
           ?? widget.printer.lanUrl;
@@ -124,8 +146,8 @@ class _PrinterScreenState extends State<PrinterScreen>
       }
 
       // Neither LAN reachable nor a tunnel URL yet — the printer was just
-      // paired / is rebooting and remote isn't up. Show the same
-      // "starting up" retry the 503 path uses instead of loading a null URL.
+      // paired / is rebooting and remote isn't up. Show the same "starting up"
+      // retry the 503 path uses instead of loading a null URL.
       if (useUrl == null) {
         if (!mounted) return;
         setState(() {
@@ -140,6 +162,18 @@ class _PrinterScreenState extends State<PrinterScreen>
 
       _initControllerIfNeeded();
       await _webController!.loadRequest(Uri.parse('$useUrl/'));
+
+      // Keep this controller warm so the next open is instant. The cache starts
+      // the background cookie refresh from here.
+      PrinterWebViewCache.instance.store(
+        widget.printer.id,
+        LiveWebSession(
+          controller: _webController!,
+          baseUrl:    useUrl,
+          usingLan:   _usingLan,
+          tunnelUrl:  access.tunnelUrl,
+        ),
+      );
       _maybeShowCameraHint();
     } on PrinterUnavailableException catch (e) {
       if (!mounted) return;
@@ -154,6 +188,21 @@ class _PrinterScreenState extends State<PrinterScreen>
       if (!mounted) return;
       setState(() { _loading = false; _errorMsg = l.printerCouldNotReach('$e'); });
     }
+  }
+
+  /// Background check after re-attaching to a warm session. A LAN session is
+  /// only valid while you're on that network — if the address no longer answers
+  /// (you've left home) drop it and reload so the tunnel takes over, rather than
+  /// leaving the user on a dead page. Tunnel sessions are trusted here: the
+  /// cache's refresh timer drops them on rotation, and a hard failure still
+  /// surfaces the error overlay.
+  Future<void> _revalidateWarm(LiveWebSession warm) async {
+    if (!warm.usingLan) return;
+    final stillReachable = await _isLanReachable(warm.baseUrl);
+    if (!mounted || stillReachable) return;
+    PrinterWebViewCache.instance.invalidate(widget.printer.id);
+    PrinterAccessCache.instance.invalidate(widget.printer.id);
+    _start();
   }
 
   static const _cameraHintSeenKey = 'camera_hint_seen';
@@ -208,6 +257,9 @@ class _PrinterScreenState extends State<PrinterScreen>
     if (result.lanUrl != widget.printer.lanUrl) {
       await PrinterRegistry.instance
           .updateLanUrl(widget.printer.id, result.lanUrl);
+      // The warm session loaded the old address — drop it so a reopen picks up
+      // the new one (the current view stays until the user reopens / refreshes).
+      PrinterWebViewCache.instance.invalidate(widget.printer.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -231,13 +283,19 @@ class _PrinterScreenState extends State<PrinterScreen>
     setState(() { _loading = true; _errorMsg = null; _usingLan = false; });
     _initControllerIfNeeded();
     await _webController!.loadRequest(Uri.parse('$_tunnelUrl/'));
+    // Re-store as a tunnel session so the warm cache reflects reality.
+    PrinterWebViewCache.instance.store(
+      widget.printer.id,
+      LiveWebSession(
+        controller: _webController!,
+        baseUrl:    _tunnelUrl!,
+        usingLan:   false,
+        tunnelUrl:  _tunnelUrl,
+      ),
+    );
   }
 
-  void _initControllerIfNeeded() {
-    if (_webController != null) return;
-    _webController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(NavigationDelegate(
+  NavigationDelegate _navDelegate() => NavigationDelegate(
         onPageStarted: (_) {
           if (mounted) setState(() { _loading = true; _errorMsg = null; });
         },
@@ -253,55 +311,24 @@ class _PrinterScreenState extends State<PrinterScreen>
             _errorMsg = l.printerTunnelUnreachable(err.description);
           });
         },
-      ));
+      );
+
+  void _initControllerIfNeeded() {
+    if (_webController != null) return;
+    _webController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(_navDelegate());
   }
 
-  // ── v0.4: EdDSA cookie wiring for the WebView ─────────────────────────────
-  //
-  // The auth proxy on the Pi (v0.4+) requires every request to carry the
-  // EdDSA access token. WebView-loaded static assets and WS upgrades can't
-  // easily set an Authorization header, so we use a cookie scoped to the
-  // tunnel host. The proxy reads `mg_token=<jwt>` from Cookie:, verifies
-  // EdDSA, and proxies upstream.
-  //
-  // Scope decisions:
-  //   - Domain = tunnel host exactly. We don't broaden to .trycloudflare.com
-  //     because that would leak our token to anyone else's quick-tunnel
-  //     subdomain the user might happen to visit in the same WebView.
-  //   - Path = "/" — token applies to every resource on the host.
-  //   - No explicit expiry — set as a session cookie, overwritten before
-  //     the JWT expires by the refresh timer.
-
-  Future<void> _setMgTokenCookie(PrinterAccess access) async {
-    // No tunnel yet (fresh pair) → nothing to scope a cookie to. LAN
-    // doesn't need it (nginx/Moonraker trust the subnet); the cookie gets
-    // set on a later refresh once the tunnel comes up.
-    if (access.tunnelUrl == null) return;
-    final tunnel = Uri.tryParse(access.tunnelUrl!);
-    if (tunnel == null || tunnel.host.isEmpty) return;
+  /// Fast LAN probe. Returns true iff `${url}/server/info` answers within 2
+  /// seconds. We hit Moonraker's own info endpoint rather than `/` because
+  /// nginx serving Mainsail's index always 200s — Moonraker only answers when
+  /// actually reachable, so a 200 here is also a liveness signal for the
+  /// printer side. 401/403 still counts as reachable (we got an answer); only
+  /// network failures and timeouts fall through to the tunnel.
+  Future<bool> _isLanReachable(String url) async {
     try {
-      await WebViewCookieManager().setCookie(WebViewCookie(
-        name:   'mg_token',
-        value:  access.accessToken,
-        domain: tunnel.host,
-        path:   '/',
-      ));
-    } catch (_) {
-      // setCookie can throw on older WebView versions; fall through. The
-      // WebView will eventually 401 and surface the error overlay.
-    }
-  }
-
-  /// Fast LAN probe. Returns true iff `${lanUrl}/server/info` answers
-  /// within 2 seconds. We hit Moonraker's own info endpoint rather than
-  /// `/` because nginx serving Mainsail's index always 200s — Moonraker
-  /// only answers when actually reachable, so a 200 here is also a
-  /// liveness signal for the printer side. 401/403 still counts as
-  /// reachable (we got an answer); only network failures and timeouts
-  /// fall through to the tunnel.
-  Future<bool> _isLanReachable(String lanUrl) async {
-    try {
-      final uri = Uri.parse('$lanUrl/server/info');
+      final uri = Uri.parse('$url/server/info');
       final resp = await http
           .get(uri)
           .timeout(const Duration(seconds: 2));
@@ -309,24 +336,6 @@ class _PrinterScreenState extends State<PrinterScreen>
     } catch (_) {
       return false;
     }
-  }
-
-  void _scheduleCookieRefresh() {
-    _cookieRefreshTimer?.cancel();
-    // Token TTL is 5 min; refresh at 4 to leave a safety margin for
-    // clock skew + the WebView holding a stale cookie momentarily.
-    _cookieRefreshTimer = Timer.periodic(const Duration(minutes: 4), (_) async {
-      if (!mounted) return;
-      try {
-        final access = await PrinterAccessCache.instance.get(widget.printer.id);
-        if (!mounted) return;
-        await _setMgTokenCookie(access);
-      } catch (_) {
-        // Refresh failed — the WebView will eventually get a 401 and the
-        // user can tap Retry. Don't disrupt the current view for a single
-        // missed background refresh.
-      }
-    });
   }
 
   @override
@@ -386,7 +395,10 @@ class _PrinterScreenState extends State<PrinterScreen>
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              // Re-fetch a fresh tunnel URL too — handles cloudflared rotation.
+              // Drop the warm session + access token so we reload from scratch
+              // (also re-fetches a fresh tunnel URL — handles cloudflared
+              // rotation).
+              PrinterWebViewCache.instance.invalidate(widget.printer.id);
               PrinterAccessCache.instance.invalidate(widget.printer.id);
               _start();
             },
@@ -435,7 +447,10 @@ class _PrinterScreenState extends State<PrinterScreen>
             child: Stack(
               children: [
                 if (_webController != null)
-                  WebViewWidget(controller: _webController!),
+                  WebViewWidget(
+                    key: ValueKey(_webController),
+                    controller: _webController!,
+                  ),
 
                 if (_loading && _errorMsg == null)
                   const Center(child: CircularProgressIndicator()),
@@ -469,6 +484,8 @@ class _PrinterScreenState extends State<PrinterScreen>
                         const SizedBox(height: 32),
                         FilledButton.icon(
                           onPressed: () {
+                            PrinterWebViewCache.instance
+                                .invalidate(widget.printer.id);
                             PrinterAccessCache.instance
                                 .invalidate(widget.printer.id);
                             _start();
