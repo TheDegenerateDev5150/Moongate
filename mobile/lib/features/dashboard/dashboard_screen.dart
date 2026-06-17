@@ -1374,23 +1374,34 @@ class _PrinterGrid extends StatelessWidget {
           ? (columns + 1).clamp(2, 4)
           : columns;
 
-      // Aspect ratio (width / height) per column count.
-      // Wider tiles (fewer columns) can be shorter; narrow tiles need more
-      // height to keep the webcam + controls comfortable.
-      final aspectRatio = switch (effectiveCols) {
-        1 => 1.0,   // single full-width tile: square on every device
-        2 => 0.75,  // default two-column layout
-        3 => 0.65,  // three columns — a bit taller relative to width
-        _ => 0.55,  // four columns in landscape from a 3-col portrait pref
-      };
+      // Each tile's webcam preview is a fixed 1:1 square (see printer_tile).
+      // To let that square span the full tile width, the tile height is sized
+      // as the square (= tile width) plus a fixed band for the status text and
+      // action row beneath it — so childAspectRatio is derived from the real
+      // tile width rather than a hand-tuned per-column constant. Tiles get a
+      // little taller than before (most visibly in multi-column layouts), the
+      // trade for a feed that's square on every device.
+      const padding = EdgeInsets.all(12);
+      const crossSpacing = 10.0;
+      // Vertical space reserved under the square webcam for the accent bar,
+      // action row, and name/temperature band. Sized to the common active tile
+      // (idle/ready ≈ 100px) so it sits snug under the square; the busiest tile
+      // (printing, with a filename) runs a little over and the webcam gives a
+      // few px back via its Flexible wrapper (printer_tile) rather than making
+      // every quieter tile carry that worst-case reserve.
+      const tileTextBand = 104.0;
+      final tileWidth = (constraints.maxWidth -
+              padding.horizontal -
+              crossSpacing * (effectiveCols - 1)) /
+          effectiveCols;
+      final aspectRatio = tileWidth / (tileWidth + tileTextBand);
 
       final gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: effectiveCols,
-        crossAxisSpacing: 10,
+        crossAxisSpacing: crossSpacing,
         mainAxisSpacing: 10,
         childAspectRatio: aspectRatio,
       );
-      const padding = EdgeInsets.all(12);
 
       // Keyed by id so a reorder (or a status re-sort) moves a tile and its
       // poller rather than rebuilding it. The key is also what the reorderable

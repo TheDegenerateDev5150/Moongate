@@ -1,5 +1,14 @@
 [
   {
+    "version": "v0.9.7",
+    "bullets": [
+      "Squarer camera feeds on the dashboard — each printer tile's live view is now a clean 1:1 square instead of an odd wide, short crop, with the printer's name and temperatures tucked neatly underneath",
+      "Offline printers sit flush — an unreachable tile now fills with its Mainsail/Fluidd logo and shows just the name, instead of leaving an empty gap below the text",
+      "A tidier view while printing — the macro button hides itself while a print is running, so the progress bar and percentage have room and stay easy to read. It comes back when the printer is idle",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.6",
     "bullets": [
       "Run your printer's macros from the dashboard — a new macro button (next to the folder) on any online printer tile opens the list of Klipper macros defined on that machine. Tap one to run it, with a quick confirm since some macros heat or move the printer",
