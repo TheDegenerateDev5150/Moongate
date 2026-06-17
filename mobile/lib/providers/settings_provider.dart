@@ -567,3 +567,33 @@ final notificationFieldsProvider =
     NotifierProvider<NotificationFieldsNotifier, NotifFieldsConfig>(
   NotificationFieldsNotifier.new,
 );
+
+// ---------------------------------------------------------------------------
+// Webcams on/off  (master switch for the dashboard tile camera feeds)
+// ---------------------------------------------------------------------------
+
+/// Whether the dashboard tiles show (and fetch) their webcam feeds. On by
+/// default. Turning it off stops every tile's snapshot polling and shows the
+/// placeholder instead — a quick data-saver, and it lets an on-demand camera
+/// (e.g. go2rtc) drop its stream and idle. The full-screen camera view, which
+/// the user opens deliberately, ignores this. Travels in backups.
+class WebcamsEnabledNotifier extends Notifier<bool> {
+  static const _key = 'webcams_enabled';
+
+  @override
+  bool build() => true;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? true;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, enabled);
+  }
+}
+
+final webcamsEnabledProvider =
+    NotifierProvider<WebcamsEnabledNotifier, bool>(WebcamsEnabledNotifier.new);

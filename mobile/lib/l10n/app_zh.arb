@@ -1,5 +1,13 @@
 {
   "@@locale": "zh",
+  "dashboardShowWebcams": "显示摄像头",
+  "dashboardShowWebcamsSubtitle": "开启或关闭仪表板上的所有摄像头画面",
+  "powerTurnOn": "开机",
+  "powerTurnOff": "关机",
+  "powerConfirmOn": "要开启 {name} 吗？",
+  "powerConfirmOff": "要关闭 {name} 吗？",
+  "powerToggleFailed": "无法切换电源",
+  "powerLockedWhilePrinting": "打印时无法关机",
   "notifContentTitle": "通知内容",
   "notifContentSubtitle": "选择并排序显示内容",
   "notifContentIntro": "选择实时打印通知中显示的信息，并拖动以排列顺序。",

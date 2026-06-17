@@ -271,6 +271,61 @@ class PrintControlService {
     return ok ?? false;
   }
 
+  // ── Power devices: list + switch a Moonraker [power …] device ──────────────
+  //
+  // Moonraker's device_power component manages [power …] sections (any type —
+  // shelly / gpio / tplink / tasmota …) and stays up while the printer itself
+  // is powered off, so these work even when Klipper is down — the "switch the
+  // printer on from its tile" case. Core Moonraker endpoints → same transparent
+  // proxy as the macro/file calls, no plugin update.
+
+  /// This printer's Moonraker power devices (name + on/off + whether Moonraker
+  /// locks it during a print). Null when every path failed; empty when the
+  /// printer defines no [power …] device. Works whenever Moonraker is reachable,
+  /// including while the printer it controls is off.
+  Future<List<PowerDevice>?> listPowerDevices() async {
+    return _viaLanThenTunnel<List<PowerDevice>>((base, token, isLan) async {
+      try {
+        final uri = Uri.parse('$base/machine/device_power/devices');
+        final resp = await http
+            .get(uri, headers: isLan ? null : {'Authorization': 'Bearer $token'})
+            .timeout(Duration(seconds: isLan ? 4 : 12));
+        if (resp.statusCode != 200) return null;
+        final list =
+            (jsonDecode(resp.body)['result']?['devices'] as List<dynamic>?) ??
+                const [];
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map(PowerDevice.fromJson)
+            .toList();
+      } catch (_) {
+        return null;
+      }
+    });
+  }
+
+  /// Switch a power [device] on or off via Moonraker. LAN-first, then tunnel;
+  /// true once Moonraker accepts it (200). Moonraker itself refuses to power a
+  /// `locked_while_printing` device off mid-print, so a rejected off returns
+  /// false rather than cutting a running print.
+  Future<bool> setPowerDevice(String device, bool on) async {
+    final ok = await _viaLanThenTunnel((base, token, isLan) async {
+      try {
+        final uri = Uri.parse('$base/machine/device_power/device'
+            '?device=${Uri.encodeComponent(device)}'
+            '&action=${on ? 'on' : 'off'}');
+        final resp = await http
+            .post(uri,
+                headers: isLan ? null : {'Authorization': 'Bearer $token'})
+            .timeout(Duration(seconds: isLan ? 4 : 12));
+        return resp.statusCode == 200 ? true : null;
+      } catch (_) {
+        return null;
+      }
+    });
+    return ok ?? false;
+  }
+
   /// Fetch a slicer-embedded thumbnail for [file] over the already-resolved
   /// [base]/[isLan] connection from [listGcodes] — no per-row LAN re-probe,
   /// which is what stalled thumbnails on the tunnel. Reads the file's metadata
@@ -432,4 +487,31 @@ class GcodeFile {
   DateTime? get modifiedAt => modified > 0
       ? DateTime.fromMillisecondsSinceEpoch((modified * 1000).round())
       : null;
+}
+
+/// A Moonraker power device — a `[power …]` section — from
+/// `/machine/device_power/devices`. Type-agnostic: shelly, gpio, tplink,
+/// tasmota, etc. all surface here the same way.
+class PowerDevice {
+  /// The device name (the `[power <name>]` label), e.g. "printer".
+  final String name;
+
+  /// True when Moonraker reports the device on. (Moonraker also has transient
+  /// "init"/"error" statuses; anything but "on" is treated as off.)
+  final bool on;
+
+  /// Moonraker blocks powering this device off while a print is running.
+  final bool lockedWhilePrinting;
+
+  const PowerDevice({
+    required this.name,
+    required this.on,
+    required this.lockedWhilePrinting,
+  });
+
+  factory PowerDevice.fromJson(Map<String, dynamic> j) => PowerDevice(
+        name: (j['device'] as String?) ?? '',
+        on: (j['status'] as String?) == 'on',
+        lockedWhilePrinting: (j['locked_while_printing'] as bool?) ?? false,
+      );
 }

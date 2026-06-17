@@ -1,5 +1,13 @@
 {
   "@@locale": "it",
+  "dashboardShowWebcams": "Mostra webcam",
+  "dashboardShowWebcamsSubtitle": "Attiva o disattiva tutti i feed delle telecamere",
+  "powerTurnOn": "Accendi",
+  "powerTurnOff": "Spegni",
+  "powerConfirmOn": "Accendere {name}?",
+  "powerConfirmOff": "Spegnere {name}?",
+  "powerToggleFailed": "Impossibile cambiare l'alimentazione",
+  "powerLockedWhilePrinting": "Non spegnibile durante la stampa",
   "notifContentTitle": "Contenuto della notifica",
   "notifContentSubtitle": "Scegli e riordina cosa mostrare",
   "notifContentIntro": "Scegli quali dettagli appaiono nella notifica di stampa in tempo reale e trascinali nell'ordine che preferisci.",

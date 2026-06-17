@@ -79,6 +79,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lightToggleFailed => 'Не удалось связаться с принтером';
 
   @override
+  String get powerTurnOn => 'Включить';
+
+  @override
+  String get powerTurnOff => 'Выключить';
+
+  @override
+  String powerConfirmOn(String name) {
+    return 'Включить $name?';
+  }
+
+  @override
+  String powerConfirmOff(String name) {
+    return 'Выключить $name?';
+  }
+
+  @override
+  String get powerToggleFailed => 'Не удалось изменить питание';
+
+  @override
+  String get powerLockedWhilePrinting => 'Нельзя выключить во время печати';
+
+  @override
+  String get dashboardShowWebcams => 'Показывать камеры';
+
+  @override
+  String get dashboardShowWebcamsSubtitle =>
+      'Включить или выключить все камеры на панели';
+
+  @override
   String get updateNotesUnavailable =>
       'Не удалось загрузить список изменений — проверьте подключение или посмотрите на GitHub.';
 

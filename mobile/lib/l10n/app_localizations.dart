@@ -242,6 +242,54 @@ abstract class AppLocalizations {
   /// **'Couldn\'t reach the printer'**
   String get lightToggleFailed;
 
+  /// Tooltip / confirm-button label to switch the printer's power device on.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get powerTurnOn;
+
+  /// Tooltip / confirm-button label to switch the printer's power device off.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get powerTurnOff;
+
+  /// Confirmation dialog title before powering a device on.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn {name} on?'**
+  String powerConfirmOn(String name);
+
+  /// Confirmation dialog title before powering a device off.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn {name} off?'**
+  String powerConfirmOff(String name);
+
+  /// Snackbar shown when toggling a Moonraker power device failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change the printer\'s power'**
+  String get powerToggleFailed;
+
+  /// Tooltip on the greyed-out power button when Moonraker locks the device during a print.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t power off while printing'**
+  String get powerLockedWhilePrinting;
+
+  /// Drawer toggle that turns all dashboard tile webcam feeds on or off.
+  ///
+  /// In en, this message translates to:
+  /// **'Show webcams'**
+  String get dashboardShowWebcams;
+
+  /// Subtitle under the Show webcams drawer toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn all dashboard camera feeds on or off'**
+  String get dashboardShowWebcamsSubtitle;
+
   /// Shown in the update overlay when the changelog couldn't be fetched.
   ///
   /// In en, this message translates to:

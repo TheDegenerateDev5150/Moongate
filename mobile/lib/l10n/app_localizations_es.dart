@@ -80,6 +80,35 @@ class AppLocalizationsEs extends AppLocalizations {
   String get lightToggleFailed => 'No se pudo conectar con la impresora';
 
   @override
+  String get powerTurnOn => 'Encender';
+
+  @override
+  String get powerTurnOff => 'Apagar';
+
+  @override
+  String powerConfirmOn(String name) {
+    return '¿Encender $name?';
+  }
+
+  @override
+  String powerConfirmOff(String name) {
+    return '¿Apagar $name?';
+  }
+
+  @override
+  String get powerToggleFailed => 'No se pudo cambiar la alimentación';
+
+  @override
+  String get powerLockedWhilePrinting => 'No se puede apagar mientras imprime';
+
+  @override
+  String get dashboardShowWebcams => 'Mostrar cámaras';
+
+  @override
+  String get dashboardShowWebcamsSubtitle =>
+      'Activar o desactivar todas las cámaras del panel';
+
+  @override
   String get updateNotesUnavailable =>
       'No se pudieron cargar las novedades: revisa tu conexión o consúltalas en GitHub.';
 

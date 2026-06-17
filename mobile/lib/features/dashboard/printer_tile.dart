@@ -180,11 +180,13 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
       PrinterConnection.offline => Colors.transparent,
     };
 
-    // Settled-offline tiles ("Printer unreachable") have no controls row and no
-    // live temperatures to show — just the name. Let the placeholder feed fill
-    // the whole tile then (no fixed square), so there's no dead band under the
-    // name. Active/connecting tiles keep the square + temps below.
-    final isOffline = _overlayState(_status) == 'offline';
+    // Tiles with no live Klipper reading — offline, the Pi up but Klipper not
+    // responding ("Printer idle" / waiting), or still connecting — have no real
+    // temperatures, so they collapse to just the name (the 0°/0° band was
+    // meaningless) and let the placeholder feed fill the whole tile, with no
+    // dead band beneath the name. Tiles with a real reading keep the square +
+    // temps below.
+    final noLiveReading = _overlayState(_status) != null;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -209,7 +211,7 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
             // tile (AspectRatio yields its ratio under a tight constraint), so a
             // controls-less offline tile has no empty band beneath its name.
             Flexible(
-              fit: isOffline ? FlexFit.tight : FlexFit.loose,
+              fit: noLiveReading ? FlexFit.tight : FlexFit.loose,
               child: AspectRatio(
                 aspectRatio: 1.0,
                 child: Stack(
@@ -283,6 +285,18 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                         right: 8,
                         child: _CameraExpandButton(printer: widget.printer),
                       ),
+                    // Power on/off (bottom-left) — shown only when this printer
+                    // has a Moonraker power device. Works even when the printer
+                    // is off (Moonraker stays up), so you can switch it on from
+                    // an idle/offline tile; a tap asks to confirm first.
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      child: _PowerButton(
+                        printer: widget.printer,
+                        status: _status,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -360,9 +374,10 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                       ],
                     ],
                   ),
-                  // Live temperatures — hidden when offline (no readings to
-                  // show; the tile then collapses to just the printer name).
-                  if (!isOffline) ...[
+                  // Live temperatures — shown only when there's a real reading.
+                  // Offline / waiting / connecting tiles collapse to just the
+                  // name (no meaningless 0°/0° row), matching the K3 tile.
+                  if (!noLiveReading) ...[
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -1062,6 +1077,167 @@ class _LightBulbButtonState extends State<_LightBulbButton> {
                         ? Colors.white24
                         : on
                             ? Colors.amber
+                            : Colors.white.withValues(alpha: 0.6),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Power on/off button ──────────────────────────────────────────────────────
+//
+// A power symbol in the webcam's bottom-left corner, shown only when this
+// printer exposes a Moonraker power device (a [power …] section — any type).
+// Crucially it works while the printer it controls is OFF, because Moonraker
+// stays up: that's the "wake the printer from its idle/offline tile" case. A
+// tap asks to confirm (on or off) so it isn't fired by accident; the icon glows
+// green when on. Off is blocked mid-print for a locked_while_printing device.
+
+class _PowerButton extends StatefulWidget {
+  final PrinterConfig printer;
+  final PrinterStatus status;
+  const _PowerButton({required this.printer, required this.status});
+
+  @override
+  State<_PowerButton> createState() => _PowerButtonState();
+}
+
+class _PowerButtonState extends State<_PowerButton> {
+  late final PrintControlService _control = PrintControlService(widget.printer);
+
+  /// The power device this tile controls (the one named "printer" if present,
+  /// else the first). Null until the first successful fetch — the button renders
+  /// nothing until then, so a printer with no power device shows no button.
+  PowerDevice? _device;
+
+  /// Optimistic target set the instant the user confirms, so the icon flips at
+  /// once; cleared once Moonraker's real state catches up (or on failure).
+  bool? _pending;
+  bool _busy = false;
+
+  bool get _isPrinting =>
+      widget.status.state == 'printing' || widget.status.state == 'paused';
+
+  bool get _displayOn => _pending ?? (_device?.on ?? false);
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PowerButton old) {
+    super.didUpdateWidget(old);
+    // Re-fetch when the printer becomes reachable, or its Klipper state changes
+    // (e.g. it just powered on), so the icon tracks reality without polling.
+    final cameOnline = old.status.connection == PrinterConnection.offline &&
+        widget.status.connection != PrinterConnection.offline;
+    if (cameOnline || old.status.state != widget.status.state) {
+      _refresh();
+    }
+    if (_pending != null && _device?.on == _pending) _pending = null;
+  }
+
+  Future<void> _refresh() async {
+    final devices = await _control.listPowerDevices();
+    if (!mounted || devices == null) return; // keep last-known on a blip
+    PowerDevice? pick;
+    for (final d in devices) {
+      if (d.name.toLowerCase() == 'printer') {
+        pick = d;
+        break;
+      }
+    }
+    pick ??= devices.isNotEmpty ? devices.first : null;
+    setState(() {
+      _device = pick;
+      if (_pending != null && pick?.on == _pending) _pending = null;
+    });
+  }
+
+  Future<void> _confirmAndToggle() async {
+    final d = _device;
+    if (d == null || _busy) return;
+    final target = !_displayOn;
+    final l = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+            target ? l.powerConfirmOn(d.name) : l.powerConfirmOff(d.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(target ? l.powerTurnOn : l.powerTurnOff),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() {
+      _busy = true;
+      _pending = target;
+    });
+    final ok = await _control.setPowerDevice(d.name, target);
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (!ok) _pending = null;
+    });
+    if (ok) {
+      _refresh(); // reconcile with Moonraker's real state
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l.powerToggleFailed),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Nothing until we know the printer has a power device.
+    if (_device == null) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
+    final on = _displayOn;
+    // Moonraker refuses to cut a locked device mid-print, so grey-out the off
+    // action then rather than let the tap fail.
+    final blocked = on && _isPrinting && _device!.lockedWhilePrinting;
+    final enabled = !_busy && !blocked;
+    return Tooltip(
+      message: blocked
+          ? l.powerLockedWhilePrinting
+          : (on ? l.powerTurnOff : l.powerTurnOn),
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.38),
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: enabled ? _confirmAndToggle : null,
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: _busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white70),
+                  )
+                : Icon(
+                    Icons.power_settings_new,
+                    size: 18,
+                    color: !enabled
+                        ? Colors.white24
+                        : on
+                            ? Colors.greenAccent
                             : Colors.white.withValues(alpha: 0.6),
                   ),
           ),

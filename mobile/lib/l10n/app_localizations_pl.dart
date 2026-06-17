@@ -79,6 +79,35 @@ class AppLocalizationsPl extends AppLocalizations {
   String get lightToggleFailed => 'Nie można połączyć się z drukarką';
 
   @override
+  String get powerTurnOn => 'Włącz';
+
+  @override
+  String get powerTurnOff => 'Wyłącz';
+
+  @override
+  String powerConfirmOn(String name) {
+    return 'Włączyć $name?';
+  }
+
+  @override
+  String powerConfirmOff(String name) {
+    return 'Wyłączyć $name?';
+  }
+
+  @override
+  String get powerToggleFailed => 'Nie udało się zmienić zasilania';
+
+  @override
+  String get powerLockedWhilePrinting => 'Nie można wyłączyć podczas druku';
+
+  @override
+  String get dashboardShowWebcams => 'Pokaż kamery';
+
+  @override
+  String get dashboardShowWebcamsSubtitle =>
+      'Włącz lub wyłącz wszystkie podglądy kamer';
+
+  @override
   String get updateNotesUnavailable =>
       'Nie udało się wczytać nowości — sprawdź połączenie lub zobacz je na GitHubie.';
 
