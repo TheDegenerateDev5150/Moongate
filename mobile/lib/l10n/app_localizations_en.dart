@@ -9,6 +9,77 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get lightingTitle => 'Lighting';
+
+  @override
+  String get lightingMenuSubtitle =>
+      'Control your printers\' lights from the dashboard';
+
+  @override
+  String get lightingBanner =>
+      'Choose which printers have a light you can control. For each, turn it on and set either an On + Off macro pair, or a single Toggle macro. Optionally pick a status source so the bulb shows the real on/off state.';
+
+  @override
+  String get lightingNoPrinters => 'No printers to set up yet.';
+
+  @override
+  String get lightingShowOnTile => 'Show on tile';
+
+  @override
+  String get lightingNeedMacro =>
+      'Set an On + Off pair or a Toggle macro to enable.';
+
+  @override
+  String get lightingLoadFailed =>
+      'Couldn\'t load this printer\'s macros (it may be offline). Type names manually below.';
+
+  @override
+  String get lightingOnMacro => 'Lights ON macro';
+
+  @override
+  String get lightingOffMacro => 'Lights OFF macro';
+
+  @override
+  String get lightingToggleMacro => 'Toggle macro';
+
+  @override
+  String get lightingToggleSection => 'Optional — toggle method';
+
+  @override
+  String get lightingStatusSource => 'Light Status Source';
+
+  @override
+  String get lightingStatusSourceHelp =>
+      'Optional. The Klipper object that reports the light\'s state — e.g. output_pin caselight (not a raw pin like PE3). Leave blank to just track your taps.';
+
+  @override
+  String get lightingStatusHint => 'Example: output_pin caselight';
+
+  @override
+  String get lightingNotSet => 'Not set';
+
+  @override
+  String get lightingPickMacro => 'Select a macro';
+
+  @override
+  String get lightingPickStatusSource => 'Select the light status pin';
+
+  @override
+  String get lightingManualHint => 'Type the exact name';
+
+  @override
+  String get lightingClear => 'Clear';
+
+  @override
+  String get lightTurnOn => 'Turn light on';
+
+  @override
+  String get lightTurnOff => 'Turn light off';
+
+  @override
+  String get lightToggleFailed => 'Couldn\'t reach the printer';
+
+  @override
   String get updateNotesUnavailable =>
       'Couldn\'t load what\'s new — check your connection, or view it on GitHub.';
 

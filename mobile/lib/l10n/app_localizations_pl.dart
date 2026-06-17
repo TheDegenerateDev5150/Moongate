@@ -9,6 +9,76 @@ class AppLocalizationsPl extends AppLocalizations {
   AppLocalizationsPl([String locale = 'pl']) : super(locale);
 
   @override
+  String get lightingTitle => 'Oświetlenie';
+
+  @override
+  String get lightingMenuSubtitle => 'Steruj oświetleniem drukarek z pulpitu';
+
+  @override
+  String get lightingBanner =>
+      'Wybierz, które drukarki mają sterowane oświetlenie. Dla każdej włącz je i ustaw parę makr Wł + Wył albo pojedyncze makro przełączające. Opcjonalnie wskaż źródło stanu, aby żarówka pokazywała rzeczywisty stan.';
+
+  @override
+  String get lightingNoPrinters => 'Brak drukarek do skonfigurowania.';
+
+  @override
+  String get lightingShowOnTile => 'Pokaż na kafelku';
+
+  @override
+  String get lightingNeedMacro =>
+      'Ustaw parę Wł + Wył lub makro przełączające, aby włączyć.';
+
+  @override
+  String get lightingLoadFailed =>
+      'Nie udało się wczytać makr tej drukarki (może być offline). Wpisz nazwy ręcznie poniżej.';
+
+  @override
+  String get lightingOnMacro => 'Makro Światło WŁ';
+
+  @override
+  String get lightingOffMacro => 'Makro Światło WYŁ';
+
+  @override
+  String get lightingToggleMacro => 'Makro przełączające';
+
+  @override
+  String get lightingToggleSection => 'Opcjonalnie — metoda przełączania';
+
+  @override
+  String get lightingStatusSource => 'Źródło stanu światła';
+
+  @override
+  String get lightingStatusSourceHelp =>
+      'Opcjonalnie. Obiekt Klipper (np. output_pin caselight), którego wartość mówi Moongate, czy światło jest włączone. Pozostaw puste, aby zamiast tego śledzić Twoje dotknięcia.';
+
+  @override
+  String get lightingStatusHint => 'Przykład: output_pin caselight';
+
+  @override
+  String get lightingNotSet => 'Nie ustawiono';
+
+  @override
+  String get lightingPickMacro => 'Wybierz makro';
+
+  @override
+  String get lightingPickStatusSource => 'Wybierz źródło stanu';
+
+  @override
+  String get lightingManualHint => 'Wpisz dokładną nazwę';
+
+  @override
+  String get lightingClear => 'Wyczyść';
+
+  @override
+  String get lightTurnOn => 'Włącz światło';
+
+  @override
+  String get lightTurnOff => 'Wyłącz światło';
+
+  @override
+  String get lightToggleFailed => 'Nie można połączyć się z drukarką';
+
+  @override
   String get updateNotesUnavailable =>
       'Nie udało się wczytać nowości — sprawdź połączenie lub zobacz je na GitHubie.';
 

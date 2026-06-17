@@ -246,12 +246,29 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                     // tile at an external camera (e.g. a phone webcam). The
                     // button watches the "show camera icons" setting and renders
                     // nothing when it's off, so it never overlaps the feed.
+                    // Top-right cluster: the camera-config gear (when its
+                    // setting is on) and the lighting bulb (when this printer
+                    // has lighting configured). The bulb sits in the corner; a
+                    // tap runs the on/off/toggle macro and it glows amber when
+                    // the light is on.
                     Positioned(
                       top: 6,
                       right: 6,
-                      child: _CameraConfigButton(
-                        printer: widget.printer,
-                        onApplied: _statusService.pollNow,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _CameraConfigButton(
+                            printer: widget.printer,
+                            onApplied: _statusService.pollNow,
+                          ),
+                          if (_hasLighting(widget.printer)) ...[
+                            const SizedBox(width: 6),
+                            _LightBulbButton(
+                              printer: widget.printer,
+                              status: _status,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     // Expand-to-full-screen camera (bottom-right). Shown only
@@ -919,6 +936,134 @@ class _CameraExpandButton extends StatelessWidget {
               size: 18,
               color: Colors.white.withValues(alpha: 0.6),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Lighting bulb button ───────────────────────────────────────────────────
+//
+// A small bulb in the webcam's top-right corner, shown only when this printer
+// has lighting configured (enabled + at least an on/off pair or a toggle macro
+// — see [_hasLighting]). A tap runs the appropriate macro; the icon glows amber
+// when the light is on and is dimmed when off. State comes from the configured
+// status object's live value ([PrinterStatus.lightOn]) when set, falling back
+// to tracking taps optimistically when it isn't. The tap flips the icon at once
+// (optimistically) and the next poll reconciles it with reality.
+
+/// Whether to show the bulb for [p]: lighting enabled AND a usable control path
+/// (an on+off pair, or a single toggle macro).
+bool _hasLighting(PrinterConfig p) {
+  if (!p.lightingEnabled) return false;
+  final hasPair = (p.lightOnMacro?.isNotEmpty ?? false) &&
+      (p.lightOffMacro?.isNotEmpty ?? false);
+  final hasToggle = p.lightToggleMacro?.isNotEmpty ?? false;
+  return hasPair || hasToggle;
+}
+
+class _LightBulbButton extends StatefulWidget {
+  final PrinterConfig printer;
+  final PrinterStatus status;
+  const _LightBulbButton({required this.printer, required this.status});
+
+  @override
+  State<_LightBulbButton> createState() => _LightBulbButtonState();
+}
+
+class _LightBulbButtonState extends State<_LightBulbButton> {
+  late final PrintControlService _control = PrintControlService(widget.printer);
+
+  /// Optimistic target set the instant the user taps, so the icon flips
+  /// immediately instead of waiting up to a full poll. Cleared once the real
+  /// status catches up (or on failure).
+  bool? _pending;
+
+  /// Fallback on/off when no status object is configured (no real reading), so
+  /// the icon still reflects the last tap.
+  bool _localOn = false;
+  bool _busy = false;
+
+  bool get _online => widget.status.connection != PrinterConnection.offline;
+
+  bool get _displayOn {
+    if (_pending != null) return _pending!;
+    return widget.status.lightOn ?? _localOn;
+  }
+
+  @override
+  void didUpdateWidget(covariant _LightBulbButton old) {
+    super.didUpdateWidget(old);
+    // Real state reached our optimistic target → hand control back to it.
+    if (_pending != null && widget.status.lightOn == _pending) {
+      _pending = null;
+    }
+  }
+
+  Future<void> _tap() async {
+    if (_busy) return;
+    final p = widget.printer;
+    final target = !_displayOn;
+    final hasPair = (p.lightOnMacro?.isNotEmpty ?? false) &&
+        (p.lightOffMacro?.isNotEmpty ?? false);
+    final macro = hasPair
+        ? (target ? p.lightOnMacro! : p.lightOffMacro!)
+        : (p.lightToggleMacro ?? '');
+    if (macro.isEmpty) return;
+    setState(() {
+      _busy = true;
+      _pending = target;
+      _localOn = target;
+    });
+    final ok = await _control.runMacro(macro);
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (!ok) {
+        _pending = null;
+        _localOn = !target;
+      }
+    });
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context).lightToggleFailed),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final on = _displayOn;
+    return Tooltip(
+      message: on ? l.lightTurnOff : l.lightTurnOn,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.38),
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: _online && !_busy ? _tap : null,
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: _busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white70),
+                  )
+                : Icon(
+                    on ? Icons.lightbulb : Icons.lightbulb_outline,
+                    size: 18,
+                    color: !_online
+                        ? Colors.white24
+                        : on
+                            ? Colors.amber
+                            : Colors.white.withValues(alpha: 0.6),
+                  ),
           ),
         ),
       ),

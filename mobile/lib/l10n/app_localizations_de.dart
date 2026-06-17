@@ -9,6 +9,77 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get lightingTitle => 'Beleuchtung';
+
+  @override
+  String get lightingMenuSubtitle =>
+      'Steuere die Beleuchtung deiner Drucker vom Dashboard';
+
+  @override
+  String get lightingBanner =>
+      'Wähle, welche Drucker eine steuerbare Beleuchtung haben. Aktiviere sie jeweils und lege entweder ein An-/Aus-Makropaar oder ein einzelnes Umschalt-Makro fest. Optional kannst du eine Statusquelle wählen, damit die Glühbirne den echten An-/Aus-Zustand anzeigt.';
+
+  @override
+  String get lightingNoPrinters => 'Noch keine Drucker zum Einrichten.';
+
+  @override
+  String get lightingShowOnTile => 'Auf Kachel anzeigen';
+
+  @override
+  String get lightingNeedMacro =>
+      'Lege ein An-/Aus-Paar oder ein Umschalt-Makro fest, um zu aktivieren.';
+
+  @override
+  String get lightingLoadFailed =>
+      'Makros dieses Druckers konnten nicht geladen werden (evtl. offline). Namen unten manuell eingeben.';
+
+  @override
+  String get lightingOnMacro => 'Makro für Licht AN';
+
+  @override
+  String get lightingOffMacro => 'Makro für Licht AUS';
+
+  @override
+  String get lightingToggleMacro => 'Umschalt-Makro';
+
+  @override
+  String get lightingToggleSection => 'Optional – Umschalt-Methode';
+
+  @override
+  String get lightingStatusSource => 'Lichtstatus-Quelle';
+
+  @override
+  String get lightingStatusSourceHelp =>
+      'Optional. Ein Klipper-Objekt (z. B. output_pin caselight), dessen Wert Moongate mitteilt, ob das Licht an ist. Leer lassen, um den Zustand stattdessen anhand deiner Schaltvorgänge zu verfolgen.';
+
+  @override
+  String get lightingStatusHint => 'Beispiel: output_pin caselight';
+
+  @override
+  String get lightingNotSet => 'Nicht festgelegt';
+
+  @override
+  String get lightingPickMacro => 'Makro auswählen';
+
+  @override
+  String get lightingPickStatusSource => 'Statusquelle auswählen';
+
+  @override
+  String get lightingManualHint => 'Genauen Namen eingeben';
+
+  @override
+  String get lightingClear => 'Löschen';
+
+  @override
+  String get lightTurnOn => 'Licht einschalten';
+
+  @override
+  String get lightTurnOff => 'Licht ausschalten';
+
+  @override
+  String get lightToggleFailed => 'Drucker nicht erreichbar';
+
+  @override
   String get updateNotesUnavailable =>
       'Neuigkeiten konnten nicht geladen werden – prüfe deine Verbindung oder sieh sie dir auf GitHub an.';
 

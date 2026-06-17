@@ -737,6 +737,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       },
                     ),
                     ListTile(
+                      leading: const Icon(Icons.lightbulb_outline),
+                      title: Text(l.lightingTitle),
+                      subtitle: Text(l.lightingMenuSubtitle),
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/lighting').then((_) => _load());
+                      },
+                    ),
+                    ListTile(
                       leading: const Icon(Icons.coffee_outlined,
                           color: Colors.amber),
                       title: Text(l.dashboardBuyMeCoffee),

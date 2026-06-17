@@ -48,6 +48,7 @@ class PrinterRegistry {
     }
     try {
       _printers = PrinterConfig.listFromJson(raw);
+      await _pruneOrphanLightStatus();
     } on FormatException catch (e) {
       // Legacy v0.2.x payload — drop it. The user will re-pair via the
       // new v=3 QR flow.
@@ -64,6 +65,25 @@ class PrinterRegistry {
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, PrinterConfig.listToJson(_printers));
+  }
+
+  /// One-off cleanup (v0.9.8): an early build auto-filled a light status object
+  /// on printers with no light macros — sometimes even a non-light object like a
+  /// display neopixel or a motor-power pin. A status object is meaningless
+  /// without a control macro, so drop these orphans. Idempotent.
+  Future<void> _pruneOrphanLightStatus() async {
+    var changed = false;
+    _printers = _printers.map((p) {
+      final hasMacro = (p.lightOnMacro?.isNotEmpty ?? false) ||
+          (p.lightOffMacro?.isNotEmpty ?? false) ||
+          (p.lightToggleMacro?.isNotEmpty ?? false);
+      if (!hasMacro && (p.lightStatusObject?.isNotEmpty ?? false)) {
+        changed = true;
+        return p.copyWith(lightStatusObject: null);
+      }
+      return p;
+    }).toList();
+    if (changed) await _save();
   }
 
   /// Pulls the current user's printers from Supabase (RLS-scoped) and
@@ -278,6 +298,31 @@ class PrinterRegistry {
     if (idx == -1) return;
     _printers = List.of(_printers)
       ..[idx] = _printers[idx].copyWith(favouriteMacros: macros);
+    await _save();
+  }
+
+  /// Persist a printer's lighting config (v0.9.8): the enable flag, the on/off
+  /// and toggle macros, and the optional status object. Full replace each call
+  /// (the lighting screen always supplies the complete config); rides backups
+  /// via [PrinterConfig]. Pass null for any macro/object to clear it.
+  Future<void> updateLightingConfig(
+    String printerId, {
+    required bool enabled,
+    String? onMacro,
+    String? offMacro,
+    String? toggleMacro,
+    String? statusObject,
+  }) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(
+        lightingEnabled:   enabled,
+        lightOnMacro:      onMacro,
+        lightOffMacro:     offMacro,
+        lightToggleMacro:  toggleMacro,
+        lightStatusObject: statusObject,
+      );
     await _save();
   }
 

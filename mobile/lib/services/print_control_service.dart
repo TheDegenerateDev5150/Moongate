@@ -208,6 +208,47 @@ class PrintControlService {
     });
   }
 
+  /// For the lighting config screen: the printer's runnable macros (same filter
+  /// as [listMacros]) plus its light-capable objects (output_pin / led /
+  /// neopixel / dotstar), each as the full Klipper object name so the status
+  /// poll can query its live value. One `printer/objects/list` fetch; null when
+  /// every path failed.
+  Future<({List<String> macros, List<String> lightObjects})?>
+      listLightingTargets() async {
+    const macroPrefix = 'gcode_macro ';
+    const lightPrefixes = [
+      'output_pin ', 'led ', 'neopixel ', 'dotstar ', 'pca9533 ', 'pca9632 ',
+    ];
+    return _viaLanThenTunnel((base, token, isLan) async {
+      try {
+        final uri = Uri.parse('$base/printer/objects/list');
+        final resp = await http
+            .get(uri, headers: isLan ? null : {'Authorization': 'Bearer $token'})
+            .timeout(Duration(seconds: isLan ? 4 : 12));
+        if (resp.statusCode != 200) return null;
+        final objects =
+            (jsonDecode(resp.body)['result']?['objects'] as List<dynamic>?) ??
+                const [];
+        final strs = objects.whereType<String>().toList();
+        final macros = strs
+            .where((o) => o.startsWith(macroPrefix))
+            .map((o) => o.substring(macroPrefix.length))
+            .where((name) =>
+                !name.startsWith('_') &&
+                !name.toUpperCase().startsWith('MOONGATE_'))
+            .toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        final lights = strs
+            .where((o) => lightPrefixes.any((p) => o.startsWith(p)))
+            .toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        return (macros: macros, lightObjects: lights);
+      } catch (_) {
+        return null;
+      }
+    });
+  }
+
   /// Run a Klipper macro by name via Moonraker's `printer/gcode/script`. Klipper
   /// uppercases the command token before dispatch, so the name is sent verbatim
   /// from the object list. LAN-first, then tunnel; returns true once Moonraker

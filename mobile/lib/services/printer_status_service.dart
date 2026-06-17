@@ -102,6 +102,27 @@ class PrinterStatusService {
     return config.customCameraUrl;
   }
 
+  /// The user's configured light status object for this printer (e.g.
+  /// `output_pin caselight`), read LIVE from the registry each poll like
+  /// [_liveCustomCameraUrl] so an edit in the lighting overlay takes effect on
+  /// the next poll. Null/empty → no real-state read (the tile falls back to
+  /// tracking taps optimistically).
+  String? get _liveLightStatusObject {
+    PrinterConfig live = config;
+    for (final p in PrinterRegistry.instance.printers) {
+      if (p.id == config.id) {
+        live = p;
+        break;
+      }
+    }
+    // Only read the light's real state when lighting is actually enabled for
+    // this printer — otherwise an orphaned/disabled status object would be
+    // polled needlessly.
+    if (!live.lightingEnabled) return null;
+    final raw = live.lightStatusObject;
+    return (raw != null && raw.isNotEmpty) ? raw : null;
+  }
+
   bool get _withinStartupGrace =>
       _firstPollAt != null &&
       DateTime.now().difference(_firstPollAt!) < _startupGrace;
@@ -503,6 +524,11 @@ class PrinterStatusService {
         await _supplementaryProgressQuery(baseUrl, access.accessToken, status,
             isLan: isLan);
       }
+      final lightObj = _liveLightStatusObject;
+      if (lightObj != null && status[lightObj] == null) {
+        await _supplementaryLightQuery(
+            baseUrl, access.accessToken, lightObj, status, isLan: isLan);
+      }
 
       final stats = status['print_stats'] as Map<String, dynamic>? ?? {};
       if (stats['state'] == 'printing') {
@@ -577,6 +603,48 @@ class PrinterStatusService {
         }
       }
     } catch (_) {}
+  }
+
+  // ── Light status object (v0.9.8) ─────────────────────────────────────────
+
+  Future<void> _supplementaryLightQuery(String baseUrl, String accessToken,
+      String object, Map<String, dynamic> status, {required bool isLan}) async {
+    try {
+      final encoded  = Uri.encodeComponent(object);
+      final uri      = Uri.parse('$baseUrl/printer/objects/query?$encoded');
+      final response = await _authedGet(
+          uri, accessToken,
+          isLan: isLan,
+          timeout: const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final s    = body['result']?['status'] as Map<String, dynamic>?;
+        final data = s?[object];
+        if (data != null) status[object] = data;
+      }
+    } catch (_) {}
+  }
+
+  /// Interpret a light object's Klipper status into on/off. `output_pin` exposes
+  /// a `value` (0..1, on if > 0); LED types (led / neopixel / dotstar) expose
+  /// `color_data` as a list of [r,g,b,w] channels — on if any channel of any
+  /// pixel is lit. Null when the shape isn't recognised.
+  static bool? _interpretLight(dynamic data) {
+    if (data is! Map) return null;
+    final value = data['value'];
+    if (value is num) return value > 0;
+    final colorData = data['color_data'];
+    if (colorData is List) {
+      for (final px in colorData) {
+        if (px is List) {
+          for (final ch in px) {
+            if (ch is num && ch > 0) return true;
+          }
+        }
+      }
+      return false;
+    }
+    return null;
   }
 
   // ── Shared status parser (unchanged from v0.2.x logic) ───────────────────
@@ -716,6 +784,10 @@ class PrinterStatusService {
       }
     }
 
+    final lightObj = _liveLightStatusObject;
+    final bool? lightOn =
+        lightObj != null ? _interpretLight(status[lightObj]) : null;
+
     return PrinterStatus(
       state:              state,
       progress:           progress,
@@ -734,6 +806,7 @@ class PrinterStatusService {
       webcamRotation:  (moongateResult?['webcam_rotation']        as num?)?.toInt() ?? 0,
       webcamTargetFps: (moongateResult?['webcam_target_fps']      as num?)?.toInt() ?? 15,
       webcamIsExternal: webcamIsExternal,
+      lightOn:          lightOn,
     );
   }
 }

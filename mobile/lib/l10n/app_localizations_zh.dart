@@ -9,6 +9,74 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get lightingTitle => '照明';
+
+  @override
+  String get lightingMenuSubtitle => '在仪表板上控制打印机的照明';
+
+  @override
+  String get lightingBanner =>
+      '选择哪些打印机有可控制的灯。为每台打印机开启并设置“开 + 关”宏对，或单个“切换”宏。也可选择一个状态来源，让灯泡显示真实的开关状态。';
+
+  @override
+  String get lightingNoPrinters => '暂无可设置的打印机。';
+
+  @override
+  String get lightingShowOnTile => '在磁贴上显示';
+
+  @override
+  String get lightingNeedMacro => '设置“开 + 关”宏对或一个“切换”宏以启用。';
+
+  @override
+  String get lightingLoadFailed => '无法加载此打印机的宏（可能已离线）。请在下方手动输入名称。';
+
+  @override
+  String get lightingOnMacro => '开灯宏';
+
+  @override
+  String get lightingOffMacro => '关灯宏';
+
+  @override
+  String get lightingToggleMacro => '切换宏';
+
+  @override
+  String get lightingToggleSection => '可选 — 切换方式';
+
+  @override
+  String get lightingStatusSource => '灯光状态来源';
+
+  @override
+  String get lightingStatusSourceHelp =>
+      '可选。一个 Klipper 对象（例如 output_pin caselight），其值会告诉 Moongate 灯是否已开启。留空则改为根据你的点按来跟踪状态。';
+
+  @override
+  String get lightingStatusHint => '示例：output_pin caselight';
+
+  @override
+  String get lightingNotSet => '未设置';
+
+  @override
+  String get lightingPickMacro => '选择一个宏';
+
+  @override
+  String get lightingPickStatusSource => '选择状态来源';
+
+  @override
+  String get lightingManualHint => '输入准确名称';
+
+  @override
+  String get lightingClear => '清除';
+
+  @override
+  String get lightTurnOn => '开灯';
+
+  @override
+  String get lightTurnOff => '关灯';
+
+  @override
+  String get lightToggleFailed => '无法连接打印机';
+
+  @override
   String get updateNotesUnavailable => '无法加载更新内容，请检查网络连接，或在 GitHub 上查看。';
 
   @override

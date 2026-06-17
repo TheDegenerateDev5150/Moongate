@@ -4,6 +4,8 @@
     "bullets": [
       "Re-opening a printer is now instant — the full Mainsail/Fluidd page stays loaded in the background when you go back to the dashboard, so opening a printer again no longer replays Mainsail's \"Initializing…\" every time. The difference is biggest over the tunnel, away from home",
       "The first time you open each printer still loads it fresh; after that it's kept warm. If your phone runs low on memory, the least-recently-used pages are released automatically",
+      "Control your printer lights from the dashboard — set up which printers have a light under the new Lighting menu, then tap the bulb in the corner of a tile's camera to switch it on or off",
+      "Use a single toggle macro, or separate on/off macros — whichever your setup has. Point Moongate at the light's Klipper object (like output_pin caselight) and the bulb shows the real on/off state, even if you switch the light elsewhere",
       "No Pi update needed — just update the app"
     ]
   },

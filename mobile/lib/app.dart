@@ -6,6 +6,7 @@ import 'features/app_lock/app_lock_gate.dart';
 import 'features/app_lock/app_lock_settings_screen.dart';
 import 'features/auth/pairing_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
+import 'features/dashboard/lighting_screen.dart';
 import 'features/printer/printer_screen.dart';
 import 'features/settings/custom_theme_screen.dart';
 import 'features/settings/settings_screen.dart';
@@ -48,6 +49,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/settings/app-lock',
       builder: (_, __) => const AppLockSettingsScreen(),
+    ),
+    GoRoute(
+      path: '/lighting',
+      builder: (_, __) => const LightingScreen(),
     ),
   ],
 );
