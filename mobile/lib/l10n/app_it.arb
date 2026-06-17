@@ -1,5 +1,14 @@
 {
   "@@locale": "it",
+  "notifContentTitle": "Contenuto della notifica",
+  "notifContentSubtitle": "Scegli e riordina cosa mostrare",
+  "notifContentIntro": "Scegli quali dettagli appaiono nella notifica di stampa in tempo reale e trascinali nell'ordine che preferisci.",
+  "notifContentPreview": "Anteprima",
+  "notifFieldProgress": "Avanzamento",
+  "notifFieldRemaining": "Tempo rimanente",
+  "notifFieldEta": "Ora di fine",
+  "notifFieldHotend": "Temp. ugello",
+  "notifFieldBed": "Temp. piatto",
   "lightingToggleSection": "Facoltativo — metodo di commutazione",
   "lightingStatusHint": "Esempio: output_pin caselight",
 

@@ -9,6 +9,7 @@ import 'features/dashboard/dashboard_screen.dart';
 import 'features/dashboard/lighting_screen.dart';
 import 'features/printer/printer_screen.dart';
 import 'features/settings/custom_theme_screen.dart';
+import 'features/settings/notification_content_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/splash/splash_screen.dart';
 import 'l10n/app_localizations.dart';
@@ -49,6 +50,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/settings/app-lock',
       builder: (_, __) => const AppLockSettingsScreen(),
+    ),
+    GoRoute(
+      path: '/settings/notifications',
+      builder: (_, __) => const NotificationContentScreen(),
     ),
     GoRoute(
       path: '/lighting',

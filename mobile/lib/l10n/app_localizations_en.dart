@@ -1113,6 +1113,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifPollIntervalTitle => 'Update frequency';
 
   @override
+  String get notifContentTitle => 'Notification content';
+
+  @override
+  String get notifContentSubtitle => 'Choose & reorder what\'s shown';
+
+  @override
+  String get notifContentIntro =>
+      'Pick which details appear in the live print notification, and drag them into the order you want.';
+
+  @override
+  String get notifContentPreview => 'Preview';
+
+  @override
+  String get notifFieldProgress => 'Progress';
+
+  @override
+  String get notifFieldRemaining => 'Time remaining';
+
+  @override
+  String get notifFieldEta => 'Finish time';
+
+  @override
+  String get notifFieldHotend => 'Hotend temp';
+
+  @override
+  String get notifFieldBed => 'Bed temp';
+
+  @override
   String get printAlertReady => 'Printer ready';
 
   @override

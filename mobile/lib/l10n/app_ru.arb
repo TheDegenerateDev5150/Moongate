@@ -1,5 +1,14 @@
 {
   "@@locale": "ru",
+  "notifContentTitle": "Содержимое уведомления",
+  "notifContentSubtitle": "Выберите и измените порядок",
+  "notifContentIntro": "Выберите, какие данные показывать в уведомлении о печати, и перетащите их в нужном порядке.",
+  "notifContentPreview": "Предпросмотр",
+  "notifFieldProgress": "Прогресс",
+  "notifFieldRemaining": "Осталось времени",
+  "notifFieldEta": "Время окончания",
+  "notifFieldHotend": "Темп. сопла",
+  "notifFieldBed": "Темп. стола",
   "lightingToggleSection": "Необязательно — режим переключения",
   "lightingStatusHint": "Например: output_pin caselight",
 

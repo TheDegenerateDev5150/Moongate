@@ -1124,6 +1124,34 @@ class AppLocalizationsPl extends AppLocalizations {
   String get notifPollIntervalTitle => 'Częstotliwość aktualizacji';
 
   @override
+  String get notifContentTitle => 'Zawartość powiadomienia';
+
+  @override
+  String get notifContentSubtitle => 'Wybierz i zmień kolejność';
+
+  @override
+  String get notifContentIntro =>
+      'Wybierz, które informacje pojawiają się w powiadomieniu o druku, i przeciągnij je w żądanej kolejności.';
+
+  @override
+  String get notifContentPreview => 'Podgląd';
+
+  @override
+  String get notifFieldProgress => 'Postęp';
+
+  @override
+  String get notifFieldRemaining => 'Pozostały czas';
+
+  @override
+  String get notifFieldEta => 'Czas zakończenia';
+
+  @override
+  String get notifFieldHotend => 'Temp. dyszy';
+
+  @override
+  String get notifFieldBed => 'Temp. stołu';
+
+  @override
   String get printAlertReady => 'Drukarka gotowa';
 
   @override

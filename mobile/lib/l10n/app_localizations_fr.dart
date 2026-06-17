@@ -1139,6 +1139,34 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notifPollIntervalTitle => 'Fréquence de mise à jour';
 
   @override
+  String get notifContentTitle => 'Contenu de la notification';
+
+  @override
+  String get notifContentSubtitle => 'Choisir et réorganiser l\'affichage';
+
+  @override
+  String get notifContentIntro =>
+      'Choisissez les détails affichés dans la notification d\'impression en direct, et faites-les glisser dans l\'ordre souhaité.';
+
+  @override
+  String get notifContentPreview => 'Aperçu';
+
+  @override
+  String get notifFieldProgress => 'Progression';
+
+  @override
+  String get notifFieldRemaining => 'Temps restant';
+
+  @override
+  String get notifFieldEta => 'Heure de fin';
+
+  @override
+  String get notifFieldHotend => 'Temp. buse';
+
+  @override
+  String get notifFieldBed => 'Temp. plateau';
+
+  @override
   String get printAlertReady => 'Imprimante prête';
 
   @override

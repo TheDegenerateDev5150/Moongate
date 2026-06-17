@@ -1,5 +1,15 @@
 [
   {
+    "version": "v0.9.9",
+    "bullets": [
+      "Your print notification now shows when the print will finish — the projected clock time (e.g. 1:20 PM) sits alongside the time remaining, the same ETA Klipper and Mainsail show. It follows your app language for 12- or 24-hour time",
+      "Make the notification your own — a new Notification content screen (under Print notifications in the menu) lets you choose exactly which details show: progress, time remaining, finish time, hotend temperature and bed temperature",
+      "Drag them into any order you like and switch off the ones you don't care about — want only the finish time and not the running time? Turn it off. A live preview updates as you tweak, and your choices are saved and travel in your backups",
+      "Tidier menu — the Lighting option now sits right under Font size for quicker reach, instead of down in the About section",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.8",
     "bullets": [
       "Re-opening a printer is now instant — the full Mainsail/Fluidd page stays loaded in the background when you go back to the dashboard, so opening a printer again no longer replays Mainsail's \"Initializing…\" every time. The difference is biggest over the tunnel, away from home",

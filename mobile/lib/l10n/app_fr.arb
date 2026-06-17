@@ -1,5 +1,14 @@
 {
   "@@locale": "fr",
+  "notifContentTitle": "Contenu de la notification",
+  "notifContentSubtitle": "Choisir et réorganiser l'affichage",
+  "notifContentIntro": "Choisissez les détails affichés dans la notification d'impression en direct, et faites-les glisser dans l'ordre souhaité.",
+  "notifContentPreview": "Aperçu",
+  "notifFieldProgress": "Progression",
+  "notifFieldRemaining": "Temps restant",
+  "notifFieldEta": "Heure de fin",
+  "notifFieldHotend": "Temp. buse",
+  "notifFieldBed": "Temp. plateau",
   "lightingToggleSection": "Facultatif — méthode bascule",
   "lightingStatusHint": "Exemple : output_pin caselight",
 

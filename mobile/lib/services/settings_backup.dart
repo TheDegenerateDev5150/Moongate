@@ -33,6 +33,8 @@ class SettingsBackup {
     'dashboard_camera_refresh':    _Kind.string,
     'print_notifications_enabled': _Kind.boolean,
     'notif_poll_interval':         _Kind.string,
+    'notif_fields_order':          _Kind.string,
+    'notif_fields_enabled':        _Kind.string,
     'app_locale':                  _Kind.string,
     'show_camera_config_icons':    _Kind.boolean,
   };

@@ -520,6 +520,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     const Divider(),
 
+                    // ── Lighting ──────────────────────────────────────────────
+                    // Pulled up here (right under Font size) for quick reach —
+                    // it was previously buried near the bottom of the About list.
+                    ListTile(
+                      leading: const Icon(Icons.lightbulb_outline),
+                      title: Text(l.lightingTitle),
+                      subtitle: Text(l.lightingMenuSubtitle),
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/lighting').then((_) => _load());
+                      },
+                    ),
+
+                    const Divider(),
+
                     // ── Dashboard layout ──────────────────────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -676,6 +691,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           },
                         ),
                       ),
+                      // Edit which fields show in the notification + their order.
+                      ListTile(
+                        leading: const Icon(Icons.format_list_bulleted),
+                        title: Text(l.notifContentTitle),
+                        subtitle: Text(l.notifContentSubtitle),
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/settings/notifications');
+                        },
+                      ),
                     ],
 
                     const Divider(),
@@ -734,15 +759,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         context.push('/settings/app-lock');
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.lightbulb_outline),
-                      title: Text(l.lightingTitle),
-                      subtitle: Text(l.lightingMenuSubtitle),
-                      onTap: () {
-                        Navigator.pop(context);
-                        context.push('/lighting').then((_) => _load());
                       },
                     ),
                     ListTile(
@@ -917,6 +933,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(dashboardCameraRefreshProvider.notifier).load();
     await ref.read(showCameraConfigIconsProvider.notifier).load();
     await ref.read(printNotificationsEnabledProvider.notifier).load();
+    await ref.read(notificationFieldsProvider.notifier).load();
     await PrintNotificationService.instance
         .sync(ref.read(printNotificationsEnabledProvider));
   }

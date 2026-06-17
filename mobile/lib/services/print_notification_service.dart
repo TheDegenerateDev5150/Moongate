@@ -6,9 +6,12 @@ import 'dart:ui' as ui;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/notif_fields.dart';
 import '../models/printer_config.dart';
 import 'printer_registry.dart';
 import 'supabase_service.dart';
@@ -166,6 +169,9 @@ class _PrintTaskHandler extends TaskHandler {
   bool _busy = false;
   final Map<String, String> _lastState = {};
   late AppLocalizations _l;
+  // Which notification segments to show + their order — re-read from prefs each
+  // tick (the user edits them on the main isolate). Defaults to all-on.
+  NotifFieldsConfig _fields = NotifFieldsConfig.defaults();
 
   void _log(String msg) => dev.log(msg, name: 'MOONGATE/NOTIF');
 
@@ -200,6 +206,13 @@ class _PrintTaskHandler extends TaskHandler {
 
     _l = await _loadL10n(); // localise the notification to the app's language
 
+    // Locale-aware 12/24h clock for the print-finish ETA. This background
+    // isolate has no BuildContext (so no TimeOfDay.format); intl's locale
+    // formatter needs its symbol data loaded once before DateFormat.jm runs.
+    try {
+      await initializeDateFormatting();
+    } catch (_) {}
+
     _tick(); // immediate first poll so the notification isn't empty for 30s
   }
 
@@ -221,6 +234,16 @@ class _PrintTaskHandler extends TaskHandler {
     if (_busy) return;
     _busy = true;
     try {
+      // Re-read the notification-content config the user may have changed on the
+      // main isolate. SharedPreferences caches per-isolate, so reload() first or
+      // we'd never see their edits (same gotcha as the printer-set refresh).
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
+      _fields = NotifFieldsConfig.fromPrefs(
+        prefs.getString(kNotifFieldsOrderKey),
+        prefs.getString(kNotifFieldsEnabledKey),
+      );
+
       await PrinterRegistry.instance.load();
       final printers = PrinterRegistry.instance.printers;
 
@@ -440,7 +463,6 @@ class _PrintTaskHandler extends TaskHandler {
   String _statusLine(String name, _Poll? s, {bool withEmoji = false}) {
     final e = withEmoji ? '${_emoji(s)} ' : '';
     if (s == null) return '$e$name — ${_l.printStatusOffline}';
-    final temps = '${s.hotend.round()}°/${s.bed.round()}°';
     if (_warming(s)) {
       final parts = <String>[
         if (s.hotendTarget > 0) '${s.hotend.round()}→${s.hotendTarget.round()}°',
@@ -450,18 +472,9 @@ class _PrintTaskHandler extends TaskHandler {
     }
     switch (s.state) {
       case 'printing':
-        {
-          final pct = (s.progress * 100).round();
-          final eta = _formatEta(s);
-          return eta != null
-              ? '$e$name — $pct% · ~$eta · $temps'
-              : '$e$name — $pct% · $temps';
-        }
+        return _composeLine(e, name, s);
       case 'paused':
-        {
-          final pct = (s.progress * 100).round();
-          return '$e$name — ${_l.printStatusPaused} $pct% · $temps';
-        }
+        return _composeLine(e, name, s, label: _l.printStatusPaused);
       case 'complete':
         return '$e$name — ${_l.printStatusComplete}';
       case 'cancelled':
@@ -477,6 +490,43 @@ class _PrintTaskHandler extends TaskHandler {
       case 'standby':
       default:
         return '$e$name — ${_l.printStatusReady}';
+    }
+  }
+
+  /// Assemble a printer's line from the user-chosen field set + order
+  /// ([_fields]). [label] (e.g. "Paused") leads the detail when present; the
+  /// enabled segments follow, joined by " · ". A field that doesn't apply yet
+  /// (remaining/ETA too early) or is switched off is skipped; with every field
+  /// off the line collapses to just the emoji + name.
+  String _composeLine(String prefix, String name, _Poll s, {String? label}) {
+    final segs = <String>[];
+    if (label != null) segs.add(label);
+    for (final f in _fields.order) {
+      if (!_fields.enabled.contains(f)) continue;
+      final seg = _fieldSegment(f, s);
+      if (seg != null) segs.add(seg);
+    }
+    return segs.isEmpty ? '$prefix$name' : '$prefix$name — ${segs.join(' · ')}';
+  }
+
+  /// Render one configured [field] for state [s], or null when it doesn't apply
+  /// (e.g. remaining/ETA before the print is far enough along to estimate).
+  String? _fieldSegment(NotifField field, _Poll s) {
+    switch (field) {
+      case NotifField.progress:
+        return '${(s.progress * 100).round()}%';
+      case NotifField.remaining:
+        final rem = _remainingSeconds(s);
+        return rem == null ? null : '~${_formatRemaining(rem)}';
+      case NotifField.eta:
+        final rem = _remainingSeconds(s);
+        if (rem == null) return null;
+        final clock = _formatFinishClock(rem);
+        return clock == null ? null : '$kNotifEtaMarker$clock';
+      case NotifField.hotend:
+        return '$kNotifHotendMarker${s.hotend.round()}°';
+      case NotifField.bed:
+        return '$kNotifBedMarker${s.bed.round()}°';
     }
   }
 
@@ -505,17 +555,37 @@ class _PrintTaskHandler extends TaskHandler {
     }
   }
 
-  /// Remaining time estimated from elapsed/progress (no extra metadata call).
-  /// Null while it's too early to be meaningful.
-  String? _formatEta(_Poll s) {
+  /// Print time remaining (seconds), estimated from elapsed/progress with no
+  /// extra metadata call. Null while it's too early — or implausibly long — to
+  /// be meaningful.
+  double? _remainingSeconds(_Poll s) {
     if (s.state != 'printing') return null;
     if (s.progress < 0.02 || s.printDurationSec < 30) return null;
     final remaining = s.printDurationSec * (1 - s.progress) / s.progress;
     if (remaining <= 0 || remaining > 100 * 3600) return null;
-    final d = Duration(seconds: remaining.round());
+    return remaining;
+  }
+
+  /// "1h05m" / "14m" — how much longer the print has to run.
+  String _formatRemaining(double seconds) {
+    final d = Duration(seconds: seconds.round());
     final h = d.inHours;
     final m = d.inMinutes % 60;
     return h > 0 ? '${h}h${m.toString().padLeft(2, '0')}m' : '${m}m';
+  }
+
+  /// Wall-clock time the print is projected to finish ("1:20 AM" / "13:20"),
+  /// localised 12/24h via the loaded UI locale — the same "ETA" Klipper and
+  /// Mainsail display. Null if the locale's date symbols didn't load, so the
+  /// line just falls back to showing the remaining duration alone.
+  String? _formatFinishClock(double remainingSeconds) {
+    try {
+      final finish =
+          DateTime.now().add(Duration(seconds: remainingSeconds.round()));
+      return DateFormat.jm(_l.localeName).format(finish);
+    } catch (_) {
+      return null;
+    }
   }
 
   // ── State-change alerts ─────────────────────────────────────────────────────

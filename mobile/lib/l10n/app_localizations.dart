@@ -2114,6 +2114,60 @@ abstract class AppLocalizations {
   /// **'Update frequency'**
   String get notifPollIntervalTitle;
 
+  /// Title of the screen (and its drawer item) for choosing which fields show in the print notification.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification content'**
+  String get notifContentTitle;
+
+  /// Subtitle under the Notification content drawer item.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose & reorder what\'s shown'**
+  String get notifContentSubtitle;
+
+  /// Intro text at the top of the Notification content screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick which details appear in the live print notification, and drag them into the order you want.'**
+  String get notifContentIntro;
+
+  /// Label above the live preview of the notification line.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get notifContentPreview;
+
+  /// Notification field name: the print progress percentage (e.g. 56%).
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get notifFieldProgress;
+
+  /// Notification field name: estimated time left on the print (e.g. ~14m).
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining'**
+  String get notifFieldRemaining;
+
+  /// Notification field name: the clock time the print is projected to finish (e.g. 1:20 PM).
+  ///
+  /// In en, this message translates to:
+  /// **'Finish time'**
+  String get notifFieldEta;
+
+  /// Notification field name: the hotend/nozzle temperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotend temp'**
+  String get notifFieldHotend;
+
+  /// Notification field name: the heated bed temperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Bed temp'**
+  String get notifFieldBed;
+
   /// Pop-up alert when a printer recovers to ready after an error (e.g. a firmware restart).
   ///
   /// In en, this message translates to:

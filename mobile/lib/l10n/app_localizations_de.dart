@@ -1129,6 +1129,34 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notifPollIntervalTitle => 'Aktualisierungsintervall';
 
   @override
+  String get notifContentTitle => 'Benachrichtigungsinhalt';
+
+  @override
+  String get notifContentSubtitle => 'Wählen & anordnen, was angezeigt wird';
+
+  @override
+  String get notifContentIntro =>
+      'Wähle, welche Details in der Live-Druckbenachrichtigung erscheinen, und ziehe sie in die gewünschte Reihenfolge.';
+
+  @override
+  String get notifContentPreview => 'Vorschau';
+
+  @override
+  String get notifFieldProgress => 'Fortschritt';
+
+  @override
+  String get notifFieldRemaining => 'Restzeit';
+
+  @override
+  String get notifFieldEta => 'Endzeit';
+
+  @override
+  String get notifFieldHotend => 'Hotend-Temp.';
+
+  @override
+  String get notifFieldBed => 'Bett-Temp.';
+
+  @override
   String get printAlertReady => 'Drucker bereit';
 
   @override

@@ -1136,6 +1136,34 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notifPollIntervalTitle => 'Frecuencia de actualización';
 
   @override
+  String get notifContentTitle => 'Contenido de la notificación';
+
+  @override
+  String get notifContentSubtitle => 'Elige y reordena lo que se muestra';
+
+  @override
+  String get notifContentIntro =>
+      'Elige qué detalles aparecen en la notificación de impresión en directo y arrástralos en el orden que quieras.';
+
+  @override
+  String get notifContentPreview => 'Vista previa';
+
+  @override
+  String get notifFieldProgress => 'Progreso';
+
+  @override
+  String get notifFieldRemaining => 'Tiempo restante';
+
+  @override
+  String get notifFieldEta => 'Hora de fin';
+
+  @override
+  String get notifFieldHotend => 'Temp. fusor';
+
+  @override
+  String get notifFieldBed => 'Temp. cama';
+
+  @override
   String get printAlertReady => 'Impresora lista';
 
   @override
