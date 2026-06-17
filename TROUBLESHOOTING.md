@@ -47,6 +47,10 @@ sudo systemctl restart KlipperScreen
 
 `127.0.0.1` is also sturdier than a LAN IP — it survives the Pi's address changing on a DHCP renewal. A client on a **separate device** (a standalone KlipperScreen tablet, a second Pi) can't use localhost and is fundamentally incompatible with the rebind; run it on the printer Pi instead.
 
+## The light bulb shows the wrong state (on when the light's off)
+
+The bulb's on/off comes from the **Light Status Source** you set for that printer (**menu → Lighting**). If it's blank, the bulb just tracks your taps and assumes the light starts *off* — so it can read backwards. Set it to the light's Klipper object: the `[output_pin …]`, `[led …]` or `[neopixel …]` section name from your `printer.cfg` — e.g. `output_pin caselight` (the object name, **not** a raw pin like `PE3`). The bulb then follows that object's real value and self-corrects on each poll, even when you switch the light from Mainsail.
+
 ## Tile shows "Connected — Printer idle"
 
 This is **not** an error — it's the v0.4 way of saying "the Pi is reachable, but Klipper isn't producing usable status right now". Common causes:
