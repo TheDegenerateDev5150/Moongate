@@ -48,7 +48,8 @@ MoongateApp                    (lib/app.dart — root widget, lifecycle observer
     ├─ /splash       → SplashScreen
     ├─ /dashboard    → DashboardScreen → many PrinterTile widgets
     ├─ /pair         → PairingScreen
-    ├─ /printer/:id  → PrinterScreen (WebView)
+    ├─ /printer/:id  → PrinterScreen (WebView, kept warm by PrinterWebViewCache)
+    ├─ /lighting     → LightingScreen (per-printer light setup)
     ├─ /settings     → SettingsScreen
     └─ /theme/custom → CustomThemeScreen
 ```
@@ -76,8 +77,9 @@ The `services/` directory has zero UI. Each file is a focused capability:
 |---|---|
 | `supabase_service.dart` | Talks to the cloud middleman. Anonymous sign-in, fetch the current access record for a printer, release a printer on un-pair, list-my-printers refresh |
 | `printer_access_cache.dart` | In-memory cache of `{tunnel_url, access_token}` per printer. Reuses a token until ~30 s before its expiry, then refreshes via the middleman. Used by every outbound call to the Pi |
-| `printer_status_service.dart` | The heart of the app. One instance per printer tile. Polls every 4 s. LAN-first when a cached LAN URL is known; falls back to the tunnel within a couple of seconds. Distinguishes Pi-up-but-printer-idle from totally-offline. Sniffs the printer's web UI (Mainsail / Fluidd) on first successful poll and persists it |
-| `print_control_service.dart` | Sends `pause` / `resume` / `cancel` / `firmware_restart`. Same per-call token retrieval, same LAN-first routing |
+| `printer_status_service.dart` | The heart of the app. One instance per printer tile. Polls every 4 s. LAN-first when a cached LAN URL is known; falls back to the tunnel within a couple of seconds. Distinguishes Pi-up-but-printer-idle from totally-offline. Sniffs the printer's web UI (Mainsail / Fluidd) on first successful poll and persists it. Also reads a printer's configured light object — when lighting is enabled — so the dashboard bulb shows the light's real on/off state |
+| `print_control_service.dart` | Sends `pause` / `resume` / `cancel` / `firmware_restart`, lists and runs Klipper macros (the macro sheet and the lighting on/off/toggle), and starts a stored G-code. Same per-call token retrieval, same LAN-first routing |
+| `printer_webview_cache.dart` | Keeps each printer's Mainsail/Fluidd `WebViewController` warm across visits to the dashboard, so re-opening a printer is instant (no reload). Owns the per-session token-cookie refresh and evicts least-recently-used sessions under OS memory pressure |
 | `printer_registry.dart` | Persistent printer list. `addClaimed` after a successful pair, `remove` plus middleman-release on un-pair, helpers to update individual fields like LAN URL, webcam transforms, and the detected UI type from a successful poll |
 | `update_service.dart` | One-shot GitHub `latest_version.json` fetch on app launch |
 
