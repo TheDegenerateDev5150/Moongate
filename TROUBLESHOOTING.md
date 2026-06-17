@@ -111,7 +111,7 @@ In v0.4.0 the app retries LAN on every poll, so this should self-correct within 
 
 After re-pairing a printer (reinstalling the app, moving to a new phone, or running `MOONGATE_RESET_OWNER`), the tile can sit on "Starting up…" for several minutes before it connects — most noticeable on networks where the app can't reach the Pi directly over local WiFi.
 
-Fixed in **plugin 0.6.7+**: the Pi now reports its connection to the cloud within seconds of the re-pair, instead of waiting for its next 5-minute check-in. **Re-run the Pi installer** (or update via **Mainsail → Software Updates → Moongate**) to get it. Scanning the QR instead of typing the GATE code also connects instantly over local WiFi.
+Fixed in **plugin 0.6.7+**: the Pi now reports its connection to the cloud within seconds of the re-pair, instead of waiting for its next 5-minute check-in. **Plugin 0.6.9** hardens this further — if the Pi hits a brief network hiccup at that exact moment (common on flaky-WiFi boards), it keeps retrying every few seconds rather than dropping back to the 5-minute wait. **Re-run the Pi installer** (or update via **Mainsail → Software Updates → Moongate**) to get the latest. Scanning the QR instead of typing the GATE code also connects instantly over local WiFi.
 
 ## Auth proxy returns 401 for me, not just attackers
 
