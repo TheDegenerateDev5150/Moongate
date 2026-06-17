@@ -9,6 +9,77 @@ class AppLocalizationsIt extends AppLocalizations {
   AppLocalizationsIt([String locale = 'it']) : super(locale);
 
   @override
+  String get lightingTitle => 'Illuminazione';
+
+  @override
+  String get lightingMenuSubtitle =>
+      'Controlla le luci delle tue stampanti dalla dashboard';
+
+  @override
+  String get lightingBanner =>
+      'Scegli quali stampanti hanno una luce controllabile. Per ognuna, attivala e imposta una coppia di macro Accendi + Spegni oppure una singola macro di Commutazione. Facoltativamente scegli una sorgente di stato così che la lampadina mostri lo stato reale.';
+
+  @override
+  String get lightingNoPrinters => 'Nessuna stampante da configurare per ora.';
+
+  @override
+  String get lightingShowOnTile => 'Mostra sulla scheda';
+
+  @override
+  String get lightingNeedMacro =>
+      'Imposta una coppia Accendi + Spegni o una macro di Commutazione per attivare.';
+
+  @override
+  String get lightingLoadFailed =>
+      'Impossibile caricare le macro di questa stampante (potrebbe essere offline). Inserisci i nomi manualmente qui sotto.';
+
+  @override
+  String get lightingOnMacro => 'Macro luce ON';
+
+  @override
+  String get lightingOffMacro => 'Macro luce OFF';
+
+  @override
+  String get lightingToggleMacro => 'Macro di commutazione';
+
+  @override
+  String get lightingToggleSection => 'Facoltativo — metodo di commutazione';
+
+  @override
+  String get lightingStatusSource => 'Sorgente di stato della luce';
+
+  @override
+  String get lightingStatusSourceHelp =>
+      'Facoltativo. Un oggetto Klipper (es. output_pin caselight) il cui valore indica a Moongate se la luce è accesa. Lascia vuoto per seguire invece i tuoi tocchi.';
+
+  @override
+  String get lightingStatusHint => 'Esempio: output_pin caselight';
+
+  @override
+  String get lightingNotSet => 'Non impostato';
+
+  @override
+  String get lightingPickMacro => 'Seleziona una macro';
+
+  @override
+  String get lightingPickStatusSource => 'Seleziona una sorgente di stato';
+
+  @override
+  String get lightingManualHint => 'Digita il nome esatto';
+
+  @override
+  String get lightingClear => 'Cancella';
+
+  @override
+  String get lightTurnOn => 'Accendi la luce';
+
+  @override
+  String get lightTurnOff => 'Spegni la luce';
+
+  @override
+  String get lightToggleFailed => 'Impossibile raggiungere la stampante';
+
+  @override
   String get updateNotesUnavailable =>
       'Impossibile caricare le novità — controlla la connessione o consultale su GitHub.';
 

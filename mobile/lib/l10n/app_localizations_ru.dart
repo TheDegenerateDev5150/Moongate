@@ -9,6 +9,76 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get lightingTitle => 'Освещение';
+
+  @override
+  String get lightingMenuSubtitle => 'Управляйте подсветкой принтеров с панели';
+
+  @override
+  String get lightingBanner =>
+      'Выберите, у каких принтеров есть управляемая подсветка. Для каждого включите её и задайте пару макросов «Вкл + Выкл» либо один макрос-переключатель. При желании укажите источник состояния, чтобы лампочка показывала реальное состояние.';
+
+  @override
+  String get lightingNoPrinters => 'Пока нет принтеров для настройки.';
+
+  @override
+  String get lightingShowOnTile => 'Показывать на плитке';
+
+  @override
+  String get lightingNeedMacro =>
+      'Задайте пару «Вкл + Выкл» или макрос-переключатель, чтобы включить.';
+
+  @override
+  String get lightingLoadFailed =>
+      'Не удалось загрузить макросы этого принтера (возможно, он не в сети). Введите имена вручную ниже.';
+
+  @override
+  String get lightingOnMacro => 'Макрос «Свет ВКЛ»';
+
+  @override
+  String get lightingOffMacro => 'Макрос «Свет ВЫКЛ»';
+
+  @override
+  String get lightingToggleMacro => 'Макрос-переключатель';
+
+  @override
+  String get lightingToggleSection => 'Необязательно — режим переключения';
+
+  @override
+  String get lightingStatusSource => 'Источник состояния света';
+
+  @override
+  String get lightingStatusSourceHelp =>
+      'Необязательно. Объект Klipper (например, output_pin caselight), по значению которого Moongate определяет, включён ли свет. Оставьте пустым, чтобы отслеживать состояние по вашим нажатиям.';
+
+  @override
+  String get lightingStatusHint => 'Например: output_pin caselight';
+
+  @override
+  String get lightingNotSet => 'Не задано';
+
+  @override
+  String get lightingPickMacro => 'Выберите макрос';
+
+  @override
+  String get lightingPickStatusSource => 'Выберите источник состояния';
+
+  @override
+  String get lightingManualHint => 'Введите точное имя';
+
+  @override
+  String get lightingClear => 'Очистить';
+
+  @override
+  String get lightTurnOn => 'Включить свет';
+
+  @override
+  String get lightTurnOff => 'Выключить свет';
+
+  @override
+  String get lightToggleFailed => 'Не удалось связаться с принтером';
+
+  @override
   String get updateNotesUnavailable =>
       'Не удалось загрузить список изменений — проверьте подключение или посмотрите на GitHub.';
 

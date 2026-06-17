@@ -61,6 +61,18 @@ class PrinterConfig {
   /// schema bump. Empty when nothing is starred.
   final List<String> favouriteMacros;
 
+  /// Per-printer lighting control (v0.9.8). [lightingEnabled] shows the bulb
+  /// icon on the tile's webcam; the user supplies EITHER an on+off macro pair
+  /// OR a single toggle macro, and optionally a [lightStatusObject] (a Klipper
+  /// object such as `output_pin caselight` / `led …`) whose live value drives
+  /// the lit/dark icon. All additive + optional, so they ride the v3 backup
+  /// envelope without a schema bump.
+  final bool    lightingEnabled;
+  final String? lightOnMacro;
+  final String? lightOffMacro;
+  final String? lightToggleMacro;
+  final String? lightStatusObject;
+
   const PrinterConfig({
     required this.id,
     required this.name,
@@ -72,6 +84,11 @@ class PrinterConfig {
     this.uiType,
     this.customCameraUrl,
     this.favouriteMacros = const [],
+    this.lightingEnabled   = false,
+    this.lightOnMacro,
+    this.lightOffMacro,
+    this.lightToggleMacro,
+    this.lightStatusObject,
   });
 
   PrinterConfig copyWith({
@@ -84,6 +101,11 @@ class PrinterConfig {
     String? uiType,
     Object? customCameraUrl = _sentinel,
     List<String>? favouriteMacros,
+    bool?   lightingEnabled,
+    Object? lightOnMacro      = _sentinel,
+    Object? lightOffMacro     = _sentinel,
+    Object? lightToggleMacro  = _sentinel,
+    Object? lightStatusObject = _sentinel,
   }) =>
       PrinterConfig(
         id:              id,
@@ -98,6 +120,19 @@ class PrinterConfig {
             ? this.customCameraUrl
             : customCameraUrl as String?,
         favouriteMacros: favouriteMacros ?? this.favouriteMacros,
+        lightingEnabled: lightingEnabled ?? this.lightingEnabled,
+        lightOnMacro: identical(lightOnMacro, _sentinel)
+            ? this.lightOnMacro
+            : lightOnMacro as String?,
+        lightOffMacro: identical(lightOffMacro, _sentinel)
+            ? this.lightOffMacro
+            : lightOffMacro as String?,
+        lightToggleMacro: identical(lightToggleMacro, _sentinel)
+            ? this.lightToggleMacro
+            : lightToggleMacro as String?,
+        lightStatusObject: identical(lightStatusObject, _sentinel)
+            ? this.lightStatusObject
+            : lightStatusObject as String?,
       );
 
   /// Normalise a user-typed printer address into a base [lanUrl] such as
@@ -168,6 +203,11 @@ class PrinterConfig {
         if (uiType != null) 'uiType': uiType,
         if (customCameraUrl != null) 'customCameraUrl': customCameraUrl,
         if (favouriteMacros.isNotEmpty) 'favouriteMacros': favouriteMacros,
+        if (lightingEnabled) 'lightingEnabled': lightingEnabled,
+        if (lightOnMacro != null) 'lightOnMacro': lightOnMacro,
+        if (lightOffMacro != null) 'lightOffMacro': lightOffMacro,
+        if (lightToggleMacro != null) 'lightToggleMacro': lightToggleMacro,
+        if (lightStatusObject != null) 'lightStatusObject': lightStatusObject,
       };
 
   factory PrinterConfig.fromJson(Map<String, dynamic> j) {
@@ -189,6 +229,11 @@ class PrinterConfig {
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      lightingEnabled:   j['lightingEnabled']   as bool?   ?? false,
+      lightOnMacro:      j['lightOnMacro']       as String?,
+      lightOffMacro:     j['lightOffMacro']      as String?,
+      lightToggleMacro:  j['lightToggleMacro']   as String?,
+      lightStatusObject: j['lightStatusObject']  as String?,
     );
   }
 
@@ -282,6 +327,11 @@ class PrinterStatus {
   /// cameras usually expose only a stream (e.g. .../video), not a snapshot.
   final bool webcamIsExternal;
 
+  /// Live light state from the configured [PrinterConfig.lightStatusObject]
+  /// (v0.9.8): true = on, false = off, null = no status object configured or
+  /// not yet known. Drives the lit/dark bulb on the tile.
+  final bool? lightOn;
+
   const PrinterStatus({
     required this.state,
     required this.progress,
@@ -300,6 +350,7 @@ class PrinterStatus {
     this.webcamRotation = 0,
     this.webcamTargetFps = 15,
     this.webcamIsExternal = false,
+    this.lightOn,
   });
 
   bool get isPrinting => state == 'printing' || state == 'paused';

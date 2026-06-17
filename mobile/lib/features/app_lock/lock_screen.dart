@@ -11,6 +11,7 @@ import '../../providers/settings_provider.dart';
 import '../../services/pin_service.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
+import '../../services/printer_webview_cache.dart';
 import 'pin_pad.dart';
 
 /// The full-screen lock shown by [AppLockGate] while the app is locked. Offers
@@ -126,6 +127,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     await ref.read(appLockEnabledProvider.notifier).set(false);
     await ref.read(biometricUnlockProvider.notifier).set(false);
     PrinterAccessCache.instance.clear();
+    PrinterWebViewCache.instance.clear();
     for (final p in List.of(PrinterRegistry.instance.printers)) {
       await PrinterRegistry.instance.remove(p.id);
     }

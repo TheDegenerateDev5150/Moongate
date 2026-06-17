@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
+import '../../services/printer_webview_cache.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -42,6 +43,7 @@ class SettingsScreen extends ConsumerWidget {
               );
               if (confirmed == true && context.mounted) {
                 PrinterAccessCache.instance.clear();
+                PrinterWebViewCache.instance.clear();
                 for (final p in List.of(PrinterRegistry.instance.printers)) {
                   await PrinterRegistry.instance.remove(p.id);
                 }

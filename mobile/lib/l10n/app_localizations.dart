@@ -110,6 +110,138 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// Title of the Lighting setup screen and its hamburger-menu entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Lighting'**
+  String get lightingTitle;
+
+  /// Subtitle of the Lighting item in the hamburger menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Control your printers\' lights from the dashboard'**
+  String get lightingMenuSubtitle;
+
+  /// Instruction banner at the top of the Lighting screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which printers have a light you can control. For each, turn it on and set either an On + Off macro pair, or a single Toggle macro. Optionally pick a status source so the bulb shows the real on/off state.'**
+  String get lightingBanner;
+
+  /// Empty state on the Lighting screen when no printers are paired.
+  ///
+  /// In en, this message translates to:
+  /// **'No printers to set up yet.'**
+  String get lightingNoPrinters;
+
+  /// Label by the per-printer switch that shows the light bulb on the dashboard tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on tile'**
+  String get lightingShowOnTile;
+
+  /// Hint shown when the enable switch is disabled because no light macro is set.
+  ///
+  /// In en, this message translates to:
+  /// **'Set an On + Off pair or a Toggle macro to enable.'**
+  String get lightingNeedMacro;
+
+  /// Shown on a printer's lighting card when its macro list couldn't be fetched.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this printer\'s macros (it may be offline). Type names manually below.'**
+  String get lightingLoadFailed;
+
+  /// Label for the macro that turns the light on.
+  ///
+  /// In en, this message translates to:
+  /// **'Lights ON macro'**
+  String get lightingOnMacro;
+
+  /// Label for the macro that turns the light off.
+  ///
+  /// In en, this message translates to:
+  /// **'Lights OFF macro'**
+  String get lightingOffMacro;
+
+  /// Label for a single macro that toggles the light.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle macro'**
+  String get lightingToggleMacro;
+
+  /// Section caption above the optional single-toggle macro field.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — toggle method'**
+  String get lightingToggleSection;
+
+  /// Label for the optional Klipper object that reports the light's on/off state.
+  ///
+  /// In en, this message translates to:
+  /// **'Light Status Source'**
+  String get lightingStatusSource;
+
+  /// Help text under the light status source field.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. The Klipper object that reports the light\'s state — e.g. output_pin caselight (not a raw pin like PE3). Leave blank to just track your taps.'**
+  String get lightingStatusSourceHelp;
+
+  /// Italic placeholder inside the Light Status Source text field; clears when the user types.
+  ///
+  /// In en, this message translates to:
+  /// **'Example: output_pin caselight'**
+  String get lightingStatusHint;
+
+  /// Placeholder shown for a lighting field that has no value selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get lightingNotSet;
+
+  /// Title of the dialog for choosing a macro.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a macro'**
+  String get lightingPickMacro;
+
+  /// Title of the dialog for choosing a light status object.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the light status pin'**
+  String get lightingPickStatusSource;
+
+  /// Label of the manual-entry field in the macro/object picker dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the exact name'**
+  String get lightingManualHint;
+
+  /// Button that clears a selected macro/object.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get lightingClear;
+
+  /// Tooltip on the dashboard bulb when the light is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn light on'**
+  String get lightTurnOn;
+
+  /// Tooltip on the dashboard bulb when the light is on.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn light off'**
+  String get lightTurnOff;
+
+  /// Snackbar shown when running the light macro failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the printer'**
+  String get lightToggleFailed;
+
   /// Shown in the update overlay when the changelog couldn't be fetched.
   ///
   /// In en, this message translates to:
