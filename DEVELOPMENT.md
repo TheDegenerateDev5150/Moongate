@@ -280,7 +280,7 @@ So **the only thing you commit by hand is code + screenshots + docs**. The relea
 
 > **Merging a non-release PR? Quiet-merge it with `[skip ci]`.** The build above runs on *every* push to `master` and rebuilds the APK for whatever `version:` is in `mobile/pubspec.yaml`. Merging a PR that **doesn't** bump the version therefore rebuilds the *current* release and **clobbers its existing Release asset** (`gh release upload --clobber`) — silently replacing the published APK with a fresh build (the `latest_version.json` manifest is left untouched when the build number hasn't changed). For deps / config / Pi-side-only PRs, put `[skip ci]` in the **merge-commit subject** so nothing rebuilds; the changes ride into the next versioned release.
 
-`ci.yml` runs `flutter analyze` and `flutter test` on PRs.
+`ci.yml` runs `flutter analyze` and `flutter test` on PRs (unit tests live in `mobile/test/`).
 
 ---
 

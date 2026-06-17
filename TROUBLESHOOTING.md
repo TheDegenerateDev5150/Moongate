@@ -153,6 +153,19 @@ You can point a tile at a camera that isn't connected to Klipper (e.g. an old ph
 - **Auto-detected camera wrong or missing?** Moongate reads the *first* webcam from Mainsail's webcam list. If you have several, set the one you want by hand with the gear, or reorder them in Mainsail.
 - **Gears in the way?** Turn them off under **Menu → Camera config icons** — that hides every tile's gear without affecting the camera feed.
 
+## My camera feeds all disappeared / show the logo
+
+If every tile shows the Mainsail/Fluidd placeholder instead of its feed, check **Menu → Camera feed → Show webcams** — that master switch turns all dashboard feeds off (a data saver) and back on. The full-screen camera view (the eye on a tile, or the camera icon on the printer page) still works even with the feeds off.
+
+## The power button isn't showing on my printer's tile
+
+The power button (bottom-left of a tile's camera) appears only when **Moonraker reports a power device** — a `[power …]` section in `moonraker.conf` (any type: GPIO, Shelly, TP-Link, Tasmota, …). It's detected automatically; there's no app setting. If it's missing:
+
+- **No power device configured.** Add a `[power <name>]` section to `moonraker.conf` and restart Moonraker.
+- **Moonraker isn't reachable.** The button needs to reach Moonraker over WiFi or the tunnel. A printer powered *off* by its own device is fine — Moonraker stays up, so the button shows (dim) and can switch it back on. But if the whole **Pi** is off, nothing answers and no button shows.
+
+Mid-print, the button is **greyed out** for a device Moonraker marks `locked_while_printing` — it won't cut power to a running print.
+
 ## QR scan won't work / camera fails
 
 - Grant camera permission when prompted, or via **Settings → Apps → Moongate → Permissions → Camera**.
