@@ -1,5 +1,11 @@
 {
   "@@locale": "es",
+  "powerTurnOn": "Encender",
+  "powerTurnOff": "Apagar",
+  "powerConfirmOn": "¿Encender {name}?",
+  "powerConfirmOff": "¿Apagar {name}?",
+  "powerToggleFailed": "No se pudo cambiar la alimentación",
+  "powerLockedWhilePrinting": "No se puede apagar mientras imprime",
   "notifContentTitle": "Contenido de la notificación",
   "notifContentSubtitle": "Elige y reordena lo que se muestra",
   "notifContentIntro": "Elige qué detalles aparecen en la notificación de impresión en directo y arrástralos en el orden que quieras.",

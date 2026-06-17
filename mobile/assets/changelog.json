@@ -1,5 +1,14 @@
 [
   {
+    "version": "v0.9.10",
+    "bullets": [
+      "Power your printer on or off right from its dashboard tile — if a printer has a Moonraker power device (a [power ...] section, any type: GPIO, Shelly, TP-Link, etc.), a power button appears in the bottom-left corner of its camera. Tap it and confirm to switch the printer on or off",
+      "It works even when the printer is off, since Moonraker keeps running — so you can wake a powered-down printer straight from its tile. Powering off is blocked while a print is running, for devices Moonraker locks",
+      "Tidier idle tiles — a printer that's offline or sitting idle (Klipper not running) now shows just its name, instead of a meaningless 0°/0° temperature row",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.9",
     "bullets": [
       "Your print notification now shows when the print will finish — the projected clock time (e.g. 1:20 PM) sits alongside the time remaining, the same ETA Klipper and Mainsail show. It follows your app language for 12- or 24-hour time",

@@ -1,5 +1,11 @@
 {
   "@@locale": "de",
+  "powerTurnOn": "Einschalten",
+  "powerTurnOff": "Ausschalten",
+  "powerConfirmOn": "{name} einschalten?",
+  "powerConfirmOff": "{name} ausschalten?",
+  "powerToggleFailed": "Stromzufuhr konnte nicht geändert werden",
+  "powerLockedWhilePrinting": "Während des Drucks nicht ausschaltbar",
   "notifContentTitle": "Benachrichtigungsinhalt",
   "notifContentSubtitle": "Wählen & anordnen, was angezeigt wird",
   "notifContentIntro": "Wähle, welche Details in der Live-Druckbenachrichtigung erscheinen, und ziehe sie in die gewünschte Reihenfolge.",

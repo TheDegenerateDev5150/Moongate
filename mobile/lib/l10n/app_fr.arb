@@ -1,5 +1,11 @@
 {
   "@@locale": "fr",
+  "powerTurnOn": "Allumer",
+  "powerTurnOff": "Éteindre",
+  "powerConfirmOn": "Allumer {name} ?",
+  "powerConfirmOff": "Éteindre {name} ?",
+  "powerToggleFailed": "Impossible de changer l'alimentation",
+  "powerLockedWhilePrinting": "Extinction impossible pendant l'impression",
   "notifContentTitle": "Contenu de la notification",
   "notifContentSubtitle": "Choisir et réorganiser l'affichage",
   "notifContentIntro": "Choisissez les détails affichés dans la notification d'impression en direct, et faites-les glisser dans l'ordre souhaité.",

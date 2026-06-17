@@ -1,5 +1,11 @@
 {
   "@@locale": "pl",
+  "powerTurnOn": "Włącz",
+  "powerTurnOff": "Wyłącz",
+  "powerConfirmOn": "Włączyć {name}?",
+  "powerConfirmOff": "Wyłączyć {name}?",
+  "powerToggleFailed": "Nie udało się zmienić zasilania",
+  "powerLockedWhilePrinting": "Nie można wyłączyć podczas druku",
   "notifContentTitle": "Zawartość powiadomienia",
   "notifContentSubtitle": "Wybierz i zmień kolejność",
   "notifContentIntro": "Wybierz, które informacje pojawiają się w powiadomieniu o druku, i przeciągnij je w żądanej kolejności.",

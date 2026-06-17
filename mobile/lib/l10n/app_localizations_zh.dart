@@ -77,6 +77,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lightToggleFailed => '无法连接打印机';
 
   @override
+  String get powerTurnOn => '开机';
+
+  @override
+  String get powerTurnOff => '关机';
+
+  @override
+  String powerConfirmOn(String name) {
+    return '要开启 $name 吗？';
+  }
+
+  @override
+  String powerConfirmOff(String name) {
+    return '要关闭 $name 吗？';
+  }
+
+  @override
+  String get powerToggleFailed => '无法切换电源';
+
+  @override
+  String get powerLockedWhilePrinting => '打印时无法关机';
+
+  @override
   String get updateNotesUnavailable => '无法加载更新内容，请检查网络连接，或在 GitHub 上查看。';
 
   @override

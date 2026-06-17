@@ -81,6 +81,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get lightToggleFailed => 'Imprimante injoignable';
 
   @override
+  String get powerTurnOn => 'Allumer';
+
+  @override
+  String get powerTurnOff => 'Éteindre';
+
+  @override
+  String powerConfirmOn(String name) {
+    return 'Allumer $name ?';
+  }
+
+  @override
+  String powerConfirmOff(String name) {
+    return 'Éteindre $name ?';
+  }
+
+  @override
+  String get powerToggleFailed => 'Impossible de changer l\'alimentation';
+
+  @override
+  String get powerLockedWhilePrinting =>
+      'Extinction impossible pendant l\'impression';
+
+  @override
   String get updateNotesUnavailable =>
       'Impossible de charger les nouveautés — vérifiez votre connexion, ou consultez-les sur GitHub.';
 

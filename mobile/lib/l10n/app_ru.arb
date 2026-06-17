@@ -1,5 +1,11 @@
 {
   "@@locale": "ru",
+  "powerTurnOn": "Включить",
+  "powerTurnOff": "Выключить",
+  "powerConfirmOn": "Включить {name}?",
+  "powerConfirmOff": "Выключить {name}?",
+  "powerToggleFailed": "Не удалось изменить питание",
+  "powerLockedWhilePrinting": "Нельзя выключить во время печати",
   "notifContentTitle": "Содержимое уведомления",
   "notifContentSubtitle": "Выберите и измените порядок",
   "notifContentIntro": "Выберите, какие данные показывать в уведомлении о печати, и перетащите их в нужном порядке.",

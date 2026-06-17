@@ -80,6 +80,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lightToggleFailed => 'Couldn\'t reach the printer';
 
   @override
+  String get powerTurnOn => 'Turn on';
+
+  @override
+  String get powerTurnOff => 'Turn off';
+
+  @override
+  String powerConfirmOn(String name) {
+    return 'Turn $name on?';
+  }
+
+  @override
+  String powerConfirmOff(String name) {
+    return 'Turn $name off?';
+  }
+
+  @override
+  String get powerToggleFailed => 'Couldn\'t change the printer\'s power';
+
+  @override
+  String get powerLockedWhilePrinting => 'Can\'t power off while printing';
+
+  @override
   String get updateNotesUnavailable =>
       'Couldn\'t load what\'s new — check your connection, or view it on GitHub.';
 
