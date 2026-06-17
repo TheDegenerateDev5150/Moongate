@@ -1069,6 +1069,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notifPollIntervalTitle => '更新频率';
 
   @override
+  String get notifContentTitle => '通知内容';
+
+  @override
+  String get notifContentSubtitle => '选择并排序显示内容';
+
+  @override
+  String get notifContentIntro => '选择实时打印通知中显示的信息，并拖动以排列顺序。';
+
+  @override
+  String get notifContentPreview => '预览';
+
+  @override
+  String get notifFieldProgress => '进度';
+
+  @override
+  String get notifFieldRemaining => '剩余时间';
+
+  @override
+  String get notifFieldEta => '完成时间';
+
+  @override
+  String get notifFieldHotend => '喷头温度';
+
+  @override
+  String get notifFieldBed => '热床温度';
+
+  @override
   String get printAlertReady => '打印机就绪';
 
   @override

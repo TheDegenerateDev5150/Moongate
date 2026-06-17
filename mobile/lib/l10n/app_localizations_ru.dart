@@ -1125,6 +1125,34 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notifPollIntervalTitle => 'Частота обновления';
 
   @override
+  String get notifContentTitle => 'Содержимое уведомления';
+
+  @override
+  String get notifContentSubtitle => 'Выберите и измените порядок';
+
+  @override
+  String get notifContentIntro =>
+      'Выберите, какие данные показывать в уведомлении о печати, и перетащите их в нужном порядке.';
+
+  @override
+  String get notifContentPreview => 'Предпросмотр';
+
+  @override
+  String get notifFieldProgress => 'Прогресс';
+
+  @override
+  String get notifFieldRemaining => 'Осталось времени';
+
+  @override
+  String get notifFieldEta => 'Время окончания';
+
+  @override
+  String get notifFieldHotend => 'Темп. сопла';
+
+  @override
+  String get notifFieldBed => 'Темп. стола';
+
+  @override
   String get printAlertReady => 'Принтер готов';
 
   @override

@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/notif_fields.dart';
+
 // ---------------------------------------------------------------------------
 // Theme mode
 // ---------------------------------------------------------------------------
@@ -510,4 +512,58 @@ class NotifPollIntervalNotifier extends Notifier<NotifPollInterval> {
 final notifPollIntervalProvider =
     NotifierProvider<NotifPollIntervalNotifier, NotifPollInterval>(
   NotifPollIntervalNotifier.new,
+);
+
+// ---------------------------------------------------------------------------
+// Notification content  (which fields show in the print notification + order)
+// ---------------------------------------------------------------------------
+
+/// The set + order of fields shown in the persistent print-status notification
+/// (progress, time-remaining, finish-ETA, hotend, bed). Edited on the
+/// Notification-content screen; read by the background isolate straight from
+/// SharedPreferences (see [NotifFieldsConfig.fromPrefs]). Travels in backups.
+class NotificationFieldsNotifier extends Notifier<NotifFieldsConfig> {
+  @override
+  NotifFieldsConfig build() => NotifFieldsConfig.defaults();
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = NotifFieldsConfig.fromPrefs(
+      prefs.getString(kNotifFieldsOrderKey),
+      prefs.getString(kNotifFieldsEnabledKey),
+    );
+  }
+
+  Future<void> _persist() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(kNotifFieldsOrderKey, state.orderPref);
+    await prefs.setString(kNotifFieldsEnabledKey, state.enabledPref);
+  }
+
+  /// Show or hide [field].
+  Future<void> setEnabled(NotifField field, bool on) async {
+    final next = {...state.enabled};
+    if (on) {
+      next.add(field);
+    } else {
+      next.remove(field);
+    }
+    state = NotifFieldsConfig(state.order, next);
+    await _persist();
+  }
+
+  /// Move a field within the display order (ReorderableListView indices).
+  Future<void> reorder(int oldIndex, int newIndex) async {
+    final order = List.of(state.order);
+    if (newIndex > oldIndex) newIndex -= 1;
+    final moved = order.removeAt(oldIndex);
+    order.insert(newIndex, moved);
+    state = NotifFieldsConfig(order, state.enabled);
+    await _persist();
+  }
+}
+
+final notificationFieldsProvider =
+    NotifierProvider<NotificationFieldsNotifier, NotifFieldsConfig>(
+  NotificationFieldsNotifier.new,
 );

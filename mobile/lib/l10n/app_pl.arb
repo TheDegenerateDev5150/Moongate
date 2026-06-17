@@ -1,5 +1,14 @@
 {
   "@@locale": "pl",
+  "notifContentTitle": "Zawartość powiadomienia",
+  "notifContentSubtitle": "Wybierz i zmień kolejność",
+  "notifContentIntro": "Wybierz, które informacje pojawiają się w powiadomieniu o druku, i przeciągnij je w żądanej kolejności.",
+  "notifContentPreview": "Podgląd",
+  "notifFieldProgress": "Postęp",
+  "notifFieldRemaining": "Pozostały czas",
+  "notifFieldEta": "Czas zakończenia",
+  "notifFieldHotend": "Temp. dyszy",
+  "notifFieldBed": "Temp. stołu",
   "lightingToggleSection": "Opcjonalnie — metoda przełączania",
   "lightingStatusHint": "Przykład: output_pin caselight",
 

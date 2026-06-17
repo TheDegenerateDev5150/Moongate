@@ -1,5 +1,14 @@
 {
   "@@locale": "es",
+  "notifContentTitle": "Contenido de la notificación",
+  "notifContentSubtitle": "Elige y reordena lo que se muestra",
+  "notifContentIntro": "Elige qué detalles aparecen en la notificación de impresión en directo y arrástralos en el orden que quieras.",
+  "notifContentPreview": "Vista previa",
+  "notifFieldProgress": "Progreso",
+  "notifFieldRemaining": "Tiempo restante",
+  "notifFieldEta": "Hora de fin",
+  "notifFieldHotend": "Temp. fusor",
+  "notifFieldBed": "Temp. cama",
   "lightingToggleSection": "Opcional: método de alternar",
   "lightingStatusHint": "Ejemplo: output_pin caselight",
 

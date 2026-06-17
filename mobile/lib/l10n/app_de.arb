@@ -1,5 +1,14 @@
 {
   "@@locale": "de",
+  "notifContentTitle": "Benachrichtigungsinhalt",
+  "notifContentSubtitle": "Wählen & anordnen, was angezeigt wird",
+  "notifContentIntro": "Wähle, welche Details in der Live-Druckbenachrichtigung erscheinen, und ziehe sie in die gewünschte Reihenfolge.",
+  "notifContentPreview": "Vorschau",
+  "notifFieldProgress": "Fortschritt",
+  "notifFieldRemaining": "Restzeit",
+  "notifFieldEta": "Endzeit",
+  "notifFieldHotend": "Hotend-Temp.",
+  "notifFieldBed": "Bett-Temp.",
   "lightingToggleSection": "Optional – Umschalt-Methode",
   "lightingStatusHint": "Beispiel: output_pin caselight",
 
