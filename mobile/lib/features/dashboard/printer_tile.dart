@@ -180,6 +180,12 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
       PrinterConnection.offline => Colors.transparent,
     };
 
+    // Settled-offline tiles ("Printer unreachable") have no controls row and no
+    // live temperatures to show — just the name. Let the placeholder feed fill
+    // the whole tile then (no fixed square), so there's no dead band under the
+    // name. Active/connecting tiles keep the square + temps below.
+    final isOffline = _overlayState(_status) == 'offline';
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -191,62 +197,77 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
             Container(height: 3, color: connColor),
 
             // ── Webcam ───────────────────────────────────────────────────
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  WebcamView(
-                    webcamSnapshotUrl: _status.webcamSnapshotUrl,
-                    webcamFlipH:     _status.webcamFlipH,
-                    webcamFlipV:     _status.webcamFlipV,
-                    webcamRotation:  _status.webcamRotation,
-                    webcamTargetFps: _status.webcamTargetFps,
-                    webcamIsExternal: _status.webcamIsExternal,
-                    uiType: _uiType,
-                  ),
-                  // Overlay shown while we don't yet have a usable
-                  // status (first poll in flight, Pi waiting for its first
-                  // heartbeat, or settled offline). When the UI type is
-                  // known we fall through to the logo + a small status
-                  // hint instead of a generic spinner — so a powered-off
-                  // K3 still looks like the K3, not a blank loading tile.
-                  if (_overlayState(_status) case final overlay?)
-                    _ConnectionProbe(state: overlay, uiType: _uiType),
-                  // ── Status badge ───────────────────────────────────────────
-                  // Only shown when connected — the probe overlay provides the
-                  // status context while offline/connecting.
-                  if (_status.connection != PrinterConnection.offline &&
-                      _status.state != 'connecting')
+            // A fixed 1:1 box so the feed always reads as a clean square,
+            // independent of how much status text sits below it. The dashboard
+            // grid sizes each tile's height as (tile width + a slim text band),
+            // so this square spans the full tile width with no letterboxing.
+            // Flexible+loose is a safety valve: on the busiest tile (printing,
+            // with a filename) or under large accessibility text the band can
+            // exceed its reserve, and the square gives back a little height
+            // instead of overflowing. BoxFit.cover still crops — no distortion.
+            // When offline, FlexFit.tight instead lets the placeholder fill the
+            // tile (AspectRatio yields its ratio under a tight constraint), so a
+            // controls-less offline tile has no empty band beneath its name.
+            Flexible(
+              fit: isOffline ? FlexFit.tight : FlexFit.loose,
+              child: AspectRatio(
+                aspectRatio: 1.0,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    WebcamView(
+                      webcamSnapshotUrl: _status.webcamSnapshotUrl,
+                      webcamFlipH:     _status.webcamFlipH,
+                      webcamFlipV:     _status.webcamFlipV,
+                      webcamRotation:  _status.webcamRotation,
+                      webcamTargetFps: _status.webcamTargetFps,
+                      webcamIsExternal: _status.webcamIsExternal,
+                      uiType: _uiType,
+                    ),
+                    // Overlay shown while we don't yet have a usable
+                    // status (first poll in flight, Pi waiting for its first
+                    // heartbeat, or settled offline). When the UI type is
+                    // known we fall through to the logo + a small status
+                    // hint instead of a generic spinner — so a powered-off
+                    // K3 still looks like the K3, not a blank loading tile.
+                    if (_overlayState(_status) case final overlay?)
+                      _ConnectionProbe(state: overlay, uiType: _uiType),
+                    // ── Status badge ───────────────────────────────────────────
+                    // Only shown when connected — the probe overlay provides the
+                    // status context while offline/connecting.
+                    if (_status.connection != PrinterConnection.offline &&
+                        _status.state != 'connecting')
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: _StatusBadge(status: _status),
+                      ),
+                    // Camera config gear (top-right). Lets the user point this
+                    // tile at an external camera (e.g. a phone webcam). The
+                    // button watches the "show camera icons" setting and renders
+                    // nothing when it's off, so it never overlaps the feed.
                     Positioned(
-                      top: 8,
-                      left: 8,
-                      child: _StatusBadge(status: _status),
+                      top: 6,
+                      right: 6,
+                      child: _CameraConfigButton(
+                        printer: widget.printer,
+                        onApplied: _statusService.pollNow,
+                      ),
                     ),
-                  // Camera config gear (top-right). Lets the user point this
-                  // tile at an external camera (e.g. a phone webcam). The
-                  // button watches the "show camera icons" setting and renders
-                  // nothing when it's off, so it never overlaps the feed.
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: _CameraConfigButton(
-                      printer: widget.printer,
-                      onApplied: _statusService.pollNow,
-                    ),
-                  ),
-                  // Expand-to-full-screen camera (bottom-right). Shown only
-                  // when there's actually a live feed to open. Pushes the same
-                  // native camera view the printer page uses (pinch-to-zoom,
-                  // LAN-direct / tunnel-proxied snapshot URL) — a one-tap
-                  // shortcut from the dashboard. The tile's own tap still opens
-                  // the printer page; this button absorbs its own tap.
-                  if ((_status.webcamSnapshotUrl ?? '').isNotEmpty)
-                    Positioned(
-                      bottom: 8,
-                      right: 8,
-                      child: _CameraExpandButton(printer: widget.printer),
-                    ),
-                ],
+                    // Expand-to-full-screen camera (bottom-right). Shown only
+                    // when there's actually a live feed to open. Pushes the same
+                    // native camera view the printer page uses (pinch-to-zoom,
+                    // LAN-direct / tunnel-proxied snapshot URL) — a one-tap
+                    // shortcut from the dashboard. The tile's own tap still opens
+                    // the printer page; this button absorbs its own tap.
+                    if ((_status.webcamSnapshotUrl ?? '').isNotEmpty)
+                      Positioned(
+                        bottom: 8,
+                        right: 8,
+                        child: _CameraExpandButton(printer: widget.printer),
+                      ),
+                  ],
+                ),
               ),
             ),
 
@@ -322,33 +343,37 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      _TempChip(
-                        icon: Icons.whatshot,
-                        color: Colors.deepOrange,
-                        temp: _status.hotendTemp,
-                        target: _status.hotendTarget,
-                      ),
-                      const SizedBox(width: 8),
-                      _TempChip(
-                        icon: Icons.bed,
-                        color: Colors.blue,
-                        temp: _status.bedTemp,
-                        target: _status.bedTarget,
-                      ),
-                      if (_status.chamberTemp > 0) ...[
+                  // Live temperatures — hidden when offline (no readings to
+                  // show; the tile then collapses to just the printer name).
+                  if (!isOffline) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        _TempChip(
+                          icon: Icons.whatshot,
+                          color: Colors.deepOrange,
+                          temp: _status.hotendTemp,
+                          target: _status.hotendTarget,
+                        ),
                         const SizedBox(width: 8),
                         _TempChip(
-                          icon: Icons.sensor_window,
-                          color: Colors.teal,
-                          temp: _status.chamberTemp,
-                          target: _status.chamberTarget,
+                          icon: Icons.bed,
+                          color: Colors.blue,
+                          temp: _status.bedTemp,
+                          target: _status.bedTarget,
                         ),
+                        if (_status.chamberTemp > 0) ...[
+                          const SizedBox(width: 8),
+                          _TempChip(
+                            icon: Icons.sensor_window,
+                            color: Colors.teal,
+                            temp: _status.chamberTemp,
+                            target: _status.chamberTarget,
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
+                    ),
+                  ],
                   if (_status.filename != null && _status.isPrinting)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
@@ -405,11 +430,11 @@ class _ActionRow extends StatelessWidget {
         (status.state == 'standby' ||
          status.state == 'complete' ||
          status.state == 'cancelled');
-    // Macros can run whenever Klipper is operational — idle/finished OR
-    // mid-print (e.g. SET_PAUSE_NEXT_LAYER) — but not in error/startup where it
-    // can't accept gcode. Sits beside the folder; a tap runs after a confirm.
-    final canRunMacros = active ||
-        status.state == 'standby' ||
+    // Macros are offered on idle/finished tiles (standby / complete /
+    // cancelled), beside the folder button; a tap runs after a confirm. They
+    // hide while printing/paused so the progress bar keeps its width — the
+    // buttons that matter then are pause/resume + stop, not a macro launcher.
+    final canRunMacros = status.state == 'standby' ||
         status.state == 'complete' ||
         status.state == 'cancelled';
 
@@ -482,7 +507,7 @@ class _ActionRow extends StatelessWidget {
               tooltip: l.tileOpenFiles,
               onTap: onOpenFiles,
             ),
-          // Run a Klipper macro — whenever Klipper can accept gcode.
+          // Run a Klipper macro — idle/finished tiles only (hidden mid-print).
           if (canRunMacros) ...[
             const SizedBox(width: 4),
             _Btn(
