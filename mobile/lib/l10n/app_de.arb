@@ -1,5 +1,7 @@
 {
   "@@locale": "de",
+  "dashboardShowWebcams": "Webcams anzeigen",
+  "dashboardShowWebcamsSubtitle": "Alle Kamera-Feeds im Dashboard ein- oder ausschalten",
   "powerTurnOn": "Einschalten",
   "powerTurnOff": "Ausschalten",
   "powerConfirmOn": "{name} einschalten?",

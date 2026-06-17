@@ -1,5 +1,7 @@
 {
   "@@locale": "es",
+  "dashboardShowWebcams": "Mostrar cámaras",
+  "dashboardShowWebcamsSubtitle": "Activar o desactivar todas las cámaras del panel",
   "powerTurnOn": "Encender",
   "powerTurnOff": "Apagar",
   "powerConfirmOn": "¿Encender {name}?",

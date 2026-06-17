@@ -99,6 +99,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerLockedWhilePrinting => '打印时无法关机';
 
   @override
+  String get dashboardShowWebcams => '显示摄像头';
+
+  @override
+  String get dashboardShowWebcamsSubtitle => '开启或关闭仪表板上的所有摄像头画面';
+
+  @override
   String get updateNotesUnavailable => '无法加载更新内容，请检查网络连接，或在 GitHub 上查看。';
 
   @override

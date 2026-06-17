@@ -57,6 +57,10 @@
   "@powerToggleFailed": {"description": "Snackbar shown when toggling a Moonraker power device failed."},
   "powerLockedWhilePrinting": "Can't power off while printing",
   "@powerLockedWhilePrinting": {"description": "Tooltip on the greyed-out power button when Moonraker locks the device during a print."},
+  "dashboardShowWebcams": "Show webcams",
+  "@dashboardShowWebcams": {"description": "Drawer toggle that turns all dashboard tile webcam feeds on or off."},
+  "dashboardShowWebcamsSubtitle": "Turn all dashboard camera feeds on or off",
+  "@dashboardShowWebcamsSubtitle": {"description": "Subtitle under the Show webcams drawer toggle."},
 
   "updateNotesUnavailable": "Couldn't load what's new — check your connection, or view it on GitHub.",
   "@updateNotesUnavailable": {"description": "Shown in the update overlay when the changelog couldn't be fetched."},

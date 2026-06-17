@@ -104,6 +104,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Extinction impossible pendant l\'impression';
 
   @override
+  String get dashboardShowWebcams => 'Afficher les webcams';
+
+  @override
+  String get dashboardShowWebcamsSubtitle =>
+      'Activer ou désactiver tous les flux des caméras du tableau de bord';
+
+  @override
   String get updateNotesUnavailable =>
       'Impossible de charger les nouveautés — vérifiez votre connexion, ou consultez-les sur GitHub.';
 

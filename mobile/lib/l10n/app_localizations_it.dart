@@ -102,6 +102,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Non spegnibile durante la stampa';
 
   @override
+  String get dashboardShowWebcams => 'Mostra webcam';
+
+  @override
+  String get dashboardShowWebcamsSubtitle =>
+      'Attiva o disattiva tutti i feed delle telecamere';
+
+  @override
   String get updateNotesUnavailable =>
       'Impossibile caricare le novità — controlla la connessione o consultale su GitHub.';
 

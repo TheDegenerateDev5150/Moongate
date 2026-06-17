@@ -102,6 +102,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Can\'t power off while printing';
 
   @override
+  String get dashboardShowWebcams => 'Show webcams';
+
+  @override
+  String get dashboardShowWebcamsSubtitle =>
+      'Turn all dashboard camera feeds on or off';
+
+  @override
   String get updateNotesUnavailable =>
       'Couldn\'t load what\'s new — check your connection, or view it on GitHub.';
 

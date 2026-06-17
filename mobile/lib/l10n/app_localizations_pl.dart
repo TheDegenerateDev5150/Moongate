@@ -101,6 +101,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Nie można wyłączyć podczas druku';
 
   @override
+  String get dashboardShowWebcams => 'Pokaż kamery';
+
+  @override
+  String get dashboardShowWebcamsSubtitle =>
+      'Włącz lub wyłącz wszystkie podglądy kamer';
+
+  @override
   String get updateNotesUnavailable =>
       'Nie udało się wczytać nowości — sprawdź połączenie lub zobacz je na GitHubie.';
 

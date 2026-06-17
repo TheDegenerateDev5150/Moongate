@@ -101,6 +101,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Нельзя выключить во время печати';
 
   @override
+  String get dashboardShowWebcams => 'Показывать камеры';
+
+  @override
+  String get dashboardShowWebcamsSubtitle =>
+      'Включить или выключить все камеры на панели';
+
+  @override
   String get updateNotesUnavailable =>
       'Не удалось загрузить список изменений — проверьте подключение или посмотрите на GitHub.';
 

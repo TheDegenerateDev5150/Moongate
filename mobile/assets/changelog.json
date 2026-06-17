@@ -5,6 +5,7 @@
       "Power your printer on or off right from its dashboard tile — if a printer has a Moonraker power device (a [power ...] section, any type: GPIO, Shelly, TP-Link, etc.), a power button appears in the bottom-left corner of its camera. Tap it and confirm to switch the printer on or off",
       "It works even when the printer is off, since Moonraker keeps running — so you can wake a powered-down printer straight from its tile. Powering off is blocked while a print is running, for devices Moonraker locks",
       "Tidier idle tiles — a printer that's offline or sitting idle (Klipper not running) now shows just its name, instead of a meaningless 0°/0° temperature row",
+      "New 'Show webcams' switch in the menu (under Camera feed) turns all dashboard camera feeds off or on at once — a quick data saver that also lets on-demand cameras idle. The full-screen camera view still works when you need it",
       "No Pi update needed — just update the app"
     ]
   },

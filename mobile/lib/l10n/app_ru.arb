@@ -1,5 +1,7 @@
 {
   "@@locale": "ru",
+  "dashboardShowWebcams": "Показывать камеры",
+  "dashboardShowWebcamsSubtitle": "Включить или выключить все камеры на панели",
   "powerTurnOn": "Включить",
   "powerTurnOff": "Выключить",
   "powerConfirmOn": "Включить {name}?",

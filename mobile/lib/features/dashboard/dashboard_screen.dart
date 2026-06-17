@@ -342,6 +342,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final autoArrange   = ref.watch(autoArrangeProvider);
     final cameraRefresh = ref.watch(dashboardCameraRefreshProvider);
     final showCameraIcons = ref.watch(showCameraConfigIconsProvider);
+    final webcamsEnabled = ref.watch(webcamsEnabledProvider);
     final printNotifications = ref.watch(printNotificationsEnabledProvider);
     final pollInterval = ref.watch(notifPollIntervalProvider);
 
@@ -633,10 +634,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             .set(s.first),
                       ),
                     ),
-                    // Show / hide the per-tile camera config gear.
+                    // Master on/off for all dashboard webcam feeds — turning it
+                    // off stops every tile's polling (a data saver) and shows
+                    // the placeholder; the full-screen camera view still works.
                     SwitchListTile(
                       dense: true,
                       secondary: const Icon(Icons.videocam_outlined),
+                      title: Text(l.dashboardShowWebcams),
+                      subtitle: Text(l.dashboardShowWebcamsSubtitle),
+                      value: webcamsEnabled,
+                      onChanged: (v) =>
+                          ref.read(webcamsEnabledProvider.notifier).set(v),
+                    ),
+                    // Show / hide the per-tile camera config gear.
+                    SwitchListTile(
+                      dense: true,
+                      secondary: const Icon(Icons.tune),
                       title: Text(l.dashboardShowCameraIcons),
                       subtitle: Text(l.dashboardShowCameraIconsSubtitle),
                       value: showCameraIcons,
@@ -934,6 +947,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(showCameraConfigIconsProvider.notifier).load();
     await ref.read(printNotificationsEnabledProvider.notifier).load();
     await ref.read(notificationFieldsProvider.notifier).load();
+    await ref.read(webcamsEnabledProvider.notifier).load();
     await PrintNotificationService.instance
         .sync(ref.read(printNotificationsEnabledProvider));
   }

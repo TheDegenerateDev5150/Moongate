@@ -103,6 +103,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Während des Drucks nicht ausschaltbar';
 
   @override
+  String get dashboardShowWebcams => 'Webcams anzeigen';
+
+  @override
+  String get dashboardShowWebcamsSubtitle =>
+      'Alle Kamera-Feeds im Dashboard ein- oder ausschalten';
+
+  @override
   String get updateNotesUnavailable =>
       'Neuigkeiten konnten nicht geladen werden – prüfe deine Verbindung oder sieh sie dir auf GitHub an.';
 

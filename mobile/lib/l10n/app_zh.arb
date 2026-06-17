@@ -1,5 +1,7 @@
 {
   "@@locale": "zh",
+  "dashboardShowWebcams": "显示摄像头",
+  "dashboardShowWebcamsSubtitle": "开启或关闭仪表板上的所有摄像头画面",
   "powerTurnOn": "开机",
   "powerTurnOff": "关机",
   "powerConfirmOn": "要开启 {name} 吗？",

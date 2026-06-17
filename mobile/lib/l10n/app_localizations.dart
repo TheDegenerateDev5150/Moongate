@@ -278,6 +278,18 @@ abstract class AppLocalizations {
   /// **'Can\'t power off while printing'**
   String get powerLockedWhilePrinting;
 
+  /// Drawer toggle that turns all dashboard tile webcam feeds on or off.
+  ///
+  /// In en, this message translates to:
+  /// **'Show webcams'**
+  String get dashboardShowWebcams;
+
+  /// Subtitle under the Show webcams drawer toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn all dashboard camera feeds on or off'**
+  String get dashboardShowWebcamsSubtitle;
+
   /// Shown in the update overlay when the changelog couldn't be fetched.
   ///
   /// In en, this message translates to:

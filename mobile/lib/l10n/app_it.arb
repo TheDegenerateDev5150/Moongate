@@ -1,5 +1,7 @@
 {
   "@@locale": "it",
+  "dashboardShowWebcams": "Mostra webcam",
+  "dashboardShowWebcamsSubtitle": "Attiva o disattiva tutti i feed delle telecamere",
   "powerTurnOn": "Accendi",
   "powerTurnOff": "Spegni",
   "powerConfirmOn": "Accendere {name}?",

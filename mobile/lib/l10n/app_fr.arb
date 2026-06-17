@@ -1,5 +1,7 @@
 {
   "@@locale": "fr",
+  "dashboardShowWebcams": "Afficher les webcams",
+  "dashboardShowWebcamsSubtitle": "Activer ou désactiver tous les flux des caméras du tableau de bord",
   "powerTurnOn": "Allumer",
   "powerTurnOff": "Éteindre",
   "powerConfirmOn": "Allumer {name} ?",

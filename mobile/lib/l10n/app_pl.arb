@@ -1,5 +1,7 @@
 {
   "@@locale": "pl",
+  "dashboardShowWebcams": "Pokaż kamery",
+  "dashboardShowWebcamsSubtitle": "Włącz lub wyłącz wszystkie podglądy kamer",
   "powerTurnOn": "Włącz",
   "powerTurnOff": "Wyłącz",
   "powerConfirmOn": "Włączyć {name}?",
