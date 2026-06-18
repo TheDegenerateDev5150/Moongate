@@ -479,6 +479,21 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get dashboardRestoreApplied =>
+      'Panel restaurado para coincidir con tu copia de seguridad.';
+
+  @override
+  String get dashboardRestoreReplaceTitle => '¿Reemplazar el panel?';
+
+  @override
+  String dashboardRestoreReplaceBody(String names) {
+    return 'Estas impresoras están en este panel pero no en la copia de seguridad: $names. Al restaurar se eliminarán para que el panel coincida exactamente con la copia. Siguen emparejadas: puedes volver a añadirlas o restaurarlas más tarde.';
+  }
+
+  @override
+  String get dashboardRestoreReplaceConfirm => 'Reemplazar';
+
+  @override
   String get dashboardRemoveSheetTitle => 'Quitar una impresora';
 
   @override

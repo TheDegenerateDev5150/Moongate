@@ -926,6 +926,30 @@ abstract class AppLocalizations {
   /// **'{added} printer(s) restored (list only). Re-pair each printer to bring it online.'**
   String dashboardRestoreListOnly(int added);
 
+  /// Snackbar after a restore that re-applied an existing dashboard (reordered / updated / removed tiles) with no brand-new printers added.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard restored to match your backup.'**
+  String get dashboardRestoreApplied;
+
+  /// Title of the confirm dialog shown when a restore would remove printers not in the backup.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace dashboard?'**
+  String get dashboardRestoreReplaceTitle;
+
+  /// Body of the restore-replace confirm dialog; lists the printers that would be removed.
+  ///
+  /// In en, this message translates to:
+  /// **'These printers are on this dashboard but not in the backup: {names}. Restoring will remove them so the dashboard matches the backup exactly. They stay paired — you can re-add or restore them later.'**
+  String dashboardRestoreReplaceBody(String names);
+
+  /// Confirm button on the restore-replace dialog; proceeds with removing printers not in the backup.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get dashboardRestoreReplaceConfirm;
+
   /// Heading of the bottom sheet listing printers to remove.
   ///
   /// In en, this message translates to:

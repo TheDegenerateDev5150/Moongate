@@ -453,6 +453,20 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get dashboardRestoreApplied => '已恢复仪表板以匹配你的备份。';
+
+  @override
+  String get dashboardRestoreReplaceTitle => '替换仪表板？';
+
+  @override
+  String dashboardRestoreReplaceBody(String names) {
+    return '以下打印机在此仪表板上，但不在备份中：$names。恢复将移除它们，使仪表板与备份完全一致。它们仍保持配对——你可以稍后重新添加或恢复。';
+  }
+
+  @override
+  String get dashboardRestoreReplaceConfirm => '替换';
+
+  @override
   String get dashboardRemoveSheetTitle => '移除打印机';
 
   @override

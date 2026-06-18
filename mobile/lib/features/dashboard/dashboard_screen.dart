@@ -924,14 +924,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   /// Lets the user pick a previously saved backup file via the SAF document
-  /// picker and restores its printer list. Existing printers are kept;
-  /// duplicates (same id) are skipped.
+  /// picker and restores it, making the dashboard match the backup exactly. If
+  /// the device has printers the backup doesn't include, [_confirmRestoreReplace]
+  /// asks before removing them.
   Future<void> _importConfig() async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     ImportOutcome? outcome;
     try {
-      outcome = await PrinterRegistry.instance.importFromBackupFile();
+      outcome = await PrinterRegistry.instance.importFromBackupFile(
+        confirmReplace: _confirmRestoreReplace,
+      );
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -951,7 +954,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await _reloadSettingsAfterRestore();
     if (!mounted) return;
     final String msg;
-    if (outcome.reconnected) {
+    if (outcome.added == 0) {
+      // Nothing new added — a re-apply onto an existing dashboard (reordered /
+      // config-updated / tiles removed). The count-based messages would read
+      // "0 printers restored", so use a generic confirmation instead.
+      msg = l.dashboardRestoreApplied;
+    } else if (outcome.reconnected) {
       msg = l.dashboardRestoreReconnected(
           outcome.added, outcome.reconnectedCount);
     } else if (outcome.hadRestoreCode) {
@@ -962,6 +970,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     messenger.showSnackBar(
       SnackBar(content: Text(msg), duration: const Duration(seconds: 6)),
     );
+  }
+
+  /// Confirms a destructive restore: the backup doesn't include [toRemove], so
+  /// restoring will drop those tiles to match it. Returns true to proceed. Never
+  /// shown on a clean install (nothing to remove). Removed printers stay paired,
+  /// so they can be re-added or restored later.
+  Future<bool> _confirmRestoreReplace(List<PrinterConfig> toRemove) async {
+    if (!mounted) return false;
+    final l = AppLocalizations.of(context);
+    final names = toRemove.map((p) => p.name).join(', ');
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.dashboardRestoreReplaceTitle),
+        content: Text(l.dashboardRestoreReplaceBody(names)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.dashboardRestoreReplaceConfirm),
+          ),
+        ],
+      ),
+    );
+    return proceed ?? false;
   }
 
   /// Re-read the settings providers from prefs after a restore wrote new

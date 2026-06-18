@@ -124,20 +124,30 @@ class PrinterRegistry {
     }
   }
 
-  /// Legacy alias kept for import-config flow. Behaves like [addClaimed].
+  /// Legacy alias for [addClaimed], retained for API compatibility.
   Future<void> add(PrinterConfig printer) => addClaimed(printer);
 
-  /// Opens the SAF document picker, parses a Moongate backup, and merges its
-  /// printers into the local cache (existing kept, duplicates matched by id
-  /// skipped). Returns the number of printers added, or null if the user
-  /// cancelled the picker. Throws on a malformed / unreadable file so the
-  /// caller can surface an error.
+  /// Opens the SAF document picker, parses a Moongate backup, and restores it so
+  /// the dashboard matches the backup exactly: the backup's printers (in their
+  /// saved order, with each tile's config) become the list, missing ones are
+  /// added, and any local printer the backup doesn't contain is dropped. Because
+  /// dropping printers is destructive, [confirmReplace] is invoked first with the
+  /// printers that would be removed; if it returns false the whole restore is
+  /// cancelled (and the single-use restore code is left unspent). With no
+  /// callback wired (the first-launch import is always onto an empty list, so
+  /// this can't normally arise) extras are kept rather than wiped silently.
   ///
-  /// Shared by the dashboard "Restore config" item and the first-launch
-  /// pairing screen. A backup carries the printer list only, NOT the Supabase
-  /// anon identity — restored printers stay offline until each Pi is re-paired
-  /// (a reinstall gets a new cloud identity).
-  Future<ImportOutcome?> importFromBackupFile() async {
+  /// Returns the outcome, or null if the user cancelled the picker or declined
+  /// the replace. Throws on a malformed / unreadable file so the caller can
+  /// surface an error.
+  ///
+  /// Shared by the dashboard "Restore config" item and the first-launch pairing
+  /// screen. A backup carries the printer list only, NOT the Supabase anon
+  /// identity — restored printers stay offline until reclaimed by the restore
+  /// code or re-paired (a reinstall gets a new cloud identity).
+  Future<ImportOutcome?> importFromBackupFile({
+    Future<bool> Function(List<PrinterConfig> toRemove)? confirmReplace,
+  }) async {
     // withData:true returns bytes inline rather than a path we may not be able
     // to read under scoped storage. Accept any file type (Android often greys
     // out custom .json filters) and validate by parsing instead.
@@ -172,9 +182,29 @@ class PrinterRegistry {
       throw const FormatException('unrecognised_backup');
     }
 
-    // Reclaim ownership FIRST so the just-added printers resolve online on
-    // their first poll. Best-effort: an invalid/expired code or a network
-    // error just leaves them offline until re-paired.
+    // The backup is authoritative: restoring should reproduce its dashboard
+    // exactly (printers, their saved order, each tile's config). Work out which
+    // local printers the backup doesn't contain — a full replace would drop
+    // them. Dropping is destructive, so confirm first, and BEFORE redeeming the
+    // single-use restore code so a decline costs nothing. With no callback wired
+    // (the first-launch import is always onto an empty list, so this can't
+    // normally arise) we keep the extras rather than wipe silently.
+    final importedIds = imported.map((p) => p.id).toSet();
+    final previousIds = _printers.map((p) => p.id).toSet();
+    final toRemove =
+        _printers.where((p) => !importedIds.contains(p.id)).toList();
+    var dropExtras = true;
+    if (toRemove.isNotEmpty) {
+      if (confirmReplace != null) {
+        if (!await confirmReplace(toRemove)) return null; // declined → cancel
+      } else {
+        dropExtras = false; // can't ask → never wipe without consent
+      }
+    }
+
+    // Reclaim ownership FIRST so the restored printers resolve online on their
+    // first poll. Best-effort: an invalid/expired code or a network error just
+    // leaves them offline until re-paired.
     var reconnectedCount = 0;
     final hadRestoreCode = restoreCode != null;
     if (restoreCode != null) {
@@ -191,14 +221,15 @@ class PrinterRegistry {
       }
     }
 
-    final existing = _printers.map((p) => p.id).toSet();
-    var added = 0;
-    for (final p in imported) {
-      if (!existing.contains(p.id)) {
-        await add(p);
-        added++;
-      }
-    }
+    // Rebuild the list from the backup, in its saved order: existing printers
+    // are updated to the backup's per-tile config, missing ones added, and (when
+    // confirmed) any not in the backup dropped. Extras are kept on the end only
+    // when there was no way to confirm their removal.
+    _printers = dropExtras
+        ? List<PrinterConfig>.of(imported)
+        : [...imported, ...toRemove];
+    await _save();
+    final added = imported.where((p) => !previousIds.contains(p.id)).length;
 
     // Apply any global app settings the backup carried (theme, colours,
     // columns, language, …). The allow-list inside SettingsBackup gates what
@@ -209,6 +240,7 @@ class PrinterRegistry {
 
     return ImportOutcome(
       added: added,
+      removed: dropExtras ? toRemove.length : 0,
       reconnectedCount: reconnectedCount,
       hadRestoreCode: hadRestoreCode,
     );
@@ -416,8 +448,13 @@ class PrinterRegistry {
 
 /// Result of PrinterRegistry.importFromBackupFile.
 class ImportOutcome {
-  /// Printers added to the local list (duplicates by id were skipped).
+  /// Printers added to the local list (ones the backup had that weren't already
+  /// present).
   final int added;
+
+  /// Printers removed because the backup didn't contain them (a confirmed
+  /// full-replace restore). 0 on a clean install, or when extras were kept.
+  final int removed;
 
   /// How many printers the backup's restore code actually re-homed to THIS
   /// identity. 0 if the backup had no code, the code was invalid / expired /
@@ -438,6 +475,7 @@ class ImportOutcome {
 
   const ImportOutcome({
     required this.added,
+    this.removed = 0,
     required this.reconnectedCount,
     required this.hadRestoreCode,
   });

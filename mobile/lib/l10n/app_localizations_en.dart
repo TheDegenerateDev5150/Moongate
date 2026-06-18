@@ -470,6 +470,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get dashboardRestoreApplied =>
+      'Dashboard restored to match your backup.';
+
+  @override
+  String get dashboardRestoreReplaceTitle => 'Replace dashboard?';
+
+  @override
+  String dashboardRestoreReplaceBody(String names) {
+    return 'These printers are on this dashboard but not in the backup: $names. Restoring will remove them so the dashboard matches the backup exactly. They stay paired — you can re-add or restore them later.';
+  }
+
+  @override
+  String get dashboardRestoreReplaceConfirm => 'Replace';
+
+  @override
   String get dashboardRemoveSheetTitle => 'Remove a printer';
 
   @override
