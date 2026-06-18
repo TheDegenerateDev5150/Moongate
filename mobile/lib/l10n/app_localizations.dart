@@ -362,6 +362,18 @@ abstract class AppLocalizations {
   /// **'Switch {name} light'**
   String lightChooseTitle(String name);
 
+  /// Custom-theme setting: printer-tile background opacity (0-100).
+  ///
+  /// In en, this message translates to:
+  /// **'Tile opacity'**
+  String get tileOpacityTitle;
+
+  /// Help text for the tile opacity field on the Custom theme screen.
+  ///
+  /// In en, this message translates to:
+  /// **'How see-through the tiles are (0–100), so a background shows through. The camera feed stays solid.'**
+  String get tileOpacityDesc;
+
   /// Drawer toggle that turns all dashboard tile webcam feeds on or off.
   ///
   /// In en, this message translates to:

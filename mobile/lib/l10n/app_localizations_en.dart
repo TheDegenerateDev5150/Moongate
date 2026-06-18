@@ -151,6 +151,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get tileOpacityTitle => 'Tile opacity';
+
+  @override
+  String get tileOpacityDesc =>
+      'How see-through the tiles are (0–100), so a background shows through. The camera feed stays solid.';
+
+  @override
   String get dashboardShowWebcams => 'Show webcams';
 
   @override

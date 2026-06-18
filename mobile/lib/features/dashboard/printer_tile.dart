@@ -20,7 +20,17 @@ class PrinterTile extends StatefulWidget {
   final PrinterConfig printer;
   final VoidCallback onTap;
 
-  const PrinterTile({super.key, required this.printer, required this.onTap});
+  /// Card background opacity (the Custom theme's tile opacity; 1.0 = opaque).
+  /// When < 1 the tile's card/stats area goes see-through so a custom dashboard
+  /// background shows through; the webcam image stays opaque.
+  final double tileOpacity;
+
+  const PrinterTile({
+    super.key,
+    required this.printer,
+    required this.onTap,
+    this.tileOpacity = 1.0,
+  });
 
   @override
   State<PrinterTile> createState() => _PrinterTileState();
@@ -188,8 +198,17 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
     // temps below.
     final noLiveReading = _overlayState(_status) != null;
 
+    final op = widget.tileOpacity;
     return Card(
       clipBehavior: Clip.antiAlias,
+      // Custom-theme tile opacity: when < 1 the card goes see-through (drop the
+      // M3 elevation tint + shadow so the alpha reads cleanly). The webcam image
+      // inside stays opaque, so only the card/stats area shows the background.
+      color: op < 1.0
+          ? theme.colorScheme.surfaceContainerLow.withValues(alpha: op)
+          : null,
+      surfaceTintColor: op < 1.0 ? Colors.transparent : null,
+      elevation: op < 1.0 ? 0 : null,
       child: InkWell(
         onTap: widget.onTap,
         child: Column(

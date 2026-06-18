@@ -24,12 +24,19 @@ class CustomTheme {
   final Color text;
   final Color error;
 
+  /// Printer-tile background opacity, 0.0–1.0 (default 1.0 = opaque). Lets the
+  /// custom dashboard background show through the tiles' card/stats area; the
+  /// camera feed stays opaque. Applied on the Custom theme only (see
+  /// printer_tile / dashboard_screen). Rides the custom_theme backup.
+  final double tileOpacity;
+
   const CustomTheme({
     required this.accent,
     required this.background,
     required this.surface,
     required this.text,
     required this.error,
+    this.tileOpacity = 1.0,
   });
 
   /// Same palette as the default seeded dark theme so flipping to Custom
@@ -48,6 +55,7 @@ class CustomTheme {
     Color? surface,
     Color? text,
     Color? error,
+    double? tileOpacity,
   }) =>
       CustomTheme(
         accent:     accent     ?? this.accent,
@@ -55,14 +63,16 @@ class CustomTheme {
         surface:    surface    ?? this.surface,
         text:       text       ?? this.text,
         error:      error      ?? this.error,
+        tileOpacity: tileOpacity ?? this.tileOpacity,
       );
 
-  Map<String, String> toJson() => {
+  Map<String, dynamic> toJson() => {
         'accent':     hexOf(accent),
         'background': hexOf(background),
         'surface':    hexOf(surface),
         'text':       hexOf(text),
         'error':      hexOf(error),
+        'tileOpacity': tileOpacity,
       };
 
   factory CustomTheme.fromJson(Map<String, dynamic> j) => CustomTheme(
@@ -71,6 +81,7 @@ class CustomTheme {
         surface:    parseHex(j['surface']    as String?) ?? defaults.surface,
         text:       parseHex(j['text']       as String?) ?? defaults.text,
         error:      parseHex(j['error']      as String?) ?? defaults.error,
+        tileOpacity: (j['tileOpacity'] as num?)?.toDouble() ?? 1.0,
       );
 
   /// "#RRGGBB" uppercase, alpha stripped.  Used for both persistence and
@@ -127,6 +138,7 @@ class CustomThemeNotifier extends Notifier<CustomTheme> {
   Future<void> setSurface(Color c)    async { state = state.copyWith(surface: c);    await _save(); }
   Future<void> setText(Color c)       async { state = state.copyWith(text: c);       await _save(); }
   Future<void> setError(Color c)      async { state = state.copyWith(error: c);      await _save(); }
+  Future<void> setTileOpacity(double v) async { state = state.copyWith(tileOpacity: v.clamp(0.0, 1.0)); await _save(); }
 
   Future<void> reset() async {
     state = CustomTheme.defaults;

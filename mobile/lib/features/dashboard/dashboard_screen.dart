@@ -176,9 +176,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // only while that theme is active (it's configured on the Custom theme
     // screen, which is only reachable when Custom is selected, so this also
     // keeps the clear-× always in reach).
-    final customBackground = ref.watch(themeModeProvider) == AppThemeMode.custom
-        ? ref.watch(dashboardBackgroundProvider)
-        : null;
+    final isCustomTheme = ref.watch(themeModeProvider) == AppThemeMode.custom;
+    final customBackground =
+        isCustomTheme ? ref.watch(dashboardBackgroundProvider) : null;
+    // Printer-tile see-through (Custom theme only) so a custom background shows
+    // through; 1.0 = opaque (the default, and all non-custom themes).
+    final tileOpacity =
+        isCustomTheme ? ref.watch(customThemeProvider).tileOpacity : 1.0;
 
     // Reload after the printer screen pops so any rename done in the app bar
     // there propagates to the tile.
@@ -200,6 +204,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           printers: _sortByStatus(_printers),
           columns: gridColumns,
           onTap: openPrinter,
+          tileOpacity: tileOpacity,
         ),
       );
     } else {
@@ -216,6 +221,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               printers: _printers,
               columns: gridColumns,
               onTap: openPrinter,
+              tileOpacity: tileOpacity,
               // Draggable only while actively arranging; otherwise a plain grid
               // in the saved order so tiles can't be nudged by accident.
               onReorder: _reordering ? _onReorder : null,
@@ -1421,10 +1427,14 @@ class _PrinterGrid extends StatelessWidget {
   /// Null in the default auto-arrange mode, where the grid is a plain GridView.
   final void Function(int oldIndex, int newIndex)? onReorder;
 
+  /// Printer-tile background opacity (Custom theme); 1.0 = opaque.
+  final double tileOpacity;
+
   const _PrinterGrid({
     required this.printers,
     required this.onTap,
     required this.columns,
+    this.tileOpacity = 1.0,
     this.onReorder,
   });
 
@@ -1475,6 +1485,7 @@ class _PrinterGrid extends StatelessWidget {
             key: ValueKey(printers[i].id),
             printer: printers[i],
             onTap: () => onTap(printers[i]),
+            tileOpacity: tileOpacity,
           );
 
       if (onReorder == null) {

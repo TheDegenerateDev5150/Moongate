@@ -126,6 +126,11 @@ class CustomThemeScreen extends ConsumerWidget {
           // colour); the × clears it. Shown only here, i.e. while Custom is on.
           const _BackgroundRow(),
 
+          // Tile opacity (0–100): how see-through the printer tiles' background
+          // is, so a custom background shows through; the camera feed stays
+          // solid. Only takes visible effect with a background set.
+          const _TileOpacityField(),
+
           const SizedBox(height: 24),
         ],
       ),
@@ -605,5 +610,81 @@ class _BackgroundRow extends ConsumerWidget {
       behavior: SnackBarBehavior.floating,
       duration: const Duration(seconds: 2),
     ));
+  }
+}
+
+// ─── Tile opacity field (0–100) ───────────────────────────────────────────────
+//
+// Type 0–100 to set how see-through the printer tiles' background is, so a
+// custom dashboard background shows through; the camera feed stays solid.
+// Applied (on the Custom theme) by printer_tile via CustomTheme.tileOpacity.
+
+class _TileOpacityField extends ConsumerStatefulWidget {
+  const _TileOpacityField();
+
+  @override
+  ConsumerState<_TileOpacityField> createState() => _TileOpacityFieldState();
+}
+
+class _TileOpacityFieldState extends ConsumerState<_TileOpacityField> {
+  late final TextEditingController _controller = TextEditingController(
+      text: '${(ref.read(customThemeProvider).tileOpacity * 100).round()}');
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _apply(String raw) {
+    final n = int.tryParse(raw.trim());
+    if (n == null) return; // mid-edit / empty — don't clobber
+    ref
+        .read(customThemeProvider.notifier)
+        .setTileOpacity(n.clamp(0, 100) / 100);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l     = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l.tileOpacityTitle, style: theme.textTheme.titleMedium),
+                const SizedBox(height: 2),
+                Text(l.tileOpacityDesc,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.outline)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 78,
+            child: TextField(
+              controller: _controller,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(3),
+              ],
+              decoration: const InputDecoration(
+                suffixText: '%',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              onChanged: _apply,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
