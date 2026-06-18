@@ -99,59 +99,65 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerLockedWhilePrinting => '打印时无法关机';
 
   @override
-  String get powerScreenTitle => 'Advanced Power Switch';
+  String get powerScreenTitle => '高级电源开关';
 
   @override
   String get powerScreenBanner =>
-      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.';
+      '适用于电源由 Klipper 宏（而非 Moonraker 电源设备）控制的打印机。开启后选择一对开/关宏，或单个切换宏——磁贴的电源按钮将使用它们。';
 
   @override
-  String get powerUseSwitch => 'Use macros';
+  String get powerUseSwitch => '使用宏';
 
   @override
-  String get powerNeedMacro => 'Set an On + Off pair, or a toggle macro.';
+  String get powerNeedMacro => '设置一对开/关宏，或一个切换宏。';
 
   @override
-  String get powerOnMacro => 'Power On macro';
+  String get powerOnMacro => '开机宏';
 
   @override
-  String get powerOffMacro => 'Power Off macro';
+  String get powerOffMacro => '关机宏';
 
   @override
-  String get powerToggleSection => 'Or a single toggle macro';
+  String get powerToggleSection => '或单个切换宏';
 
   @override
-  String get powerToggleMacro => 'Power Toggle macro';
+  String get powerToggleMacro => '电源切换宏';
 
   @override
-  String get powerMenuTitle => 'Advanced Power Switch';
+  String get powerMenuTitle => '高级电源开关';
 
   @override
-  String get powerMenuSubtitle => 'Control printer power with a macro';
+  String get powerMenuSubtitle => '用宏控制打印机电源';
 
   @override
-  String get powerMacroTooltip => 'Power';
+  String get powerMacroTooltip => '电源';
 
   @override
   String powerMacroToggleConfirm(String name) {
-    return 'Switch $name power?';
+    return '切换 $name 的电源？';
   }
 
   @override
   String powerMacroChooseTitle(String name) {
-    return 'Switch $name power';
+    return '切换 $name 的电源';
   }
 
   @override
   String lightChooseTitle(String name) {
-    return 'Switch $name light';
+    return '切换 $name 的灯光';
   }
 
   @override
-  String get dashboardShowWebcams => '显示摄像头';
+  String get tileOpacityTitle => '磁贴不透明度';
 
   @override
-  String get dashboardShowWebcamsSubtitle => '开启或关闭仪表板上的所有摄像头画面';
+  String get tileOpacityDesc => '磁贴的透明程度（0–100），让背景透出。摄像头画面保持不透明。';
+
+  @override
+  String get dashboardShowWebcams => '摄像头';
+
+  @override
+  String get dashboardShowWebcamsSubtitle => '显示或隐藏每台打印机的摄像头';
 
   @override
   String get updateNotesUnavailable => '无法加载更新内容，请检查网络连接，或在 GitHub 上查看。';

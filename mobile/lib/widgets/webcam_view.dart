@@ -109,12 +109,10 @@ class _WebcamViewState extends ConsumerState<WebcamView>
   /// upstream naturally throttles the effective frame rate.
   Future<void> _loop() async {
     while (mounted) {
-      // Idle while backgrounded, or while the global "webcams off" toggle is set
-      // (tile previews only — the full-screen view ignores it). No fetch then,
-      // so an on-demand camera (go2rtc) drops its stream and the sensor idles.
-      if (_appPaused ||
-          (widget.respectDashboardThrottle &&
-              !ref.read(webcamsEnabledProvider))) {
+      // Idle while backgrounded — no fetch, so an on-demand camera (go2rtc)
+      // drops its stream and the sensor idles. (A printer whose webcam is hidden
+      // renders no WebcamView at all, so there's nothing to throttle here.)
+      if (_appPaused) {
         await Future.delayed(const Duration(milliseconds: 400));
         continue;
       }
@@ -233,11 +231,7 @@ class _WebcamViewState extends ConsumerState<WebcamView>
 
   @override
   Widget build(BuildContext context) {
-    // Tile previews respect the global webcams toggle; the full-screen view
-    // (respectDashboardThrottle == false) always shows the feed.
-    final webcamsOff =
-        widget.respectDashboardThrottle && !ref.watch(webcamsEnabledProvider);
-    final bytes = webcamsOff ? null : _currentBytes;
+    final bytes = _currentBytes;
     Widget image = bytes != null
         ? Image.memory(bytes, fit: widget.fit, gaplessPlayback: true)
         : Container(

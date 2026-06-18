@@ -101,60 +101,68 @@ class AppLocalizationsRu extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Нельзя выключить во время печати';
 
   @override
-  String get powerScreenTitle => 'Advanced Power Switch';
+  String get powerScreenTitle => 'Расширенный выключатель питания';
 
   @override
   String get powerScreenBanner =>
-      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.';
+      'Для принтеров, питание которых задаётся макросом Klipper, а не устройством питания Moonraker. Включите и выберите пару «Вкл + Выкл» или один макрос переключения — кнопка питания на плитке будет использовать их.';
 
   @override
-  String get powerUseSwitch => 'Use macros';
+  String get powerUseSwitch => 'Использовать макросы';
 
   @override
-  String get powerNeedMacro => 'Set an On + Off pair, or a toggle macro.';
+  String get powerNeedMacro =>
+      'Задайте пару «Вкл + Выкл» или макрос переключения.';
 
   @override
-  String get powerOnMacro => 'Power On macro';
+  String get powerOnMacro => 'Макрос включения';
 
   @override
-  String get powerOffMacro => 'Power Off macro';
+  String get powerOffMacro => 'Макрос выключения';
 
   @override
-  String get powerToggleSection => 'Or a single toggle macro';
+  String get powerToggleSection => 'Или один макрос переключения';
 
   @override
-  String get powerToggleMacro => 'Power Toggle macro';
+  String get powerToggleMacro => 'Макрос переключения питания';
 
   @override
-  String get powerMenuTitle => 'Advanced Power Switch';
+  String get powerMenuTitle => 'Расширенный выключатель питания';
 
   @override
-  String get powerMenuSubtitle => 'Control printer power with a macro';
+  String get powerMenuSubtitle => 'Управление питанием принтера через макрос';
 
   @override
-  String get powerMacroTooltip => 'Power';
+  String get powerMacroTooltip => 'Питание';
 
   @override
   String powerMacroToggleConfirm(String name) {
-    return 'Switch $name power?';
+    return 'Переключить питание $name?';
   }
 
   @override
   String powerMacroChooseTitle(String name) {
-    return 'Switch $name power';
+    return 'Переключить питание $name';
   }
 
   @override
   String lightChooseTitle(String name) {
-    return 'Switch $name light';
+    return 'Переключить свет $name';
   }
 
   @override
-  String get dashboardShowWebcams => 'Показывать камеры';
+  String get tileOpacityTitle => 'Непрозрачность плиток';
+
+  @override
+  String get tileOpacityDesc =>
+      'Насколько прозрачны плитки (0–100), чтобы просвечивал фон. Изображение с камеры остаётся непрозрачным.';
+
+  @override
+  String get dashboardShowWebcams => 'Веб-камеры';
 
   @override
   String get dashboardShowWebcamsSubtitle =>
-      'Включить или выключить все камеры на панели';
+      'Показать или скрыть веб-камеру каждого принтера';
 
   @override
   String get updateNotesUnavailable =>

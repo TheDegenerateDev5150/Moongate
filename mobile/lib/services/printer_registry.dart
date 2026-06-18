@@ -288,6 +288,18 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Persist whether this printer's webcam is hidden on the dashboard (set from
+  /// the camera dialog). When true the tile renders compact (band-only) and the
+  /// masonry grid packs it tightly. Rides backups via [PrinterConfig.hideWebcam].
+  Future<void> updateHideWebcam(String printerId, bool hide) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    if (_printers[idx].hideWebcam == hide) return;
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(hideWebcam: hide);
+    await _save();
+  }
+
   /// Persist the user's favourited macros for a printer — the ones starred in
   /// the macro sheet to pin them to the top of the list. The full set is stored
   /// each time (not a delta), so passing an empty list clears them. Rides

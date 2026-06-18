@@ -362,16 +362,28 @@ abstract class AppLocalizations {
   /// **'Switch {name} light'**
   String lightChooseTitle(String name);
 
-  /// Drawer toggle that turns all dashboard tile webcam feeds on or off.
+  /// Custom-theme setting: printer-tile background opacity (0-100).
   ///
   /// In en, this message translates to:
-  /// **'Show webcams'**
+  /// **'Tile opacity'**
+  String get tileOpacityTitle;
+
+  /// Help text for the tile opacity field on the Custom theme screen.
+  ///
+  /// In en, this message translates to:
+  /// **'How see-through the tiles are (0–100), so a background shows through. The camera feed stays solid.'**
+  String get tileOpacityDesc;
+
+  /// Drawer entry that opens the per-printer Webcams sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Webcams'**
   String get dashboardShowWebcams;
 
-  /// Subtitle under the Show webcams drawer toggle.
+  /// Subtitle under the Webcams drawer entry, and the header of the Webcams sheet.
   ///
   /// In en, this message translates to:
-  /// **'Turn all dashboard camera feeds on or off'**
+  /// **'Show or hide each printer\'s webcam'**
   String get dashboardShowWebcamsSubtitle;
 
   /// Shown in the update overlay when the changelog couldn't be fetched.
