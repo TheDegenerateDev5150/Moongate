@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -81,11 +82,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     PrintNotificationService.instance.refreshNow().ignore();
   }
 
-  /// Persist a reorder from the manual-order list (manual mode only).
-  /// ReorderableListView's onReorderItem hands back a newIndex already adjusted
-  /// for the removed item, so this does a plain removeAt/insert. The new order
-  /// is written through the registry (the dashboard's order of record; rides
-  /// backups).
+  /// Persist a drag-to-reorder from the dashboard grid (manual mode only).
+  /// reorderable_grid_view reports the *final* index directly, so this is a
+  /// plain removeAt/insert — no ReorderableListView-style `-1` fix-up. The new
+  /// order is written through the registry (the dashboard's order of record;
+  /// rides backups).
   void _onReorder(int oldIndex, int newIndex) {
     final reordered = List<PrinterConfig>.of(_printers);
     final moved = reordered.removeAt(oldIndex);
@@ -210,8 +211,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
     } else {
       // Manual order: tiles stay where the user put them; entering reorder mode
-      // swaps the masonry for a single-column draggable list. Deliberately NOT
-      // wrapped in the status StreamBuilder — re-sorting is exactly what the
+      // turns the grid into a draggable grid of the actual tiles. Deliberately
+      // NOT wrapped in the status StreamBuilder — re-sorting is exactly what the
       // user turned off here, and a rebuild mid-drag would fight the gesture.
       // Each tile still refreshes its own content through its status stream.
       body = Column(
@@ -1424,10 +1425,10 @@ class _PrinterGrid extends StatelessWidget {
   /// automatically so the extra horizontal space is used well.
   final int columns;
 
-  /// When non-null, the dashboard is in manual-order mode: arranging happens in
-  /// a single-column draggable list (a masonry grid can't host drag-to-reorder),
-  /// and this fires with the new (old, new) indices. Null in the default
-  /// auto-arrange mode, where the grid is the read-only masonry view.
+  /// When non-null, the dashboard is in manual-order mode: the tiles are dragged
+  /// around a fixed-cell ReorderableGridView and this fires with the new
+  /// (old, new) indices. Null in the default auto-arrange mode, where the grid
+  /// is the read-only masonry view.
   final void Function(int oldIndex, int newIndex)? onReorder;
 
   /// Printer-tile background opacity (Custom theme); 1.0 = opaque.
@@ -1456,41 +1457,41 @@ class _PrinterGrid extends StatelessWidget {
       const spacing = 10.0;
 
       // Keyed by id so a reorder (or a status re-sort) moves a tile and its
-      // poller rather than rebuilding it.
-      Widget tileAt(int i) => PrinterTile(
+      // poller rather than rebuilding it. `bounded` tiles are for the fixed-cell
+      // reorder grid (see PrinterTile.bounded); the masonry view leaves it off.
+      Widget tileAt(int i, {bool bounded = false}) => PrinterTile(
             key: ValueKey(printers[i].id),
             printer: printers[i],
             onTap: () => onTap(printers[i]),
             tileOpacity: tileOpacity,
+            bounded: bounded,
           );
 
-      // Manual-order mode: a single-column draggable list of printer rows. A
-      // masonry grid can't host drag-to-reorder (the reorder packages need
-      // uniform cells), so arranging happens in this simplified list; the
-      // masonry view reflects the saved order as soon as you're done.
+      // Manual-order mode: drag the actual tiles around the grid — the original
+      // workflow. reorderable_grid_view needs uniform cells, so while arranging
+      // every tile takes one fixed-height cell (the webcam square plus a fixed
+      // status band, sized from the real tile width so it matches the display
+      // tiles closely) and the bounded tile lets a busy full tile give a little
+      // height back. A compact (webcam-hidden) tile just sits with space beneath
+      // it — alignment isn't the point here; the masonry packing returns the
+      // moment you tap Done.
       if (onReorder != null) {
-        return ReorderableListView.builder(
+        const tileTextBand = 104.0;
+        final tileWidth = (constraints.maxWidth -
+                padding.horizontal -
+                spacing * (effectiveCols - 1)) /
+            effectiveCols;
+        return ReorderableGridView.builder(
           padding: padding,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: effectiveCols,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+            childAspectRatio: tileWidth / (tileWidth + tileTextBand),
+          ),
           itemCount: printers.length,
-          // onReorderItem hands back a newIndex already adjusted for the item
-          // removed at oldIndex, so the saved order matches the drop exactly
-          // (no manual `-1` fix-up, unlike the deprecated onReorder).
-          onReorderItem: onReorder!,
-          itemBuilder: (context, i) {
-            final p = printers[i];
-            return Card(
-              key: ValueKey(p.id),
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              child: ListTile(
-                leading: const Icon(Icons.drag_indicator),
-                title: Text(
-                  p.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            );
-          },
+          onReorder: onReorder!,
+          itemBuilder: (_, i) => tileAt(i, bounded: true),
         );
       }
 

@@ -25,11 +25,19 @@ class PrinterTile extends StatefulWidget {
   /// background shows through; the webcam image stays opaque.
   final double tileOpacity;
 
+  /// True when the tile is rendered inside a fixed-height cell (the manual
+  /// drag-to-reorder grid) rather than the masonry grid. A masonry cell has an
+  /// unbounded height, so the webcam square defines the tile height there; a
+  /// reorder cell is bounded, so the square is wrapped in a loose Flexible that
+  /// can give height back rather than overflow on a busy tile. See _webcamCell.
+  final bool bounded;
+
   const PrinterTile({
     super.key,
     required this.printer,
     required this.onTap,
     this.tileOpacity = 1.0,
+    this.bounded = false,
   });
 
   @override
@@ -178,6 +186,13 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
     return null;
   }
 
+  /// Wraps the webcam square for the tile's layout context. In the masonry grid
+  /// (the default) the cell height is unbounded, so the bare square sets the
+  /// height. In the manual-reorder grid the cell is a fixed height, so a loose
+  /// Flexible lets a busy tile yield a few pixels instead of overflowing.
+  Widget _webcamCell(Widget square) =>
+      widget.bounded ? Flexible(fit: FlexFit.loose, child: square) : square;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -233,10 +248,13 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
             // its own height — this square (= tile width) plus the status band —
             // and packs the columns by height, so a full tile stands about a
             // square taller than a compact (webcam-hidden) one. BoxFit.cover
-            // crops to fill the square; no distortion. (A plain AspectRatio, not
-            // Flexible: the masonry cell gives an unbounded height, where a Flex
-            // child would throw — the square defines the height instead.)
-            AspectRatio(
+            // crops to fill the square; no distortion. Normally a plain
+            // AspectRatio — the masonry cell's height is unbounded, where a Flex
+            // child would throw, so the square defines the height. In manual-
+            // reorder mode the tile sits in a fixed-height cell instead, so
+            // _webcamCell wraps it in a loose Flexible (bounded) to let a busy
+            // tile give height back rather than overflow.
+            _webcamCell(AspectRatio(
               aspectRatio: 1.0,
               child: Stack(
                 fit: StackFit.expand,
@@ -327,7 +345,7 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                   ),
                 ],
               ),
-            ),
+            )),
 
             // ── Progress + buttons in ONE row ────────────────────────────
             // Hide action row when there's nothing to act on: offline,

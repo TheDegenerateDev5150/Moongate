@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.13",
+    "bullets": [
+      "Reorder your printer tiles by dragging them again — turn off 'Auto-arrange by status' in the menu, tap the drag-drop button (bottom-left), then drag the tiles around the dashboard and tap the green check to finish, exactly as before. v0.9.12 had temporarily replaced this with a plain list",
+      "Both full and compact (webcam-hidden) tiles can be dragged; the tidy masonry layout returns as soon as you're done arranging",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.12",
     "bullets": [
       "Show or hide each printer's webcam — the menu's Webcams entry opens a list of your printers, each with a switch. Turn one off and its dashboard tile shrinks to a compact card (name, status and temperatures, no camera), and the dashboard packs the full and compact tiles together so the printers you're not watching take up far less room",
