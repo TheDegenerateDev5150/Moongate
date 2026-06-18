@@ -801,34 +801,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         );
                       },
                     ),
+
+                    const Divider(),
+
+                    // Settings + Language scroll with the rest of the menu now;
+                    // only the build number stays pinned at the very bottom.
+                    ListTile(
+                      leading: const Icon(Icons.settings_outlined),
+                      title: Text(l.dashboardSettings),
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/settings');
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.translate),
+                      title: Text(l.menuLanguage),
+                      subtitle: Text(
+                        nativeLanguageName(ref.watch(localeProvider)) ??
+                            l.languageSystemDefault,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        showLanguagePicker(context);
+                      },
+                    ),
                   ],
                 ),
               ),
               ),
             ),
 
-            // ── Bottom bar — always visible ───────────────────────────────────
+            // ── Bottom bar — only the build number stays pinned ───────────────
             const Divider(),
-            ListTile(
-              leading: const Icon(Icons.settings_outlined),
-              title: Text(l.dashboardSettings),
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/settings');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.translate),
-              title: Text(l.menuLanguage),
-              subtitle: Text(
-                nativeLanguageName(ref.watch(localeProvider)) ??
-                    l.languageSystemDefault,
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                showLanguagePicker(context);
-              },
-            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
               child: ref.watch(appVersionProvider).when(
