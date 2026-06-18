@@ -776,6 +776,36 @@ abstract class AppLocalizations {
   /// **'How often tiles refresh the camera. Lower rates use much less data.'**
   String get dashboardCameraFeedSubtitle;
 
+  /// Drawer entry + bottom-sheet title for the per-path camera feed rates.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard Camera Feeds'**
+  String get cameraFeedsMenuTitle;
+
+  /// Drawer subtitle under the Dashboard Camera Feeds entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Local & tunnel feed rates'**
+  String get cameraFeedsMenuSubtitle;
+
+  /// Explanatory line at the top of the Dashboard Camera Feeds sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'How often each tile refreshes its camera. Use a faster rate at home and a slower one over the remote tunnel to save data.'**
+  String get cameraFeedsIntro;
+
+  /// Label above the Raw/1s/3s/5s picker for the LAN webcam refresh rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Local feed polling rate'**
+  String get cameraFeedsLocalRate;
+
+  /// Label above the Raw/1s/3s/5s picker for the remote (tunnel) webcam refresh rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tunnel feed polling rate'**
+  String get cameraFeedsTunnelRate;
+
   /// Section heading for the About group in the drawer.
   ///
   /// In en, this message translates to:

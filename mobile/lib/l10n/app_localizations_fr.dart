@@ -387,6 +387,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'Fréquence de rafraîchissement de la caméra sur les tuiles. Une fréquence plus basse consomme beaucoup moins de données.';
 
   @override
+  String get cameraFeedsMenuTitle => 'Flux caméra du tableau de bord';
+
+  @override
+  String get cameraFeedsMenuSubtitle => 'Débits des flux local et tunnel';
+
+  @override
+  String get cameraFeedsIntro =>
+      'Fréquence de rafraîchissement de la caméra de chaque tuile. Utilisez un débit plus rapide à la maison et plus lent via le tunnel distant pour économiser les données.';
+
+  @override
+  String get cameraFeedsLocalRate => 'Débit du flux local';
+
+  @override
+  String get cameraFeedsTunnelRate => 'Débit du flux tunnel';
+
+  @override
   String get dashboardAboutHeading => 'À propos';
 
   @override

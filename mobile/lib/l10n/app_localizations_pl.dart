@@ -382,6 +382,22 @@ class AppLocalizationsPl extends AppLocalizations {
       'Jak często kafelki odświeżają obraz z kamery. Niższe częstotliwości zużywają znacznie mniej danych.';
 
   @override
+  String get cameraFeedsMenuTitle => 'Podglądy kamer pulpitu';
+
+  @override
+  String get cameraFeedsMenuSubtitle => 'Częstotliwości lokalna i tunelowa';
+
+  @override
+  String get cameraFeedsIntro =>
+      'Jak często każdy kafelek odświeża kamerę. Użyj wyższej częstotliwości w domu i niższej przez zdalny tunel, aby oszczędzać dane.';
+
+  @override
+  String get cameraFeedsLocalRate => 'Częstotliwość lokalnego podglądu';
+
+  @override
+  String get cameraFeedsTunnelRate => 'Częstotliwość podglądu przez tunel';
+
+  @override
   String get dashboardAboutHeading => 'Informacje';
 
   @override

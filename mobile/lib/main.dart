@@ -34,7 +34,8 @@ void main() async {
   await container.read(gridColumnsProvider.notifier).load();
   await container.read(allowRotationProvider.notifier).load();
   await container.read(autoArrangeProvider.notifier).load();
-  await container.read(dashboardCameraRefreshProvider.notifier).load();
+  await container.read(localCameraRefreshProvider.notifier).load();
+  await container.read(tunnelCameraRefreshProvider.notifier).load();
   await container.read(showCameraConfigIconsProvider.notifier).load();
   await container.read(appLockEnabledProvider.notifier).load();
   await container.read(biometricUnlockProvider.notifier).load();

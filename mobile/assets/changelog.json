@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.14",
+    "bullets": [
+      "Separate camera feed rates for home and away — a new 'Dashboard Camera Feeds' screen in the menu lets you set the tile webcam refresh rate independently for your local (WiFi) connection and the remote (tunnel) connection",
+      "Each tile automatically uses the local rate at home and the tunnel rate when you're away, so you can keep a fast feed on WiFi and a slower one over mobile data to save bandwidth",
+      "New tunnel feeds default to 3s (a data saver); your existing setting carries over to both. No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.13",
     "bullets": [
       "Drag your printer tiles into any order again — turn off 'Auto-arrange by status' in the menu, tap the drag-drop button (bottom-left), then drag the tiles around the dashboard (both full and compact tiles) and tap the green check to finish. The tidy masonry layout returns as soon as you're done",

@@ -383,6 +383,22 @@ class AppLocalizationsIt extends AppLocalizations {
       'Con quale frequenza i riquadri aggiornano la camera. Frequenze più basse usano molti meno dati.';
 
   @override
+  String get cameraFeedsMenuTitle => 'Feed videocamera della dashboard';
+
+  @override
+  String get cameraFeedsMenuSubtitle => 'Frequenze feed locale e tunnel';
+
+  @override
+  String get cameraFeedsIntro =>
+      'Con quale frequenza ogni riquadro aggiorna la videocamera. Usa una frequenza più alta a casa e più bassa tramite il tunnel remoto per risparmiare dati.';
+
+  @override
+  String get cameraFeedsLocalRate => 'Frequenza feed locale';
+
+  @override
+  String get cameraFeedsTunnelRate => 'Frequenza feed tunnel';
+
+  @override
   String get dashboardAboutHeading => 'Informazioni';
 
   @override

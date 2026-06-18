@@ -384,6 +384,22 @@ class AppLocalizationsEs extends AppLocalizations {
       'Con qué frecuencia las casillas actualizan la cámara. Las frecuencias más bajas usan muchos menos datos.';
 
   @override
+  String get cameraFeedsMenuTitle => 'Cámaras del panel';
+
+  @override
+  String get cameraFeedsMenuSubtitle => 'Frecuencias de feed local y túnel';
+
+  @override
+  String get cameraFeedsIntro =>
+      'Con qué frecuencia cada casilla actualiza su cámara. Usa una frecuencia más rápida en casa y una más lenta por el túnel remoto para ahorrar datos.';
+
+  @override
+  String get cameraFeedsLocalRate => 'Frecuencia del feed local';
+
+  @override
+  String get cameraFeedsTunnelRate => 'Frecuencia del feed por túnel';
+
+  @override
   String get dashboardAboutHeading => 'Acerca de';
 
   @override

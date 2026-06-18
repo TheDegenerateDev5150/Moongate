@@ -382,6 +382,22 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wie oft Kacheln das Kamerabild aktualisieren. Niedrigere Raten verbrauchen deutlich weniger Daten.';
 
   @override
+  String get cameraFeedsMenuTitle => 'Dashboard-Kamerafeeds';
+
+  @override
+  String get cameraFeedsMenuSubtitle => 'Lokale & Tunnel-Feed-Raten';
+
+  @override
+  String get cameraFeedsIntro =>
+      'Wie oft jede Kachel ihr Kamerabild aktualisiert. Nutze zu Hause eine höhere Rate und über den Tunnel eine niedrigere, um Daten zu sparen.';
+
+  @override
+  String get cameraFeedsLocalRate => 'Rate des lokalen Feeds';
+
+  @override
+  String get cameraFeedsTunnelRate => 'Rate des Tunnel-Feeds';
+
+  @override
   String get dashboardAboutHeading => 'Über';
 
   @override

@@ -212,33 +212,65 @@ extension DashboardCameraRefreshX on DashboardCameraRefresh {
       };
 }
 
-class DashboardCameraRefreshNotifier extends Notifier<DashboardCameraRefresh> {
-  static const _key = 'dashboard_camera_refresh';
+/// Legacy single-rate key (pre-v0.9.14). A user who set it keeps that value:
+/// both the local and tunnel rates fall back to it when their own key is unset,
+/// so updating preserves the old behaviour. Fresh installs use the per-path
+/// defaults below (local 1 s; tunnel 3 s — throttled to save mobile data).
+const _legacyCameraRefreshKey = 'dashboard_camera_refresh';
 
-  // Default to a 1 s interval — ~15× less webcam traffic than the old raw
-  // feed while still feeling live. Users can opt back into raw in the menu.
+/// Shared load/set for the two per-path dashboard camera-refresh settings. A
+/// tile reads the LOCAL rate while connected over the LAN and the TUNNEL rate
+/// while remote (see PrinterTile → WebcamView).
+abstract class _CameraRefreshNotifier extends Notifier<DashboardCameraRefresh> {
+  String get key;
+  DashboardCameraRefresh get fallback;
+
   @override
-  DashboardCameraRefresh build() => DashboardCameraRefresh.oneSecond;
+  DashboardCameraRefresh build() => fallback;
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key);
+    // Per-path key wins; otherwise migrate from the old single key; else default.
+    final raw = prefs.getString(key) ?? prefs.getString(_legacyCameraRefreshKey);
     state = DashboardCameraRefresh.values.firstWhere(
       (e) => e.name == raw,
-      orElse: () => DashboardCameraRefresh.oneSecond,
+      orElse: () => fallback,
     );
   }
 
   Future<void> set(DashboardCameraRefresh value) async {
     state = value;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, value.name);
+    await prefs.setString(key, value.name);
   }
 }
 
-final dashboardCameraRefreshProvider =
-    NotifierProvider<DashboardCameraRefreshNotifier, DashboardCameraRefresh>(
-  DashboardCameraRefreshNotifier.new,
+class LocalCameraRefreshNotifier extends _CameraRefreshNotifier {
+  @override
+  String get key => 'dashboard_camera_refresh_local';
+  @override
+  DashboardCameraRefresh get fallback => DashboardCameraRefresh.oneSecond;
+}
+
+class TunnelCameraRefreshNotifier extends _CameraRefreshNotifier {
+  @override
+  String get key => 'dashboard_camera_refresh_tunnel';
+  @override
+  DashboardCameraRefresh get fallback => DashboardCameraRefresh.threeSeconds;
+}
+
+/// Tile webcam refresh rate while connected over the LAN (default 1 s).
+final localCameraRefreshProvider =
+    NotifierProvider<LocalCameraRefreshNotifier, DashboardCameraRefresh>(
+  LocalCameraRefreshNotifier.new,
+);
+
+/// Tile webcam refresh rate while connected over the remote tunnel (default
+/// 3 s — slower to save mobile data; adjustable in the Dashboard Camera Feeds
+/// sheet).
+final tunnelCameraRefreshProvider =
+    NotifierProvider<TunnelCameraRefreshNotifier, DashboardCameraRefresh>(
+  TunnelCameraRefreshNotifier.new,
 );
 
 // ---------------------------------------------------------------------------
