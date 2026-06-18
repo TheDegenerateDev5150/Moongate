@@ -57,6 +57,12 @@ class WebcamView extends ConsumerStatefulWidget {
   /// the printer's own target FPS and what the upstream can actually deliver.
   final bool respectDashboardThrottle;
 
+  /// True when the tile is currently connected over the LAN, false when over the
+  /// remote tunnel. Selects which dashboard refresh rate applies — the local
+  /// rate or the (typically slower, data-saving) tunnel rate. Only consulted
+  /// when [respectDashboardThrottle] is true.
+  final bool isLocal;
+
   const WebcamView({
     super.key,
     this.webcamSnapshotUrl,
@@ -68,6 +74,7 @@ class WebcamView extends ConsumerStatefulWidget {
     this.uiType,
     this.fit = BoxFit.cover,
     this.respectDashboardThrottle = true,
+    this.isLocal = true,
   });
 
   @override
@@ -123,9 +130,12 @@ class _WebcamViewState extends ConsumerState<WebcamView>
 
       // The dashboard refresh setting caps the rate ONLY for the tile preview.
       // The full-screen view ignores it and runs at the printer's target FPS.
-      final fixed = widget.respectDashboardThrottle
-          ? ref.read(dashboardCameraRefreshProvider).intervalMs
-          : null;
+      // Local tiles use the LAN rate; remote tiles the tunnel rate (so the
+      // remote feed can be throttled to save data) — see settings_provider.
+      final refresh = widget.isLocal
+          ? ref.read(localCameraRefreshProvider)
+          : ref.read(tunnelCameraRefreshProvider);
+      final fixed = widget.respectDashboardThrottle ? refresh.intervalMs : null;
       final int intervalMs;
       if (fixed != null) {
         intervalMs = fixed;

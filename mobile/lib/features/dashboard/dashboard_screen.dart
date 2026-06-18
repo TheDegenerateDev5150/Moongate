@@ -34,6 +34,7 @@ import '../language/language_picker.dart';
 import '../notifications/notifications_prompt.dart';
 import 'feedback_sheet.dart';
 import 'printer_tile.dart';
+import 'camera_feeds_overlay.dart';
 import 'webcams_overlay.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -363,7 +364,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final gridColumns   = ref.watch(gridColumnsProvider);
     final allowRotation = ref.watch(allowRotationProvider);
     final autoArrange   = ref.watch(autoArrangeProvider);
-    final cameraRefresh = ref.watch(dashboardCameraRefreshProvider);
     final showCameraIcons = ref.watch(showCameraConfigIconsProvider);
     final printNotifications = ref.watch(printNotificationsEnabledProvider);
     final pollInterval = ref.watch(notifPollIntervalProvider);
@@ -617,47 +617,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     const Divider(),
 
-                    // ── Camera feed ───────────────────────────────────────────
-                    // Throttles how often EVERY dashboard tile re-fetches its
-                    // webcam snapshot. The default 1 s cuts network use ~15× vs
-                    // the old raw feed; 'Raw' restores the live per-printer FPS.
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Text(l.dashboardCameraFeedHeading,
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelMedium
-                              ?.copyWith(color: Colors.white54)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
-                      child: Text(
-                        l.dashboardCameraFeedSubtitle,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: Colors.white38),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 4),
-                      child: SegmentedButton<DashboardCameraRefresh>(
-                        // No selected-checkmark (see column picker above) — keeps
-                        // 'Raw'/'1s'/'3s'/'5s' on a single line when selected.
-                        showSelectedIcon: false,
-                        style: SegmentedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        segments: [
-                          for (final r in DashboardCameraRefresh.values)
-                            ButtonSegment(value: r, label: Text(r.label)),
-                        ],
-                        selected: {cameraRefresh},
-                        onSelectionChanged: (s) => ref
-                            .read(dashboardCameraRefreshProvider.notifier)
-                            .set(s.first),
-                      ),
+                    // ── Camera feeds ──────────────────────────────────────────
+                    // Per-path tile webcam refresh rates. Opens a sheet with two
+                    // Raw/1s/3s/5s pickers — each tile uses the local rate on the
+                    // LAN and the tunnel rate when remote, so the remote feed can
+                    // be throttled to save data.
+                    ListTile(
+                      dense: true,
+                      leading: const Icon(Icons.shutter_speed),
+                      title: Text(l.cameraFeedsMenuTitle),
+                      subtitle: Text(l.cameraFeedsMenuSubtitle),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.pop(context);
+                        showCameraFeedsSheet(context);
+                      },
                     ),
                     // Per-printer webcam visibility. Opens a sheet listing every
                     // printer with a switch; turning one off collapses its tile
@@ -1012,7 +986,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(gridColumnsProvider.notifier).load();
     await ref.read(allowRotationProvider.notifier).load();
     await ref.read(autoArrangeProvider.notifier).load();
-    await ref.read(dashboardCameraRefreshProvider.notifier).load();
+    await ref.read(localCameraRefreshProvider.notifier).load();
+    await ref.read(tunnelCameraRefreshProvider.notifier).load();
     await ref.read(showCameraConfigIconsProvider.notifier).load();
     await ref.read(printNotificationsEnabledProvider.notifier).load();
     await ref.read(notificationFieldsProvider.notifier).load();

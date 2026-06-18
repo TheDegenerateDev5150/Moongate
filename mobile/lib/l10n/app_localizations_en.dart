@@ -379,6 +379,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'How often tiles refresh the camera. Lower rates use much less data.';
 
   @override
+  String get cameraFeedsMenuTitle => 'Dashboard Camera Feeds';
+
+  @override
+  String get cameraFeedsMenuSubtitle => 'Local & tunnel feed rates';
+
+  @override
+  String get cameraFeedsIntro =>
+      'How often each tile refreshes its camera. Use a faster rate at home and a slower one over the remote tunnel to save data.';
+
+  @override
+  String get cameraFeedsLocalRate => 'Local feed polling rate';
+
+  @override
+  String get cameraFeedsTunnelRate => 'Tunnel feed polling rate';
+
+  @override
   String get dashboardAboutHeading => 'About';
 
   @override

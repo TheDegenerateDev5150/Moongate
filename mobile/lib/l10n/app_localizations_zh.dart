@@ -365,6 +365,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardCameraFeedSubtitle => '磁贴刷新摄像头的频率。频率越低，流量消耗越少。';
 
   @override
+  String get cameraFeedsMenuTitle => '仪表板摄像头画面';
+
+  @override
+  String get cameraFeedsMenuSubtitle => '本地与隧道画面频率';
+
+  @override
+  String get cameraFeedsIntro => '每个磁贴刷新摄像头的频率。在家使用较快的频率，通过远程隧道时使用较慢的频率以节省流量。';
+
+  @override
+  String get cameraFeedsLocalRate => '本地画面刷新频率';
+
+  @override
+  String get cameraFeedsTunnelRate => '隧道画面刷新频率';
+
+  @override
   String get dashboardAboutHeading => '关于';
 
   @override

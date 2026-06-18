@@ -382,6 +382,23 @@ class AppLocalizationsRu extends AppLocalizations {
       'Как часто плитки обновляют камеру. Меньшая частота заметно экономит трафик.';
 
   @override
+  String get cameraFeedsMenuTitle => 'Камеры на панели';
+
+  @override
+  String get cameraFeedsMenuSubtitle =>
+      'Частоты локального и туннельного потоков';
+
+  @override
+  String get cameraFeedsIntro =>
+      'Как часто каждая плитка обновляет камеру. Дома используйте более высокую частоту, а через удалённый туннель — более низкую, чтобы экономить трафик.';
+
+  @override
+  String get cameraFeedsLocalRate => 'Частота локального потока';
+
+  @override
+  String get cameraFeedsTunnelRate => 'Частота туннельного потока';
+
+  @override
   String get dashboardAboutHeading => 'О приложении';
 
   @override
