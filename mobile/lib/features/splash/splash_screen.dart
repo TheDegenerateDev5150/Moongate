@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -81,7 +82,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                     ],
                   ),
-                  child: Icon(Icons.router_rounded, size: 58, color: brand),
+                  // The Moongate moon-gate mark (same SVG as the dashboard
+                  // app-bar / launcher icon), tinted to the brand colour.
+                  child: SvgPicture.asset(
+                    'assets/icons/moongate_icon.svg',
+                    width: 64,
+                    height: 64,
+                    colorFilter: ColorFilter.mode(brand, BlendMode.srcIn),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Text(
