@@ -102,6 +102,55 @@ class AppLocalizationsIt extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Non spegnibile durante la stampa';
 
   @override
+  String get powerScreenTitle => 'Advanced Power Switch';
+
+  @override
+  String get powerScreenBanner =>
+      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.';
+
+  @override
+  String get powerUseSwitch => 'Use macros';
+
+  @override
+  String get powerNeedMacro => 'Set an On + Off pair, or a toggle macro.';
+
+  @override
+  String get powerOnMacro => 'Power On macro';
+
+  @override
+  String get powerOffMacro => 'Power Off macro';
+
+  @override
+  String get powerToggleSection => 'Or a single toggle macro';
+
+  @override
+  String get powerToggleMacro => 'Power Toggle macro';
+
+  @override
+  String get powerMenuTitle => 'Advanced Power Switch';
+
+  @override
+  String get powerMenuSubtitle => 'Control printer power with a macro';
+
+  @override
+  String get powerMacroTooltip => 'Power';
+
+  @override
+  String powerMacroToggleConfirm(String name) {
+    return 'Switch $name power?';
+  }
+
+  @override
+  String powerMacroChooseTitle(String name) {
+    return 'Switch $name power';
+  }
+
+  @override
+  String lightChooseTitle(String name) {
+    return 'Switch $name light';
+  }
+
+  @override
   String get dashboardShowWebcams => 'Mostra webcam';
 
   @override
@@ -765,6 +814,79 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get tileCancelled => 'Annullata';
+
+  @override
+  String get tileClearJobTooltip => 'Cancella e imposta su inattiva';
+
+  @override
+  String get tileClearJobFailed => 'Impossibile reimpostare la stampante';
+
+  @override
+  String get dashboardBackgroundTitle => 'Sfondo della dashboard';
+
+  @override
+  String get dashboardBackgroundNone => 'Nessuno — colore del tema';
+
+  @override
+  String get dashboardBackgroundCustom => 'Immagine personalizzata';
+
+  @override
+  String get dashboardBackgroundRemove => 'Rimuovi sfondo';
+
+  @override
+  String get dashboardBackgroundSet => 'Sfondo aggiornato';
+
+  @override
+  String get uiGuideSectionTileButtons => 'Pulsanti della scheda';
+
+  @override
+  String get uiGuideFilesTitle => 'Stampa un file';
+
+  @override
+  String get uiGuideFilesDesc =>
+      'Sfoglia i file G-code salvati sulla stampante e avviane uno.';
+
+  @override
+  String get uiGuideMacrosTitle => 'Macro';
+
+  @override
+  String get uiGuideMacrosDesc =>
+      'Esegui una delle macro Klipper della stampante.';
+
+  @override
+  String get uiGuidePowerTitle => 'Alimentazione';
+
+  @override
+  String get uiGuidePowerDesc =>
+      'Accendi o spegni la stampante, quando ha un dispositivo di alimentazione.';
+
+  @override
+  String get uiGuideLightingTitle => 'Illuminazione';
+
+  @override
+  String get uiGuideLightingDesc =>
+      'Attiva/disattiva la luce della stampante; la lampadina si illumina quando è accesa.';
+
+  @override
+  String get uiGuideCameraViewTitle => 'Fotocamera';
+
+  @override
+  String get uiGuideCameraViewDesc =>
+      'Apri la fotocamera dal vivo a schermo intero.';
+
+  @override
+  String get uiGuideCameraSetupTitle => 'Configurazione fotocamera';
+
+  @override
+  String get uiGuideCameraSetupDesc =>
+      'Punta una scheda verso una fotocamera non collegata a Klipper.';
+
+  @override
+  String get uiGuideClearJobTitle => 'Cancella una stampa terminata';
+
+  @override
+  String get uiGuideClearJobDesc =>
+      'Tocca la × su una scheda Fatto o Annullata per riportarla su inattiva.';
 
   @override
   String get tileError => 'Errore';

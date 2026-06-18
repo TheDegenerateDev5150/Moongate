@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../providers/custom_theme_provider.dart';
+import '../../providers/dashboard_background_provider.dart';
 
 /// Full-screen colour editor for the Custom theme.
 ///
@@ -116,6 +118,13 @@ class CustomThemeScreen extends ConsumerWidget {
             colour: theme.error,
             onPick: (c) => notifier.setError(c),
           ),
+
+          const Divider(height: 1),
+
+          // Dashboard background image — part of the Custom theme. Picks an
+          // image to sit behind the tiles (centred, scaled-down, over the theme
+          // colour); the × clears it. Shown only here, i.e. while Custom is on.
+          const _BackgroundRow(),
 
           const SizedBox(height: 24),
         ],
@@ -536,5 +545,65 @@ class _PreviewTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ─── Dashboard background image row ───────────────────────────────────────────
+//
+// Part of the Custom theme: pick an image to sit behind the dashboard tiles
+// (centred, scaled-down, over the theme's background colour, so a logo PNG or a
+// wrong-aspect picture still shows the theme colour around it). The × clears it.
+// The dashboard only paints it while the Custom theme is active.
+
+class _BackgroundRow extends ConsumerWidget {
+  const _BackgroundRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l  = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
+    final bg = ref.watch(dashboardBackgroundProvider);
+    final hasBg = bg != null && bg.isNotEmpty;
+    return ListTile(
+      contentPadding: const EdgeInsets.fromLTRB(16, 6, 12, 6),
+      leading: Icon(Icons.wallpaper_outlined, color: cs.onSurface),
+      title: Text(l.dashboardBackgroundTitle),
+      subtitle:
+          Text(hasBg ? l.dashboardBackgroundCustom : l.dashboardBackgroundNone),
+      trailing: hasBg
+          ? IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: l.dashboardBackgroundRemove,
+              onPressed: () =>
+                  ref.read(dashboardBackgroundProvider.notifier).clear(),
+            )
+          : Icon(Icons.chevron_right,
+              color: cs.onSurface.withValues(alpha: 0.4)),
+      onTap: () => _pick(context, ref),
+    );
+  }
+
+  Future<void> _pick(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    FilePickerResult? result;
+    try {
+      result = await FilePicker.platform
+          .pickFiles(type: FileType.image, withData: true);
+    } catch (_) {
+      result = null;
+    }
+    final files = result?.files ?? const <PlatformFile>[];
+    final picked = files.isNotEmpty ? files.first : null;
+    final bytes = picked?.bytes;
+    if (bytes == null) return; // cancelled, or the bytes couldn't be read
+    await ref
+        .read(dashboardBackgroundProvider.notifier)
+        .setFromBytes(bytes, extension: picked?.extension ?? 'img');
+    messenger.showSnackBar(SnackBar(
+      content: Text(l.dashboardBackgroundSet),
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 2),
+    ));
   }
 }

@@ -326,6 +326,29 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Persist a printer's advanced-power config (v0.9.11): the enable flag and
+  /// the on/off + toggle macros. Full replace each call (the screen always
+  /// supplies the complete config); rides backups via [PrinterConfig]. Pass
+  /// null for any macro to clear it.
+  Future<void> updatePowerMacroConfig(
+    String printerId, {
+    required bool enabled,
+    String? onMacro,
+    String? offMacro,
+    String? toggleMacro,
+  }) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(
+        powerMacroEnabled: enabled,
+        powerOnMacro:      onMacro,
+        powerOffMacro:     offMacro,
+        powerToggleMacro:  toggleMacro,
+      );
+    await _save();
+  }
+
   /// Persist the detected web UI type ('mainsail' | 'fluidd') so the tile
   /// can render the right logo on a cold launch — including when the
   /// printer is currently offline (power-off, Pi rebooting, etc.).

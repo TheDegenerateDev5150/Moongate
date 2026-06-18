@@ -242,7 +242,11 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                       Positioned(
                         top: 8,
                         left: 8,
-                        child: _StatusBadge(status: _status),
+                        child: _StatusBadge(
+                          printer: widget.printer,
+                          status: _status,
+                          onCleared: _statusService.pollNow,
+                        ),
                       ),
                     // Camera config gear (top-right). Lets the user point this
                     // tile at an external camera (e.g. a phone webcam). The
@@ -797,14 +801,59 @@ class _TunnelStatusDot extends StatelessWidget {
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 
-class _StatusBadge extends StatelessWidget {
+class _StatusBadge extends StatefulWidget {
+  final PrinterConfig printer;
   final PrinterStatus status;
-  const _StatusBadge({required this.status});
+
+  /// Called after a successful clear so the tile re-polls and the badge drops
+  /// back to "Idle" without waiting a full cycle.
+  final VoidCallback onCleared;
+
+  const _StatusBadge({
+    required this.printer,
+    required this.status,
+    required this.onCleared,
+  });
+
+  @override
+  State<_StatusBadge> createState() => _StatusBadgeState();
+}
+
+class _StatusBadgeState extends State<_StatusBadge> {
+  late final PrintControlService _control = PrintControlService(widget.printer);
+  bool _clearing = false;
+
+  /// The two terminal states that leave a stuck badge with nothing else to act
+  /// on — both cleared by SDCARD_RESET_FILE → standby. 'error' is left alone: it
+  /// keeps the firmware-restart button and may need a deliberate reset.
+  bool get _dismissable =>
+      widget.status.state == 'complete' || widget.status.state == 'cancelled';
+
+  Future<void> _clear() async {
+    if (_clearing) return;
+    // No confirm dialog: the × only shows on the terminal Done/Cancelled badge
+    // (never while printing or idle), so a stray tap can't disturb a live job —
+    // it just re-runs the harmless reset. One tap dismisses, as it should.
+    final l = AppLocalizations.of(context);
+    setState(() => _clearing = true);
+    final ok = await _control.resetPrintState();
+    if (!mounted) return;
+    setState(() => _clearing = false);
+    if (ok) {
+      widget.onCleared(); // re-poll: 'complete'/'cancelled' → 'standby' (Idle)
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l.tileClearJobFailed),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final (label, color) = switch (status.state) {
+    final (label, color) = switch (widget.status.state) {
       'printing'   => (l.tilePrinting,      Colors.green),
       'paused'     => (l.tilePaused,        Colors.orange),
       'standby'    => (l.tileIdle,          Colors.blueGrey),
@@ -817,18 +866,51 @@ class _StatusBadge extends StatelessWidget {
       'connecting' => (l.tileConnectingBadge, Colors.blueGrey),
       _            => (l.tileOffline,       Colors.black54),
     };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    final pill = Container(
+      padding: EdgeInsets.only(
+          left: 8, right: _dismissable ? 5 : 8, top: 3, bottom: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          // A small × turns a finished/cancelled badge into a dismiss
+          // affordance: tap it to clear the job and drop the printer to Idle.
+          if (_dismissable) ...[
+            const SizedBox(width: 3),
+            _clearing
+                ? const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 1.6, color: Colors.white),
+                  )
+                : const Icon(Icons.close_rounded,
+                    size: 14, color: Colors.white),
+          ],
+        ],
+      ),
+    );
+    if (!_dismissable) return pill;
+    return Tooltip(
+      message: l.tileClearJobTooltip,
+      child: Material(
+        color: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: _clearing ? null : _clear,
+          child: pill,
         ),
       ),
     );
@@ -1019,13 +1101,50 @@ class _LightBulbButtonState extends State<_LightBulbButton> {
   Future<void> _tap() async {
     if (_busy) return;
     final p = widget.printer;
-    final target = !_displayOn;
     final hasPair = (p.lightOnMacro?.isNotEmpty ?? false) &&
         (p.lightOffMacro?.isNotEmpty ?? false);
+    final hasToggle = p.lightToggleMacro?.isNotEmpty ?? false;
+    final hasStatus = p.lightStatusObject?.isNotEmpty ?? false;
+
+    // On/off pair with no toggle and no status source → the real state is
+    // unknown, so ask On or Off explicitly instead of guessing.
+    if (hasPair && !hasToggle && !hasStatus) {
+      final l = AppLocalizations.of(context);
+      final choice = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.lightChooseTitle(p.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.lightTurnOff),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l.lightTurnOn),
+            ),
+          ],
+        ),
+      );
+      if (choice == null || !mounted) return;
+      await _run(choice ? p.lightOnMacro! : p.lightOffMacro!, choice);
+      return;
+    }
+
+    // Otherwise toggle by the known (or optimistic) state.
+    final target = !_displayOn;
     final macro = hasPair
         ? (target ? p.lightOnMacro! : p.lightOffMacro!)
         : (p.lightToggleMacro ?? '');
     if (macro.isEmpty) return;
+    await _run(macro, target);
+  }
+
+  Future<void> _run(String macro, bool target) async {
     setState(() {
       _busy = true;
       _pending = target;
@@ -1122,15 +1241,21 @@ class _PowerButtonState extends State<_PowerButton> {
 
   bool get _displayOn => _pending ?? (_device?.on ?? false);
 
+  /// Advanced Power Switch (v0.9.11): drive power via the configured macros
+  /// instead of a Moonraker [power] device. Stateless — no device to track.
+  bool get _macroMode => widget.printer.powerMacroEnabled;
+
   @override
   void initState() {
     super.initState();
-    _refresh();
+    // Device mode fetches the Moonraker [power] device; macro mode is stateless.
+    if (!_macroMode) _refresh();
   }
 
   @override
   void didUpdateWidget(covariant _PowerButton old) {
     super.didUpdateWidget(old);
+    if (_macroMode) return; // macro mode tracks no Moonraker device
     // Re-fetch when the printer becomes reachable, or its Klipper state changes
     // (e.g. it just powered on), so the icon tracks reality without polling.
     final cameOnline = old.status.connection == PrinterConnection.offline &&
@@ -1202,9 +1327,108 @@ class _PowerButtonState extends State<_PowerButton> {
     }
   }
 
+  // ── Macro mode (Advanced Power Switch) ─────────────────────────────────────
+  // Stateless: with a toggle macro we confirm then run it; with an on/off pair
+  // we ask On or Off explicitly, since the real state isn't knowable.
+  Future<void> _macroTap() async {
+    if (_busy) return;
+    final p = widget.printer;
+    final l = AppLocalizations.of(context);
+    final hasToggle = p.powerToggleMacro?.isNotEmpty ?? false;
+    String? macro;
+    if (hasToggle) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.powerMacroToggleConfirm(p.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l.commonOk),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+      macro = p.powerToggleMacro;
+    } else {
+      // No toggle: don't assume state — let the user pick On or Off.
+      final choice = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.powerMacroChooseTitle(p.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.powerTurnOff),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l.powerTurnOn),
+            ),
+          ],
+        ),
+      );
+      if (choice == null) return; // cancelled
+      macro = choice ? p.powerOnMacro : p.powerOffMacro;
+    }
+    if (macro == null || macro.isEmpty || !mounted) return;
+    setState(() => _busy = true);
+    final ok = await _control.runMacro(macro);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l.powerToggleFailed),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ));
+    }
+  }
+
+  Widget _buildMacroButton() {
+    final l = AppLocalizations.of(context);
+    return Tooltip(
+      message: l.powerMacroTooltip,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.38),
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: _busy ? null : _macroTap,
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: _busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white70),
+                  )
+                : Icon(
+                    Icons.power_settings_new,
+                    size: 18,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Nothing until we know the printer has a power device.
+    // Advanced Power (macro) mode takes over the button when enabled.
+    if (_macroMode) return _buildMacroButton();
+    // Device mode: nothing until we know the printer has a power device.
     if (_device == null) return const SizedBox.shrink();
     final l = AppLocalizations.of(context);
     final on = _displayOn;

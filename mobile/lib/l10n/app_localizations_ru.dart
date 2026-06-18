@@ -101,6 +101,55 @@ class AppLocalizationsRu extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Нельзя выключить во время печати';
 
   @override
+  String get powerScreenTitle => 'Advanced Power Switch';
+
+  @override
+  String get powerScreenBanner =>
+      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.';
+
+  @override
+  String get powerUseSwitch => 'Use macros';
+
+  @override
+  String get powerNeedMacro => 'Set an On + Off pair, or a toggle macro.';
+
+  @override
+  String get powerOnMacro => 'Power On macro';
+
+  @override
+  String get powerOffMacro => 'Power Off macro';
+
+  @override
+  String get powerToggleSection => 'Or a single toggle macro';
+
+  @override
+  String get powerToggleMacro => 'Power Toggle macro';
+
+  @override
+  String get powerMenuTitle => 'Advanced Power Switch';
+
+  @override
+  String get powerMenuSubtitle => 'Control printer power with a macro';
+
+  @override
+  String get powerMacroTooltip => 'Power';
+
+  @override
+  String powerMacroToggleConfirm(String name) {
+    return 'Switch $name power?';
+  }
+
+  @override
+  String powerMacroChooseTitle(String name) {
+    return 'Switch $name power';
+  }
+
+  @override
+  String lightChooseTitle(String name) {
+    return 'Switch $name light';
+  }
+
+  @override
   String get dashboardShowWebcams => 'Показывать камеры';
 
   @override
@@ -760,6 +809,78 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tileCancelled => 'Отменено';
+
+  @override
+  String get tileClearJobTooltip => 'Очистить и вернуть в ожидание';
+
+  @override
+  String get tileClearJobFailed => 'Не удалось сбросить принтер';
+
+  @override
+  String get dashboardBackgroundTitle => 'Фон панели';
+
+  @override
+  String get dashboardBackgroundNone => 'Нет — цвет темы';
+
+  @override
+  String get dashboardBackgroundCustom => 'Своё изображение';
+
+  @override
+  String get dashboardBackgroundRemove => 'Убрать фон';
+
+  @override
+  String get dashboardBackgroundSet => 'Фон обновлён';
+
+  @override
+  String get uiGuideSectionTileButtons => 'Кнопки плитки';
+
+  @override
+  String get uiGuideFilesTitle => 'Печать файла';
+
+  @override
+  String get uiGuideFilesDesc =>
+      'Просмотрите файлы G-code на принтере и запустите один из них.';
+
+  @override
+  String get uiGuideMacrosTitle => 'Макросы';
+
+  @override
+  String get uiGuideMacrosDesc =>
+      'Запустите один из макросов Klipper принтера.';
+
+  @override
+  String get uiGuidePowerTitle => 'Питание';
+
+  @override
+  String get uiGuidePowerDesc =>
+      'Включите или выключите принтер, если у него есть устройство питания.';
+
+  @override
+  String get uiGuideLightingTitle => 'Освещение';
+
+  @override
+  String get uiGuideLightingDesc =>
+      'Переключите подсветку принтера; лампочка горит, когда она включена.';
+
+  @override
+  String get uiGuideCameraViewTitle => 'Камера';
+
+  @override
+  String get uiGuideCameraViewDesc => 'Откройте камеру в полноэкранном режиме.';
+
+  @override
+  String get uiGuideCameraSetupTitle => 'Настройка камеры';
+
+  @override
+  String get uiGuideCameraSetupDesc =>
+      'Направьте плитку на камеру, не подключённую к Klipper.';
+
+  @override
+  String get uiGuideClearJobTitle => 'Очистить завершённую печать';
+
+  @override
+  String get uiGuideClearJobDesc =>
+      'Нажмите × на плитке «Готово» или «Отменено», чтобы вернуть её в ожидание.';
 
   @override
   String get tileError => 'Ошибка';

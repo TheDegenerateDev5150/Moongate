@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'features/app_lock/app_lock_gate.dart';
 import 'features/app_lock/app_lock_settings_screen.dart';
 import 'features/auth/pairing_screen.dart';
+import 'features/dashboard/advanced_power_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/dashboard/lighting_screen.dart';
 import 'features/printer/printer_screen.dart';
@@ -58,6 +59,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/lighting',
       builder: (_, __) => const LightingScreen(),
+    ),
+    GoRoute(
+      path: '/power',
+      builder: (_, __) => const AdvancedPowerScreen(),
     ),
   ],
 );
@@ -150,14 +155,12 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
   /// fall through to `dark` for it.  When in custom mode we set `theme` and
   /// `darkTheme` to the same thing anyway, so the mode passed here is moot.
   ThemeMode _toFlutterMode(AppThemeMode m) => switch (m) {
-        AppThemeMode.system => ThemeMode.system,
         AppThemeMode.light  => ThemeMode.light,
         AppThemeMode.dark   => ThemeMode.dark,
         AppThemeMode.custom => ThemeMode.dark,
       };
 
-  /// The original purple-seeded Material 3 theme.  Used for system / light /
-  /// dark.
+  /// The original purple-seeded Material 3 theme.  Used for light / dark.
   ThemeData _buildSeededTheme(Brightness brightness) {
     return ThemeData(
       useMaterial3: true,

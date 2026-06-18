@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -13,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/printer_config.dart';
 import '../../providers/custom_theme_provider.dart';
+import '../../providers/dashboard_background_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/update_provider.dart';
 import '../../providers/version_provider.dart';
@@ -170,6 +172,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final gridColumns = ref.watch(gridColumnsProvider);
     final autoArrange = ref.watch(autoArrangeProvider);
+    // The custom dashboard background is part of the Custom theme — render it
+    // only while that theme is active (it's configured on the Custom theme
+    // screen, which is only reachable when Custom is selected, so this also
+    // keeps the clear-× always in reach).
+    final customBackground = ref.watch(themeModeProvider) == AppThemeMode.custom
+        ? ref.watch(dashboardBackgroundProvider)
+        : null;
 
     // Reload after the printer screen pops so any rename done in the app bar
     // there propagates to the tile.
@@ -239,23 +248,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
       endDrawer: _buildDrawer(context),
-      body: ValueListenableBuilder<bool>(
-        valueListenable: SupabaseService.instance.signedIn,
-        builder: (context, signedIn, _) {
-          final banners = <Widget>[
-            if (update != null)
-              _UpdateBanner(
-                update: update,
-                onDismiss: () => setState(() => _updateDismissed = true),
-                onWhatsNew: () => _showUpdateNotes(context, update),
-              ),
-            if (!signedIn) const _SignInBanner(),
-          ];
-          if (banners.isEmpty) return body;
-          return Column(
-            children: [...banners, Expanded(child: body)],
-          );
-        },
+      // Optional custom background image sits behind the tiles, centred and
+      // scaled-down over the theme's scaffold colour — so a logo PNG or a
+      // wrong-aspect image still shows the theme colour around and behind it.
+      body: _DashboardBackground(
+        imagePath: customBackground,
+        child: ValueListenableBuilder<bool>(
+          valueListenable: SupabaseService.instance.signedIn,
+          builder: (context, signedIn, _) {
+            final banners = <Widget>[
+              if (update != null)
+                _UpdateBanner(
+                  update: update,
+                  onDismiss: () => setState(() => _updateDismissed = true),
+                  onWhatsNew: () => _showUpdateNotes(context, update),
+                ),
+              if (!signedIn) const _SignInBanner(),
+            ];
+            if (banners.isEmpty) return body;
+            return Column(
+              children: [...banners, Expanded(child: body)],
+            );
+          },
+        ),
       ),
       floatingActionButton: _printers.isEmpty
           ? null
@@ -450,11 +465,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       child: Column(
                         children: [
                           RadioListTile(
-                            value: AppThemeMode.system,
-                            title: Text(l.dashboardThemeSystem),
-                            secondary: const Icon(Icons.brightness_auto),
-                          ),
-                          RadioListTile(
                             value: AppThemeMode.dark,
                             title: Text(l.dashboardThemeDark),
                             secondary: const Icon(Icons.dark_mode),
@@ -486,7 +496,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           context.push('/theme/custom');
                         },
                       ),
-
                     const Divider(),
 
                     // Font size
@@ -531,6 +540,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         context.push('/lighting').then((_) => _load());
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.power_settings_new),
+                      title: Text(l.powerMenuTitle),
+                      subtitle: Text(l.powerMenuSubtitle),
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/power').then((_) => _load());
                       },
                     ),
 
@@ -787,34 +805,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         );
                       },
                     ),
+
+                    const Divider(),
+
+                    // Settings + Language scroll with the rest of the menu now;
+                    // only the build number stays pinned at the very bottom.
+                    ListTile(
+                      leading: const Icon(Icons.settings_outlined),
+                      title: Text(l.dashboardSettings),
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/settings');
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.translate),
+                      title: Text(l.menuLanguage),
+                      subtitle: Text(
+                        nativeLanguageName(ref.watch(localeProvider)) ??
+                            l.languageSystemDefault,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        showLanguagePicker(context);
+                      },
+                    ),
                   ],
                 ),
               ),
               ),
             ),
 
-            // ── Bottom bar — always visible ───────────────────────────────────
+            // ── Bottom bar — only the build number stays pinned ───────────────
             const Divider(),
-            ListTile(
-              leading: const Icon(Icons.settings_outlined),
-              title: Text(l.dashboardSettings),
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/settings');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.translate),
-              title: Text(l.menuLanguage),
-              subtitle: Text(
-                nativeLanguageName(ref.watch(localeProvider)) ??
-                    l.languageSystemDefault,
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                showLanguagePicker(context);
-              },
-            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
               child: ref.watch(appVersionProvider).when(
@@ -1501,6 +1524,35 @@ class _ReorderHint extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Wraps the dashboard body with the user's custom background image when set.
+/// The image is centred and scaled-down (never upscaled, never distorted) over
+/// the theme's scaffold colour, so a small logo or a wrong-aspect picture still
+/// shows the theme colour around and behind it (and through any transparency).
+/// Decoding is capped to ~1440px wide to keep memory sane on large photos.
+class _DashboardBackground extends StatelessWidget {
+  final String? imagePath;
+  final Widget child;
+
+  const _DashboardBackground({required this.imagePath, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final path = imagePath;
+    if (path == null || path.isEmpty) return child;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        image: DecorationImage(
+          image: ResizeImage(FileImage(File(path)), width: 1440),
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.center,
+        ),
+      ),
+      child: child,
     );
   }
 }

@@ -10,11 +10,11 @@ import '../models/notif_fields.dart';
 
 /// Moongate's theme selector.
 ///
-/// `system`/`dark`/`light` map 1:1 onto Flutter's [ThemeMode].
+/// `dark`/`light` map 1:1 onto Flutter's [ThemeMode].
 /// `custom` is our own value — when selected, [app.dart] builds the
 /// MaterialApp theme from user-picked colours stored in
 /// [customThemeProvider] instead of the seeded purple defaults.
-enum AppThemeMode { system, dark, light, custom }
+enum AppThemeMode { dark, light, custom }
 
 class ThemeModeNotifier extends Notifier<AppThemeMode> {
   static const _key = 'theme_mode';
@@ -27,8 +27,8 @@ class ThemeModeNotifier extends Notifier<AppThemeMode> {
     final raw = prefs.getString(_key);
     state = switch (raw) {
       'light'  => AppThemeMode.light,
-      'system' => AppThemeMode.system,
       'custom' => AppThemeMode.custom,
+      // 'system' (a removed option) and anything unknown fall back to Dark.
       _        => AppThemeMode.dark,
     };
   }

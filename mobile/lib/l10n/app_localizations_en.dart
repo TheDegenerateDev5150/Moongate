@@ -102,6 +102,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Can\'t power off while printing';
 
   @override
+  String get powerScreenTitle => 'Advanced Power Switch';
+
+  @override
+  String get powerScreenBanner =>
+      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.';
+
+  @override
+  String get powerUseSwitch => 'Use macros';
+
+  @override
+  String get powerNeedMacro => 'Set an On + Off pair, or a toggle macro.';
+
+  @override
+  String get powerOnMacro => 'Power On macro';
+
+  @override
+  String get powerOffMacro => 'Power Off macro';
+
+  @override
+  String get powerToggleSection => 'Or a single toggle macro';
+
+  @override
+  String get powerToggleMacro => 'Power Toggle macro';
+
+  @override
+  String get powerMenuTitle => 'Advanced Power Switch';
+
+  @override
+  String get powerMenuSubtitle => 'Control printer power with a macro';
+
+  @override
+  String get powerMacroTooltip => 'Power';
+
+  @override
+  String powerMacroToggleConfirm(String name) {
+    return 'Switch $name power?';
+  }
+
+  @override
+  String powerMacroChooseTitle(String name) {
+    return 'Switch $name power';
+  }
+
+  @override
+  String lightChooseTitle(String name) {
+    return 'Switch $name light';
+  }
+
+  @override
   String get dashboardShowWebcams => 'Show webcams';
 
   @override
@@ -749,6 +798,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tileCancelled => 'Cancelled';
+
+  @override
+  String get tileClearJobTooltip => 'Clear and set to idle';
+
+  @override
+  String get tileClearJobFailed => 'Couldn\'t reset the printer';
+
+  @override
+  String get dashboardBackgroundTitle => 'Dashboard background';
+
+  @override
+  String get dashboardBackgroundNone => 'None — theme colour';
+
+  @override
+  String get dashboardBackgroundCustom => 'Custom image';
+
+  @override
+  String get dashboardBackgroundRemove => 'Remove background';
+
+  @override
+  String get dashboardBackgroundSet => 'Background updated';
+
+  @override
+  String get uiGuideSectionTileButtons => 'Tile buttons';
+
+  @override
+  String get uiGuideFilesTitle => 'Print a file';
+
+  @override
+  String get uiGuideFilesDesc =>
+      'Browse the printer\'s stored G-code files and start one.';
+
+  @override
+  String get uiGuideMacrosTitle => 'Macros';
+
+  @override
+  String get uiGuideMacrosDesc => 'Run one of the printer\'s Klipper macros.';
+
+  @override
+  String get uiGuidePowerTitle => 'Power';
+
+  @override
+  String get uiGuidePowerDesc =>
+      'Switch the printer on or off, when it has a power device.';
+
+  @override
+  String get uiGuideLightingTitle => 'Lighting';
+
+  @override
+  String get uiGuideLightingDesc =>
+      'Toggle the printer\'s light; the bulb glows when it\'s on.';
+
+  @override
+  String get uiGuideCameraViewTitle => 'Camera';
+
+  @override
+  String get uiGuideCameraViewDesc => 'Open the live camera full-screen.';
+
+  @override
+  String get uiGuideCameraSetupTitle => 'Camera setup';
+
+  @override
+  String get uiGuideCameraSetupDesc =>
+      'Point a tile at a camera that isn\'t wired into Klipper.';
+
+  @override
+  String get uiGuideClearJobTitle => 'Clear a finished print';
+
+  @override
+  String get uiGuideClearJobDesc =>
+      'Tap the × on a Done or Cancelled tile to set it back to Idle.';
 
   @override
   String get tileError => 'Error';

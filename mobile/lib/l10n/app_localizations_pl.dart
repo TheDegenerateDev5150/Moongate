@@ -101,6 +101,55 @@ class AppLocalizationsPl extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Nie można wyłączyć podczas druku';
 
   @override
+  String get powerScreenTitle => 'Advanced Power Switch';
+
+  @override
+  String get powerScreenBanner =>
+      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.';
+
+  @override
+  String get powerUseSwitch => 'Use macros';
+
+  @override
+  String get powerNeedMacro => 'Set an On + Off pair, or a toggle macro.';
+
+  @override
+  String get powerOnMacro => 'Power On macro';
+
+  @override
+  String get powerOffMacro => 'Power Off macro';
+
+  @override
+  String get powerToggleSection => 'Or a single toggle macro';
+
+  @override
+  String get powerToggleMacro => 'Power Toggle macro';
+
+  @override
+  String get powerMenuTitle => 'Advanced Power Switch';
+
+  @override
+  String get powerMenuSubtitle => 'Control printer power with a macro';
+
+  @override
+  String get powerMacroTooltip => 'Power';
+
+  @override
+  String powerMacroToggleConfirm(String name) {
+    return 'Switch $name power?';
+  }
+
+  @override
+  String powerMacroChooseTitle(String name) {
+    return 'Switch $name power';
+  }
+
+  @override
+  String lightChooseTitle(String name) {
+    return 'Switch $name light';
+  }
+
+  @override
   String get dashboardShowWebcams => 'Pokaż kamery';
 
   @override
@@ -759,6 +808,78 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get tileCancelled => 'Anulowano';
+
+  @override
+  String get tileClearJobTooltip => 'Wyczyść i ustaw jako bezczynną';
+
+  @override
+  String get tileClearJobFailed => 'Nie udało się zresetować drukarki';
+
+  @override
+  String get dashboardBackgroundTitle => 'Tło pulpitu';
+
+  @override
+  String get dashboardBackgroundNone => 'Brak — kolor motywu';
+
+  @override
+  String get dashboardBackgroundCustom => 'Własny obraz';
+
+  @override
+  String get dashboardBackgroundRemove => 'Usuń tło';
+
+  @override
+  String get dashboardBackgroundSet => 'Zaktualizowano tło';
+
+  @override
+  String get uiGuideSectionTileButtons => 'Przyciski kafelka';
+
+  @override
+  String get uiGuideFilesTitle => 'Wydrukuj plik';
+
+  @override
+  String get uiGuideFilesDesc =>
+      'Przeglądaj pliki G-code zapisane w drukarce i uruchom jeden.';
+
+  @override
+  String get uiGuideMacrosTitle => 'Makra';
+
+  @override
+  String get uiGuideMacrosDesc => 'Uruchom jedno z makr Klipper drukarki.';
+
+  @override
+  String get uiGuidePowerTitle => 'Zasilanie';
+
+  @override
+  String get uiGuidePowerDesc =>
+      'Włącz lub wyłącz drukarkę, gdy ma urządzenie zasilające.';
+
+  @override
+  String get uiGuideLightingTitle => 'Oświetlenie';
+
+  @override
+  String get uiGuideLightingDesc =>
+      'Przełącz światło drukarki; żarówka świeci, gdy jest włączone.';
+
+  @override
+  String get uiGuideCameraViewTitle => 'Kamera';
+
+  @override
+  String get uiGuideCameraViewDesc =>
+      'Otwórz kamerę na żywo na pełnym ekranie.';
+
+  @override
+  String get uiGuideCameraSetupTitle => 'Konfiguracja kamery';
+
+  @override
+  String get uiGuideCameraSetupDesc =>
+      'Skieruj kafelek na kamerę niepodłączoną do Klippera.';
+
+  @override
+  String get uiGuideClearJobTitle => 'Wyczyść ukończony wydruk';
+
+  @override
+  String get uiGuideClearJobDesc =>
+      'Dotknij × na kafelku Gotowe lub Anulowano, aby ustawić go jako bezczynny.';
 
   @override
   String get tileError => 'Błąd';
