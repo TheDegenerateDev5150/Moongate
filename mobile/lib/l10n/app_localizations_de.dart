@@ -475,6 +475,21 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get dashboardRestoreApplied =>
+      'Dashboard entsprechend deinem Backup wiederhergestellt.';
+
+  @override
+  String get dashboardRestoreReplaceTitle => 'Dashboard ersetzen?';
+
+  @override
+  String dashboardRestoreReplaceBody(String names) {
+    return 'Diese Drucker sind auf diesem Dashboard, aber nicht im Backup: $names. Beim Wiederherstellen werden sie entfernt, damit das Dashboard exakt dem Backup entspricht. Sie bleiben gekoppelt – du kannst sie später wieder hinzufügen oder wiederherstellen.';
+  }
+
+  @override
+  String get dashboardRestoreReplaceConfirm => 'Ersetzen';
+
+  @override
   String get dashboardRemoveSheetTitle => 'Drucker entfernen';
 
   @override

@@ -476,6 +476,21 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get dashboardRestoreApplied =>
+      'Панель восстановлена в соответствии с резервной копией.';
+
+  @override
+  String get dashboardRestoreReplaceTitle => 'Заменить панель?';
+
+  @override
+  String dashboardRestoreReplaceBody(String names) {
+    return 'Эти принтеры есть на этой панели, но отсутствуют в резервной копии: $names. При восстановлении они будут удалены, чтобы панель точно соответствовала копии. Они останутся привязанными — вы сможете добавить или восстановить их позже.';
+  }
+
+  @override
+  String get dashboardRestoreReplaceConfirm => 'Заменить';
+
+  @override
   String get dashboardRemoveSheetTitle => 'Удалить принтер';
 
   @override

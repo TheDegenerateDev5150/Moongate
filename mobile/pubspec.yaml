@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.9.12+81
+version: 0.9.13+82
 publish_to: none
 
 environment:
@@ -103,10 +103,14 @@ dependencies:
 
   # Masonry dashboard grid (MasonryGridView): lets full webcam tiles and compact
   # (webcam-hidden) tiles each take their natural height and pack the columns
-  # tightly, instead of one uniform cell size for every tile. Manual reordering
-  # uses the built-in single-column ReorderableListView, since a masonry grid
-  # can't host drag-to-reorder.
+  # tightly, instead of one uniform cell size for every tile.
   flutter_staggered_grid_view: ^0.7.0
+
+  # Drag-to-reorder the printer tiles directly on the dashboard (manual-order
+  # mode). The built-in ReorderableListView is single-axis only; this pure-Dart
+  # package reorders within a 2-D grid. Reorder mode uses uniform fixed-height
+  # cells (the package needs them) while the masonry above is the normal view.
+  reorderable_grid_view: ^2.2.8
 
 dev_dependencies:
   flutter_test:
