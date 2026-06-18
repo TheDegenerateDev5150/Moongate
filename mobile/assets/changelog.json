@@ -1,17 +1,10 @@
 [
   {
-    "version": "v0.9.14",
-    "bullets": [
-      "Restoring a backup now rebuilds your dashboard to match it exactly — the same printer order and each tile's layout (including which webcams are hidden), not just adding any missing printers",
-      "If the phone already has printers that aren't in the backup, restore asks before removing them (and lists them first), so you can't lose a printer you paired after making the backup. On a fresh phone there's nothing to remove, so it just restores",
-      "No Pi update needed — just update the app"
-    ]
-  },
-  {
     "version": "v0.9.13",
     "bullets": [
-      "Reorder your printer tiles by dragging them again — turn off 'Auto-arrange by status' in the menu, tap the drag-drop button (bottom-left), then drag the tiles around the dashboard and tap the green check to finish, exactly as before. v0.9.12 had temporarily replaced this with a plain list",
-      "Both full and compact (webcam-hidden) tiles can be dragged; the tidy masonry layout returns as soon as you're done arranging",
+      "Drag your printer tiles into any order again — turn off 'Auto-arrange by status' in the menu, tap the drag-drop button (bottom-left), then drag the tiles around the dashboard (both full and compact tiles) and tap the green check to finish. The tidy masonry layout returns as soon as you're done",
+      "Restoring a backup now rebuilds your dashboard to match it exactly — the same printer order and each tile's layout (including which webcams are hidden), not just adding any missing printers",
+      "If the phone already has printers that aren't in the backup, restore asks before removing them (and lists them first), so you can't lose a printer you paired after making the backup. On a fresh phone there's nothing to remove, so it just restores",
       "No Pi update needed — just update the app"
     ]
   },
