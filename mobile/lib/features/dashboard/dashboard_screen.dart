@@ -542,6 +542,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         context.push('/lighting').then((_) => _load());
                       },
                     ),
+                    ListTile(
+                      leading: const Icon(Icons.power_settings_new),
+                      title: Text(l.powerMenuTitle),
+                      subtitle: Text(l.powerMenuSubtitle),
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/power').then((_) => _load());
+                      },
+                    ),
 
                     const Divider(),
 

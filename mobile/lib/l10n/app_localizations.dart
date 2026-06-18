@@ -278,6 +278,90 @@ abstract class AppLocalizations {
   /// **'Can\'t power off while printing'**
   String get powerLockedWhilePrinting;
 
+  /// Title of the Advanced Power Switch setup screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Power Switch'**
+  String get powerScreenTitle;
+
+  /// Instruction banner at the top of the Advanced Power Switch screen.
+  ///
+  /// In en, this message translates to:
+  /// **'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.'**
+  String get powerScreenBanner;
+
+  /// Per-printer switch on the Advanced Power screen: drive the power button with macros.
+  ///
+  /// In en, this message translates to:
+  /// **'Use macros'**
+  String get powerUseSwitch;
+
+  /// Hint shown when a printer has no usable power macro configured yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set an On + Off pair, or a toggle macro.'**
+  String get powerNeedMacro;
+
+  /// Label for the macro that powers the printer on.
+  ///
+  /// In en, this message translates to:
+  /// **'Power On macro'**
+  String get powerOnMacro;
+
+  /// Label for the macro that powers the printer off.
+  ///
+  /// In en, this message translates to:
+  /// **'Power Off macro'**
+  String get powerOffMacro;
+
+  /// Section header above the optional single toggle power macro.
+  ///
+  /// In en, this message translates to:
+  /// **'Or a single toggle macro'**
+  String get powerToggleSection;
+
+  /// Label for a single macro that toggles the printer's power.
+  ///
+  /// In en, this message translates to:
+  /// **'Power Toggle macro'**
+  String get powerToggleMacro;
+
+  /// Drawer menu entry that opens the Advanced Power Switch screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Power Switch'**
+  String get powerMenuTitle;
+
+  /// Subtitle for the Advanced Power Switch drawer entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Control printer power with a macro'**
+  String get powerMenuSubtitle;
+
+  /// Tooltip on the tile power button when it is driven by macros.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get powerMacroTooltip;
+
+  /// Confirm dialog title before running the power toggle macro.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch {name} power?'**
+  String powerMacroToggleConfirm(String name);
+
+  /// Title of the On/Off chooser shown when a printer has separate power on/off macros and the state is unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch {name} power'**
+  String powerMacroChooseTitle(String name);
+
+  /// Title of the On/Off chooser shown for a light with on/off macros but no toggle or status source.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch {name} light'**
+  String lightChooseTitle(String name);
+
   /// Drawer toggle that turns all dashboard tile webcam feeds on or off.
   ///
   /// In en, this message translates to:

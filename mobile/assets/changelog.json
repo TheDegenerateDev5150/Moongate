@@ -6,6 +6,7 @@
       "Give the dashboard your own background — switch to the Custom theme, open it from the menu, then pick any image from your phone to sit behind the tiles. It's centred and scaled to fit over your theme colour, so a wallpaper fills the screen and a logo PNG sits neatly in the middle with the theme colour around it",
       "Refreshed icon guide — the in-app guide (menu → About) now covers all the newer tile buttons: Print a file, Macros, Power, Lighting, Camera and Camera setup, plus the new clear-a-print ×",
       "Tidier appearance and menu — the cold-start loading screen now matches the dark theme (dark, with the red Moongate brand mark, instead of flashing white on a light-mode phone), the 'System default' theme option has been removed (themes are now Dark, Light and Custom — default Dark), and Settings + Language scroll with the rest of the menu (only the version stays pinned at the bottom)",
+      "Advanced Power Switch (in the menu, beside Lighting) — for printers whose power is a Klipper macro instead of a Moonraker power device: set an On + Off pair or a single toggle macro, and the tile's power button drives the printer through it. With on/off macros it asks 'Turn on' or 'Turn off' rather than assuming the state; the light bulb does the same when it has on/off macros but no toggle or status pin",
       "No Pi update needed — just update the app"
     ]
   },

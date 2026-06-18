@@ -1101,13 +1101,50 @@ class _LightBulbButtonState extends State<_LightBulbButton> {
   Future<void> _tap() async {
     if (_busy) return;
     final p = widget.printer;
-    final target = !_displayOn;
     final hasPair = (p.lightOnMacro?.isNotEmpty ?? false) &&
         (p.lightOffMacro?.isNotEmpty ?? false);
+    final hasToggle = p.lightToggleMacro?.isNotEmpty ?? false;
+    final hasStatus = p.lightStatusObject?.isNotEmpty ?? false;
+
+    // On/off pair with no toggle and no status source → the real state is
+    // unknown, so ask On or Off explicitly instead of guessing.
+    if (hasPair && !hasToggle && !hasStatus) {
+      final l = AppLocalizations.of(context);
+      final choice = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.lightChooseTitle(p.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.lightTurnOff),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l.lightTurnOn),
+            ),
+          ],
+        ),
+      );
+      if (choice == null || !mounted) return;
+      await _run(choice ? p.lightOnMacro! : p.lightOffMacro!, choice);
+      return;
+    }
+
+    // Otherwise toggle by the known (or optimistic) state.
+    final target = !_displayOn;
     final macro = hasPair
         ? (target ? p.lightOnMacro! : p.lightOffMacro!)
         : (p.lightToggleMacro ?? '');
     if (macro.isEmpty) return;
+    await _run(macro, target);
+  }
+
+  Future<void> _run(String macro, bool target) async {
     setState(() {
       _busy = true;
       _pending = target;
@@ -1204,15 +1241,21 @@ class _PowerButtonState extends State<_PowerButton> {
 
   bool get _displayOn => _pending ?? (_device?.on ?? false);
 
+  /// Advanced Power Switch (v0.9.11): drive power via the configured macros
+  /// instead of a Moonraker [power] device. Stateless — no device to track.
+  bool get _macroMode => widget.printer.powerMacroEnabled;
+
   @override
   void initState() {
     super.initState();
-    _refresh();
+    // Device mode fetches the Moonraker [power] device; macro mode is stateless.
+    if (!_macroMode) _refresh();
   }
 
   @override
   void didUpdateWidget(covariant _PowerButton old) {
     super.didUpdateWidget(old);
+    if (_macroMode) return; // macro mode tracks no Moonraker device
     // Re-fetch when the printer becomes reachable, or its Klipper state changes
     // (e.g. it just powered on), so the icon tracks reality without polling.
     final cameOnline = old.status.connection == PrinterConnection.offline &&
@@ -1284,9 +1327,108 @@ class _PowerButtonState extends State<_PowerButton> {
     }
   }
 
+  // ── Macro mode (Advanced Power Switch) ─────────────────────────────────────
+  // Stateless: with a toggle macro we confirm then run it; with an on/off pair
+  // we ask On or Off explicitly, since the real state isn't knowable.
+  Future<void> _macroTap() async {
+    if (_busy) return;
+    final p = widget.printer;
+    final l = AppLocalizations.of(context);
+    final hasToggle = p.powerToggleMacro?.isNotEmpty ?? false;
+    String? macro;
+    if (hasToggle) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.powerMacroToggleConfirm(p.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l.commonOk),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+      macro = p.powerToggleMacro;
+    } else {
+      // No toggle: don't assume state — let the user pick On or Off.
+      final choice = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.powerMacroChooseTitle(p.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.powerTurnOff),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l.powerTurnOn),
+            ),
+          ],
+        ),
+      );
+      if (choice == null) return; // cancelled
+      macro = choice ? p.powerOnMacro : p.powerOffMacro;
+    }
+    if (macro == null || macro.isEmpty || !mounted) return;
+    setState(() => _busy = true);
+    final ok = await _control.runMacro(macro);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l.powerToggleFailed),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ));
+    }
+  }
+
+  Widget _buildMacroButton() {
+    final l = AppLocalizations.of(context);
+    return Tooltip(
+      message: l.powerMacroTooltip,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.38),
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: _busy ? null : _macroTap,
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: _busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white70),
+                  )
+                : Icon(
+                    Icons.power_settings_new,
+                    size: 18,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Nothing until we know the printer has a power device.
+    // Advanced Power (macro) mode takes over the button when enabled.
+    if (_macroMode) return _buildMacroButton();
+    // Device mode: nothing until we know the printer has a power device.
     if (_device == null) return const SizedBox.shrink();
     final l = AppLocalizations.of(context);
     final on = _displayOn;

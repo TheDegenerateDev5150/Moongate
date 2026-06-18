@@ -73,6 +73,18 @@ class PrinterConfig {
   final String? lightToggleMacro;
   final String? lightStatusObject;
 
+  /// Per-printer advanced power control (v0.9.11). [powerMacroEnabled] makes the
+  /// tile's power button drive the printer via macros instead of a Moonraker
+  /// `[power …]` device — for printers whose power is a Klipper macro. EITHER an
+  /// on+off macro pair OR a single toggle macro. Stateless by design: power-by-
+  /// macro can't reliably report state (powering off takes Klipper down), so the
+  /// button offers an explicit On/Off choice rather than guessing. Additive +
+  /// optional → rides the v3 backup envelope.
+  final bool    powerMacroEnabled;
+  final String? powerOnMacro;
+  final String? powerOffMacro;
+  final String? powerToggleMacro;
+
   const PrinterConfig({
     required this.id,
     required this.name,
@@ -89,6 +101,10 @@ class PrinterConfig {
     this.lightOffMacro,
     this.lightToggleMacro,
     this.lightStatusObject,
+    this.powerMacroEnabled = false,
+    this.powerOnMacro,
+    this.powerOffMacro,
+    this.powerToggleMacro,
   });
 
   PrinterConfig copyWith({
@@ -106,6 +122,10 @@ class PrinterConfig {
     Object? lightOffMacro     = _sentinel,
     Object? lightToggleMacro  = _sentinel,
     Object? lightStatusObject = _sentinel,
+    bool?   powerMacroEnabled,
+    Object? powerOnMacro      = _sentinel,
+    Object? powerOffMacro     = _sentinel,
+    Object? powerToggleMacro  = _sentinel,
   }) =>
       PrinterConfig(
         id:              id,
@@ -133,6 +153,16 @@ class PrinterConfig {
         lightStatusObject: identical(lightStatusObject, _sentinel)
             ? this.lightStatusObject
             : lightStatusObject as String?,
+        powerMacroEnabled: powerMacroEnabled ?? this.powerMacroEnabled,
+        powerOnMacro: identical(powerOnMacro, _sentinel)
+            ? this.powerOnMacro
+            : powerOnMacro as String?,
+        powerOffMacro: identical(powerOffMacro, _sentinel)
+            ? this.powerOffMacro
+            : powerOffMacro as String?,
+        powerToggleMacro: identical(powerToggleMacro, _sentinel)
+            ? this.powerToggleMacro
+            : powerToggleMacro as String?,
       );
 
   /// Normalise a user-typed printer address into a base [lanUrl] such as
@@ -208,6 +238,10 @@ class PrinterConfig {
         if (lightOffMacro != null) 'lightOffMacro': lightOffMacro,
         if (lightToggleMacro != null) 'lightToggleMacro': lightToggleMacro,
         if (lightStatusObject != null) 'lightStatusObject': lightStatusObject,
+        if (powerMacroEnabled) 'powerMacroEnabled': powerMacroEnabled,
+        if (powerOnMacro != null) 'powerOnMacro': powerOnMacro,
+        if (powerOffMacro != null) 'powerOffMacro': powerOffMacro,
+        if (powerToggleMacro != null) 'powerToggleMacro': powerToggleMacro,
       };
 
   factory PrinterConfig.fromJson(Map<String, dynamic> j) {
@@ -234,6 +268,10 @@ class PrinterConfig {
       lightOffMacro:     j['lightOffMacro']      as String?,
       lightToggleMacro:  j['lightToggleMacro']   as String?,
       lightStatusObject: j['lightStatusObject']  as String?,
+      powerMacroEnabled: j['powerMacroEnabled']  as bool?   ?? false,
+      powerOnMacro:      j['powerOnMacro']        as String?,
+      powerOffMacro:     j['powerOffMacro']       as String?,
+      powerToggleMacro:  j['powerToggleMacro']    as String?,
     );
   }
 

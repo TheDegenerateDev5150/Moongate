@@ -104,6 +104,55 @@ class AppLocalizationsFr extends AppLocalizations {
       'Extinction impossible pendant l\'impression';
 
   @override
+  String get powerScreenTitle => 'Advanced Power Switch';
+
+  @override
+  String get powerScreenBanner =>
+      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.';
+
+  @override
+  String get powerUseSwitch => 'Use macros';
+
+  @override
+  String get powerNeedMacro => 'Set an On + Off pair, or a toggle macro.';
+
+  @override
+  String get powerOnMacro => 'Power On macro';
+
+  @override
+  String get powerOffMacro => 'Power Off macro';
+
+  @override
+  String get powerToggleSection => 'Or a single toggle macro';
+
+  @override
+  String get powerToggleMacro => 'Power Toggle macro';
+
+  @override
+  String get powerMenuTitle => 'Advanced Power Switch';
+
+  @override
+  String get powerMenuSubtitle => 'Control printer power with a macro';
+
+  @override
+  String get powerMacroTooltip => 'Power';
+
+  @override
+  String powerMacroToggleConfirm(String name) {
+    return 'Switch $name power?';
+  }
+
+  @override
+  String powerMacroChooseTitle(String name) {
+    return 'Switch $name power';
+  }
+
+  @override
+  String lightChooseTitle(String name) {
+    return 'Switch $name light';
+  }
+
+  @override
   String get dashboardShowWebcams => 'Afficher les webcams';
 
   @override
