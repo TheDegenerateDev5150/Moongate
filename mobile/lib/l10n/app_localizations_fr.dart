@@ -772,6 +772,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tileCancelled => 'Annulée';
 
   @override
+  String get tileClearJobTooltip => 'Effacer et remettre en inactivité';
+
+  @override
+  String get tileClearJobFailed => 'Impossible de réinitialiser l\'imprimante';
+
+  @override
   String get tileError => 'Erreur';
 
   @override

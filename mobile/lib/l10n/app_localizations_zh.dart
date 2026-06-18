@@ -724,6 +724,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tileCancelled => '已取消';
 
   @override
+  String get tileClearJobTooltip => '清除并恢复为空闲';
+
+  @override
+  String get tileClearJobFailed => '无法重置打印机';
+
+  @override
   String get tileError => '错误';
 
   @override

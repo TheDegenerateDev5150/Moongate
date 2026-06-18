@@ -762,6 +762,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tileCancelled => 'Отменено';
 
   @override
+  String get tileClearJobTooltip => 'Очистить и вернуть в ожидание';
+
+  @override
+  String get tileClearJobFailed => 'Не удалось сбросить принтер';
+
+  @override
   String get tileError => 'Ошибка';
 
   @override

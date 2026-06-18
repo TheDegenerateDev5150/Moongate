@@ -1442,6 +1442,18 @@ abstract class AppLocalizations {
   /// **'Cancelled'**
   String get tileCancelled;
 
+  /// Tooltip on the × in a Done/Cancelled status badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear and set to idle'**
+  String get tileClearJobTooltip;
+
+  /// Snackbar shown when clearing the finished job (SDCARD_RESET_FILE) failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reset the printer'**
+  String get tileClearJobFailed;
+
   /// Status badge shown when the printer is in an error state.
   ///
   /// In en, this message translates to:

@@ -761,6 +761,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get tileCancelled => 'Anulowano';
 
   @override
+  String get tileClearJobTooltip => 'Wyczyść i ustaw jako bezczynną';
+
+  @override
+  String get tileClearJobFailed => 'Nie udało się zresetować drukarki';
+
+  @override
   String get tileError => 'Błąd';
 
   @override

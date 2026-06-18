@@ -271,6 +271,36 @@ class PrintControlService {
     return ok ?? false;
   }
 
+  /// Clear a finished job and return Klipper's print state to standby (Idle).
+  ///
+  /// After a print ends, `print_stats.state` stays at `complete` (or
+  /// `cancelled`) until something clears it, so the tile keeps showing
+  /// "Done"/"Cancelled". `SDCARD_RESET_FILE` unloads the virtual-sdcard file and
+  /// calls `print_stats.reset()`, which returns the state to `standby` — the
+  /// same gcode Mainsail/Fluidd fire from their post-print "clear" action (it
+  /// resets the stats even when no file is loaded, and Klipper only refuses it
+  /// when run *from* the SD file mid-print, which never applies here). Rides the
+  /// same transparent `printer/gcode/script` proxy as [runMacro] (no plugin
+  /// update); because it changes the *real* Klipper state, both the dashboard
+  /// poll and the notification isolate read Idle on their next cycle.
+  Future<bool> resetPrintState() async {
+    final ok = await _viaLanThenTunnel((base, token, isLan) async {
+      try {
+        final uri = Uri.parse('$base/printer/gcode/script'
+            '?script=${Uri.encodeComponent('SDCARD_RESET_FILE')}');
+        final resp = await http
+            .post(uri,
+                headers: isLan ? null : {'Authorization': 'Bearer $token'})
+            .timeout(Duration(seconds: isLan ? 4 : 12));
+        // null (not false) on non-200 so the next path is still tried.
+        return resp.statusCode == 200 ? true : null;
+      } catch (_) {
+        return null;
+      }
+    });
+    return ok ?? false;
+  }
+
   // ── Power devices: list + switch a Moonraker [power …] device ──────────────
   //
   // Moonraker's device_power component manages [power …] sections (any type —

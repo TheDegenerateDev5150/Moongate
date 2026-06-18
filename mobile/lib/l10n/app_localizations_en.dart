@@ -751,6 +751,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tileCancelled => 'Cancelled';
 
   @override
+  String get tileClearJobTooltip => 'Clear and set to idle';
+
+  @override
+  String get tileClearJobFailed => 'Couldn\'t reset the printer';
+
+  @override
   String get tileError => 'Error';
 
   @override

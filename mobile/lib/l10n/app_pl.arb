@@ -242,6 +242,8 @@
   "tileIdle": "Bezczynna",
   "tileDone": "Gotowe",
   "tileCancelled": "Anulowano",
+  "tileClearJobTooltip": "Wyczyść i ustaw jako bezczynną",
+  "tileClearJobFailed": "Nie udało się zresetować drukarki",
   "tileError": "Błąd",
   "tileStarting": "Uruchamianie",
   "tileConnectingBadge": "Łączenie",

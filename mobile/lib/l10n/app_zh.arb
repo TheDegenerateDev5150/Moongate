@@ -242,6 +242,8 @@
   "tileIdle": "空闲",
   "tileDone": "完成",
   "tileCancelled": "已取消",
+  "tileClearJobTooltip": "清除并恢复为空闲",
+  "tileClearJobFailed": "无法重置打印机",
   "tileError": "错误",
   "tileStarting": "正在启动",
   "tileConnectingBadge": "正在连接",

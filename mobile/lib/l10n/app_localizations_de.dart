@@ -764,6 +764,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tileCancelled => 'Abgebrochen';
 
   @override
+  String get tileClearJobTooltip => 'Löschen und auf Leerlauf setzen';
+
+  @override
+  String get tileClearJobFailed => 'Drucker konnte nicht zurückgesetzt werden';
+
+  @override
   String get tileError => 'Fehler';
 
   @override

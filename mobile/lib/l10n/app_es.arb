@@ -242,6 +242,8 @@
   "tileIdle": "Inactiva",
   "tileDone": "Hecho",
   "tileCancelled": "Cancelada",
+  "tileClearJobTooltip": "Borrar y poner como inactiva",
+  "tileClearJobFailed": "No se pudo restablecer la impresora",
   "tileError": "Error",
   "tileStarting": "Iniciando",
   "tileConnectingBadge": "Conectando",

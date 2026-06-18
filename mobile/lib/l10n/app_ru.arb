@@ -242,6 +242,8 @@
   "tileIdle": "Ожидание",
   "tileDone": "Готово",
   "tileCancelled": "Отменено",
+  "tileClearJobTooltip": "Очистить и вернуть в ожидание",
+  "tileClearJobFailed": "Не удалось сбросить принтер",
   "tileError": "Ошибка",
   "tileStarting": "Запуск",
   "tileConnectingBadge": "Подключение",

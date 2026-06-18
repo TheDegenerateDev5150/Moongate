@@ -242,6 +242,8 @@
   "tileIdle": "Leerlauf",
   "tileDone": "Fertig",
   "tileCancelled": "Abgebrochen",
+  "tileClearJobTooltip": "Löschen und auf Leerlauf setzen",
+  "tileClearJobFailed": "Drucker konnte nicht zurückgesetzt werden",
   "tileError": "Fehler",
   "tileStarting": "Startet",
   "tileConnectingBadge": "Verbinden",
