@@ -153,9 +153,11 @@ You can point a tile at a camera that isn't connected to Klipper (e.g. an old ph
 - **Auto-detected camera wrong or missing?** Moongate reads the *first* webcam from Mainsail's webcam list. If you have several, set the one you want by hand with the gear, or reorder them in Mainsail.
 - **Gears in the way?** Turn them off under **Menu → Camera config icons** — that hides every tile's gear without affecting the camera feed.
 
-## My camera feeds all disappeared / show the logo
+## A tile shows the logo, or a printer has no camera at all
 
-If every tile shows the Mainsail/Fluidd placeholder instead of its feed, check **Menu → Camera feed → Show webcams** — that master switch turns all dashboard feeds off (a data saver) and back on. The full-screen camera view (the eye on a tile, or the camera icon on the printer page) still works even with the feeds off.
+If a tile shows the **Mainsail/Fluidd logo** instead of a live picture, that feed just isn't loading — the printer is offline or connecting, or it has no camera configured. The full-screen camera view (the eye on a tile, or the camera icon on the printer page) still works whenever there's a feed.
+
+If a printer has **no camera area at all** (a slim, compact tile), its webcam is switched **off**: open **Menu → Webcams** and turn it back on. Turning a printer's webcam off there collapses its tile to save space and data; turning it on restores the full tile with its feed.
 
 ## The power button isn't showing on my printer's tile
 
