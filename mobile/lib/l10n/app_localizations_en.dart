@@ -757,6 +757,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tileClearJobFailed => 'Couldn\'t reset the printer';
 
   @override
+  String get dashboardBackgroundTitle => 'Dashboard background';
+
+  @override
+  String get dashboardBackgroundNone => 'None — theme colour';
+
+  @override
+  String get dashboardBackgroundCustom => 'Custom image';
+
+  @override
+  String get dashboardBackgroundRemove => 'Remove background';
+
+  @override
+  String get dashboardBackgroundSet => 'Background updated';
+
+  @override
+  String get uiGuideSectionTileButtons => 'Tile buttons';
+
+  @override
+  String get uiGuideFilesTitle => 'Print a file';
+
+  @override
+  String get uiGuideFilesDesc =>
+      'Browse the printer\'s stored G-code files and start one.';
+
+  @override
+  String get uiGuideMacrosTitle => 'Macros';
+
+  @override
+  String get uiGuideMacrosDesc => 'Run one of the printer\'s Klipper macros.';
+
+  @override
+  String get uiGuidePowerTitle => 'Power';
+
+  @override
+  String get uiGuidePowerDesc =>
+      'Switch the printer on or off, when it has a power device.';
+
+  @override
+  String get uiGuideLightingTitle => 'Lighting';
+
+  @override
+  String get uiGuideLightingDesc =>
+      'Toggle the printer\'s light; the bulb glows when it\'s on.';
+
+  @override
+  String get uiGuideCameraViewTitle => 'Camera';
+
+  @override
+  String get uiGuideCameraViewDesc => 'Open the live camera full-screen.';
+
+  @override
+  String get uiGuideCameraSetupTitle => 'Camera setup';
+
+  @override
+  String get uiGuideCameraSetupDesc =>
+      'Point a tile at a camera that isn\'t wired into Klipper.';
+
+  @override
+  String get uiGuideClearJobTitle => 'Clear a finished print';
+
+  @override
+  String get uiGuideClearJobDesc =>
+      'Tap the × on a Done or Cancelled tile to set it back to Idle.';
+
+  @override
   String get tileError => 'Error';
 
   @override

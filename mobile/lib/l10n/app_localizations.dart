@@ -1454,6 +1454,126 @@ abstract class AppLocalizations {
   /// **'Couldn\'t reset the printer'**
   String get tileClearJobFailed;
 
+  /// Drawer row title for the custom dashboard background image setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard background'**
+  String get dashboardBackgroundTitle;
+
+  /// Subtitle for the dashboard background row when no custom image is set.
+  ///
+  /// In en, this message translates to:
+  /// **'None — theme colour'**
+  String get dashboardBackgroundNone;
+
+  /// Subtitle for the dashboard background row when a custom image is set.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom image'**
+  String get dashboardBackgroundCustom;
+
+  /// Tooltip on the button that clears the custom dashboard background.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove background'**
+  String get dashboardBackgroundRemove;
+
+  /// Snackbar confirming a new dashboard background image was applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Background updated'**
+  String get dashboardBackgroundSet;
+
+  /// Icon-guide section header for the action buttons on a printer tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Tile buttons'**
+  String get uiGuideSectionTileButtons;
+
+  /// Icon-guide entry title for the folder / print-a-file button.
+  ///
+  /// In en, this message translates to:
+  /// **'Print a file'**
+  String get uiGuideFilesTitle;
+
+  /// Icon-guide description for the folder / print-a-file button.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse the printer\'s stored G-code files and start one.'**
+  String get uiGuideFilesDesc;
+
+  /// Icon-guide entry title for the macros button.
+  ///
+  /// In en, this message translates to:
+  /// **'Macros'**
+  String get uiGuideMacrosTitle;
+
+  /// Icon-guide description for the macros button.
+  ///
+  /// In en, this message translates to:
+  /// **'Run one of the printer\'s Klipper macros.'**
+  String get uiGuideMacrosDesc;
+
+  /// Icon-guide entry title for the power on/off button.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get uiGuidePowerTitle;
+
+  /// Icon-guide description for the power on/off button.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch the printer on or off, when it has a power device.'**
+  String get uiGuidePowerDesc;
+
+  /// Icon-guide entry title for the lighting bulb button.
+  ///
+  /// In en, this message translates to:
+  /// **'Lighting'**
+  String get uiGuideLightingTitle;
+
+  /// Icon-guide description for the lighting bulb button.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle the printer\'s light; the bulb glows when it\'s on.'**
+  String get uiGuideLightingDesc;
+
+  /// Icon-guide entry title for the camera view (eye) button.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get uiGuideCameraViewTitle;
+
+  /// Icon-guide description for the camera view (eye) button.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the live camera full-screen.'**
+  String get uiGuideCameraViewDesc;
+
+  /// Icon-guide entry title for the camera-config gear button.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera setup'**
+  String get uiGuideCameraSetupTitle;
+
+  /// Icon-guide description for the camera-config gear button.
+  ///
+  /// In en, this message translates to:
+  /// **'Point a tile at a camera that isn\'t wired into Klipper.'**
+  String get uiGuideCameraSetupDesc;
+
+  /// Icon-guide entry title for the × that clears a finished or cancelled job.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear a finished print'**
+  String get uiGuideClearJobTitle;
+
+  /// Icon-guide description for the × that clears a finished or cancelled job.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the × on a Done or Cancelled tile to set it back to Idle.'**
+  String get uiGuideClearJobDesc;
+
   /// Status badge shown when the printer is in an error state.
   ///
   /// In en, this message translates to:

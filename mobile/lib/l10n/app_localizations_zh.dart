@@ -730,6 +730,66 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tileClearJobFailed => '无法重置打印机';
 
   @override
+  String get dashboardBackgroundTitle => '仪表板背景';
+
+  @override
+  String get dashboardBackgroundNone => '无 — 主题颜色';
+
+  @override
+  String get dashboardBackgroundCustom => '自定义图片';
+
+  @override
+  String get dashboardBackgroundRemove => '移除背景';
+
+  @override
+  String get dashboardBackgroundSet => '背景已更新';
+
+  @override
+  String get uiGuideSectionTileButtons => '磁贴按钮';
+
+  @override
+  String get uiGuideFilesTitle => '打印文件';
+
+  @override
+  String get uiGuideFilesDesc => '浏览打印机中存储的 G-code 文件并开始打印。';
+
+  @override
+  String get uiGuideMacrosTitle => '宏';
+
+  @override
+  String get uiGuideMacrosDesc => '运行打印机的某个 Klipper 宏。';
+
+  @override
+  String get uiGuidePowerTitle => '电源';
+
+  @override
+  String get uiGuidePowerDesc => '在打印机配有电源设备时开关打印机。';
+
+  @override
+  String get uiGuideLightingTitle => '照明';
+
+  @override
+  String get uiGuideLightingDesc => '切换打印机灯光；灯泡亮起表示已开启。';
+
+  @override
+  String get uiGuideCameraViewTitle => '摄像头';
+
+  @override
+  String get uiGuideCameraViewDesc => '全屏打开实时摄像头。';
+
+  @override
+  String get uiGuideCameraSetupTitle => '摄像头设置';
+
+  @override
+  String get uiGuideCameraSetupDesc => '将磁贴指向未接入 Klipper 的摄像头。';
+
+  @override
+  String get uiGuideClearJobTitle => '清除已完成的打印';
+
+  @override
+  String get uiGuideClearJobDesc => '点按“完成”或“已取消”磁贴上的 × 即可将其恢复为空闲。';
+
+  @override
   String get tileError => '错误';
 
   @override

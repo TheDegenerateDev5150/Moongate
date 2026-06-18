@@ -1,5 +1,14 @@
 [
   {
+    "version": "v0.9.11",
+    "bullets": [
+      "Clear a finished print right from the tile — when a job ends, its tile shows a Done (or Cancelled) badge; tap the small × on it to send the printer back to Idle. One tap, no pop-up, and your print notification updates to Idle too",
+      "Give the dashboard your own background — switch to the Custom theme, open it from the menu, then pick any image from your phone to sit behind the tiles. It's centred and scaled to fit over your theme colour, so a wallpaper fills the screen and a logo PNG sits neatly in the middle with the theme colour around it",
+      "Refreshed icon guide — the in-app guide (menu → About) now covers all the newer tile buttons: Print a file, Macros, Power, Lighting, Camera and Camera setup, plus the new clear-a-print ×",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.10",
     "bullets": [
       "Power your printer on or off right from its dashboard tile — if a printer has a Moonraker power device (a [power ...] section, any type: GPIO, Shelly, TP-Link, etc.), a power button appears in the bottom-left corner of its camera. Tap it and confirm to switch the printer on or off",

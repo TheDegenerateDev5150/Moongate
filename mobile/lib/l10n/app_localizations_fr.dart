@@ -778,6 +778,73 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tileClearJobFailed => 'Impossible de réinitialiser l\'imprimante';
 
   @override
+  String get dashboardBackgroundTitle => 'Arrière-plan du tableau de bord';
+
+  @override
+  String get dashboardBackgroundNone => 'Aucun — couleur du thème';
+
+  @override
+  String get dashboardBackgroundCustom => 'Image personnalisée';
+
+  @override
+  String get dashboardBackgroundRemove => 'Supprimer l\'arrière-plan';
+
+  @override
+  String get dashboardBackgroundSet => 'Arrière-plan mis à jour';
+
+  @override
+  String get uiGuideSectionTileButtons => 'Boutons de la tuile';
+
+  @override
+  String get uiGuideFilesTitle => 'Imprimer un fichier';
+
+  @override
+  String get uiGuideFilesDesc =>
+      'Parcourez les fichiers G-code stockés sur l\'imprimante et lancez-en un.';
+
+  @override
+  String get uiGuideMacrosTitle => 'Macros';
+
+  @override
+  String get uiGuideMacrosDesc =>
+      'Exécutez l\'une des macros Klipper de l\'imprimante.';
+
+  @override
+  String get uiGuidePowerTitle => 'Alimentation';
+
+  @override
+  String get uiGuidePowerDesc =>
+      'Allumez ou éteignez l\'imprimante, lorsqu\'elle dispose d\'un appareil d\'alimentation.';
+
+  @override
+  String get uiGuideLightingTitle => 'Éclairage';
+
+  @override
+  String get uiGuideLightingDesc =>
+      'Activez/désactivez la lumière de l\'imprimante ; l\'ampoule s\'allume quand elle est active.';
+
+  @override
+  String get uiGuideCameraViewTitle => 'Caméra';
+
+  @override
+  String get uiGuideCameraViewDesc =>
+      'Ouvrez la caméra en direct en plein écran.';
+
+  @override
+  String get uiGuideCameraSetupTitle => 'Configuration de la caméra';
+
+  @override
+  String get uiGuideCameraSetupDesc =>
+      'Pointez une tuile vers une caméra non reliée à Klipper.';
+
+  @override
+  String get uiGuideClearJobTitle => 'Effacer une impression terminée';
+
+  @override
+  String get uiGuideClearJobDesc =>
+      'Touchez le × d\'une tuile Terminée ou Annulée pour la remettre en inactivité.';
+
+  @override
   String get tileError => 'Erreur';
 
   @override

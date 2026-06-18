@@ -770,6 +770,72 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tileClearJobFailed => 'Drucker konnte nicht zurückgesetzt werden';
 
   @override
+  String get dashboardBackgroundTitle => 'Dashboard-Hintergrund';
+
+  @override
+  String get dashboardBackgroundNone => 'Keiner — Themenfarbe';
+
+  @override
+  String get dashboardBackgroundCustom => 'Eigenes Bild';
+
+  @override
+  String get dashboardBackgroundRemove => 'Hintergrund entfernen';
+
+  @override
+  String get dashboardBackgroundSet => 'Hintergrund aktualisiert';
+
+  @override
+  String get uiGuideSectionTileButtons => 'Kachel-Schaltflächen';
+
+  @override
+  String get uiGuideFilesTitle => 'Datei drucken';
+
+  @override
+  String get uiGuideFilesDesc =>
+      'Die gespeicherten G-Code-Dateien des Druckers durchsuchen und eine starten.';
+
+  @override
+  String get uiGuideMacrosTitle => 'Makros';
+
+  @override
+  String get uiGuideMacrosDesc =>
+      'Eines der Klipper-Makros des Druckers ausführen.';
+
+  @override
+  String get uiGuidePowerTitle => 'Stromversorgung';
+
+  @override
+  String get uiGuidePowerDesc =>
+      'Den Drucker ein- oder ausschalten, sofern ein Power-Gerät vorhanden ist.';
+
+  @override
+  String get uiGuideLightingTitle => 'Beleuchtung';
+
+  @override
+  String get uiGuideLightingDesc =>
+      'Das Licht des Druckers umschalten; die Glühbirne leuchtet, wenn es an ist.';
+
+  @override
+  String get uiGuideCameraViewTitle => 'Kamera';
+
+  @override
+  String get uiGuideCameraViewDesc => 'Die Live-Kamera im Vollbild öffnen.';
+
+  @override
+  String get uiGuideCameraSetupTitle => 'Kamera-Einrichtung';
+
+  @override
+  String get uiGuideCameraSetupDesc =>
+      'Eine Kachel auf eine Kamera richten, die nicht mit Klipper verbunden ist.';
+
+  @override
+  String get uiGuideClearJobTitle => 'Abgeschlossenen Druck löschen';
+
+  @override
+  String get uiGuideClearJobDesc =>
+      'Tippe auf das × einer Fertig- oder Abgebrochen-Kachel, um sie wieder auf Leerlauf zu setzen.';
+
+  @override
   String get tileError => 'Fehler';
 
   @override

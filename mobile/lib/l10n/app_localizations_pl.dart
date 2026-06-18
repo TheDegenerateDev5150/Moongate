@@ -767,6 +767,72 @@ class AppLocalizationsPl extends AppLocalizations {
   String get tileClearJobFailed => 'Nie udało się zresetować drukarki';
 
   @override
+  String get dashboardBackgroundTitle => 'Tło pulpitu';
+
+  @override
+  String get dashboardBackgroundNone => 'Brak — kolor motywu';
+
+  @override
+  String get dashboardBackgroundCustom => 'Własny obraz';
+
+  @override
+  String get dashboardBackgroundRemove => 'Usuń tło';
+
+  @override
+  String get dashboardBackgroundSet => 'Zaktualizowano tło';
+
+  @override
+  String get uiGuideSectionTileButtons => 'Przyciski kafelka';
+
+  @override
+  String get uiGuideFilesTitle => 'Wydrukuj plik';
+
+  @override
+  String get uiGuideFilesDesc =>
+      'Przeglądaj pliki G-code zapisane w drukarce i uruchom jeden.';
+
+  @override
+  String get uiGuideMacrosTitle => 'Makra';
+
+  @override
+  String get uiGuideMacrosDesc => 'Uruchom jedno z makr Klipper drukarki.';
+
+  @override
+  String get uiGuidePowerTitle => 'Zasilanie';
+
+  @override
+  String get uiGuidePowerDesc =>
+      'Włącz lub wyłącz drukarkę, gdy ma urządzenie zasilające.';
+
+  @override
+  String get uiGuideLightingTitle => 'Oświetlenie';
+
+  @override
+  String get uiGuideLightingDesc =>
+      'Przełącz światło drukarki; żarówka świeci, gdy jest włączone.';
+
+  @override
+  String get uiGuideCameraViewTitle => 'Kamera';
+
+  @override
+  String get uiGuideCameraViewDesc =>
+      'Otwórz kamerę na żywo na pełnym ekranie.';
+
+  @override
+  String get uiGuideCameraSetupTitle => 'Konfiguracja kamery';
+
+  @override
+  String get uiGuideCameraSetupDesc =>
+      'Skieruj kafelek na kamerę niepodłączoną do Klippera.';
+
+  @override
+  String get uiGuideClearJobTitle => 'Wyczyść ukończony wydruk';
+
+  @override
+  String get uiGuideClearJobDesc =>
+      'Dotknij × na kafelku Gotowe lub Anulowano, aby ustawić go jako bezczynny.';
+
+  @override
   String get tileError => 'Błąd';
 
   @override

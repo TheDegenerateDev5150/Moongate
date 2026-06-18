@@ -773,6 +773,73 @@ class AppLocalizationsIt extends AppLocalizations {
   String get tileClearJobFailed => 'Impossibile reimpostare la stampante';
 
   @override
+  String get dashboardBackgroundTitle => 'Sfondo della dashboard';
+
+  @override
+  String get dashboardBackgroundNone => 'Nessuno — colore del tema';
+
+  @override
+  String get dashboardBackgroundCustom => 'Immagine personalizzata';
+
+  @override
+  String get dashboardBackgroundRemove => 'Rimuovi sfondo';
+
+  @override
+  String get dashboardBackgroundSet => 'Sfondo aggiornato';
+
+  @override
+  String get uiGuideSectionTileButtons => 'Pulsanti della scheda';
+
+  @override
+  String get uiGuideFilesTitle => 'Stampa un file';
+
+  @override
+  String get uiGuideFilesDesc =>
+      'Sfoglia i file G-code salvati sulla stampante e avviane uno.';
+
+  @override
+  String get uiGuideMacrosTitle => 'Macro';
+
+  @override
+  String get uiGuideMacrosDesc =>
+      'Esegui una delle macro Klipper della stampante.';
+
+  @override
+  String get uiGuidePowerTitle => 'Alimentazione';
+
+  @override
+  String get uiGuidePowerDesc =>
+      'Accendi o spegni la stampante, quando ha un dispositivo di alimentazione.';
+
+  @override
+  String get uiGuideLightingTitle => 'Illuminazione';
+
+  @override
+  String get uiGuideLightingDesc =>
+      'Attiva/disattiva la luce della stampante; la lampadina si illumina quando è accesa.';
+
+  @override
+  String get uiGuideCameraViewTitle => 'Fotocamera';
+
+  @override
+  String get uiGuideCameraViewDesc =>
+      'Apri la fotocamera dal vivo a schermo intero.';
+
+  @override
+  String get uiGuideCameraSetupTitle => 'Configurazione fotocamera';
+
+  @override
+  String get uiGuideCameraSetupDesc =>
+      'Punta una scheda verso una fotocamera non collegata a Klipper.';
+
+  @override
+  String get uiGuideClearJobTitle => 'Cancella una stampa terminata';
+
+  @override
+  String get uiGuideClearJobDesc =>
+      'Tocca la × su una scheda Fatto o Annullata per riportarla su inattiva.';
+
+  @override
   String get tileError => 'Errore';
 
   @override

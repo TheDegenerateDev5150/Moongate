@@ -776,6 +776,73 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tileClearJobFailed => 'No se pudo restablecer la impresora';
 
   @override
+  String get dashboardBackgroundTitle => 'Fondo del panel';
+
+  @override
+  String get dashboardBackgroundNone => 'Ninguno — color del tema';
+
+  @override
+  String get dashboardBackgroundCustom => 'Imagen personalizada';
+
+  @override
+  String get dashboardBackgroundRemove => 'Quitar fondo';
+
+  @override
+  String get dashboardBackgroundSet => 'Fondo actualizado';
+
+  @override
+  String get uiGuideSectionTileButtons => 'Botones de la tarjeta';
+
+  @override
+  String get uiGuideFilesTitle => 'Imprimir un archivo';
+
+  @override
+  String get uiGuideFilesDesc =>
+      'Explora los archivos G-code guardados en la impresora e inicia uno.';
+
+  @override
+  String get uiGuideMacrosTitle => 'Macros';
+
+  @override
+  String get uiGuideMacrosDesc =>
+      'Ejecuta una de las macros de Klipper de la impresora.';
+
+  @override
+  String get uiGuidePowerTitle => 'Encendido';
+
+  @override
+  String get uiGuidePowerDesc =>
+      'Enciende o apaga la impresora, cuando tiene un dispositivo de encendido.';
+
+  @override
+  String get uiGuideLightingTitle => 'Iluminación';
+
+  @override
+  String get uiGuideLightingDesc =>
+      'Activa o desactiva la luz de la impresora; la bombilla se ilumina cuando está encendida.';
+
+  @override
+  String get uiGuideCameraViewTitle => 'Cámara';
+
+  @override
+  String get uiGuideCameraViewDesc =>
+      'Abre la cámara en vivo a pantalla completa.';
+
+  @override
+  String get uiGuideCameraSetupTitle => 'Configuración de cámara';
+
+  @override
+  String get uiGuideCameraSetupDesc =>
+      'Apunta una tarjeta a una cámara que no está conectada a Klipper.';
+
+  @override
+  String get uiGuideClearJobTitle => 'Borrar una impresión finalizada';
+
+  @override
+  String get uiGuideClearJobDesc =>
+      'Toca la × en una tarjeta Hecho o Cancelada para volver a ponerla como inactiva.';
+
+  @override
   String get tileError => 'Error';
 
   @override

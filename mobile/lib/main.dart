@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'providers/custom_theme_provider.dart';
+import 'providers/dashboard_background_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/lan_discovery_service.dart';
 import 'services/print_notification_service.dart';
@@ -42,6 +43,7 @@ void main() async {
   await container.read(notifPollIntervalProvider.notifier).load();
   await container.read(notificationFieldsProvider.notifier).load();
   await container.read(webcamsEnabledProvider.notifier).load();
+  await container.read(dashboardBackgroundProvider.notifier).load();
 
   // Bring the print-notification foreground service in line with the saved
   // preference — starts it if the user left notifications on. Best-effort.
