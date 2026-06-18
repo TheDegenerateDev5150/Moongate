@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -19,10 +21,14 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _anim;
   late final Animation<double> _fade;
   late final Animation<double> _scale;
+  // A second, continuously-looping controller drives the "alive" loading
+  // effect — a breathing glow on the logo and a travelling pulse through the
+  // dots — so the splash doesn't sit perfectly still while it loads.
+  late final AnimationController _pulse;
 
   @override
   void initState() {
@@ -36,6 +42,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         .animate(CurvedAnimation(parent: _anim, curve: Curves.easeOutBack));
     _anim.forward();
 
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat();
+
     Future.delayed(const Duration(milliseconds: 2000), () {
       if (mounted) context.go('/dashboard');
     });
@@ -44,6 +55,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   void dispose() {
     _anim.dispose();
+    _pulse.dispose();
     super.dispose();
   }
 
@@ -68,20 +80,34 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: brandContainer,
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: brand.withValues(alpha:0.3),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
+                // Breathing logo: a gentle scale + a pulsing glow, looping so
+                // the mark feels alive while the app loads.
+                AnimatedBuilder(
+                  animation: _pulse,
+                  builder: (context, child) {
+                    final breathe =
+                        (1 - math.cos(_pulse.value * 2 * math.pi)) / 2;
+                    return Transform.scale(
+                      scale: 1.0 + 0.05 * breathe,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: brandContainer,
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: brand
+                                  .withValues(alpha: 0.25 + 0.35 * breathe),
+                              blurRadius: 16 + 22 * breathe,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: child,
                       ),
-                    ],
-                  ),
+                    );
+                  },
                   // The Moongate moon-gate mark (same SVG as the dashboard
                   // app-bar / launcher icon), tinted to the brand colour.
                   child: SvgPicture.asset(
@@ -107,6 +133,32 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         color: cs.onSurface.withValues(alpha:0.45),
                         letterSpacing: 1,
                       ),
+                ),
+                const SizedBox(height: 22),
+                // Three dots with a travelling pulse — a quiet "loading" cue.
+                AnimatedBuilder(
+                  animation: _pulse,
+                  builder: (context, _) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(3, (i) {
+                      final phase = (_pulse.value + i / 3) % 1.0;
+                      final wave = (1 - math.cos(phase * 2 * math.pi)) / 2;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Opacity(
+                          opacity: 0.25 + 0.75 * wave,
+                          child: Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: brand,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
                 ),
               ],
             ),
