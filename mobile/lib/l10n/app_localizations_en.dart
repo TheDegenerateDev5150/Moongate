@@ -158,11 +158,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'How see-through the tiles are (0–100), so a background shows through. The camera feed stays solid.';
 
   @override
-  String get dashboardShowWebcams => 'Show webcams';
+  String get dashboardShowWebcams => 'Webcams';
 
   @override
   String get dashboardShowWebcamsSubtitle =>
-      'Turn all dashboard camera feeds on or off';
+      'Show or hide each printer\'s webcam';
 
   @override
   String get updateNotesUnavailable =>

@@ -85,6 +85,14 @@ class PrinterConfig {
   final String? powerOffMacro;
   final String? powerToggleMacro;
 
+  /// Per-printer dashboard display (v0.9.12). When true, this printer's tile
+  /// drops its 1:1 webcam square and renders compact (just the name +
+  /// temperature band) on the dashboard, so printers you don't need to watch
+  /// take far less space and the grid packs them masonry-style. The full
+  /// webcam is still one tap away on the printer page. Additive + optional →
+  /// rides the v3 backup envelope without a schema bump.
+  final bool hideWebcam;
+
   const PrinterConfig({
     required this.id,
     required this.name,
@@ -105,6 +113,7 @@ class PrinterConfig {
     this.powerOnMacro,
     this.powerOffMacro,
     this.powerToggleMacro,
+    this.hideWebcam = false,
   });
 
   PrinterConfig copyWith({
@@ -126,6 +135,7 @@ class PrinterConfig {
     Object? powerOnMacro      = _sentinel,
     Object? powerOffMacro     = _sentinel,
     Object? powerToggleMacro  = _sentinel,
+    bool?   hideWebcam,
   }) =>
       PrinterConfig(
         id:              id,
@@ -163,6 +173,7 @@ class PrinterConfig {
         powerToggleMacro: identical(powerToggleMacro, _sentinel)
             ? this.powerToggleMacro
             : powerToggleMacro as String?,
+        hideWebcam: hideWebcam ?? this.hideWebcam,
       );
 
   /// Normalise a user-typed printer address into a base [lanUrl] such as
@@ -242,6 +253,7 @@ class PrinterConfig {
         if (powerOnMacro != null) 'powerOnMacro': powerOnMacro,
         if (powerOffMacro != null) 'powerOffMacro': powerOffMacro,
         if (powerToggleMacro != null) 'powerToggleMacro': powerToggleMacro,
+        if (hideWebcam) 'hideWebcam': hideWebcam,
       };
 
   factory PrinterConfig.fromJson(Map<String, dynamic> j) {
@@ -272,6 +284,7 @@ class PrinterConfig {
       powerOnMacro:      j['powerOnMacro']        as String?,
       powerOffMacro:     j['powerOffMacro']       as String?,
       powerToggleMacro:  j['powerToggleMacro']    as String?,
+      hideWebcam:        j['hideWebcam']          as bool?   ?? false,
     );
   }
 

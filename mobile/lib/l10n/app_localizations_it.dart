@@ -102,67 +102,69 @@ class AppLocalizationsIt extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Non spegnibile durante la stampa';
 
   @override
-  String get powerScreenTitle => 'Advanced Power Switch';
+  String get powerScreenTitle => 'Interruttore di alimentazione avanzato';
 
   @override
   String get powerScreenBanner =>
-      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.';
+      'Per le stampanti la cui alimentazione è una macro di Klipper anziché un dispositivo di alimentazione di Moonraker. Attivalo e scegli una coppia Accensione + Spegnimento, oppure una singola macro di commutazione: il pulsante di accensione del riquadro le userà.';
 
   @override
-  String get powerUseSwitch => 'Use macros';
+  String get powerUseSwitch => 'Usa le macro';
 
   @override
-  String get powerNeedMacro => 'Set an On + Off pair, or a toggle macro.';
+  String get powerNeedMacro =>
+      'Imposta una coppia Accensione + Spegnimento, oppure una macro di commutazione.';
 
   @override
-  String get powerOnMacro => 'Power On macro';
+  String get powerOnMacro => 'Macro di accensione';
 
   @override
-  String get powerOffMacro => 'Power Off macro';
+  String get powerOffMacro => 'Macro di spegnimento';
 
   @override
-  String get powerToggleSection => 'Or a single toggle macro';
+  String get powerToggleSection => 'Oppure una singola macro di commutazione';
 
   @override
-  String get powerToggleMacro => 'Power Toggle macro';
+  String get powerToggleMacro => 'Macro di commutazione';
 
   @override
-  String get powerMenuTitle => 'Advanced Power Switch';
+  String get powerMenuTitle => 'Interruttore di alimentazione avanzato';
 
   @override
-  String get powerMenuSubtitle => 'Control printer power with a macro';
+  String get powerMenuSubtitle =>
+      'Controlla l\'alimentazione della stampante con una macro';
 
   @override
-  String get powerMacroTooltip => 'Power';
+  String get powerMacroTooltip => 'Alimentazione';
 
   @override
   String powerMacroToggleConfirm(String name) {
-    return 'Switch $name power?';
+    return 'Commutare l\'alimentazione di $name?';
   }
 
   @override
   String powerMacroChooseTitle(String name) {
-    return 'Switch $name power';
+    return 'Cambia l\'alimentazione di $name';
   }
 
   @override
   String lightChooseTitle(String name) {
-    return 'Switch $name light';
+    return 'Cambia la luce di $name';
   }
 
   @override
-  String get tileOpacityTitle => 'Tile opacity';
+  String get tileOpacityTitle => 'Opacità dei riquadri';
 
   @override
   String get tileOpacityDesc =>
-      'How see-through the tiles are (0–100), so a background shows through. The camera feed stays solid.';
+      'Quanto sono trasparenti i riquadri (0–100), così da far vedere uno sfondo. Il flusso della videocamera resta opaco.';
 
   @override
-  String get dashboardShowWebcams => 'Mostra webcam';
+  String get dashboardShowWebcams => 'Webcam';
 
   @override
   String get dashboardShowWebcamsSubtitle =>
-      'Attiva o disattiva tutti i feed delle telecamere';
+      'Mostra o nascondi la webcam di ogni stampante';
 
   @override
   String get updateNotesUnavailable =>

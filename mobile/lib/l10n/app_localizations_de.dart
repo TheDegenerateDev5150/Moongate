@@ -103,67 +103,68 @@ class AppLocalizationsDe extends AppLocalizations {
       'Während des Drucks nicht ausschaltbar';
 
   @override
-  String get powerScreenTitle => 'Advanced Power Switch';
+  String get powerScreenTitle => 'Erweiterter Netzschalter';
 
   @override
   String get powerScreenBanner =>
-      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.';
+      'Für Drucker, deren Stromversorgung ein Klipper-Makro statt eines Moonraker-Stromgeräts ist. Aktivieren und ein Ein/Aus-Paar oder ein einzelnes Umschalt-Makro wählen — die Ein/Aus-Taste der Kachel verwendet sie.';
 
   @override
-  String get powerUseSwitch => 'Use macros';
+  String get powerUseSwitch => 'Makros verwenden';
 
   @override
-  String get powerNeedMacro => 'Set an On + Off pair, or a toggle macro.';
+  String get powerNeedMacro =>
+      'Ein Ein/Aus-Paar oder ein Umschalt-Makro festlegen.';
 
   @override
-  String get powerOnMacro => 'Power On macro';
+  String get powerOnMacro => 'Einschalt-Makro';
 
   @override
-  String get powerOffMacro => 'Power Off macro';
+  String get powerOffMacro => 'Ausschalt-Makro';
 
   @override
-  String get powerToggleSection => 'Or a single toggle macro';
+  String get powerToggleSection => 'Oder ein einzelnes Umschalt-Makro';
 
   @override
-  String get powerToggleMacro => 'Power Toggle macro';
+  String get powerToggleMacro => 'Umschalt-Makro';
 
   @override
-  String get powerMenuTitle => 'Advanced Power Switch';
+  String get powerMenuTitle => 'Erweiterter Netzschalter';
 
   @override
-  String get powerMenuSubtitle => 'Control printer power with a macro';
+  String get powerMenuSubtitle => 'Druckerstrom per Makro steuern';
 
   @override
-  String get powerMacroTooltip => 'Power';
+  String get powerMacroTooltip => 'Strom';
 
   @override
   String powerMacroToggleConfirm(String name) {
-    return 'Switch $name power?';
+    return 'Strom von $name umschalten?';
   }
 
   @override
   String powerMacroChooseTitle(String name) {
-    return 'Switch $name power';
+    return 'Strom von $name schalten';
   }
 
   @override
   String lightChooseTitle(String name) {
-    return 'Switch $name light';
+    return 'Licht von $name schalten';
   }
 
   @override
-  String get tileOpacityTitle => 'Tile opacity';
+  String get tileOpacityTitle => 'Kachel-Deckkraft';
 
   @override
   String get tileOpacityDesc =>
-      'How see-through the tiles are (0–100), so a background shows through. The camera feed stays solid.';
+      'Wie durchsichtig die Kacheln sind (0–100), damit ein Hintergrund durchscheint. Das Kamerabild bleibt deckend.';
 
   @override
-  String get dashboardShowWebcams => 'Webcams anzeigen';
+  String get dashboardShowWebcams => 'Webcams';
 
   @override
   String get dashboardShowWebcamsSubtitle =>
-      'Alle Kamera-Feeds im Dashboard ein- oder ausschalten';
+      'Jede Drucker-Webcam ein- oder ausblenden';
 
   @override
   String get updateNotesUnavailable =>

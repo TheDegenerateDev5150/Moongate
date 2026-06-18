@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:reorderable_grid_view/reorderable_grid_view.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,6 +33,7 @@ import '../language/language_picker.dart';
 import '../notifications/notifications_prompt.dart';
 import 'feedback_sheet.dart';
 import 'printer_tile.dart';
+import 'webcams_overlay.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -80,11 +81,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     PrintNotificationService.instance.refreshNow().ignore();
   }
 
-  /// Persist a drag-to-reorder from the dashboard grid (manual mode only).
-  /// reorderable_grid_view reports the *final* index directly, so this is a
-  /// plain removeAt/insert — no ReorderableListView-style `-1` fix-up. The new
-  /// order is written through the registry (which is the dashboard's order of
-  /// record and rides backups).
+  /// Persist a reorder from the manual-order list (manual mode only).
+  /// ReorderableListView's onReorderItem hands back a newIndex already adjusted
+  /// for the removed item, so this does a plain removeAt/insert. The new order
+  /// is written through the registry (the dashboard's order of record; rides
+  /// backups).
   void _onReorder(int oldIndex, int newIndex) {
     final reordered = List<PrinterConfig>.of(_printers);
     final moved = reordered.removeAt(oldIndex);
@@ -208,11 +209,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       );
     } else {
-      // Manual order: tiles stay where the user put them and can be dragged to
-      // reorder (long-press to pick up). Deliberately NOT wrapped in the status
-      // StreamBuilder — re-sorting is exactly what the user turned off here, and
-      // a rebuild mid-drag would fight the gesture. Each tile still refreshes
-      // its own content through its internal status stream.
+      // Manual order: tiles stay where the user put them; entering reorder mode
+      // swaps the masonry for a single-column draggable list. Deliberately NOT
+      // wrapped in the status StreamBuilder — re-sorting is exactly what the
+      // user turned off here, and a rebuild mid-drag would fight the gesture.
+      // Each tile still refreshes its own content through its status stream.
       body = Column(
         children: [
           if (_reordering && _printers.length > 1) const _ReorderHint(),
@@ -222,8 +223,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               columns: gridColumns,
               onTap: openPrinter,
               tileOpacity: tileOpacity,
-              // Draggable only while actively arranging; otherwise a plain grid
-              // in the saved order so tiles can't be nudged by accident.
+              // Non-null only while actively arranging → the draggable reorder
+              // list; otherwise the read-only masonry in the saved order.
               onReorder: _reordering ? _onReorder : null,
             ),
           ),
@@ -363,7 +364,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final autoArrange   = ref.watch(autoArrangeProvider);
     final cameraRefresh = ref.watch(dashboardCameraRefreshProvider);
     final showCameraIcons = ref.watch(showCameraConfigIconsProvider);
-    final webcamsEnabled = ref.watch(webcamsEnabledProvider);
     final printNotifications = ref.watch(printNotificationsEnabledProvider);
     final pollInterval = ref.watch(notifPollIntervalProvider);
 
@@ -658,17 +658,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             .set(s.first),
                       ),
                     ),
-                    // Master on/off for all dashboard webcam feeds — turning it
-                    // off stops every tile's polling (a data saver) and shows
-                    // the placeholder; the full-screen camera view still works.
-                    SwitchListTile(
+                    // Per-printer webcam visibility. Opens a sheet listing every
+                    // printer with a switch; turning one off collapses its tile
+                    // to the compact (no-camera) layout, which the masonry packs
+                    // in — and it stops that tile fetching snapshots (data saver).
+                    ListTile(
                       dense: true,
-                      secondary: const Icon(Icons.videocam_outlined),
+                      leading: const Icon(Icons.videocam_outlined),
                       title: Text(l.dashboardShowWebcams),
                       subtitle: Text(l.dashboardShowWebcamsSubtitle),
-                      value: webcamsEnabled,
-                      onChanged: (v) =>
-                          ref.read(webcamsEnabledProvider.notifier).set(v),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.pop(context);
+                        showWebcamsSheet(context).then((_) => _load());
+                      },
                     ),
                     // Show / hide the per-tile camera config gear.
                     SwitchListTile(
@@ -976,7 +979,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(showCameraConfigIconsProvider.notifier).load();
     await ref.read(printNotificationsEnabledProvider.notifier).load();
     await ref.read(notificationFieldsProvider.notifier).load();
-    await ref.read(webcamsEnabledProvider.notifier).load();
     await PrintNotificationService.instance
         .sync(ref.read(printNotificationsEnabledProvider));
   }
@@ -1422,9 +1424,10 @@ class _PrinterGrid extends StatelessWidget {
   /// automatically so the extra horizontal space is used well.
   final int columns;
 
-  /// When non-null, the grid is in manual-order mode: tiles can be long-pressed
-  /// and dragged to reorder, and this fires with the new (old, new) indices.
-  /// Null in the default auto-arrange mode, where the grid is a plain GridView.
+  /// When non-null, the dashboard is in manual-order mode: arranging happens in
+  /// a single-column draggable list (a masonry grid can't host drag-to-reorder),
+  /// and this fires with the new (old, new) indices. Null in the default
+  /// auto-arrange mode, where the grid is the read-only masonry view.
   final void Function(int oldIndex, int newIndex)? onReorder;
 
   /// Printer-tile background opacity (Custom theme); 1.0 = opaque.
@@ -1449,38 +1452,11 @@ class _PrinterGrid extends StatelessWidget {
           ? (columns + 1).clamp(2, 4)
           : columns;
 
-      // Each tile's webcam preview is a fixed 1:1 square (see printer_tile).
-      // To let that square span the full tile width, the tile height is sized
-      // as the square (= tile width) plus a fixed band for the status text and
-      // action row beneath it — so childAspectRatio is derived from the real
-      // tile width rather than a hand-tuned per-column constant. Tiles get a
-      // little taller than before (most visibly in multi-column layouts), the
-      // trade for a feed that's square on every device.
       const padding = EdgeInsets.all(12);
-      const crossSpacing = 10.0;
-      // Vertical space reserved under the square webcam for the accent bar,
-      // action row, and name/temperature band. Sized to the common active tile
-      // (idle/ready ≈ 100px) so it sits snug under the square; the busiest tile
-      // (printing, with a filename) runs a little over and the webcam gives a
-      // few px back via its Flexible wrapper (printer_tile) rather than making
-      // every quieter tile carry that worst-case reserve.
-      const tileTextBand = 104.0;
-      final tileWidth = (constraints.maxWidth -
-              padding.horizontal -
-              crossSpacing * (effectiveCols - 1)) /
-          effectiveCols;
-      final aspectRatio = tileWidth / (tileWidth + tileTextBand);
-
-      final gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: effectiveCols,
-        crossAxisSpacing: crossSpacing,
-        mainAxisSpacing: 10,
-        childAspectRatio: aspectRatio,
-      );
+      const spacing = 10.0;
 
       // Keyed by id so a reorder (or a status re-sort) moves a tile and its
-      // poller rather than rebuilding it. The key is also what the reorderable
-      // grid tracks while dragging.
+      // poller rather than rebuilding it.
       Widget tileAt(int i) => PrinterTile(
             key: ValueKey(printers[i].id),
             printer: printers[i],
@@ -1488,23 +1464,46 @@ class _PrinterGrid extends StatelessWidget {
             tileOpacity: tileOpacity,
           );
 
-      if (onReorder == null) {
-        return GridView.builder(
+      // Manual-order mode: a single-column draggable list of printer rows. A
+      // masonry grid can't host drag-to-reorder (the reorder packages need
+      // uniform cells), so arranging happens in this simplified list; the
+      // masonry view reflects the saved order as soon as you're done.
+      if (onReorder != null) {
+        return ReorderableListView.builder(
           padding: padding,
-          gridDelegate: gridDelegate,
           itemCount: printers.length,
-          itemBuilder: (_, i) => tileAt(i),
+          // onReorderItem hands back a newIndex already adjusted for the item
+          // removed at oldIndex, so the saved order matches the drop exactly
+          // (no manual `-1` fix-up, unlike the deprecated onReorder).
+          onReorderItem: onReorder!,
+          itemBuilder: (context, i) {
+            final p = printers[i];
+            return Card(
+              key: ValueKey(p.id),
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              child: ListTile(
+                leading: const Icon(Icons.drag_indicator),
+                title: Text(
+                  p.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            );
+          },
         );
       }
 
-      // Manual-order mode: long-press a tile to lift it, drag it into place;
-      // the reflow animates and the dropped order is persisted by the caller.
-      return ReorderableGridView.builder(
+      // Display mode: masonry so full (webcam) tiles and compact (band-only)
+      // tiles each take their natural height and pack the columns tightly —
+      // roughly two compact tiles fit in the height of one full tile.
+      return MasonryGridView.count(
         padding: padding,
-        gridDelegate: gridDelegate,
+        crossAxisCount: effectiveCols,
+        mainAxisSpacing: spacing,
+        crossAxisSpacing: spacing,
         itemCount: printers.length,
-        onReorder: onReorder!,
-        itemBuilder: (_, i) => tileAt(i),
+        itemBuilder: (context, i) => tileAt(i),
       );
     });
   }

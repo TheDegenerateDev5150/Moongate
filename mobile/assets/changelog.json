@@ -1,5 +1,15 @@
 [
   {
+    "version": "v0.9.12",
+    "bullets": [
+      "Show or hide each printer's webcam — the menu's Webcams entry opens a list of your printers, each with a switch. Turn one off and its dashboard tile shrinks to a compact card (name, status and temperatures, no camera), and the dashboard packs the full and compact tiles together so the printers you're not watching take up far less room",
+      "A hidden webcam also stops that tile fetching its camera, so it doubles as a per-printer data saver — this replaces the old all-or-nothing 'Show webcams' switch with per-printer control",
+      "See-through tiles — on the Custom theme you can now set a tile opacity (0-100) so your dashboard background shows through the tiles, while the camera feed stays solid",
+      "More of the app is translated — the Advanced Power Switch and the new tile-opacity controls are now covered in all 8 languages",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.11",
     "bullets": [
       "Clear a finished print right from the tile — when a job ends, its tile shows a Done (or Cancelled) badge; tap the small × on it to send the printer back to Idle. One tap, no pop-up, and your print notification updates to Idle too",

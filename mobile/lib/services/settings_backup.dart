@@ -37,7 +37,6 @@ class SettingsBackup {
     'notif_fields_enabled':        _Kind.string,
     'app_locale':                  _Kind.string,
     'show_camera_config_icons':    _Kind.boolean,
-    'webcams_enabled':             _Kind.boolean,
   };
 
   /// Snapshot the currently-set preferences into a JSON-safe map. Unset keys

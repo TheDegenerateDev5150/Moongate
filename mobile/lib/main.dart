@@ -42,7 +42,6 @@ void main() async {
   await container.read(printNotificationsEnabledProvider.notifier).load();
   await container.read(notifPollIntervalProvider.notifier).load();
   await container.read(notificationFieldsProvider.notifier).load();
-  await container.read(webcamsEnabledProvider.notifier).load();
   await container.read(dashboardBackgroundProvider.notifier).load();
 
   // Bring the print-notification foreground service in line with the saved
