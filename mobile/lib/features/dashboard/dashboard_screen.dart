@@ -465,11 +465,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       child: Column(
                         children: [
                           RadioListTile(
-                            value: AppThemeMode.system,
-                            title: Text(l.dashboardThemeSystem),
-                            secondary: const Icon(Icons.brightness_auto),
-                          ),
-                          RadioListTile(
                             value: AppThemeMode.dark,
                             title: Text(l.dashboardThemeDark),
                             secondary: const Icon(Icons.dark_mode),

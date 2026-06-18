@@ -5,6 +5,7 @@
       "Clear a finished print right from the tile — when a job ends, its tile shows a Done (or Cancelled) badge; tap the small × on it to send the printer back to Idle. One tap, no pop-up, and your print notification updates to Idle too",
       "Give the dashboard your own background — switch to the Custom theme, open it from the menu, then pick any image from your phone to sit behind the tiles. It's centred and scaled to fit over your theme colour, so a wallpaper fills the screen and a logo PNG sits neatly in the middle with the theme colour around it",
       "Refreshed icon guide — the in-app guide (menu → About) now covers all the newer tile buttons: Print a file, Macros, Power, Lighting, Camera and Camera setup, plus the new clear-a-print ×",
+      "Tidier appearance and menu — the cold-start loading screen now matches the dark theme (no white flash on light-mode phones), the 'System default' theme option has been removed (themes are now Dark, Light and Custom — default Dark), and Settings + Language scroll with the rest of the menu (only the version stays pinned at the bottom)",
       "No Pi update needed — just update the app"
     ]
   },

@@ -150,14 +150,12 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
   /// fall through to `dark` for it.  When in custom mode we set `theme` and
   /// `darkTheme` to the same thing anyway, so the mode passed here is moot.
   ThemeMode _toFlutterMode(AppThemeMode m) => switch (m) {
-        AppThemeMode.system => ThemeMode.system,
         AppThemeMode.light  => ThemeMode.light,
         AppThemeMode.dark   => ThemeMode.dark,
         AppThemeMode.custom => ThemeMode.dark,
       };
 
-  /// The original purple-seeded Material 3 theme.  Used for system / light /
-  /// dark.
+  /// The original purple-seeded Material 3 theme.  Used for light / dark.
   ThemeData _buildSeededTheme(Brightness brightness) {
     return ThemeData(
       useMaterial3: true,

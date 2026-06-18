@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#0E0E10</color>
+    <!-- Cold-start launch screen background. Fixed to Moongate's dark theme
+         background so the native splash (shown before Flutter loads, when it
+         can't yet read the user's theme) matches the default Dark theme instead
+         of flashing the system white on a light-mode phone. -->
+    <color name="launch_background">#FF121212</color>
 </resources>
