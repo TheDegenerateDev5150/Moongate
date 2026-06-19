@@ -401,7 +401,6 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                 children: [
                   // Printer name + connection label on the same row
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
@@ -412,50 +411,31 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                       ),
                       if (_status.connection != PrinterConnection.offline) ...[
                         const SizedBox(width: 4),
-                        // Connection label, with the E-STOP triangle directly
-                        // beneath it (right-aligned).
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _status.connection == PrinterConnection.local
-                                      ? Icons.wifi_rounded
-                                      : Icons.cloud_outlined,
-                                  size: 11,
-                                  color: connColor,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  _status.connection == PrinterConnection.local
-                                      ? l.tileLocal
-                                      : l.tileTunnel,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: connColor,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                // v0.5.0: when connected over LAN, show the
-                                // remote (tunnel) status as a small background
-                                // hint — a "connecting" pip while the Pi's
-                                // tunnel is still coming up after a fresh pair /
-                                // reboot, a green check once the cloud knows the
-                                // tunnel URL. On the tunnel path the badge says
-                                // so already.
-                                if (_status.connection ==
-                                    PrinterConnection.local)
-                                  _TunnelStatusDot(ready: _status.tunnelReady),
-                              ],
-                            ),
-                            const SizedBox(height: 3),
-                            _EstopButton(
-                              tooltip: l.tileEmergencyStop,
-                              onFire: _handleEmergencyStop,
-                            ),
-                          ],
+                        Icon(
+                          _status.connection == PrinterConnection.local
+                              ? Icons.wifi_rounded
+                              : Icons.cloud_outlined,
+                          size: 11,
+                          color: connColor,
                         ),
+                        const SizedBox(width: 3),
+                        Text(
+                          _status.connection == PrinterConnection.local
+                              ? l.tileLocal
+                              : l.tileTunnel,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: connColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        // v0.5.0: when connected over LAN, show the remote
+                        // (tunnel) status as a small background hint — a
+                        // spinner-ish "connecting" pip while the Pi's tunnel
+                        // is still coming up after a fresh pair / reboot, and
+                        // a green check once the cloud knows the tunnel URL.
+                        // On the tunnel path itself the badge already says so.
+                        if (_status.connection == PrinterConnection.local)
+                          _TunnelStatusDot(ready: _status.tunnelReady),
                       ],
                     ],
                   ),
@@ -488,6 +468,12 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                             target: _status.chamberTarget,
                           ),
                         ],
+                        // E-STOP at the right end of the temperature line.
+                        const Spacer(),
+                        _EstopButton(
+                          tooltip: l.tileEmergencyStop,
+                          onFire: _handleEmergencyStop,
+                        ),
                       ],
                     ),
                   ],
@@ -549,7 +535,6 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                 children: [
                   // Name + connection icon + the always-present settings gear.
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
@@ -560,23 +545,17 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                       ),
                       if (_status.connection != PrinterConnection.offline) ...[
                         const SizedBox(width: 5),
-                        // Connection icon + the E-STOP triangle beneath it.
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Icon(
-                              _status.connection == PrinterConnection.local
-                                  ? Icons.wifi_rounded
-                                  : Icons.cloud_outlined,
-                              size: 11,
-                              color: connColor,
-                            ),
-                            const SizedBox(height: 3),
-                            _EstopButton(
-                              tooltip: l.tileEmergencyStop,
-                              onFire: _handleEmergencyStop,
-                            ),
-                          ],
+                        Icon(
+                          _status.connection == PrinterConnection.local
+                              ? Icons.wifi_rounded
+                              : Icons.cloud_outlined,
+                          size: 11,
+                          color: connColor,
+                        ),
+                        const SizedBox(width: 6),
+                        _EstopButton(
+                          tooltip: l.tileEmergencyStop,
+                          onFire: _handleEmergencyStop,
                         ),
                       ],
                     ],
