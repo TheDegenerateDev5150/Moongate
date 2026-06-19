@@ -240,14 +240,19 @@ class PrinterStatusService {
     //     or app-resume still comes up via the normal "starting up" path below.
     final inStartupGrace =
         DateTime.now().difference(_firstPollAt!) < _startupGrace;
-    if (!inStartupGrace) {
-      var reachable = PrinterLivenessService.instance.isCloudOnline(config.id);
-      if (!reachable) {
-        final probeUrl =
-            LanDiscoveryService.instance.lookup(config.id) ?? _currentLanUrl;
-        reachable = probeUrl != null && await _lanHeadReachable(probeUrl);
-      }
-      if (!reachable) {
+    if (!inStartupGrace &&
+        PrinterLivenessService.instance.isKnownOffline(config.id)) {
+      // Positive evidence the printer is offline (cloud last_seen is stale).
+      // Confirm with a token-free LAN HEAD first — a Pi that's up on the LAN but
+      // failing its heartbeats (e.g. clock skew) is still reachable and must not
+      // be skipped. Only when that ALSO fails do we declare offline without
+      // minting a token. Unknown / fresh last_seen falls through and polls — we
+      // never gate on missing data, so a slow/failed seed can't show a live
+      // printer offline.
+      final probeUrl =
+          LanDiscoveryService.instance.lookup(config.id) ?? _currentLanUrl;
+      final lanUp = probeUrl != null && await _lanHeadReachable(probeUrl);
+      if (!lanUp) {
         if (!_disposed) _controller.add(PrinterStatus.offline);
         return;
       }

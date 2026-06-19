@@ -47,13 +47,15 @@ class PrinterLivenessService {
 
   void _log(String msg) => dev.log(msg, name: 'MOONGATE/LIVENESS');
 
-  /// True if the cloud has heard from [printerId] within [_onlineWindow].
-  /// Unknown (never seen) → false; the caller then falls back to a token-free
-  /// LAN probe before deciding the printer is offline.
-  bool isCloudOnline(String printerId) {
+  /// True only when we have a `last_seen` for [printerId] AND it's older than
+  /// [_onlineWindow] — i.e. positive evidence the printer is offline. Returns
+  /// false when `last_seen` is unknown (not seeded yet / never heartbeated), so
+  /// the caller fails OPEN (polls) rather than wrongly showing a live printer
+  /// offline just because we haven't learned its state yet.
+  bool isKnownOffline(String printerId) {
     final ts = _lastSeen[printerId];
     if (ts == null) return false;
-    return DateTime.now().toUtc().difference(ts) < _onlineWindow;
+    return DateTime.now().toUtc().difference(ts) >= _onlineWindow;
   }
 
   /// Most recent known `last_seen` for [printerId] (diagnostics), or null.
