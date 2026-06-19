@@ -134,6 +134,8 @@ mobile/lib/
     ├── printer_access_cache.dart       # In-memory cache of {tunnel_url, access_token} per printer
     ├── printer_registry.dart           # Persistent printer list + LAN URL / webcam / UI-type updaters
     ├── printer_status_service.dart     # Per-tile 4 s poll loop, LAN-first with reachability probe
+    ├── printer_liveness_service.dart    # Realtime + RLS-scoped read of last_seen; gates polling of offline printers (v0.9.16)
+    ├── printer_webview_cache.dart       # Keeps each printer's WebView warm; pre-warms all at startup (v0.9.8 / v0.9.15)
     ├── print_control_service.dart      # pause/resume/cancel/firmware_restart
     ├── update_service.dart             # /APK/latest_version.json poll
     ├── lan_discovery_service.dart      # mDNS browse for _moongate._tcp Pis (v0.5)
@@ -144,6 +146,8 @@ mobile/lib/
 > **v0.6.3 services & deps.** `supabase_service.dart` also handles backup **restore grants** (`createRestoreGrant` / `redeemRestoreGrant`) and **bug reports** (`submitFeedback`); the report UI is `features/dashboard/feedback_sheet.dart`, reachable from the drawer **and** the pairing screen. New dependency: **`device_info_plus`** (device model + Android version for reports). To read submitted reports without the Supabase dashboard, POST to the **`read-feedback`** Edge Function with header `x-moongate-debug: <MOONGATE_DEBUG_KEY>` — the secret is a Supabase function secret (`supabase secrets set/unset`), never in the repo.
 
 > **v0.6.4–v0.6.5.** `diagnostics_service.dart` now also captures the Pi's **plugin version** (from the `/status` reply, where `moongate_standalone.py` reports `MOONGATE_PLUGIN_VERSION`) and the **remote/tunnel** connection result, not just the LAN outcome. v0.6.5 adds the first-run **"How pairing works"** onboarding — `_maybeShowPairingHelp()` / `_showPairingHelp()` in `dashboard_screen.dart`, shown once on cold launch (a persisted "Don't show again" flag suppresses it) and always reachable from the drawer's **How pairing works** item.
+
+> **v0.9.15–v0.9.16 services & deps.** `printer_webview_cache.dart` gained a **pre-warm** path that loads every printer's WebView in the background at startup (so the first open is instant), and a new `printer_liveness_service.dart` tracks each printer's online/offline state via **Supabase Realtime** on the `printers` table (plus a periodic RLS-scoped read) so the dashboard and the notification service stop requesting access for switched-off printers. A new `onMobileDataProvider` in `providers/settings_provider.dart` drives the connectivity-aware camera feed rate. New dependency: **`connectivity_plus`** (Wi-Fi vs. mobile-data detection). The liveness feature relies on the Realtime migration below being applied to the Supabase project.
 
 For a guided tour of how these pieces fit together, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -281,6 +285,8 @@ So **the only thing you commit by hand is code + screenshots + docs**. The relea
 > **Merging a non-release PR? Quiet-merge it with `[skip ci]`.** The build above runs on *every* push to `master` and rebuilds the APK for whatever `version:` is in `mobile/pubspec.yaml`. Merging a PR that **doesn't** bump the version therefore rebuilds the *current* release and **clobbers its existing Release asset** (`gh release upload --clobber`) — silently replacing the published APK with a fresh build (the `latest_version.json` manifest is left untouched when the build number hasn't changed). For deps / config / Pi-side-only PRs, put `[skip ci]` in the **merge-commit subject** so nothing rebuilds; the changes ride into the next versioned release.
 
 `ci.yml` runs `flutter analyze` and `flutter test` on PRs (unit tests live in `mobile/test/`).
+
+> **The Supabase backend is not part of CI.** Database migrations under [`supabase/migrations/`](supabase/migrations/) and the Edge Functions under [`supabase/functions/`](supabase/functions/) are deployed **manually** against the live project — `supabase db push` for migrations and `supabase functions deploy <name>` for functions — never by GitHub Actions. So a PR that adds a migration (e.g. `20260619120000_printers_realtime.sql`, which enabled Realtime on the `printers` table for v0.9.16) or changes a function (e.g. the access-token TTL in `_shared/accessToken.ts`) only takes effect once it's pushed to Supabase by hand. Full backend setup / deploy flow: [`supabase/README.md`](supabase/README.md).
 
 ---
 

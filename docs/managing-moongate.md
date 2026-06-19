@@ -21,7 +21,7 @@ Pi-side updates appear automatically in **Mainsail → Machine → Software Upda
 Prefer the command line? SSH in and re-run the installer — it pulls the latest and restarts the services:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh | bash
 ```
 
 > Some releases note **"re-run the Pi installer"** in the changelog — that means a plugin-side change shipped (e.g. v0.5.1's instant-pairing QR). Update the plugin to get it.
@@ -51,7 +51,7 @@ To reinstall cleanly:
 To completely remove Moongate from your Pi, SSH in and run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/uninstall.sh | MOONGATE_YES=1 bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/uninstall.sh | MOONGATE_YES=1 bash
 ```
 
 (`MOONGATE_YES=1` skips the confirmation prompt, which can't be answered interactively when piping through `bash`. Omit it if you download the script first.)
@@ -71,7 +71,7 @@ This removes:
 `cloudflared` is removed by default. If the uninstaller detects it's used by something else on the Pi — a named-tunnel config, or a standalone `cloudflared` systemd service — it leaves it in place instead (Moongate's own Quick Tunnel creates none of those, so a Moongate-only Pi always has it removed). To keep `cloudflared` regardless, pass `MOONGATE_KEEP_CLOUDFLARED=1`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/uninstall.sh | MOONGATE_KEEP_CLOUDFLARED=1 MOONGATE_YES=1 bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/uninstall.sh | MOONGATE_KEEP_CLOUDFLARED=1 MOONGATE_YES=1 bash
 ```
 
 Don't forget to uninstall the Moongate app from your phone as well.
