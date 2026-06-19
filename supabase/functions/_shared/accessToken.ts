@@ -1,5 +1,7 @@
-// Short-lived (~5 min) access tokens minted by /printer-access and verified
-// on the Pi.
+// Short-lived (~10 min) access tokens minted by /printer-access and verified
+// on the Pi. The app caches a token until ~30 s before this expiry, so a
+// longer TTL directly cuts how often it has to call /printer-access (the
+// dominant Edge Function cost).
 //
 // Algorithm: EdDSA (Ed25519). Private key is a JWK stored in
 // MOONGATE_JWT_SIGNING_KEY env var. Public key is exposed via the /jwks
@@ -12,7 +14,7 @@
 
 import * as jose from "npm:jose@5";
 
-const ACCESS_TOKEN_TTL_SECONDS = 300; // 5 minutes
+const ACCESS_TOKEN_TTL_SECONDS = 600; // 10 minutes
 export const KID      = "moongate-access-1";
 export const AUDIENCE = "moongate-printer";
 export const ISSUER   = "moongate";
