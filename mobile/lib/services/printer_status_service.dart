@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import '../models/printer_config.dart';
 import 'lan_discovery_service.dart';
 import 'printer_access_cache.dart';
+import 'printer_liveness_service.dart';
 import 'printer_registry.dart';
 import 'printer_status_registry.dart';
 import 'supabase_service.dart';
@@ -229,6 +230,34 @@ class PrinterStatusService {
       LanDiscoveryService.instance.refresh().ignore();
     }
 
+    // 0.5 Liveness gate. Don't spend an Edge call (/printer-access mints the
+    //     token) on a printer with no token-free sign of life. We learn
+    //     online/offline from the cloud's last_seen over Realtime
+    //     ([PrinterLivenessService] — NOT an Edge Function) and, failing that, a
+    //     token-free LAN probe (so LAN still works when the heartbeat/cloud is
+    //     down). A powered-off printer (stale last_seen, no LAN) thus costs zero
+    //     Edge Function calls. Skipped during the startup grace so a fresh pair
+    //     or app-resume still comes up via the normal "starting up" path below.
+    final inStartupGrace =
+        DateTime.now().difference(_firstPollAt!) < _startupGrace;
+    if (!inStartupGrace &&
+        PrinterLivenessService.instance.isKnownOffline(config.id)) {
+      // Positive evidence the printer is offline (cloud last_seen is stale).
+      // Confirm with a token-free LAN HEAD first — a Pi that's up on the LAN but
+      // failing its heartbeats (e.g. clock skew) is still reachable and must not
+      // be skipped. Only when that ALSO fails do we declare offline without
+      // minting a token. Unknown / fresh last_seen falls through and polls — we
+      // never gate on missing data, so a slow/failed seed can't show a live
+      // printer offline.
+      final probeUrl =
+          LanDiscoveryService.instance.lookup(config.id) ?? _currentLanUrl;
+      final lanUp = probeUrl != null && await _lanHeadReachable(probeUrl);
+      if (!lanUp) {
+        if (!_disposed) _controller.add(PrinterStatus.offline);
+        return;
+      }
+    }
+
     // 1. Fresh access token (+ tunnel URL when known) from Supabase.
     //    v0.5.0: the token now comes back even before the Pi has reported a
     //    tunnel URL (access.tunnelUrl == null in that window) so the LAN
@@ -393,6 +422,21 @@ class PrinterStatusService {
       }
     }
     return false;
+  }
+
+  /// Token-free LAN reachability check for the liveness gate: HEAD [lanUrl] and
+  /// treat ANY HTTP answer (even a 401 from the auth proxy) as "the Pi is up on
+  /// this network". No access token needed, so it never costs an Edge call — it's
+  /// how a printer that's offline-from-the-cloud but actually reachable on the
+  /// LAN (e.g. a clock-skewed Pi whose heartbeats 401) still gets polled. When
+  /// the phone is remote, the private LAN IP simply fast-fails (no route).
+  Future<bool> _lanHeadReachable(String lanUrl) async {
+    try {
+      await http.head(Uri.parse(lanUrl)).timeout(const Duration(seconds: 2));
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   // ── Authed GET helper ────────────────────────────────────────────────────
