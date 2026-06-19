@@ -1,5 +1,11 @@
 {
   "@@locale": "es",
+  "updateDownloading": "Descargando actualización…",
+  "updateOpeningInstaller": "Abriendo el instalador…",
+  "updateFailed": "No se pudo completar la actualización automáticamente.",
+  "updateOpenInBrowser": "Abrir en el navegador",
+  "tileEmergencyStop": "Parada de emergencia · doble toque",
+  "tileEmergencyStopFailed": "No se pudo conectar con la impresora — falló la parada de emergencia",
   "lightChooseTitle": "Cambiar la luz de {name}",
   "powerScreenTitle": "Interruptor de alimentación avanzado",
   "powerScreenBanner": "Para impresoras cuya alimentación es una macro de Klipper en lugar de un dispositivo de alimentación de Moonraker. Actívalo y elige un par de Encendido + Apagado, o una sola macro de alternancia: el botón de encendido de la tarjeta las usará.",

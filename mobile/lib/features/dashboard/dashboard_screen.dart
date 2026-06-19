@@ -20,6 +20,7 @@ import '../../providers/settings_provider.dart';
 import '../../providers/update_provider.dart';
 import '../../providers/version_provider.dart';
 import '../../services/changelog_service.dart';
+import '../../services/ota_installer.dart';
 import '../../services/print_notification_service.dart';
 import '../../services/printer_access_cache.dart';
 import '../../services/printer_registry.dart';
@@ -1406,10 +1407,7 @@ class _UpdateBanner extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 FilledButton(
-                  onPressed: () => launchUrl(
-                    Uri.parse(update.apkUrl),
-                    mode: LaunchMode.externalApplication,
-                  ),
+                  onPressed: () => _startInAppUpdate(context, update),
                   style: FilledButton.styleFrom(
                     backgroundColor: cs.primary,
                     foregroundColor: cs.onPrimary,
@@ -1421,6 +1419,114 @@ class _UpdateBanner extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Kicks off the in-app update. On Android, shows a download-progress dialog
+/// that auto-launches the installer; elsewhere (iOS) it falls back to opening
+/// the release in a browser (no sideloading on iOS).
+void _startInAppUpdate(BuildContext context, UpdateInfo update) {
+  if (!Platform.isAndroid) {
+    launchUrl(Uri.parse(update.apkUrl), mode: LaunchMode.externalApplication);
+    return;
+  }
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => _UpdateDownloadDialog(update: update),
+  );
+}
+
+/// Downloads the new APK with a progress bar, then launches the system
+/// installer. Any failure (network, or the user declining the install
+/// permission) falls back to opening the release in a browser.
+class _UpdateDownloadDialog extends StatefulWidget {
+  final UpdateInfo update;
+  const _UpdateDownloadDialog({required this.update});
+
+  @override
+  State<_UpdateDownloadDialog> createState() => _UpdateDownloadDialogState();
+}
+
+class _UpdateDownloadDialogState extends State<_UpdateDownloadDialog> {
+  double _progress = 0; // < 0 while the total size is still unknown
+  bool _installing = false;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _run();
+  }
+
+  Future<void> _run() async {
+    try {
+      final path = await OtaInstaller.downloadApk(
+        widget.update.apkUrl,
+        (p) {
+          if (mounted) setState(() => _progress = p);
+        },
+      );
+      // Dialog dismissed (Cancel) mid-download → don't pop the installer up.
+      if (!mounted) return;
+      setState(() => _installing = true);
+      final ok = await OtaInstaller.installApk(path);
+      if (!mounted) return;
+      if (ok) {
+        Navigator.of(context).pop(); // the system installer is now in front
+      } else {
+        setState(() => _failed = true); // install permission declined
+      }
+    } catch (_) {
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  void _openInBrowser() {
+    launchUrl(Uri.parse(widget.update.apkUrl),
+        mode: LaunchMode.externalApplication);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    if (_failed) {
+      return AlertDialog(
+        title: Text(l.dashboardUpdate),
+        content: Text(l.updateFailed),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l.dashboardUpdateLater),
+          ),
+          FilledButton(
+            onPressed: _openInBrowser,
+            child: Text(l.updateOpenInBrowser),
+          ),
+        ],
+      );
+    }
+    final determinate = !_installing && _progress >= 0;
+    return AlertDialog(
+      title: Text(_installing ? l.updateOpeningInstaller : l.updateDownloading),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          LinearProgressIndicator(value: determinate ? _progress : null),
+          if (determinate) ...[
+            const SizedBox(height: 12),
+            Text('${(_progress * 100).round()}%'),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.dashboardUpdateLater),
+        ),
+      ],
     );
   }
 }

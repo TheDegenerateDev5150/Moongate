@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
 import '../models/notif_fields.dart';
 import '../models/printer_config.dart';
+import 'print_progress.dart';
 import 'printer_access_cache.dart';
 import 'printer_registry.dart';
 import 'supabase_service.dart';
@@ -173,6 +174,10 @@ class _PrintTaskHandler extends TaskHandler {
   // SELECT (PostgREST, NOT an Edge Function). Lets _poll skip the token mint for
   // a printer that's positively offline — see _isKnownOffline.
   Map<String, DateTime> _lastSeen = {};
+  // Per-printer gcode byte offsets (from file metadata), cached per filename so
+  // the notification's progress matches Mainsail's file-relative default and the
+  // dashboard. Fetched once per print — see _fetchOffsets.
+  final Map<String, _MetaOffsets> _meta = {};
   late AppLocalizations _l;
   // Which notification segments to show + their order — re-read from prefs each
   // tick (the user edits them on the main isolate). Defaults to all-on.
@@ -402,7 +407,7 @@ class _PrintTaskHandler extends TaskHandler {
         (access.tunnelUrl!, false),
     ];
     for (final (base, isLan) in bases) {
-      final r = await _fetchStatus(base, access.accessToken, isLan);
+      final r = await _fetchStatus(p.id, base, access.accessToken, isLan);
       if (r != null) return r;
     }
     // No /status answer on any path. Distinguish a Pi that's up but whose
@@ -449,7 +454,8 @@ class _PrintTaskHandler extends TaskHandler {
     return false;
   }
 
-  Future<_Poll?> _fetchStatus(String base, String token, bool isLan) async {
+  Future<_Poll?> _fetchStatus(
+      String printerId, String base, String token, bool isLan) async {
     try {
       final uri = Uri.parse(
           '$base/server/moongate/status?mg_token=${Uri.encodeComponent(token)}');
@@ -476,12 +482,29 @@ class _PrintTaskHandler extends TaskHandler {
         sdcard  ??= supp?['virtual_sdcard'] as Map<String, dynamic>?;
       }
 
-      var progress = (display?['progress'] as num?)?.toDouble() ?? 0;
-      if (progress <= 0) progress = (sdcard?['progress'] as num?)?.toDouble() ?? 0;
+      final state    = (printStats['state'] as String?) ?? 'standby';
+      final filename = printStats['filename'] as String?;
+
+      // File-relative progress, matching Mainsail and the dashboard (shared
+      // computePrintProgress). Needs the gcode byte offsets from file metadata;
+      // fetch them once per print, cached per printer. Until they load we fall
+      // back to display_status / virtual_sdcard (within ~1% of Mainsail).
+      _MetaOffsets? offsets;
+      if (state == 'printing' && filename != null && filename.isNotEmpty) {
+        offsets =
+            await _fetchOffsets(printerId, base, token, filename, isLan: isLan);
+      }
+      final progress = computePrintProgress(
+        filePosition:    (sdcard?['file_position'] as num?)?.toDouble(),
+        gcodeStartByte:  offsets?.startByte,
+        gcodeEndByte:    offsets?.endByte,
+        displayProgress: (display?['progress'] as num?)?.toDouble(),
+        sdcardProgress:  (sdcard?['progress'] as num?)?.toDouble(),
+      );
 
       return _Poll(
-        state:            (printStats['state'] as String?) ?? 'standby',
-        progress:         progress.clamp(0.0, 1.0),
+        state:            state,
+        progress:         progress,
         printDurationSec: (printStats['print_duration'] as num?)?.toDouble() ?? 0,
         hotend:           (extruder['temperature'] as num?)?.toDouble() ?? 0,
         hotendTarget:     (extruder['target']      as num?)?.toDouble() ?? 0,
@@ -511,6 +534,36 @@ class _PrintTaskHandler extends TaskHandler {
       return body['result']?['status'] as Map<String, dynamic>?;
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Fetch + cache the printing file's gcode body byte offsets (per printer, per
+  /// filename) so progress can be computed file-relative like Mainsail. Fetched
+  /// once per print — the offsets don't change — so it adds no per-tick cost. On
+  /// any failure the previous cache entry is kept (progress just falls back).
+  Future<_MetaOffsets?> _fetchOffsets(
+      String printerId, String base, String token, String filename,
+      {required bool isLan}) async {
+    final cached = _meta[printerId];
+    if (cached != null && cached.filename == filename) return cached;
+    try {
+      final uri = Uri.parse(
+          '$base/server/files/metadata?filename=${Uri.encodeComponent(filename)}');
+      final resp = await http
+          .get(uri, headers: isLan ? null : {'Authorization': 'Bearer $token'})
+          .timeout(const Duration(seconds: 5));
+      if (resp.statusCode != 200) return cached;
+      final result = (jsonDecode(resp.body) as Map<String, dynamic>)['result']
+          as Map<String, dynamic>?;
+      final m = _MetaOffsets(
+        filename,
+        (result?['gcode_start_byte'] as num?)?.toInt(),
+        (result?['gcode_end_byte']   as num?)?.toInt(),
+      );
+      _meta[printerId] = m;
+      return m;
+    } catch (_) {
+      return cached;
     }
   }
 
@@ -693,6 +746,15 @@ class _PrintTaskHandler extends TaskHandler {
       ),
     );
   }
+}
+
+/// The gcode body byte offsets for one printer's current file (from Moonraker
+/// metadata), used to compute Mainsail-style file-relative progress.
+class _MetaOffsets {
+  final String filename;
+  final int? startByte;
+  final int? endByte;
+  const _MetaOffsets(this.filename, this.startByte, this.endByte);
 }
 
 /// A single printer's parsed status — just what the notification needs.

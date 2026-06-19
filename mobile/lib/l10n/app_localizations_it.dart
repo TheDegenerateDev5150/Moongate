@@ -9,6 +9,19 @@ class AppLocalizationsIt extends AppLocalizations {
   AppLocalizationsIt([String locale = 'it']) : super(locale);
 
   @override
+  String get updateDownloading => 'Download dell\'aggiornamento…';
+
+  @override
+  String get updateOpeningInstaller => 'Apertura dell\'installer…';
+
+  @override
+  String get updateFailed =>
+      'Impossibile completare l\'aggiornamento automaticamente.';
+
+  @override
+  String get updateOpenInBrowser => 'Apri nel browser';
+
+  @override
   String get lightingTitle => 'Illuminazione';
 
   @override
@@ -800,6 +813,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get tileFirmwareRestart => 'Riavvio firmware';
+
+  @override
+  String get tileEmergencyStop => 'Arresto di emergenza · doppio tocco';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'Impossibile raggiungere la stampante — arresto di emergenza non riuscito';
 
   @override
   String get tilePrintComplete => 'Stampa completata';

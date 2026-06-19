@@ -110,6 +110,30 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// Title of the in-app update dialog while the new APK is downloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update…'**
+  String get updateDownloading;
+
+  /// Shown in the update dialog once the download finishes and the system installer is launching.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening installer…'**
+  String get updateOpeningInstaller;
+
+  /// Shown when the in-app update download or install fails; the user is offered the browser fallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t complete the update automatically.'**
+  String get updateFailed;
+
+  /// Button that falls back to downloading the update via the system browser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in browser'**
+  String get updateOpenInBrowser;
+
   /// Title of the Lighting setup screen and its hamburger-menu entry.
   ///
   /// In en, this message translates to:
@@ -1483,6 +1507,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Firmware restart'**
   String get tileFirmwareRestart;
+
+  /// Tooltip on the red emergency-stop triangle under the connection label; double-tap triggers it.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency stop · double-tap'**
+  String get tileEmergencyStop;
+
+  /// Snackbar shown when an emergency-stop command could not reach the printer.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach printer — emergency stop failed'**
+  String get tileEmergencyStopFailed;
 
   /// Idle-row label shown when the last print finished successfully.
   ///

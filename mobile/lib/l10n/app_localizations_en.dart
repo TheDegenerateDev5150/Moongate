@@ -9,6 +9,18 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get updateDownloading => 'Downloading update…';
+
+  @override
+  String get updateOpeningInstaller => 'Opening installer…';
+
+  @override
+  String get updateFailed => 'Couldn\'t complete the update automatically.';
+
+  @override
+  String get updateOpenInBrowser => 'Open in browser';
+
+  @override
   String get lightingTitle => 'Lighting';
 
   @override
@@ -782,6 +794,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tileFirmwareRestart => 'Firmware restart';
+
+  @override
+  String get tileEmergencyStop => 'Emergency stop · double-tap';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'Could not reach printer — emergency stop failed';
 
   @override
   String get tilePrintComplete => 'Print complete';

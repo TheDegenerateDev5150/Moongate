@@ -9,6 +9,18 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get updateDownloading => 'Загрузка обновления…';
+
+  @override
+  String get updateOpeningInstaller => 'Открытие установщика…';
+
+  @override
+  String get updateFailed => 'Не удалось автоматически завершить обновление.';
+
+  @override
+  String get updateOpenInBrowser => 'Открыть в браузере';
+
+  @override
   String get lightingTitle => 'Освещение';
 
   @override
@@ -795,6 +807,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tileFirmwareRestart => 'Перезапуск прошивки';
+
+  @override
+  String get tileEmergencyStop => 'Аварийная остановка · двойное нажатие';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'Не удалось связаться с принтером — аварийная остановка не выполнена';
 
   @override
   String get tilePrintComplete => 'Печать завершена';

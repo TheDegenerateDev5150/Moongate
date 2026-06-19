@@ -9,6 +9,19 @@ class AppLocalizationsPl extends AppLocalizations {
   AppLocalizationsPl([String locale = 'pl']) : super(locale);
 
   @override
+  String get updateDownloading => 'Pobieranie aktualizacji…';
+
+  @override
+  String get updateOpeningInstaller => 'Otwieranie instalatora…';
+
+  @override
+  String get updateFailed =>
+      'Nie udało się automatycznie ukończyć aktualizacji.';
+
+  @override
+  String get updateOpenInBrowser => 'Otwórz w przeglądarce';
+
+  @override
   String get lightingTitle => 'Oświetlenie';
 
   @override
@@ -793,6 +806,13 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get tileFirmwareRestart => 'Restart firmware';
+
+  @override
+  String get tileEmergencyStop => 'Zatrzymanie awaryjne · dotknij dwukrotnie';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'Nie można połączyć z drukarką — zatrzymanie awaryjne nie powiodło się';
 
   @override
   String get tilePrintComplete => 'Wydruk ukończony';

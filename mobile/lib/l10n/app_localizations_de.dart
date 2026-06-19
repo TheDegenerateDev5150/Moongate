@@ -9,6 +9,19 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get updateDownloading => 'Update wird heruntergeladen…';
+
+  @override
+  String get updateOpeningInstaller => 'Installation wird geöffnet…';
+
+  @override
+  String get updateFailed =>
+      'Update konnte nicht automatisch abgeschlossen werden.';
+
+  @override
+  String get updateOpenInBrowser => 'Im Browser öffnen';
+
+  @override
   String get lightingTitle => 'Beleuchtung';
 
   @override
@@ -796,6 +809,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tileFirmwareRestart => 'Firmware-Neustart';
+
+  @override
+  String get tileEmergencyStop => 'Notstopp · doppelt tippen';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'Drucker nicht erreichbar — Notstopp fehlgeschlagen';
 
   @override
   String get tilePrintComplete => 'Druck abgeschlossen';

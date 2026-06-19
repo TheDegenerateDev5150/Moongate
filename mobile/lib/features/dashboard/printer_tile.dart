@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -174,6 +175,34 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
         ),
       );
     }
+  }
+
+  /// Emergency stop — fired by a DOUBLE-tap on the tile's red triangle (a
+  /// single tap is swallowed, so a stray touch can't halt a print). No confirm
+  /// dialog: the double-tap IS the guard. Buzzes on fire; a snackbar surfaces
+  /// only a failure to reach the printer. The printer drops to a shutdown/error
+  /// state afterwards, where the tile's firmware-restart button recovers it.
+  Future<void> _handleEmergencyStop() async {
+    HapticFeedback.heavyImpact();
+    final ok = await _controlService.sendAction('emergency_stop');
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).tileEmergencyStopFailed),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  /// Firmware restart — the recovery shown after an emergency stop (the triangle
+  /// becomes a restart button while Klipper is shut down). Single tap; it's not
+  /// destructive. Deliberately NOT automatic: a shutdown can point at a real
+  /// problem worth checking before bringing the machine back.
+  Future<void> _handleFirmwareRestart() async {
+    HapticFeedback.mediumImpact();
+    await _controlService.sendAction('firmware_restart');
   }
 
   /// Maps the current status to an overlay state, or null when the tile
@@ -448,6 +477,18 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                             target: _status.chamberTarget,
                           ),
                         ],
+                        // E-STOP at the right end of the temperature line.
+                        const Spacer(),
+                        if (_status.klippyShutdown)
+                          _RestartButton(
+                            tooltip: l.tileFirmwareRestart,
+                            onTap: _handleFirmwareRestart,
+                          )
+                        else
+                          _EstopButton(
+                            tooltip: l.tileEmergencyStop,
+                            onFire: _handleEmergencyStop,
+                          ),
                       ],
                     ),
                   ],
@@ -526,6 +567,17 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                           size: 11,
                           color: connColor,
                         ),
+                        const SizedBox(width: 6),
+                        if (_status.klippyShutdown)
+                          _RestartButton(
+                            tooltip: l.tileFirmwareRestart,
+                            onTap: _handleFirmwareRestart,
+                          )
+                        else
+                          _EstopButton(
+                            tooltip: l.tileEmergencyStop,
+                            onFire: _handleEmergencyStop,
+                          ),
                       ],
                     ],
                   ),
@@ -646,7 +698,7 @@ class _ActionRow extends StatelessWidget {
                                 ?.copyWith(color: color),
                           ),
                           Text(
-                            '${(status.progress * 100).toStringAsFixed(1)}%',
+                            '${(status.progress * 100).round()}%',
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: color,
                               fontWeight: FontWeight.bold,
@@ -793,7 +845,7 @@ class _CompactProgress extends StatelessWidget {
               style: theme.textTheme.labelSmall?.copyWith(color: color),
             ),
             Text(
-              '${(status.progress * 100).toStringAsFixed(1)}%',
+              '${(status.progress * 100).round()}%',
               style: theme.textTheme.labelSmall
                   ?.copyWith(color: color, fontWeight: FontWeight.bold),
             ),
@@ -877,6 +929,66 @@ class _Btn extends StatelessWidget {
           ),
           padding: const EdgeInsets.all(6),
           child: Icon(icon, color: color, size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+/// Red warning-triangle emergency-stop button shown under the connection label.
+/// DOUBLE-tap fires [onFire] (Klipper M112) immediately — there is no confirm
+/// dialog; the double-tap is the safety. A single tap is swallowed
+/// (HitTestBehavior.opaque + a no-op onTap) so a stray touch neither halts the
+/// print nor opens the printer screen.
+class _EstopButton extends StatelessWidget {
+  final String tooltip;
+  final VoidCallback onFire;
+  const _EstopButton({required this.tooltip, required this.onFire});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {}, // swallow single taps — must not fire or navigate
+        onDoubleTap: onFire,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.red.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+          child: const Icon(Icons.warning_rounded, color: Colors.red, size: 18),
+        ),
+      ),
+    );
+  }
+}
+
+/// Recovery button shown in place of the E-STOP triangle once Klipper is shut
+/// down (e.g. after an emergency stop): a single tap fires FIRMWARE_RESTART to
+/// bring the machine back online. Single tap, not double — recovery isn't
+/// destructive, so it doesn't need the accidental-press guard.
+class _RestartButton extends StatelessWidget {
+  final String tooltip;
+  final VoidCallback onTap;
+  const _RestartButton({required this.tooltip, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+          child: const Icon(Icons.restart_alt, color: Colors.orange, size: 18),
         ),
       ),
     );
