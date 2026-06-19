@@ -168,6 +168,18 @@ The power button (bottom-left of a tile's camera) appears only when **Moonraker 
 
 Mid-print, the button is **greyed out** for a device Moonraker marks `locked_while_printing` — it won't cut power to a running print.
 
+## What's the red triangle on a tile? (Emergency stop)
+
+Every **online** tile shows a small red warning triangle by its temperatures — it's an **emergency stop**. **Double-tap** it to halt the printer immediately with Klipper's `M112`; a single tap does nothing, so a stray touch can't fire it, and there's no confirm dialog (the double-tap *is* the safeguard).
+
+After an emergency stop the machine is **shut down**, not just idle — so the triangle turns into an **orange restart button**. Tap it once to run `FIRMWARE_RESTART` and bring the printer back online; the triangle returns once it's healthy. The restart is a deliberate manual tap rather than automatic, since an emergency stop can mean something's worth checking first.
+
+## In-app update didn't install, or asks for a permission
+
+Tapping **Update** downloads the new version inside the app, then hands it to Android's package installer. The **first** time, Android asks you to allow Moongate to **install unknown apps** — expected for an app installed outside the Play Store. Grant it (the system jumps you straight to the toggle), come back, and tap **Update** again; after that it's a single tap plus the standard install confirmation.
+
+If the download or install fails for any reason, Moongate **falls back to opening the APK in your browser** — finish there and open it to install. Either route installs **in place** over your existing app (same signing key), so your printers and settings are kept.
+
 ## QR scan won't work / camera fails
 
 - Grant camera permission when prompted, or via **Settings → Apps → Moongate → Permissions → Camera**.

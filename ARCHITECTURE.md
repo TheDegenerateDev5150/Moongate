@@ -77,12 +77,14 @@ The `services/` directory has zero UI. Each file is a focused capability:
 |---|---|
 | `supabase_service.dart` | Talks to the cloud middleman. Anonymous sign-in, fetch the current access record for a printer, release a printer on un-pair, list-my-printers refresh |
 | `printer_access_cache.dart` | In-memory cache of `{tunnel_url, access_token}` per printer. Reuses a token until ~30 s before its expiry, then refreshes via the middleman. Used by every outbound call to the Pi |
-| `printer_status_service.dart` | The heart of the app. One instance per printer tile. Polls every 4 s. LAN-first when a cached LAN URL is known; falls back to the tunnel within a couple of seconds. Distinguishes Pi-up-but-printer-idle from totally-offline. Sniffs the printer's web UI (Mainsail / Fluidd) on first successful poll and persists it. Also reads a printer's configured light object — when lighting is enabled — so the dashboard bulb shows the light's real on/off state |
-| `print_control_service.dart` | Sends `pause` / `resume` / `cancel` / `firmware_restart`, lists and runs Klipper macros (the macro sheet and the lighting on/off/toggle), and starts a stored G-code. Same per-call token retrieval, same LAN-first routing |
+| `printer_status_service.dart` | The heart of the app. One instance per printer tile. Polls every 4 s. LAN-first when a cached LAN URL is known; falls back to the tunnel within a couple of seconds. Distinguishes Pi-up-but-printer-idle from totally-offline. Sniffs the printer's web UI (Mainsail / Fluidd) on first successful poll and persists it. Also reads a printer's configured light object — when lighting is enabled — so the dashboard bulb shows the light's real on/off state. Reads Moonraker's `webhooks.state` too, so the tile can tell a **shut-down** Klipper (e.g. after an emergency stop) from merely idle and offer a restart instead of the E-STOP triangle |
+| `print_control_service.dart` | Sends `pause` / `resume` / `cancel` / `firmware_restart` / `emergency_stop`, lists and runs Klipper macros (the macro sheet and the lighting on/off/toggle), and starts a stored G-code. Same per-call token retrieval, same LAN-first routing |
 | `printer_webview_cache.dart` | Keeps each printer's Mainsail/Fluidd `WebViewController` warm across visits to the dashboard, so re-opening a printer is instant (no reload). **Pre-warms every printer's page in the background at app startup, so even the *first* open is instant** (v0.9.15). Owns the per-session token-cookie refresh and evicts least-recently-used sessions under OS memory pressure |
 | `printer_liveness_service.dart` | Tracks each printer's online/offline state from the cloud — subscribing to `last_seen` changes over **Supabase Realtime** plus a periodic RLS-scoped read as a fallback — so the dashboard and the notification service can mark a powered-off printer offline and **skip requesting access for it entirely** rather than polling it every cycle. Realtime delivery is scoped by the same "select own printers" RLS policy, so it widens nothing (v0.9.16) |
 | `printer_registry.dart` | Persistent printer list. `addClaimed` after a successful pair, `remove` plus middleman-release on un-pair, helpers to update individual fields like LAN URL, webcam transforms, and the detected UI type from a successful poll |
 | `update_service.dart` | One-shot GitHub `latest_version.json` fetch on app launch |
+| `print_progress.dart` | Pure helper that computes print progress as a 0–1 fraction matching Mainsail's default *file position (relative)* mode — the printed byte position mapped onto the slicer's gcode body. Shared by the status service and the notification so the tile, the notification, and Mainsail all show the same number (v0.9.17) |
+| `ota_installer.dart` | In-app updater (Android): streams the new release APK to the cache dir with progress, then launches the system package installer through a `FileProvider` + a native `MethodChannel`. Browser fallback on failure (v0.9.17) |
 
 ### Android native side
 
@@ -90,13 +92,16 @@ Most of the app is pure Dart, but a few things need Kotlin:
 
 ```
 mobile/android/app/src/main/
-├── AndroidManifest.xml              # CAMERA, INTERNET, USE_BIOMETRIC
+├── AndroidManifest.xml              # permissions (camera, biometric, notifications,
+│                                    #   foreground-service, REQUEST_INSTALL_PACKAGES)
+│                                    #   + a FileProvider for the in-app updater
 ├── kotlin/com/moongate/app/
-│   └── moongate/MainActivity.kt     # FlutterFragmentActivity
+│   └── moongate/MainActivity.kt     # FlutterFragmentActivity + two MethodChannels
+├── res/xml/file_paths.xml           # FileProvider paths (the updater's APK cache dir)
 └── app/proguard-rules.pro           # R8 keep-rules for ML Kit + mobile_scanner + CameraX
 ```
 
-`MainActivity` extends `FlutterFragmentActivity` (not the default `FlutterActivity`) because CameraX requires the activity to be a `LifecycleOwner`. Switching this fixed an earlier camera-binding crash on first launch.
+`MainActivity` extends `FlutterFragmentActivity` (not the default `FlutterActivity`) because CameraX requires the activity to be a `LifecycleOwner`. Switching this fixed an earlier camera-binding crash on first launch. It also hosts two small `MethodChannel`s: `com.moongate.app/secure` (toggles `FLAG_SECURE` for the app-lock screen) and `com.moongate.app/install` (v0.9.17 — launches the system package installer on the APK the in-app updater downloaded, shared as a `content://` URI via the `FileProvider`).
 
 ---
 
@@ -124,7 +129,7 @@ Responsibilities:
 - **Pairing.** Generates the QR + `GATE-XXXX-XXXX` code, registers the printer with the cloud middleman on first successful pair.
 - **Heartbeat.** Periodically tells the middleman the current Cloudflare tunnel URL (it rotates on each Pi reboot).
 - **Status.** Aggregates Klipper / Moonraker objects into a single `/server/moongate/status` response — `print_stats`, temperatures, the discovered chamber sensor, webcam transforms, and the current tunnel URL.
-- **Control.** A small whitelist of safe actions: `pause`, `resume`, `cancel`, `firmware_restart`. There is no arbitrary G-code endpoint.
+- **Control.** A small whitelist of safe actions: `pause`, `resume`, `cancel`, `firmware_restart`, `emergency_stop`. There is no arbitrary G-code endpoint.
 - **Owner state.** Knows the user this Pi is paired to, persisted at `~/.config/moongate/owner.json`. The `MOONGATE_RESET_OWNER` macro wipes it.
 
 ### The auth proxy (v0.4+)
@@ -258,6 +263,10 @@ The off-LAN cost is an extra ~2 s per poll cycle (LAN timeout fires before the t
 ### Connectivity-aware camera feed rate
 
 The dashboard keeps two webcam refresh rates — a faster "Local" rate and a throttled "Tunnel" rate (v0.9.14). As of v0.9.15 the tile picks between them by the **phone's network type** rather than by which URL the status poll happened to win on: an `onMobileDataProvider` (backed by `connectivity_plus`) drives the choice, so the faster Local rate applies on **any Wi-Fi** — including when you're away and reaching the printer over the tunnel — and the throttled Tunnel rate applies only on **mobile data**, where cellular data actually costs something. Reaching a printer on the LAN is always Wi-Fi, so home behaviour is unchanged.
+
+### Print progress matches Mainsail (file-relative, single source)
+
+Progress used to be computed two different ways — the dashboard tile preferred elapsed-time ÷ the slicer's time estimate, while the notification used the raw file fraction — so the tile, the notification, and Mainsail could all disagree (the tile typically ran a few percent ahead, because slicer time estimates are routinely off). As of v0.9.17 a single helper, [`print_progress.dart`](mobile/lib/services/print_progress.dart), is the only place progress is derived, for **both** the tile and the notification. It matches Mainsail's default **"file position (relative)"** calculation — `(file_position − gcode_start_byte) / (gcode_end_byte − gcode_start_byte)`, the printed byte position mapped onto the slicer's gcode body (the start/end offsets come from the file metadata the status service already fetches) — and falls back to `display_status.progress`, then the raw `virtual_sdcard.progress`, until those offsets are known. The slicer time estimate still drives the notification's finish-time ETA, just not the progress bar.
 
 ### Liveness-gated polling for offline printers
 
