@@ -391,7 +391,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cameraFeedsIntro =>
-      'Con qué frecuencia cada casilla actualiza su cámara. Usa una frecuencia más rápida en casa y una más lenta por el túnel remoto para ahorrar datos.';
+      'Con qué frecuencia cada casilla actualiza su cámara. Moongate usa la velocidad Local mientras estás en Wi-Fi (incluso fuera de casa) y la velocidad Túnel con datos móviles, para mantener un flujo rápido en Wi-Fi y más ligero en datos móviles y ahorrar datos.';
 
   @override
   String get cameraFeedsLocalRate => 'Frecuencia del feed local';

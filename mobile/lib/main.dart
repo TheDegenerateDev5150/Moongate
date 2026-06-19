@@ -45,6 +45,10 @@ void main() async {
   await container.read(notificationFieldsProvider.notifier).load();
   await container.read(dashboardBackgroundProvider.notifier).load();
 
+  // Start listening for Wi-Fi <-> mobile-data changes now, so the dashboard's
+  // camera feeds pick the right refresh rate from the first frame.
+  container.read(onMobileDataProvider);
+
   // Bring the print-notification foreground service in line with the saved
   // preference — starts it if the user left notifications on. Best-effort.
   PrintNotificationService.instance

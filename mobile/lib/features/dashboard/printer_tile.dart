@@ -267,7 +267,6 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                     webcamTargetFps: _status.webcamTargetFps,
                     webcamIsExternal: _status.webcamIsExternal,
                     uiType: _uiType,
-                    isLocal: _status.connection == PrinterConnection.local,
                   ),
                   // Overlay shown while we don't yet have a usable
                   // status (first poll in flight, Pi waiting for its first

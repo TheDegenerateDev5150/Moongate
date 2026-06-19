@@ -394,7 +394,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cameraFeedsIntro =>
-      'Fréquence de rafraîchissement de la caméra de chaque tuile. Utilisez un débit plus rapide à la maison et plus lent via le tunnel distant pour économiser les données.';
+      'Fréquence de rafraîchissement de la caméra de chaque tuile. Moongate utilise le débit Local tant que vous êtes en Wi-Fi (même hors de chez vous) et le débit Tunnel en données mobiles — un flux rapide en Wi-Fi et plus léger en cellulaire pour économiser les données.';
 
   @override
   String get cameraFeedsLocalRate => 'Débit du flux local';
