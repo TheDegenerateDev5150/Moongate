@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
 import '../models/notif_fields.dart';
 import '../models/printer_config.dart';
+import 'printer_access_cache.dart';
 import 'printer_registry.dart';
 import 'supabase_service.dart';
 
@@ -324,7 +325,12 @@ class _PrintTaskHandler extends TaskHandler {
   Future<_Poll?> _poll(PrinterConfig p) async {
     final PrinterAccess access;
     try {
-      access = await SupabaseService.instance.getPrinterAccess(p.id);
+      // Cached per-isolate so a 30 s / 5 s poll loop reuses one token for
+      // ~4.5 min instead of minting a fresh one from /printer-access on every
+      // single tick. Running 24/7 in this foreground service, the uncached call
+      // was a major source of Edge Function invocations — even for printers
+      // that are powered off (their last token mints fine regardless).
+      access = await PrinterAccessCache.instance.get(p.id);
     } catch (_) {
       return null; // offline / not yet heartbeated / network
     }

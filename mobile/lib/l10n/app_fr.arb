@@ -130,7 +130,7 @@
   "dashboardCameraFeedSubtitle": "Fréquence de rafraîchissement de la caméra sur les tuiles. Une fréquence plus basse consomme beaucoup moins de données.",
   "cameraFeedsMenuTitle": "Flux caméra du tableau de bord",
   "cameraFeedsMenuSubtitle": "Débits des flux local et tunnel",
-  "cameraFeedsIntro": "Fréquence de rafraîchissement de la caméra de chaque tuile. Utilisez un débit plus rapide à la maison et plus lent via le tunnel distant pour économiser les données.",
+  "cameraFeedsIntro": "Fréquence de rafraîchissement de la caméra de chaque tuile. Moongate utilise le débit Local tant que vous êtes en Wi-Fi (même hors de chez vous) et le débit Tunnel en données mobiles — un flux rapide en Wi-Fi et plus léger en cellulaire pour économiser les données.",
   "cameraFeedsLocalRate": "Débit du flux local",
   "cameraFeedsTunnelRate": "Débit du flux tunnel",
   "dashboardAboutHeading": "À propos",

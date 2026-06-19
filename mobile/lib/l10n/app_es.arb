@@ -130,7 +130,7 @@
   "dashboardCameraFeedSubtitle": "Con qué frecuencia las casillas actualizan la cámara. Las frecuencias más bajas usan muchos menos datos.",
   "cameraFeedsMenuTitle": "Cámaras del panel",
   "cameraFeedsMenuSubtitle": "Frecuencias de feed local y túnel",
-  "cameraFeedsIntro": "Con qué frecuencia cada casilla actualiza su cámara. Usa una frecuencia más rápida en casa y una más lenta por el túnel remoto para ahorrar datos.",
+  "cameraFeedsIntro": "Con qué frecuencia cada casilla actualiza su cámara. Moongate usa la velocidad Local mientras estás en Wi-Fi (incluso fuera de casa) y la velocidad Túnel con datos móviles, para mantener un flujo rápido en Wi-Fi y más ligero en datos móviles y ahorrar datos.",
   "cameraFeedsLocalRate": "Frecuencia del feed local",
   "cameraFeedsTunnelRate": "Frecuencia del feed por túnel",
   "dashboardAboutHeading": "Acerca de",

@@ -2,8 +2,11 @@ import 'dart:async';
 import 'dart:developer' as dev;
 
 import 'package:flutter/widgets.dart';
+import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../models/printer_config.dart';
+import 'lan_discovery_service.dart';
 import 'printer_access_cache.dart';
 import 'supabase_service.dart';
 
@@ -110,6 +113,85 @@ class PrinterWebViewCache with WidgetsBindingObserver {
     _log('cleared');
   }
 
+  /// Pre-warm every configured printer's Mainsail/Fluidd page in the background
+  /// at startup, so the FIRST open of a printer is instant instead of replaying
+  /// Mainsail's "Initializing…". Mirrors the screen's cold-load path (LAN-first,
+  /// tunnel fallback) but headless — no widget is mounted; the page loads, its
+  /// Moonraker WebSocket connects, and the controller is stored warm. A printer
+  /// already warm is skipped; one that's offline / not yet reachable is skipped
+  /// silently (the screen cold-loads it on open, exactly as before). Each warms
+  /// concurrently so one slow printer doesn't hold up the rest; best-effort.
+  void prewarmAll(List<PrinterConfig> printers) {
+    for (final printer in printers) {
+      if (_sessions.containsKey(printer.id)) continue;
+      unawaited(_prewarmOne(printer));
+    }
+  }
+
+  Future<void> _prewarmOne(PrinterConfig printer) async {
+    try {
+      final access = await PrinterAccessCache.instance.get(printer.id);
+      await setMgTokenCookie(access);
+
+      // Prefer LAN when reachable (Mainsail loads far faster direct), else the
+      // tunnel — the same resolution the printer screen uses on a cold open.
+      final lanUrl =
+          LanDiscoveryService.instance.lookup(printer.id) ?? printer.lanUrl;
+      String? useUrl;
+      var usingLan = false;
+      if (lanUrl != null && await _isLanReachable(lanUrl)) {
+        useUrl = lanUrl;
+        usingLan = true;
+      } else if (access.tunnelUrl != null) {
+        useUrl = access.tunnelUrl;
+      }
+      if (useUrl == null) return; // not reachable yet — the screen cold-loads it
+
+      // A real visit may have warmed (or be warming) this printer while we
+      // awaited the access fetch / probe — don't clobber the live session.
+      if (_sessions.containsKey(printer.id)) return;
+
+      // Load headless, but only KEEP the session if the page actually finishes —
+      // so we never hand the screen a blank/failed page (an offline printer would
+      // otherwise lose its "starting up, retry" overlay to a dead page). This
+      // also makes prewarm self-validating: if a headless WebView can't load on
+      // this device, the wait times out, nothing is stored, and opening falls
+      // back to the normal cold load — no regression.
+      final controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted);
+      final loaded = Completer<bool>();
+      controller.setNavigationDelegate(NavigationDelegate(
+        onPageFinished: (_) {
+          if (!loaded.isCompleted) loaded.complete(true);
+        },
+        onWebResourceError: (err) {
+          if (err.isForMainFrame == true && !loaded.isCompleted) {
+            loaded.complete(false);
+          }
+        },
+      ));
+      await controller.loadRequest(Uri.parse('$useUrl/'));
+      final ok = await loaded.future
+          .timeout(const Duration(seconds: 15), onTimeout: () => false);
+      if (!ok) return; // blank / failed / too slow — the screen cold-loads on open
+
+      // A real visit may have warmed this printer while the page loaded.
+      if (_sessions.containsKey(printer.id)) return;
+      store(
+        printer.id,
+        LiveWebSession(
+          controller: controller,
+          baseUrl:    useUrl,
+          usingLan:   usingLan,
+          tunnelUrl:  access.tunnelUrl,
+        ),
+      );
+      _log('prewarmed ${printer.id} (${usingLan ? 'LAN' : 'tunnel'})');
+    } catch (_) {
+      // Offline / not paired / blip — skip; the screen cold-loads on open.
+    }
+  }
+
   // Token TTL is 5 min; refresh the cookie at 4 so a backgrounded session never
   // sends an expired token. Lives here (not in the screen) so it keeps running
   // while the printer screen is closed — without it a warm tunnel session would
@@ -163,6 +245,23 @@ class PrinterWebViewCache with WidgetsBindingObserver {
       ));
     } catch (_) {
       // setCookie can throw on older WebView versions; fall through.
+    }
+  }
+
+  /// Fast LAN liveness probe used by [prewarmAll] (mirrors the printer screen's
+  /// own `_isLanReachable`): true iff `${url}/server/info` answers within 2 s.
+  /// Hits Moonraker's own endpoint (not nginx, which always 200s for Mainsail's
+  /// index), so a sub-500 status doubles as a printer-side liveness signal;
+  /// 401/403 still counts as reachable. Only network failures / timeouts fall
+  /// through to the tunnel.
+  static Future<bool> _isLanReachable(String url) async {
+    try {
+      final resp = await http
+          .get(Uri.parse('$url/server/info'))
+          .timeout(const Duration(seconds: 2));
+      return resp.statusCode < 500;
+    } catch (_) {
+      return false;
     }
   }
 }

@@ -791,7 +791,7 @@ abstract class AppLocalizations {
   /// Explanatory line at the top of the Dashboard Camera Feeds sheet.
   ///
   /// In en, this message translates to:
-  /// **'How often each tile refreshes its camera. Use a faster rate at home and a slower one over the remote tunnel to save data.'**
+  /// **'How often each tile refreshes its camera. Moongate uses the Local rate while you\'re on Wi-Fi (even away from home), and the Tunnel rate on mobile data — keeping a fast feed on Wi-Fi and a lighter one on cellular to save data.'**
   String get cameraFeedsIntro;
 
   /// Label above the Raw/1s/3s/5s picker for the LAN webcam refresh rate.

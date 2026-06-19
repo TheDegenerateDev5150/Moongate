@@ -371,7 +371,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraFeedsMenuSubtitle => '本地与隧道画面频率';
 
   @override
-  String get cameraFeedsIntro => '每个磁贴刷新摄像头的频率。在家使用较快的频率，通过远程隧道时使用较慢的频率以节省流量。';
+  String get cameraFeedsIntro =>
+      '每个磁贴刷新摄像头画面的频率。只要连接 Wi-Fi（即使在外、通过隧道访问），都会使用“本地”速率；使用移动数据时则使用“隧道”速率——这样在 Wi-Fi 下更流畅，在移动网络下更省流量。';
 
   @override
   String get cameraFeedsLocalRate => '本地画面刷新频率';

@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.9.14+83
+version: 0.9.15+84
 publish_to: none
 
 environment:
@@ -23,6 +23,12 @@ dependencies:
   # Networking
   web_socket_channel: ^2.4.0
   http: ^1.2.0
+
+  # Detects whether the phone is on Wi-Fi or mobile data, so the dashboard can
+  # use the faster "local" camera-feed rate on Wi-Fi (even when reaching a
+  # printer remotely over the tunnel) and the throttled "tunnel" rate only on
+  # metered mobile data. See onMobileDataProvider / WebcamView.
+  connectivity_plus: ^6.1.0
 
   # Supabase — anonymous auth, Edge Function calls, printers table queries.
   # v0.3.0 routes every printer call through Supabase: app signs in

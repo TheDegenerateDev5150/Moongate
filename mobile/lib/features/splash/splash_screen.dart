@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/printer_registry.dart';
+import '../../services/printer_webview_cache.dart';
 
 /// Moongate brand red — the launcher-icon / moon-gate colour (#FF3B30). On the
 /// boot splash the Dark theme uses this instead of the purple seed, so the
@@ -47,7 +49,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       duration: const Duration(milliseconds: 1600),
     )..repeat();
 
-    Future.delayed(const Duration(milliseconds: 2000), () {
+    // Warm every printer's Mainsail/Fluidd page in the background while the
+    // splash shows, so the first open from the dashboard is instant (no
+    // "Initializing…"). Runs headless in PrinterWebViewCache and outlives this
+    // screen; the slightly longer splash below gives the loads a head start.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PrinterWebViewCache.instance
+          .prewarmAll(PrinterRegistry.instance.printers);
+    });
+
+    Future.delayed(const Duration(milliseconds: 3000), () {
       if (mounted) context.go('/dashboard');
     });
   }

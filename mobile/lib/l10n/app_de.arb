@@ -130,7 +130,7 @@
   "dashboardCameraFeedSubtitle": "Wie oft Kacheln das Kamerabild aktualisieren. Niedrigere Raten verbrauchen deutlich weniger Daten.",
   "cameraFeedsMenuTitle": "Dashboard-Kamerafeeds",
   "cameraFeedsMenuSubtitle": "Lokale & Tunnel-Feed-Raten",
-  "cameraFeedsIntro": "Wie oft jede Kachel ihr Kamerabild aktualisiert. Nutze zu Hause eine höhere Rate und über den Tunnel eine niedrigere, um Daten zu sparen.",
+  "cameraFeedsIntro": "Wie oft jede Kachel ihr Kamerabild aktualisiert. Moongate nutzt die lokale Rate, solange du im WLAN bist (auch unterwegs), und die Tunnel-Rate bei mobilen Daten – so bleibt das Bild im WLAN schnell und schont unterwegs dein Datenvolumen.",
   "cameraFeedsLocalRate": "Rate des lokalen Feeds",
   "cameraFeedsTunnelRate": "Rate des Tunnel-Feeds",
   "dashboardAboutHeading": "Über",

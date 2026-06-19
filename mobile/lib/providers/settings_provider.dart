@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -218,9 +221,11 @@ extension DashboardCameraRefreshX on DashboardCameraRefresh {
 /// defaults below (local 1 s; tunnel 3 s — throttled to save mobile data).
 const _legacyCameraRefreshKey = 'dashboard_camera_refresh';
 
-/// Shared load/set for the two per-path dashboard camera-refresh settings. A
-/// tile reads the LOCAL rate while connected over the LAN and the TUNNEL rate
-/// while remote (see PrinterTile → WebcamView).
+/// Shared load/set for the two dashboard camera-refresh settings. A tile reads
+/// the LOCAL rate while the phone is on Wi-Fi (even when reaching the printer
+/// remotely over the tunnel) and the TUNNEL rate on mobile data, so the remote
+/// feed is throttled only where data is metered (see [onMobileDataProvider] +
+/// WebcamView).
 abstract class _CameraRefreshNotifier extends Notifier<DashboardCameraRefresh> {
   String get key;
   DashboardCameraRefresh get fallback;
@@ -259,19 +264,54 @@ class TunnelCameraRefreshNotifier extends _CameraRefreshNotifier {
   DashboardCameraRefresh get fallback => DashboardCameraRefresh.threeSeconds;
 }
 
-/// Tile webcam refresh rate while connected over the LAN (default 1 s).
+/// Tile webcam refresh rate while the phone is on Wi-Fi (default 1 s).
 final localCameraRefreshProvider =
     NotifierProvider<LocalCameraRefreshNotifier, DashboardCameraRefresh>(
   LocalCameraRefreshNotifier.new,
 );
 
-/// Tile webcam refresh rate while connected over the remote tunnel (default
-/// 3 s — slower to save mobile data; adjustable in the Dashboard Camera Feeds
+/// Tile webcam refresh rate while the phone is on mobile data (default 3 s —
+/// slower to save cellular data; adjustable in the Dashboard Camera Feeds
 /// sheet).
 final tunnelCameraRefreshProvider =
     NotifierProvider<TunnelCameraRefreshNotifier, DashboardCameraRefresh>(
   TunnelCameraRefreshNotifier.new,
 );
+
+// ---------------------------------------------------------------------------
+// Network type  (is the phone on metered mobile data?)
+// ---------------------------------------------------------------------------
+
+/// Whether the phone is currently on **mobile data only** — cellular, with no
+/// Wi-Fi or wired connection. Drives which dashboard camera-feed rate applies:
+/// on Wi-Fi (even when a printer is reached remotely over the tunnel) the
+/// faster local rate is used; only on metered mobile data does the throttled
+/// tunnel rate kick in. Wi-Fi / Ethernet win when present (Android routes over
+/// them and they aren't metered). Updated live as the phone changes networks.
+class OnMobileDataNotifier extends Notifier<bool> {
+  StreamSubscription<List<ConnectivityResult>>? _sub;
+
+  @override
+  bool build() {
+    final conn = Connectivity();
+    _sub = conn.onConnectivityChanged.listen(_apply);
+    ref.onDispose(() => _sub?.cancel());
+    // The stream only fires on change — seed with the current state.
+    conn.checkConnectivity().then(_apply);
+    return false; // assume unmetered until the first reading lands
+  }
+
+  void _apply(List<ConnectivityResult> results) {
+    final hasUnmetered = results.contains(ConnectivityResult.wifi) ||
+        results.contains(ConnectivityResult.ethernet);
+    final onMobile =
+        results.contains(ConnectivityResult.mobile) && !hasUnmetered;
+    if (onMobile != state) state = onMobile;
+  }
+}
+
+final onMobileDataProvider =
+    NotifierProvider<OnMobileDataNotifier, bool>(OnMobileDataNotifier.new);
 
 // ---------------------------------------------------------------------------
 // Camera config icons  (show/hide the per-tile camera gear)

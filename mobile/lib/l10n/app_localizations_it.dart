@@ -390,7 +390,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get cameraFeedsIntro =>
-      'Con quale frequenza ogni riquadro aggiorna la videocamera. Usa una frequenza più alta a casa e più bassa tramite il tunnel remoto per risparmiare dati.';
+      'Con quale frequenza ogni riquadro aggiorna la videocamera. Moongate usa la frequenza Locale quando sei in Wi-Fi (anche fuori casa) e la frequenza Tunnel con i dati mobili, così mantieni un flusso veloce in Wi-Fi e più leggero in mobilità per risparmiare dati.';
 
   @override
   String get cameraFeedsLocalRate => 'Frequenza feed locale';

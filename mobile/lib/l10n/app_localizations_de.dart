@@ -389,7 +389,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cameraFeedsIntro =>
-      'Wie oft jede Kachel ihr Kamerabild aktualisiert. Nutze zu Hause eine höhere Rate und über den Tunnel eine niedrigere, um Daten zu sparen.';
+      'Wie oft jede Kachel ihr Kamerabild aktualisiert. Moongate nutzt die lokale Rate, solange du im WLAN bist (auch unterwegs), und die Tunnel-Rate bei mobilen Daten – so bleibt das Bild im WLAN schnell und schont unterwegs dein Datenvolumen.';
 
   @override
   String get cameraFeedsLocalRate => 'Rate des lokalen Feeds';

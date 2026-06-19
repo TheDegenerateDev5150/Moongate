@@ -389,7 +389,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get cameraFeedsIntro =>
-      'Jak często każdy kafelek odświeża kamerę. Użyj wyższej częstotliwości w domu i niższej przez zdalny tunel, aby oszczędzać dane.';
+      'Jak często każdy kafelek odświeża obraz z kamery. Moongate używa częstotliwości lokalnej, gdy jesteś w Wi-Fi (także poza domem), i częstotliwości tunelu przy danych komórkowych — dzięki czemu obraz w Wi-Fi jest szybki, a w sieci komórkowej lżejszy, by oszczędzać dane.';
 
   @override
   String get cameraFeedsLocalRate => 'Częstotliwość lokalnego podglądu';
