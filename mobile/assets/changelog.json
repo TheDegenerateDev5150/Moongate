@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.16",
+    "bullets": [
+      "Powered-off printers no longer cost anything in the background — the app detects they're offline from the cloud over a live connection and stops requesting access for them, instead of pinging every few seconds. Less mobile data and battery, and offline tiles settle faster",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.15",
     "bullets": [
       "Camera feeds are now smarter about your connection — the faster 'Local' refresh rate is used whenever your phone is on Wi-Fi, even when you're away from home and reaching a printer through the tunnel. The slower 'Tunnel' rate now only kicks in on mobile data, where it actually saves you data",

@@ -7,6 +7,7 @@ import 'providers/dashboard_background_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/lan_discovery_service.dart';
 import 'services/print_notification_service.dart';
+import 'services/printer_liveness_service.dart';
 import 'services/printer_registry.dart';
 import 'services/supabase_service.dart';
 
@@ -63,6 +64,11 @@ void main() async {
   // practice. If it doesn't, the first poll falls back to the persisted
   // lanUrl exactly as v0.4.x did. See docs/v0.5-lan-discovery-design.md §7.
   LanDiscoveryService.instance.refresh().ignore();
+
+  // Track printer liveness (last_seen) over Realtime so the dashboard can show
+  // offline printers and skip minting tokens for them — keeping an offline Pi at
+  // zero Edge Function cost. No-ops until the anon session lands, then self-starts.
+  PrinterLivenessService.instance.start();
 
   runApp(UncontrolledProviderScope(container: container, child: const MoongateApp()));
 }
