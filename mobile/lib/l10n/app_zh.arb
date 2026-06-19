@@ -1,5 +1,7 @@
 {
   "@@locale": "zh",
+  "tileEmergencyStop": "紧急停止 · 双击",
+  "tileEmergencyStopFailed": "无法连接打印机 — 紧急停止失败",
   "lightChooseTitle": "切换 {name} 的灯光",
   "powerScreenTitle": "高级电源开关",
   "powerScreenBanner": "适用于电源由 Klipper 宏（而非 Moonraker 电源设备）控制的打印机。开启后选择一对开/关宏，或单个切换宏——磁贴的电源按钮将使用它们。",

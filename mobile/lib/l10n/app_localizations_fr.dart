@@ -807,6 +807,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tileFirmwareRestart => 'Redémarrage du firmware';
 
   @override
+  String get tileEmergencyStop => 'Arrêt d\'urgence · appuyer deux fois';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'Imprimante injoignable — échec de l\'arrêt d\'urgence';
+
+  @override
   String get tilePrintComplete => 'Impression terminée';
 
   @override

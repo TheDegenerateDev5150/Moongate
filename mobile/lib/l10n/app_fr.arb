@@ -1,5 +1,7 @@
 {
   "@@locale": "fr",
+  "tileEmergencyStop": "Arrêt d'urgence · appuyer deux fois",
+  "tileEmergencyStopFailed": "Imprimante injoignable — échec de l'arrêt d'urgence",
   "lightChooseTitle": "Commander la lumière de {name}",
   "powerScreenTitle": "Interrupteur d'alimentation avancé",
   "powerScreenBanner": "Pour les imprimantes dont l'alimentation est une macro Klipper plutôt qu'un périphérique d'alimentation Moonraker. Activez-le et choisissez une paire Marche + Arrêt, ou une seule macro de bascule — le bouton d'alimentation de la tuile les utilisera.",

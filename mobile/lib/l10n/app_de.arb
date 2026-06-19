@@ -1,5 +1,7 @@
 {
   "@@locale": "de",
+  "tileEmergencyStop": "Notstopp · doppelt tippen",
+  "tileEmergencyStopFailed": "Drucker nicht erreichbar — Notstopp fehlgeschlagen",
   "lightChooseTitle": "Licht von {name} schalten",
   "powerScreenTitle": "Erweiterter Netzschalter",
   "powerScreenBanner": "Für Drucker, deren Stromversorgung ein Klipper-Makro statt eines Moonraker-Stromgeräts ist. Aktivieren und ein Ein/Aus-Paar oder ein einzelnes Umschalt-Makro wählen — die Ein/Aus-Taste der Kachel verwendet sie.",

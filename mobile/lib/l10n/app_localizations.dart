@@ -1484,6 +1484,18 @@ abstract class AppLocalizations {
   /// **'Firmware restart'**
   String get tileFirmwareRestart;
 
+  /// Tooltip on the red emergency-stop triangle under the connection label; double-tap triggers it.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency stop · double-tap'**
+  String get tileEmergencyStop;
+
+  /// Snackbar shown when an emergency-stop command could not reach the printer.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach printer — emergency stop failed'**
+  String get tileEmergencyStopFailed;
+
   /// Idle-row label shown when the last print finished successfully.
   ///
   /// In en, this message translates to:

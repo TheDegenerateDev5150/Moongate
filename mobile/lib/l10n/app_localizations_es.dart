@@ -805,6 +805,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tileFirmwareRestart => 'Reiniciar firmware';
 
   @override
+  String get tileEmergencyStop => 'Parada de emergencia · doble toque';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'No se pudo conectar con la impresora — falló la parada de emergencia';
+
+  @override
   String get tilePrintComplete => 'Impresión completada';
 
   @override

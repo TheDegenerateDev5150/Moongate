@@ -1,5 +1,7 @@
 {
   "@@locale": "it",
+  "tileEmergencyStop": "Arresto di emergenza · doppio tocco",
+  "tileEmergencyStopFailed": "Impossibile raggiungere la stampante — arresto di emergenza non riuscito",
   "lightChooseTitle": "Cambia la luce di {name}",
   "powerScreenTitle": "Interruttore di alimentazione avanzato",
   "powerScreenBanner": "Per le stampanti la cui alimentazione è una macro di Klipper anziché un dispositivo di alimentazione di Moonraker. Attivalo e scegli una coppia Accensione + Spegnimento, oppure una singola macro di commutazione: il pulsante di accensione del riquadro le userà.",

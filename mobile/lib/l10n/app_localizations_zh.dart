@@ -755,6 +755,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tileFirmwareRestart => '固件重启';
 
   @override
+  String get tileEmergencyStop => '紧急停止 · 双击';
+
+  @override
+  String get tileEmergencyStopFailed => '无法连接打印机 — 紧急停止失败';
+
+  @override
   String get tilePrintComplete => '打印完成';
 
   @override

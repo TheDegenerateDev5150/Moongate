@@ -798,6 +798,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tileFirmwareRestart => 'Firmware-Neustart';
 
   @override
+  String get tileEmergencyStop => 'Notstopp · doppelt tippen';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'Drucker nicht erreichbar — Notstopp fehlgeschlagen';
+
+  @override
   String get tilePrintComplete => 'Druck abgeschlossen';
 
   @override

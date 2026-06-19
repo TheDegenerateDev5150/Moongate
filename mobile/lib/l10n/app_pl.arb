@@ -1,5 +1,7 @@
 {
   "@@locale": "pl",
+  "tileEmergencyStop": "Zatrzymanie awaryjne · dotknij dwukrotnie",
+  "tileEmergencyStopFailed": "Nie można połączyć z drukarką — zatrzymanie awaryjne nie powiodło się",
   "lightChooseTitle": "Przełącz światło {name}",
   "powerScreenTitle": "Zaawansowany wyłącznik zasilania",
   "powerScreenBanner": "Dla drukarek, których zasilanie jest makrem Klippera, a nie urządzeniem zasilania Moonrakera. Włącz i wybierz parę Wł. + Wył. lub pojedyncze makro przełączające — przycisk zasilania kafelka ich użyje.",

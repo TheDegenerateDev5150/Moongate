@@ -797,6 +797,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tileFirmwareRestart => 'Перезапуск прошивки';
 
   @override
+  String get tileEmergencyStop => 'Аварийная остановка · двойное нажатие';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'Не удалось связаться с принтером — аварийная остановка не выполнена';
+
+  @override
   String get tilePrintComplete => 'Печать завершена';
 
   @override

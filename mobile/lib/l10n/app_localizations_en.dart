@@ -784,6 +784,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tileFirmwareRestart => 'Firmware restart';
 
   @override
+  String get tileEmergencyStop => 'Emergency stop · double-tap';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'Could not reach printer — emergency stop failed';
+
+  @override
   String get tilePrintComplete => 'Print complete';
 
   @override

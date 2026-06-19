@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/printer_config.dart';
 import 'lan_discovery_service.dart';
+import 'print_progress.dart';
 import 'printer_access_cache.dart';
 import 'printer_liveness_service.dart';
 import 'printer_registry.dart';
@@ -37,8 +38,12 @@ class PrinterStatusService {
   String? _chamberKey;
   bool    _chamberDiscovered = false;
 
-  // ── File-metadata cache for accurate progress (kept from v0.2.x) ─────────
-  double? _estimatedPrintSeconds;
+  // ── File-metadata cache for accurate progress ────────────────────────────
+  // The slicer's gcode body byte offsets, cached per filename. They drive the
+  // Mainsail-matching "file position (relative)" progress in _parseStatus —
+  // (file_position − start) / (end − start) — via [computePrintProgress].
+  int?    _gcodeStartByte;
+  int?    _gcodeEndByte;
   String? _metadataFilename;
 
   // ── LAN-first state ──────────────────────────────────────────────────────
@@ -506,15 +511,18 @@ class PrinterStatusService {
     }
   }
 
-  // ── File metadata for accurate progress (kept from v0.2.x) ───────────────
+  // ── File metadata for accurate progress ──────────────────────────────────
+  // Fetches the printing file's gcode body byte offsets (once per filename) so
+  // _parseStatus can report Mainsail's "file position (relative)" progress.
 
   Future<void> _fetchFileMetadata(
       String baseUrl, String accessToken, String? filename,
       {required bool isLan}) async {
     if (filename == null || filename.isEmpty) return;
     if (filename == _metadataFilename) return;
-    _estimatedPrintSeconds = null;
-    _metadataFilename      = null;
+    _gcodeStartByte   = null;
+    _gcodeEndByte     = null;
+    _metadataFilename = null;
     try {
       final encoded  = Uri.encodeComponent(filename);
       final uri      = Uri.parse(
@@ -524,12 +532,16 @@ class PrinterStatusService {
           isLan: isLan,
           timeout: const Duration(seconds: 5));
       if (response.statusCode == 200) {
-        final body      = jsonDecode(response.body) as Map<String, dynamic>;
-        final estimated =
-            (body['result']?['estimated_time'] as num?)?.toDouble();
-        if (estimated != null && estimated > 0) {
-          _estimatedPrintSeconds = estimated;
-          _metadataFilename      = filename;
+        final result =
+            jsonDecode(response.body)['result'] as Map<String, dynamic>?;
+        final start = (result?['gcode_start_byte'] as num?)?.toInt();
+        final end   = (result?['gcode_end_byte']   as num?)?.toInt();
+        // Only cache (and stop re-fetching) once we have a usable range; a file
+        // Moonraker is still analysing may omit the offsets for a moment.
+        if (start != null && end != null && end > start) {
+          _gcodeStartByte   = start;
+          _gcodeEndByte     = end;
+          _metadataFilename = filename;
         }
       }
     } catch (_) {}
@@ -731,26 +743,23 @@ class PrinterStatusService {
 
     final state = (printStats['state'] as String?) ?? 'startup';
 
-    final double printDuration =
-        (printStats['print_duration'] as num?)?.toDouble() ?? 0.0;
     final double displayProg =
         (displayStatus['progress'] as num?)?.toDouble() ?? 0.0;
     final double sdcardProg =
         (virtualSdcard['progress'] as num?)?.toDouble() ?? 0.0;
+    final double? filePosition =
+        (virtualSdcard['file_position'] as num?)?.toDouble();
 
-    final double progress;
-    if (_estimatedPrintSeconds != null &&
-        _estimatedPrintSeconds! > 0 &&
-        printDuration > 0 &&
-        state == 'printing') {
-      progress = (printDuration / _estimatedPrintSeconds!).clamp(0.0, 1.0);
-    } else if (displayProg > 0.0) {
-      progress = displayProg.clamp(0.0, 1.0);
-    } else if (sdcardProg > 0.0) {
-      progress = sdcardProg.clamp(0.0, 1.0);
-    } else {
-      progress = 0.0;
-    }
+    // File-relative progress — matches Mainsail's default and the notification
+    // (single source of truth in computePrintProgress). The slicer-time
+    // estimate that used to lead here read several % ahead of Mainsail.
+    final double progress = computePrintProgress(
+      filePosition:    filePosition,
+      gcodeStartByte:  _gcodeStartByte,
+      gcodeEndByte:    _gcodeEndByte,
+      displayProgress: displayProg,
+      sdcardProgress:  sdcardProg,
+    );
 
     // Persist webcam transform info — keeps the tile correct on next launch.
     // Also pick up the Pi's local_ip if it surfaced, so future polls can

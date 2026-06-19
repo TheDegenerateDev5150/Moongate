@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.17",
+    "bullets": [
+      "Print progress now matches Mainsail exactly. The dashboard tile and the print notification both show the same percentage as Mainsail/Fluidd — its default 'file position (relative)' — instead of the tile running a few percent ahead from the slicer's time estimate. The progress bar, the tile %, and the notification % are now one and the same number",
+      "Emergency stop from the dashboard. Each online printer tile now has a small red warning triangle under the Local/Tunnel label — double-tap it to send an immediate emergency stop (Klipper M112). It's a double-tap with no confirmation so a single stray tap can't trigger it; afterwards the firmware-restart button brings the printer back",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.16",
     "bullets": [
       "Powered-off printers no longer cost anything in the background — the app (the dashboard and the print-notification service alike) detects they're offline from the cloud and stops requesting access for them, instead of pinging every few seconds. Less mobile data and battery, and offline tiles settle faster",

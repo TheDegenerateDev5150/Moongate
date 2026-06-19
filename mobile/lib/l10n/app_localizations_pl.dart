@@ -795,6 +795,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get tileFirmwareRestart => 'Restart firmware';
 
   @override
+  String get tileEmergencyStop => 'Zatrzymanie awaryjne · dotknij dwukrotnie';
+
+  @override
+  String get tileEmergencyStopFailed =>
+      'Nie można połączyć z drukarką — zatrzymanie awaryjne nie powiodło się';
+
+  @override
   String get tilePrintComplete => 'Wydruk ukończony';
 
   @override
