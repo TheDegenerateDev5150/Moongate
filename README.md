@@ -34,13 +34,13 @@ Free, open-source Android control for your **Klipper 3D printer** — live webca
 
 ## Features
 
-- 📊 **Fleet dashboard** — live webcam thumbnails (pick the refresh rate to balance smoothness vs. data, or switch all feeds off entirely to save data), print progress matched to Mainsail's estimate, temperatures, chamber sensor, and a per-printer status badge. Tiles auto-sort by activity so whatever's printing floats to the top — or turn that off and **drag them into your own order**, which sticks and travels in your backups. **Hide a printer's webcam** to shrink it to a compact tile, and the grid packs full and compact tiles together so the printers you're not watching take up less room.
+- 📊 **Fleet dashboard** — live webcam thumbnails (the feed rate follows your network automatically — smoother on Wi-Fi, throttled on mobile data to save it — with separate rates you can tune for each, or switch a feed off entirely), print progress matched to Mainsail's estimate, temperatures, chamber sensor, and a per-printer status badge. Tiles auto-sort by activity so whatever's printing floats to the top — or turn that off and **drag them into your own order**, which sticks and travels in your backups. **Hide a printer's webcam** to shrink it to a compact tile, and the grid packs full and compact tiles together so the printers you're not watching take up less room.
 - 📷 **External cameras** — point a tile at a camera that isn't wired into Klipper (an old phone as a webcam, a network IP cam). Cameras already configured in Mainsail are auto-detected; or set one by hand with the tile's gear. Works on Wi-Fi and remotely through the tunnel (home-network cameras), and a menu toggle hides the gears.
 - 🎛️ **Print controls** — pause, resume, and stop from the tile, plus a one-tap firmware restart for idle or errored printers. If a printer has a Moonraker **power device**, a power button on its tile switches it **on or off** (with a confirm) — and it works even while the printer is off, so you can wake it remotely. No power device? Point the printer at its own **power macro** instead (Advanced Power Switch) and the same button drives that.
 - 💡 **Lighting control** — drive your printer's lights from the dashboard. Set each printer's on/off (or single toggle) macro under the **Lighting** menu, then tap the bulb on its camera. Point it at the light's Klipper object and the bulb shows the **real** on/off state, even when you switch the light elsewhere.
 - 📂 **Print files on the printer** — tap the folder button on a ready printer to browse the G-code already saved on it, shown with slicer **thumbnails**, newest first. Pick one and **Start print** with a confirm tap — no slicer, no re-upload.
-- 🖥️ **Full Mainsail / Fluidd UI** — tap a tile to open the complete web UI in-app; whichever you run is auto-detected. It **stays loaded in the background, so re-opening a printer is instant** instead of reloading every time — a big difference over the tunnel. A built-in full-screen **camera view** (top-bar icon) keeps the feed working when you're away — even for an external camera the embedded page can't load over mobile data.
-- 📡 **Auto local ↔ remote** — tries home WiFi first every poll, falls back to the Cloudflare tunnel within ~2s when you're away, and flips back to "Local" the moment you're home.
+- 🖥️ **Full Mainsail / Fluidd UI** — tap a tile to open the complete web UI in-app; whichever you run is auto-detected. Every printer's page is **warmed in the background the moment the app starts and then kept loaded, so even the first time you open a printer it's instant** — no "Initializing…" reload, a big difference over the tunnel. A built-in full-screen **camera view** (top-bar icon) keeps the feed working when you're away — even for an external camera the embedded page can't load over mobile data.
+- 📡 **Auto local ↔ remote** — tries home WiFi first every poll, falls back to the Cloudflare tunnel within ~2s when you're away, and flips back to "Local" the moment you're home. Printers that are **switched off cost almost nothing in the background** — the dashboard and the print notifications both stop reaching out to them until they're back online — so it's easy on mobile data and battery.
 - 🔔 **Print notifications** — opt-in live fleet status in your notification shade — per-printer progress, the projected **finish time**, temperatures and heat-up — with start / finish / pause / error alerts and a configurable refresh interval. **Choose which details show and drag them into the order you want.** Off by default.
 - 🔒 **App lock** — optional PIN + biometric (fingerprint/face) on launch, with configurable auto-lock and screenshot protection. Off by default.
 - 🌍 **8 languages** — fully translated into English, German, French, Spanish, Italian, Simplified Chinese, Russian, and Polish; choose on first launch or anytime from the menu.
@@ -78,7 +78,7 @@ Three steps: install the Pi plugin, install the app, pair.
 SSH into your Pi and run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh | bash
 ```
 
 This installs the plugin, the `MOONGATE_PAIR` macro, the QR pairing page, the auth proxy, and the Cloudflare tunnel, then restarts Moonraker. Future updates appear in **Mainsail → Software Updates → Moongate**.
@@ -93,7 +93,7 @@ This installs the plugin, the `MOONGATE_PAIR` macro, the QR pairing page, the au
 **Non-standard port?** Moonraker usually serves on port 80 (the installer's default). If yours is elsewhere, tell the installer:
 
 ```bash
-MOONGATE_PORT=8080 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh)"
+MOONGATE_PORT=8080 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh)"
 ```
 
 In the app's pair screen, set the **Port** field to match (leave it blank for 80).
