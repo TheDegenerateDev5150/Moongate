@@ -136,7 +136,9 @@ mobile/lib/
     ├── printer_status_service.dart     # Per-tile 4 s poll loop, LAN-first with reachability probe
     ├── printer_liveness_service.dart    # Realtime + RLS-scoped read of last_seen; gates polling of offline printers (v0.9.16)
     ├── printer_webview_cache.dart       # Keeps each printer's WebView warm; pre-warms all at startup (v0.9.8 / v0.9.15)
-    ├── print_control_service.dart      # pause/resume/cancel/firmware_restart
+    ├── print_control_service.dart      # pause/resume/cancel/firmware_restart/emergency_stop
+    ├── print_progress.dart             # shared Mainsail-matching (file-relative) progress calc (v0.9.17)
+    ├── ota_installer.dart              # in-app updater: download APK + launch installer (v0.9.17)
     ├── update_service.dart             # /APK/latest_version.json poll
     ├── lan_discovery_service.dart      # mDNS browse for _moongate._tcp Pis (v0.5)
     ├── printer_status_registry.dart    # last live status + LAN-poll outcome per printer
@@ -148,6 +150,8 @@ mobile/lib/
 > **v0.6.4–v0.6.5.** `diagnostics_service.dart` now also captures the Pi's **plugin version** (from the `/status` reply, where `moongate_standalone.py` reports `MOONGATE_PLUGIN_VERSION`) and the **remote/tunnel** connection result, not just the LAN outcome. v0.6.5 adds the first-run **"How pairing works"** onboarding — `_maybeShowPairingHelp()` / `_showPairingHelp()` in `dashboard_screen.dart`, shown once on cold launch (a persisted "Don't show again" flag suppresses it) and always reachable from the drawer's **How pairing works** item.
 
 > **v0.9.15–v0.9.16 services & deps.** `printer_webview_cache.dart` gained a **pre-warm** path that loads every printer's WebView in the background at startup (so the first open is instant), and a new `printer_liveness_service.dart` tracks each printer's online/offline state via **Supabase Realtime** on the `printers` table (plus a periodic RLS-scoped read) so the dashboard and the notification service stop requesting access for switched-off printers. A new `onMobileDataProvider` in `providers/settings_provider.dart` drives the connectivity-aware camera feed rate. New dependency: **`connectivity_plus`** (Wi-Fi vs. mobile-data detection). The liveness feature relies on the Realtime migration below being applied to the Supabase project.
+
+> **v0.9.17 services & native.** Two new app services: `print_progress.dart` — a pure helper that computes Mainsail-matching *file position (relative)* progress, now the **single source** for both the dashboard tile and the print notification (they used to disagree) — and `ota_installer.dart`, the in-app updater that streams the release APK to the cache dir with progress then triggers the system installer. The updater adds a native `MethodChannel` (`com.moongate.app/install`) in `MainActivity.kt`, a `FileProvider` + `res/xml/file_paths.xml`, and the `REQUEST_INSTALL_PACKAGES` permission in the manifest; it reuses the existing `http` / `path_provider` / `permission_handler` deps (no new package). The post-emergency-stop restart button keys off a new `klippyShutdown` flag on `PrinterStatus`, parsed from Moonraker's `webhooks.state`. Unit test: `mobile/test/print_progress_test.dart`.
 
 For a guided tour of how these pieces fit together, see [ARCHITECTURE.md](ARCHITECTURE.md).
 

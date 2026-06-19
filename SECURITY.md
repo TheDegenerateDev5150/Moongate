@@ -185,9 +185,9 @@ The Moongate plugin is a Moonraker component, which means it runs in the Moonrak
 
 Practical implications:
 
-- **Any holder of a valid access token can run `pause`, `resume`, `cancel`, or `firmware_restart`.** Print control is the explicit purpose of the auth-gated `/server/moongate/control` endpoint.
-- **Status polling reads Moonraker objects** that the plugin asks for — `print_stats`, `extruder`, `heater_bed`, `display_status`, `virtual_sdcard`, the discovered chamber sensor. Nothing else.
-- **The plugin does not run arbitrary G-code on behalf of token holders.** There is no `POST /server/moongate/gcode` endpoint. Print control is restricted to the four whitelisted actions; adding more requires editing [`klipper-plugin/moongate_standalone.py`](klipper-plugin/moongate_standalone.py) and auditing the new behaviour.
+- **Any holder of a valid access token can run `pause`, `resume`, `cancel`, `firmware_restart`, or `emergency_stop`.** Print control is the explicit purpose of the auth-gated `/server/moongate/control` endpoint.
+- **Status polling reads Moonraker objects** that the plugin asks for — `print_stats`, `extruder`, `heater_bed`, `display_status`, `virtual_sdcard`, `webhooks` (Klipper's ready/shutdown state), the discovered chamber sensor. Nothing else.
+- **The plugin does not run arbitrary G-code on behalf of token holders.** There is no `POST /server/moongate/gcode` endpoint. Print control is restricted to the five whitelisted actions; adding more requires editing [`klipper-plugin/moongate_standalone.py`](klipper-plugin/moongate_standalone.py) and auditing the new behaviour.
 - **The plugin reads its own state from `~/.config/moongate/`** and calls `systemctl` / `journalctl` to discover the current tunnel URL when its own log lookup fails. It does not read `printer.cfg` or any other Klipper internals beyond what Moonraker exposes.
 
 The auth proxy is even more constrained — it doesn't talk to Klipper at all, it just routes HTTP / WebSocket between Cloudflare and nginx. The verifier classes it uses for token checks are imported from the plugin file, not duplicated, so signature semantics stay single-source.
@@ -211,6 +211,17 @@ The auth proxy is even more constrained — it doesn't talk to Klipper at all, i
 **Realtime is scoped by the existing RLS policy.** v0.9.16 lets the app learn each printer's online/offline state from the cloud over a **Supabase Realtime** subscription on the `printers` table, so it can stop requesting access for a powered-off printer (migration `supabase/migrations/20260619120000_printers_realtime.sql`: `ALTER PUBLICATION supabase_realtime ADD TABLE public.printers`). This **does not widen access**: Realtime delivery for `printers` is gated by the *same* "select own printers" row-level-security policy that already governs every read of that table, so a client only ever receives change events for its own printer rows — exactly the rows it could already `SELECT`. No new policy, no broader grant. The migration also sets **`REPLICA IDENTITY FULL`** on the table so that the owner column is present in the WAL for `UPDATE` events (a heartbeat changes `last_seen` / `tunnel_url`, not `owner_user_id`); without it the policy column would be absent on the change event and Realtime would simply *not deliver* the update — a fail-closed default. The row already contains nothing secret (tunnel URL, last-seen timestamp, owner handle), and the LAN path is untouched: liveness only suppresses remote token requests, it never authenticates anything.
 
 **Access-token TTL is now 10 minutes** (`ACCESS_TOKEN_TTL_SECONDS` in [`supabase/functions/_shared/accessToken.ts`](supabase/functions/_shared/accessToken.ts)), raised from 5 to cut how often the app calls `/printer-access`. It remains short-lived in the sense the threat model relies on — minutes, not days — so the replay window stays small and a refreshed token still supersedes the old one. The token is still the perimeter; nothing else about its scope or signing changed.
+
+---
+
+## In-app updater (v0.9.17)
+
+The update banner can now download and install a new version **without leaving the app** (Android only). That adds the `REQUEST_INSTALL_PACKAGES` permission and a `FileProvider`, so it's worth stating what it can and can't do:
+
+- It downloads the APK over **HTTPS from the project's GitHub Releases** — the same artifact you'd get by tapping the download link yourself — into the app's private cache directory, then hands that file to **Android's system package installer** via a `content://` `FileProvider` URI.
+- The install is **not silent**: Android shows its standard "install this update?" confirmation, and the first time it requires the user to grant "install unknown apps" for Moongate. A sideloaded app cannot install anything without that interaction.
+- **Android enforces signature continuity.** A downloaded APK can only *replace* the installed app if it's signed with the **same release key**. A tampered or differently-signed APK is rejected by the installer — so a compromised download, or a swapped Release asset, can't silently turn Moongate into a malicious build; it simply fails to install.
+- On any failure (network, or the user declining the permission) it falls back to opening the release in the browser. The updater never installs anything the user couldn't already install by hand from the Releases page.
 
 ---
 
