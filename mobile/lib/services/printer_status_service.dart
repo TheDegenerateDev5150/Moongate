@@ -305,25 +305,33 @@ class PrinterStatusService {
         return;
       }
 
-      // 5. Maybe the token got invalidated server-side. Drop cache and
-      //    try once more with a fresh token before declaring offline.
-      PrinterAccessCache.instance.invalidate(config.id);
-      try {
-        access = await PrinterAccessCache.instance.get(config.id);
-      } catch (_) {
-        if (!_disposed) _controller.add(PrinterStatus.offline);
-        return;
-      }
-      if (access.tunnelUrl != null) {
-        final retry = await _tryMoongateEndpoint(
-            baseUrl: access.tunnelUrl!, access: access, isLan: false, tunnelReady: true);
-        _recordPollDiag({
-          'tunnel_url': access.tunnelUrl,
-          'tunnel_status': _lastEndpointReason ?? 'unknown',
-        });
-        if (retry != null) {
-          if (!_disposed) _controller.add(retry);
+      // 5. A 401 means the token itself was rejected (e.g. invalidated
+      //    server-side) — a fresh one may work, so drop the cache and try ONCE
+      //    more before declaring offline. For any other failure (timeout,
+      //    offline, 404) a new token can't help: the Pi simply isn't reachable,
+      //    so re-minting is pure waste. Re-minting on every poll for an
+      //    offline-but-still-paired printer (whose stale tunnel URL keeps this
+      //    branch alive) was the dominant source of /printer-access Edge
+      //    Function calls — so we skip it unless the failure was an auth reject.
+      if (_lastEndpointReason == 'http_401') {
+        PrinterAccessCache.instance.invalidate(config.id);
+        try {
+          access = await PrinterAccessCache.instance.get(config.id);
+        } catch (_) {
+          if (!_disposed) _controller.add(PrinterStatus.offline);
           return;
+        }
+        if (access.tunnelUrl != null) {
+          final retry = await _tryMoongateEndpoint(
+              baseUrl: access.tunnelUrl!, access: access, isLan: false, tunnelReady: true);
+          _recordPollDiag({
+            'tunnel_url': access.tunnelUrl,
+            'tunnel_status': _lastEndpointReason ?? 'unknown',
+          });
+          if (retry != null) {
+            if (!_disposed) _controller.add(retry);
+            return;
+          }
         }
       }
     }

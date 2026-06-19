@@ -4,6 +4,7 @@
     "bullets": [
       "Camera feeds are now smarter about your connection — the faster 'Local' refresh rate is used whenever your phone is on Wi-Fi, even when you're away from home and reaching a printer through the tunnel. The slower 'Tunnel' rate now only kicks in on mobile data, where it actually saves you data",
       "Printers warm up in the background the moment you open the app, so the first time you tap a printer it opens instantly instead of showing Mainsail's 'Initializing…' — the same instant open as before, now ready from the very first tap",
+      "Lighter on mobile data and battery — the app and the background notification service now reuse a cached connection token instead of re-requesting one every few seconds, and no longer keep requesting tokens for printers that are switched off",
       "No Pi update needed — just update the app"
     ]
   },
