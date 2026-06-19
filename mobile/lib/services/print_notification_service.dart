@@ -169,6 +169,10 @@ class _PrintTaskHandler extends TaskHandler {
   final _alerts = FlutterLocalNotificationsPlugin();
   bool _busy = false;
   final Map<String, String> _lastState = {};
+  // Cloud last_seen per printer, refreshed once per tick by a single RLS-scoped
+  // SELECT (PostgREST, NOT an Edge Function). Lets _poll skip the token mint for
+  // a printer that's positively offline — see _isKnownOffline.
+  Map<String, DateTime> _lastSeen = {};
   late AppLocalizations _l;
   // Which notification segments to show + their order — re-read from prefs each
   // tick (the user edits them on the main isolate). Defaults to all-on.
@@ -248,6 +252,11 @@ class _PrintTaskHandler extends TaskHandler {
       await PrinterRegistry.instance.load();
       final printers = PrinterRegistry.instance.printers;
 
+      // One cheap fleet read of last_seen (PostgREST, not an Edge call) gates the
+      // per-printer token mints below, so an offline printer costs zero Edge
+      // Function calls even though this service polls 24/7.
+      await _refreshLiveness();
+
       final entries = <(String, _Poll?)>[];
 
       for (final p in printers) {
@@ -320,9 +329,62 @@ class _PrintTaskHandler extends TaskHandler {
     );
   }
 
+  // ── Liveness (offline gate) ─────────────────────────────────────────────────
+
+  /// Refresh every owned printer's cloud last_seen in one RLS-scoped query
+  /// (PostgREST — not an Edge Function). Best-effort: on failure we keep the
+  /// previous snapshot, and the gate fails open on anything unknown.
+  Future<void> _refreshLiveness() async {
+    try {
+      final rows = await SupabaseService.instance.client
+          .from('printers')
+          .select('id, last_seen');
+      final next = <String, DateTime>{};
+      for (final r in rows as List) {
+        final id = r['id'] as String?;
+        final raw = r['last_seen'] as String?;
+        if (id == null || raw == null) continue;
+        final ts = DateTime.tryParse(raw);
+        if (ts != null) next[id] = ts.toUtc();
+      }
+      _lastSeen = next;
+    } catch (_) {
+      // Keep the prior snapshot; _isKnownOffline fails open on unknown ids.
+    }
+  }
+
+  /// True only with positive evidence the printer is offline: a known last_seen
+  /// older than the window (2× the 5-min heartbeat + slack). Unknown → false, so
+  /// the gate fails open and polls rather than hiding a live printer.
+  bool _isKnownOffline(String printerId) {
+    final ts = _lastSeen[printerId];
+    if (ts == null) return false;
+    return DateTime.now().toUtc().difference(ts) >= const Duration(minutes: 12);
+  }
+
+  /// Token-free LAN reachability: HEAD the persisted LAN URL; any HTTP answer
+  /// (even 401) means the Pi is up on this network, so a printer that's offline
+  /// in the cloud but reachable on the LAN still gets polled. Remote → fast-fail.
+  Future<bool> _lanHeadReachable(PrinterConfig p) async {
+    final lan = p.lanUrl;
+    if (lan == null || lan.isEmpty) return false;
+    try {
+      await http.head(Uri.parse(lan)).timeout(const Duration(seconds: 2));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // ── Polling ───────────────────────────────────────────────────────────────
 
   Future<_Poll?> _poll(PrinterConfig p) async {
+    // Liveness gate (mirrors the dashboard): skip the token mint — an Edge call
+    // — for a printer with positive evidence of being offline (stale cloud
+    // last_seen) and no token-free LAN answer. Fails open on unknown last_seen.
+    if (_isKnownOffline(p.id) && !await _lanHeadReachable(p)) {
+      return null; // offline → no token, zero Edge Function cost
+    }
     final PrinterAccess access;
     try {
       // Cached per-isolate so a 30 s / 5 s poll loop reuses one token for
