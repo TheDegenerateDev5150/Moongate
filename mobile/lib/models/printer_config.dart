@@ -383,6 +383,11 @@ class PrinterStatus {
   /// not yet known. Drives the lit/dark bulb on the tile.
   final bool? lightOn;
 
+  /// True when Moonraker reports Klipper is shut down or errored
+  /// (webhooks.state == "shutdown" / "error") — e.g. after an emergency stop.
+  /// The tile swaps the E-STOP triangle for a firmware-restart button then.
+  final bool klippyShutdown;
+
   const PrinterStatus({
     required this.state,
     required this.progress,
@@ -402,6 +407,7 @@ class PrinterStatus {
     this.webcamTargetFps = 15,
     this.webcamIsExternal = false,
     this.lightOn,
+    this.klippyShutdown = false,
   });
 
   bool get isPrinting => state == 'printing' || state == 'paused';

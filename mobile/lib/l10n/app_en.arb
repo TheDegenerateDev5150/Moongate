@@ -1,5 +1,13 @@
 {
   "@@locale": "en",
+  "updateDownloading": "Downloading update…",
+  "@updateDownloading": {"description": "Title of the in-app update dialog while the new APK is downloading."},
+  "updateOpeningInstaller": "Opening installer…",
+  "@updateOpeningInstaller": {"description": "Shown in the update dialog once the download finishes and the system installer is launching."},
+  "updateFailed": "Couldn't complete the update automatically.",
+  "@updateFailed": {"description": "Shown when the in-app update download or install fails; the user is offered the browser fallback."},
+  "updateOpenInBrowser": "Open in browser",
+  "@updateOpenInBrowser": {"description": "Button that falls back to downloading the update via the system browser."},
 
   "lightingTitle": "Lighting",
   "@lightingTitle": {"description": "Title of the Lighting setup screen and its hamburger-menu entry."},

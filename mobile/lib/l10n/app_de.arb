@@ -1,5 +1,9 @@
 {
   "@@locale": "de",
+  "updateDownloading": "Update wird heruntergeladen…",
+  "updateOpeningInstaller": "Installation wird geöffnet…",
+  "updateFailed": "Update konnte nicht automatisch abgeschlossen werden.",
+  "updateOpenInBrowser": "Im Browser öffnen",
   "tileEmergencyStop": "Notstopp · doppelt tippen",
   "tileEmergencyStopFailed": "Drucker nicht erreichbar — Notstopp fehlgeschlagen",
   "lightChooseTitle": "Licht von {name} schalten",

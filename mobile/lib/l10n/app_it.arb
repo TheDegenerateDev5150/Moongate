@@ -1,5 +1,9 @@
 {
   "@@locale": "it",
+  "updateDownloading": "Download dell'aggiornamento…",
+  "updateOpeningInstaller": "Apertura dell'installer…",
+  "updateFailed": "Impossibile completare l'aggiornamento automaticamente.",
+  "updateOpenInBrowser": "Apri nel browser",
   "tileEmergencyStop": "Arresto di emergenza · doppio tocco",
   "tileEmergencyStopFailed": "Impossibile raggiungere la stampante — arresto di emergenza non riuscito",
   "lightChooseTitle": "Cambia la luce di {name}",

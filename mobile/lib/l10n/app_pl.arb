@@ -1,5 +1,9 @@
 {
   "@@locale": "pl",
+  "updateDownloading": "Pobieranie aktualizacji…",
+  "updateOpeningInstaller": "Otwieranie instalatora…",
+  "updateFailed": "Nie udało się automatycznie ukończyć aktualizacji.",
+  "updateOpenInBrowser": "Otwórz w przeglądarce",
   "tileEmergencyStop": "Zatrzymanie awaryjne · dotknij dwukrotnie",
   "tileEmergencyStopFailed": "Nie można połączyć z drukarką — zatrzymanie awaryjne nie powiodło się",
   "lightChooseTitle": "Przełącz światło {name}",

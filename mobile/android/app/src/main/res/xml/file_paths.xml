@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- The in-app updater downloads to <cacheDir>/updates (path_provider's
+         getTemporaryDirectory() is the app's cacheDir on Android) and shares the
+         APK with the system installer through this FileProvider. -->
+    <cache-path name="updates" path="updates/" />
+</paths>

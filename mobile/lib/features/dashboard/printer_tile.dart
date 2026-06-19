@@ -196,6 +196,15 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
     }
   }
 
+  /// Firmware restart — the recovery shown after an emergency stop (the triangle
+  /// becomes a restart button while Klipper is shut down). Single tap; it's not
+  /// destructive. Deliberately NOT automatic: a shutdown can point at a real
+  /// problem worth checking before bringing the machine back.
+  Future<void> _handleFirmwareRestart() async {
+    HapticFeedback.mediumImpact();
+    await _controlService.sendAction('firmware_restart');
+  }
+
   /// Maps the current status to an overlay state, or null when the tile
   /// has a real reading to show.
   String? _overlayState(PrinterStatus s) {
@@ -470,10 +479,16 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                         ],
                         // E-STOP at the right end of the temperature line.
                         const Spacer(),
-                        _EstopButton(
-                          tooltip: l.tileEmergencyStop,
-                          onFire: _handleEmergencyStop,
-                        ),
+                        if (_status.klippyShutdown)
+                          _RestartButton(
+                            tooltip: l.tileFirmwareRestart,
+                            onTap: _handleFirmwareRestart,
+                          )
+                        else
+                          _EstopButton(
+                            tooltip: l.tileEmergencyStop,
+                            onFire: _handleEmergencyStop,
+                          ),
                       ],
                     ),
                   ],
@@ -553,10 +568,16 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                           color: connColor,
                         ),
                         const SizedBox(width: 6),
-                        _EstopButton(
-                          tooltip: l.tileEmergencyStop,
-                          onFire: _handleEmergencyStop,
-                        ),
+                        if (_status.klippyShutdown)
+                          _RestartButton(
+                            tooltip: l.tileFirmwareRestart,
+                            onTap: _handleFirmwareRestart,
+                          )
+                        else
+                          _EstopButton(
+                            tooltip: l.tileEmergencyStop,
+                            onFire: _handleEmergencyStop,
+                          ),
                       ],
                     ],
                   ),
@@ -939,6 +960,35 @@ class _EstopButton extends StatelessWidget {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
           child: const Icon(Icons.warning_rounded, color: Colors.red, size: 18),
+        ),
+      ),
+    );
+  }
+}
+
+/// Recovery button shown in place of the E-STOP triangle once Klipper is shut
+/// down (e.g. after an emergency stop): a single tap fires FIRMWARE_RESTART to
+/// bring the machine back online. Single tap, not double — recovery isn't
+/// destructive, so it doesn't need the accidental-press guard.
+class _RestartButton extends StatelessWidget {
+  final String tooltip;
+  final VoidCallback onTap;
+  const _RestartButton({required this.tooltip, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+          child: const Icon(Icons.restart_alt, color: Colors.orange, size: 18),
         ),
       ),
     );

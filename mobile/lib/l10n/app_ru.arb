@@ -1,5 +1,9 @@
 {
   "@@locale": "ru",
+  "updateDownloading": "Загрузка обновления…",
+  "updateOpeningInstaller": "Открытие установщика…",
+  "updateFailed": "Не удалось автоматически завершить обновление.",
+  "updateOpenInBrowser": "Открыть в браузере",
   "tileEmergencyStop": "Аварийная остановка · двойное нажатие",
   "tileEmergencyStopFailed": "Не удалось связаться с принтером — аварийная остановка не выполнена",
   "lightChooseTitle": "Переключить свет {name}",

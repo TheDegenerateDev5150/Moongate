@@ -9,6 +9,19 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get updateDownloading => 'Téléchargement de la mise à jour…';
+
+  @override
+  String get updateOpeningInstaller => 'Ouverture de l\'installateur…';
+
+  @override
+  String get updateFailed =>
+      'Impossible de terminer la mise à jour automatiquement.';
+
+  @override
+  String get updateOpenInBrowser => 'Ouvrir dans le navigateur';
+
+  @override
   String get lightingTitle => 'Éclairage';
 
   @override

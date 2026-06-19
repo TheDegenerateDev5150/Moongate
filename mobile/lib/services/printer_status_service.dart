@@ -649,7 +649,7 @@ class PrinterStatusService {
       {required bool isLan}) async {
     try {
       final uri = Uri.parse(
-          '$baseUrl/printer/objects/query?display_status&virtual_sdcard');
+          '$baseUrl/printer/objects/query?display_status&virtual_sdcard&webhooks');
       final response = await _authedGet(
           uri, accessToken,
           isLan: isLan,
@@ -664,6 +664,8 @@ class PrinterStatusService {
           if (status['virtual_sdcard'] == null && s['virtual_sdcard'] != null) {
             status['virtual_sdcard'] = s['virtual_sdcard'];
           }
+          // Klipper health — drives the tile's after-E-STOP restart button.
+          if (s['webhooks'] != null) status['webhooks'] = s['webhooks'];
         }
       }
     } catch (_) {}
@@ -849,6 +851,15 @@ class PrinterStatusService {
     final bool? lightOn =
         lightObj != null ? _interpretLight(status[lightObj]) : null;
 
+    // Klipper health from Moonraker's webhooks object: "shutdown" (e.g. after an
+    // emergency stop) or "error" means the machine needs a firmware restart to
+    // come back — the tile then shows a restart button instead of the E-STOP
+    // triangle. (Also corrects the misleading "idle" a shut-down printer showed.)
+    final webhooks       = status['webhooks'] as Map<String, dynamic>?;
+    final klippyState    = webhooks?['state'] as String?;
+    final klippyShutdown =
+        klippyState == 'shutdown' || klippyState == 'error';
+
     return PrinterStatus(
       state:              state,
       progress:           progress,
@@ -868,6 +879,7 @@ class PrinterStatusService {
       webcamTargetFps: (moongateResult?['webcam_target_fps']      as num?)?.toInt() ?? 15,
       webcamIsExternal: webcamIsExternal,
       lightOn:          lightOn,
+      klippyShutdown:   klippyShutdown,
     );
   }
 }

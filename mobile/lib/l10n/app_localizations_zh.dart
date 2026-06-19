@@ -9,6 +9,18 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get updateDownloading => '正在下载更新…';
+
+  @override
+  String get updateOpeningInstaller => '正在打开安装程序…';
+
+  @override
+  String get updateFailed => '无法自动完成更新。';
+
+  @override
+  String get updateOpenInBrowser => '在浏览器中打开';
+
+  @override
   String get lightingTitle => '照明';
 
   @override
