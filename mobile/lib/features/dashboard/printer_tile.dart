@@ -543,15 +543,24 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
             // Connection accent bar (matches the full tile).
             Container(height: 3, color: connColor),
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 7, 4, 9),
+              // Right inset matches the full tile (10) so the connection icons
+              // and the E-STOP line up with a full tile stacked above/below.
+              padding: const EdgeInsets.fromLTRB(10, 7, 10, 9),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Name + connection label — same as the full tile: wifi/cloud
-                  // icon + Local/Tunnel label + the remote-tunnel status dot.
+                  // icon + Local/Tunnel label + the remote-tunnel status dot. A
+                  // power button leads the row (compact tiles have no webcam to
+                  // host it); it self-hides when the printer has no power control.
                   Row(
                     children: [
+                      _PowerButton(
+                        printer: widget.printer,
+                        status: _status,
+                        onSurface: true,
+                      ),
                       Expanded(
                         child: Text(
                           widget.printer.name,
@@ -1595,7 +1604,16 @@ class _LightBulbButtonState extends State<_LightBulbButton> {
 class _PowerButton extends StatefulWidget {
   final PrinterConfig printer;
   final PrinterStatus status;
-  const _PowerButton({required this.printer, required this.status});
+
+  /// When true, render for a card surface (the compact tile's name row): a plain
+  /// theme-coloured icon with trailing space, instead of the dark webcam-overlay
+  /// chip. Self-hides the same way when the printer has no power control.
+  final bool onSurface;
+  const _PowerButton({
+    required this.printer,
+    required this.status,
+    this.onSurface = false,
+  });
 
   @override
   State<_PowerButton> createState() => _PowerButtonState();
@@ -1772,33 +1790,68 @@ class _PowerButtonState extends State<_PowerButton> {
     }
   }
 
-  Widget _buildMacroButton() {
-    final l = AppLocalizations.of(context);
+  /// Renders the power icon with the right chrome: a plain theme-coloured icon
+  /// (onSurface — the compact tile's name row) or the dark webcam-overlay chip
+  /// (default). The overlay/surface icon colours are passed in so the on/off and
+  /// disabled states stay readable against each backdrop.
+  Widget _chrome({
+    required String tooltip,
+    required VoidCallback? onTap,
+    required Color overlayIconColor,
+    required Color surfaceIconColor,
+  }) {
+    final iconOrSpinner = _busy
+        ? SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: widget.onSurface
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.white70,
+            ),
+          )
+        : Icon(Icons.power_settings_new,
+            size: 18,
+            color: widget.onSurface ? surfaceIconColor : overlayIconColor);
+    if (widget.onSurface) {
+      // Compact tile: plain icon ahead of the name, with trailing space so it
+      // reads as "[power]  name". No dark chip — it sits on the card surface.
+      return Tooltip(
+        message: tooltip,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child:
+                Padding(padding: const EdgeInsets.all(2), child: iconOrSpinner),
+          ),
+        ),
+      );
+    }
     return Tooltip(
-      message: l.powerMacroTooltip,
+      message: tooltip,
       child: Material(
         color: Colors.black.withValues(alpha: 0.38),
         shape: const CircleBorder(),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: _busy ? null : _macroTap,
-          child: Padding(
-            padding: const EdgeInsets.all(5),
-            child: _busy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white70),
-                  )
-                : Icon(
-                    Icons.power_settings_new,
-                    size: 18,
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-          ),
+          onTap: onTap,
+          child:
+              Padding(padding: const EdgeInsets.all(5), child: iconOrSpinner),
         ),
       ),
+    );
+  }
+
+  Widget _buildMacroButton() {
+    final l = AppLocalizations.of(context);
+    return _chrome(
+      tooltip: l.powerMacroTooltip,
+      onTap: _busy ? null : _macroTap,
+      overlayIconColor: Colors.white.withValues(alpha: 0.85),
+      surfaceIconColor: Theme.of(context).colorScheme.onSurfaceVariant,
     );
   }
 
@@ -1814,37 +1867,22 @@ class _PowerButtonState extends State<_PowerButton> {
     // action then rather than let the tap fail.
     final blocked = on && _isPrinting && _device!.lockedWhilePrinting;
     final enabled = !_busy && !blocked;
-    return Tooltip(
-      message: blocked
+    final cs = Theme.of(context).colorScheme;
+    return _chrome(
+      tooltip: blocked
           ? l.powerLockedWhilePrinting
           : (on ? l.powerTurnOff : l.powerTurnOn),
-      child: Material(
-        color: Colors.black.withValues(alpha: 0.38),
-        shape: const CircleBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: enabled ? _confirmAndToggle : null,
-          child: Padding(
-            padding: const EdgeInsets.all(5),
-            child: _busy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white70),
-                  )
-                : Icon(
-                    Icons.power_settings_new,
-                    size: 18,
-                    color: !enabled
-                        ? Colors.white24
-                        : on
-                            ? Colors.greenAccent
-                            : Colors.white.withValues(alpha: 0.6),
-                  ),
-          ),
-        ),
-      ),
+      onTap: enabled ? _confirmAndToggle : null,
+      overlayIconColor: !enabled
+          ? Colors.white24
+          : on
+              ? Colors.greenAccent
+              : Colors.white.withValues(alpha: 0.6),
+      surfaceIconColor: !enabled
+          ? cs.onSurface.withValues(alpha: 0.3)
+          : on
+              ? Colors.green
+              : cs.onSurfaceVariant,
     );
   }
 }
