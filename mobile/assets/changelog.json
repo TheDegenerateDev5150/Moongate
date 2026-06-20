@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.24",
+    "bullets": [
+      "Printer tiles now show just the current temperature for the hotend, bed and chamber — the target reading (the “/265°” shown after the current “265°”) no longer appears on the tile. During a print that extra text had been widening the temperature row enough to push the Emergency-stop button off the edge of the tile; the row now stays compact and the E-STOP stays put. The heater icon still turns its accent colour while it's heating, and the live print notification still shows the target",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.23",
     "bullets": [
       "The in-app icon guide (menu → About) now includes the Emergency-stop button, and on the Custom theme shows the E-STOP and accent icons in your chosen colours so it matches your dashboard",
