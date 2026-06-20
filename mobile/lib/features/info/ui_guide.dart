@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../providers/custom_theme_provider.dart';
+import '../../providers/settings_provider.dart';
 
 /// Shows the dashboard icon guide as a centered popup.
 ///
@@ -15,13 +18,18 @@ Future<void> showUiGuide(BuildContext context) {
   );
 }
 
-class _UiGuideDialog extends StatelessWidget {
+class _UiGuideDialog extends ConsumerWidget {
   const _UiGuideDialog();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
+    // The E-STOP icon follows the Custom theme's E-stop colour (matching the
+    // tile) when that theme is active; otherwise the classic emergency red.
+    final estopColor = ref.watch(themeModeProvider) == AppThemeMode.custom
+        ? ref.watch(customThemeProvider).estop
+        : Colors.red;
     // Cap the scroll area to ~60% of the screen so the centered dialog (plus
     // its title and pinned button) always stays clear of the system bars.
     final maxHeight = MediaQuery.sizeOf(context).height * 0.6;
@@ -70,6 +78,8 @@ class _UiGuideDialog extends StatelessWidget {
                     l.uiGuidePauseDesc),
                 _row(Icons.stop_rounded, Colors.redAccent, l.uiGuideStopTitle,
                     l.uiGuideStopDesc),
+                _row(Icons.warning_rounded, estopColor, l.uiGuideEstopTitle,
+                    l.uiGuideEstopDesc),
                 _row(Icons.restart_alt, cs.primary,
                     l.uiGuideFirmwareRestartTitle,
                     l.uiGuideFirmwareRestartDesc),

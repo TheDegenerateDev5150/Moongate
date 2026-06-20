@@ -1256,6 +1256,13 @@ class AppLocalizationsPl extends AppLocalizations {
       'Anuluj wydruk — naciśnij dwukrotnie, aby potwierdzić.';
 
   @override
+  String get uiGuideEstopTitle => 'Zatrzymanie awaryjne';
+
+  @override
+  String get uiGuideEstopDesc =>
+      'Dotknij dwukrotnie czerwonego trójkąta, aby natychmiast zatrzymać drukarkę (Klipper M112).';
+
+  @override
   String get uiGuideFirmwareRestartTitle => 'Restart firmware';
 
   @override

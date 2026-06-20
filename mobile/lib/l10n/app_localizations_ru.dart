@@ -1257,6 +1257,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Отменить печать — нажмите дважды для подтверждения.';
 
   @override
+  String get uiGuideEstopTitle => 'Аварийная остановка';
+
+  @override
+  String get uiGuideEstopDesc =>
+      'Дважды нажмите на красный треугольник, чтобы немедленно остановить принтер (Klipper M112).';
+
+  @override
   String get uiGuideFirmwareRestartTitle => 'Перезапуск прошивки';
 
   @override

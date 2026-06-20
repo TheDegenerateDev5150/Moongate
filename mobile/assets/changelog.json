@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.23",
+    "bullets": [
+      "The in-app icon guide (menu → About) now includes the Emergency-stop button, and on the Custom theme shows the E-STOP and accent icons in your chosen colours so it matches your dashboard",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.22",
     "bullets": [
       "Fixed alignment on webcam-hidden (compact) tiles — the connection icons and the E-STOP button now line up with full tiles stacked above or below them",

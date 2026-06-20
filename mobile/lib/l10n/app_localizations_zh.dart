@@ -1196,6 +1196,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiGuideStopDesc => '取消打印 — 点击两次以确认。';
 
   @override
+  String get uiGuideEstopTitle => '急停';
+
+  @override
+  String get uiGuideEstopDesc => '双击红色三角形以立即停止打印机（Klipper M112）。';
+
+  @override
   String get uiGuideFirmwareRestartTitle => '固件重启';
 
   @override

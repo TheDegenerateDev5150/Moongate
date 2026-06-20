@@ -1260,6 +1260,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Den Druck abbrechen — zweimal tippen zum Bestätigen.';
 
   @override
+  String get uiGuideEstopTitle => 'Not-Aus';
+
+  @override
+  String get uiGuideEstopDesc =>
+      'Doppeltippen Sie auf das rote Dreieck, um den Drucker sofort zu stoppen (Klipper M112).';
+
+  @override
   String get uiGuideFirmwareRestartTitle => 'Firmware-Neustart';
 
   @override
