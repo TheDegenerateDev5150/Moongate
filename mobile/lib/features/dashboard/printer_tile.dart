@@ -1333,11 +1333,6 @@ class _TempChip extends StatelessWidget {
             color: target > 0 ? neutral : muted,
           ),
         ),
-        if (target > 0)
-          Text(
-            '/${target.toStringAsFixed(0)}°',
-            style: TextStyle(fontSize: 10, color: muted),
-          ),
       ],
     );
   }
