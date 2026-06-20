@@ -543,7 +543,9 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
             // Connection accent bar (matches the full tile).
             Container(height: 3, color: connColor),
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 7, 4, 9),
+              // Right inset matches the full tile (10) so the connection icons
+              // and the E-STOP line up with a full tile stacked above/below.
+              padding: const EdgeInsets.fromLTRB(10, 7, 10, 9),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,

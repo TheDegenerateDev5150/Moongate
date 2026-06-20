@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.22",
+    "bullets": [
+      "Fixed alignment on webcam-hidden (compact) tiles — the connection icons and the E-STOP button now line up with full tiles stacked above or below them",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.21",
     "bullets": [
       "You can now set the emergency-stop button's colour — a new E-STOP slot on the Custom theme changes its ring and icon (defaults to the classic emergency red)",
