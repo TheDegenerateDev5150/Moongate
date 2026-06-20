@@ -497,8 +497,7 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(
                         _status.filename!,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: Colors.white54),
+                        style: theme.textTheme.bodySmall,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -1278,22 +1277,29 @@ class _TempChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Temps must stay legible on BOTH themes. The old white-family colours were
+    // invisible on the Light theme (white text + icons on a near-white card).
+    // Use the same neutral blueGrey as the "Ready" idle label above the name —
+    // it reads on light and dark alike. A heating element keeps its accent
+    // colour (orange/blue/teal) on the icon while it has a target set.
+    const neutral = Colors.blueGrey;
+    final muted   = neutral.withValues(alpha: 0.7);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: target > 0 ? color : Colors.white38),
+        Icon(icon, size: 13, color: target > 0 ? color : muted),
         const SizedBox(width: 2),
         Text(
           '${temp.toStringAsFixed(0)}°',
           style: TextStyle(
             fontSize: 12,
-            color: target > 0 ? Colors.white : Colors.white54,
+            color: target > 0 ? neutral : muted,
           ),
         ),
         if (target > 0)
           Text(
             '/${target.toStringAsFixed(0)}°',
-            style: const TextStyle(fontSize: 10, color: Colors.white54),
+            style: TextStyle(fontSize: 10, color: muted),
           ),
       ],
     );
