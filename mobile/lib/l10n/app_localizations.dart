@@ -2342,6 +2342,18 @@ abstract class AppLocalizations {
   /// **'Cancel the print — tap twice to confirm.'**
   String get uiGuideStopDesc;
 
+  /// Icon-guide entry title for the emergency-stop control.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency stop'**
+  String get uiGuideEstopTitle;
+
+  /// Icon-guide description for the emergency-stop control.
+  ///
+  /// In en, this message translates to:
+  /// **'Double-tap the red triangle to stop the printer immediately (Klipper M112).'**
+  String get uiGuideEstopDesc;
+
   /// Icon-guide entry title for the firmware-restart control.
   ///
   /// In en, this message translates to:

@@ -1269,6 +1269,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cancela la impresión — toca dos veces para confirmar.';
 
   @override
+  String get uiGuideEstopTitle => 'Parada de emergencia';
+
+  @override
+  String get uiGuideEstopDesc =>
+      'Toca dos veces el triángulo rojo para detener la impresora de inmediato (Klipper M112).';
+
+  @override
   String get uiGuideFirmwareRestartTitle => 'Reiniciar firmware';
 
   @override

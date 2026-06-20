@@ -1271,6 +1271,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Annuler l\'impression — touchez deux fois pour confirmer.';
 
   @override
+  String get uiGuideEstopTitle => 'Arrêt d\'urgence';
+
+  @override
+  String get uiGuideEstopDesc =>
+      'Double-touchez le triangle rouge pour arrêter immédiatement l\'imprimante (Klipper M112).';
+
+  @override
   String get uiGuideFirmwareRestartTitle => 'Redémarrage du firmware';
 
   @override

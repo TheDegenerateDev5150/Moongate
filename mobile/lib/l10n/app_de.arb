@@ -399,6 +399,8 @@
   "uiGuidePauseDesc": "Den aktuellen Druck pausieren.",
   "uiGuideStopTitle": "Stopp",
   "uiGuideStopDesc": "Den Druck abbrechen — zweimal tippen zum Bestätigen.",
+  "uiGuideEstopTitle": "Not-Aus",
+  "uiGuideEstopDesc": "Doppeltippen Sie auf das rote Dreieck, um den Drucker sofort zu stoppen (Klipper M112).",
   "uiGuideFirmwareRestartTitle": "Firmware-Neustart",
   "uiGuideFirmwareRestartDesc": "Klipper neu starten, wenn der Drucker im Leerlauf oder im Fehlerzustand ist.",
   "uiGuideStatusReadyTitle": "Bereit / abgeschlossen",

@@ -399,6 +399,8 @@
   "uiGuidePauseDesc": "Приостановить текущую печать.",
   "uiGuideStopTitle": "Стоп",
   "uiGuideStopDesc": "Отменить печать — нажмите дважды для подтверждения.",
+  "uiGuideEstopTitle": "Аварийная остановка",
+  "uiGuideEstopDesc": "Дважды нажмите на красный треугольник, чтобы немедленно остановить принтер (Klipper M112).",
   "uiGuideFirmwareRestartTitle": "Перезапуск прошивки",
   "uiGuideFirmwareRestartDesc": "Перезапустить Klipper, когда принтер бездействует или в состоянии ошибки.",
   "uiGuideStatusReadyTitle": "Готов / завершено",

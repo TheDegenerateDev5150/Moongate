@@ -399,6 +399,8 @@
   "uiGuidePauseDesc": "Mettre l'impression en cours en pause.",
   "uiGuideStopTitle": "Arrêter",
   "uiGuideStopDesc": "Annuler l'impression — touchez deux fois pour confirmer.",
+  "uiGuideEstopTitle": "Arrêt d'urgence",
+  "uiGuideEstopDesc": "Double-touchez le triangle rouge pour arrêter immédiatement l'imprimante (Klipper M112).",
   "uiGuideFirmwareRestartTitle": "Redémarrage du firmware",
   "uiGuideFirmwareRestartDesc": "Redémarrer Klipper lorsque l'imprimante est inactive ou en erreur.",
   "uiGuideStatusReadyTitle": "Prête / terminée",

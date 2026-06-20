@@ -399,6 +399,8 @@
   "uiGuidePauseDesc": "Wstrzymaj bieżący wydruk.",
   "uiGuideStopTitle": "Stop",
   "uiGuideStopDesc": "Anuluj wydruk — naciśnij dwukrotnie, aby potwierdzić.",
+  "uiGuideEstopTitle": "Zatrzymanie awaryjne",
+  "uiGuideEstopDesc": "Dotknij dwukrotnie czerwonego trójkąta, aby natychmiast zatrzymać drukarkę (Klipper M112).",
   "uiGuideFirmwareRestartTitle": "Restart firmware",
   "uiGuideFirmwareRestartDesc": "Zrestartuj Klipper, gdy drukarka jest bezczynna lub w stanie błędu.",
   "uiGuideStatusReadyTitle": "Gotowa / ukończono",

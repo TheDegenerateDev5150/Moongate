@@ -1242,6 +1242,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiGuideStopDesc => 'Cancel the print — tap twice to confirm.';
 
   @override
+  String get uiGuideEstopTitle => 'Emergency stop';
+
+  @override
+  String get uiGuideEstopDesc =>
+      'Double-tap the red triangle to stop the printer immediately (Klipper M112).';
+
+  @override
   String get uiGuideFirmwareRestartTitle => 'Firmware restart';
 
   @override

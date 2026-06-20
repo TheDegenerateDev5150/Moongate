@@ -399,6 +399,8 @@
   "uiGuidePauseDesc": "暂停当前打印。",
   "uiGuideStopTitle": "停止",
   "uiGuideStopDesc": "取消打印 — 点击两次以确认。",
+  "uiGuideEstopTitle": "急停",
+  "uiGuideEstopDesc": "双击红色三角形以立即停止打印机（Klipper M112）。",
   "uiGuideFirmwareRestartTitle": "固件重启",
   "uiGuideFirmwareRestartDesc": "在打印机空闲或出错时重启 Klipper。",
   "uiGuideStatusReadyTitle": "就绪 / 完成",
