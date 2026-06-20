@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.19",
+    "bullets": [
+      "Simplified the look of the dashboard emergency-stop button — it's now a clean round button with a red rim (the soft glow added in v0.9.18 is gone). The post-shutdown restart button matches it in orange",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.18",
     "bullets": [
       "Fixed: on the Light theme, the temperatures under each printer's name (hotend, bed and chamber) were hard to read — the text and icons were a near-white colour left over from the Dark theme, so they blended into the light tile background. They now use the same clear colour as the rest of the tile, so they're legible on both the Light and Dark themes",
