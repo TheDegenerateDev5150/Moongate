@@ -497,8 +497,7 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(
                         _status.filename!,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: Colors.white54),
+                        style: theme.textTheme.bodySmall,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -543,7 +542,7 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
             // Connection accent bar (matches the full tile).
             Container(height: 3, color: connColor),
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 7, 4, 9),
+              padding: const EdgeInsets.fromLTRB(10, 7, 8, 9),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -954,12 +953,22 @@ class _EstopButton extends StatelessWidget {
         onTap: () {}, // swallow single taps — must not fire or navigate
         onDoubleTap: onFire,
         child: Container(
+          width: 28,
+          height: 28,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.red.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(6),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.red, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.red.withValues(alpha: 0.6),
+                blurRadius: 6,
+                spreadRadius: 0.5,
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-          child: const Icon(Icons.warning_rounded, color: Colors.red, size: 18),
+          child: const Icon(Icons.warning_rounded, color: Colors.red, size: 16),
         ),
       ),
     );
@@ -983,12 +992,22 @@ class _RestartButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
+          width: 28,
+          height: 28,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.orange.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(6),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.orange, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.orange.withValues(alpha: 0.6),
+                blurRadius: 6,
+                spreadRadius: 0.5,
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-          child: const Icon(Icons.restart_alt, color: Colors.orange, size: 18),
+          child: const Icon(Icons.restart_alt, color: Colors.orange, size: 16),
         ),
       ),
     );
@@ -1278,22 +1297,29 @@ class _TempChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Temps must stay legible on BOTH themes. The old white-family colours were
+    // invisible on the Light theme (white text + icons on a near-white card).
+    // Use the same neutral blueGrey as the "Ready" idle label above the name —
+    // it reads on light and dark alike. A heating element keeps its accent
+    // colour (orange/blue/teal) on the icon while it has a target set.
+    const neutral = Colors.blueGrey;
+    final muted   = neutral.withValues(alpha: 0.7);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: target > 0 ? color : Colors.white38),
+        Icon(icon, size: 13, color: target > 0 ? color : muted),
         const SizedBox(width: 2),
         Text(
           '${temp.toStringAsFixed(0)}°',
           style: TextStyle(
             fontSize: 12,
-            color: target > 0 ? Colors.white : Colors.white54,
+            color: target > 0 ? neutral : muted,
           ),
         ),
         if (target > 0)
           Text(
             '/${target.toStringAsFixed(0)}°',
-            style: const TextStyle(fontSize: 10, color: Colors.white54),
+            style: TextStyle(fontSize: 10, color: muted),
           ),
       ],
     );

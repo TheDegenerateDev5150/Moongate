@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.18",
+    "bullets": [
+      "Fixed: on the Light theme, the temperatures under each printer's name (hotend, bed and chamber) were hard to read — the text and icons were a near-white colour left over from the Dark theme, so they blended into the light tile background. They now use the same clear colour as the rest of the tile, so they're legible on both the Light and Dark themes",
+      "The dashboard emergency-stop button has a new look — a round, red-rimmed button with a soft red glow, so it reads more like a physical machine E-stop. The post-shutdown restart button matches it in orange",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.17",
     "bullets": [
       "Print progress now matches Mainsail exactly. The dashboard tile and the print notification both show the same percentage as Mainsail/Fluidd — its default 'file position (relative)' — instead of the tile running a few percent ahead from the slicer's time estimate. The progress bar, the tile %, and the notification % are now one and the same number",
