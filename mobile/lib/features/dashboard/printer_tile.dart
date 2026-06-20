@@ -542,7 +542,7 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
             // Connection accent bar (matches the full tile).
             Container(height: 3, color: connColor),
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 7, 4, 9),
+              padding: const EdgeInsets.fromLTRB(10, 7, 8, 9),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -953,12 +953,22 @@ class _EstopButton extends StatelessWidget {
         onTap: () {}, // swallow single taps — must not fire or navigate
         onDoubleTap: onFire,
         child: Container(
+          width: 28,
+          height: 28,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.red.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(6),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.red, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.red.withValues(alpha: 0.6),
+                blurRadius: 6,
+                spreadRadius: 0.5,
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-          child: const Icon(Icons.warning_rounded, color: Colors.red, size: 18),
+          child: const Icon(Icons.warning_rounded, color: Colors.red, size: 16),
         ),
       ),
     );
@@ -982,12 +992,22 @@ class _RestartButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
+          width: 28,
+          height: 28,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.orange.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(6),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.orange, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.orange.withValues(alpha: 0.6),
+                blurRadius: 6,
+                spreadRadius: 0.5,
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-          child: const Icon(Icons.restart_alt, color: Colors.orange, size: 18),
+          child: const Icon(Icons.restart_alt, color: Colors.orange, size: 16),
         ),
       ),
     );
