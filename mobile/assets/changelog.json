@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.20",
+    "bullets": [
+      "The custom dashboard background now fills the whole screen — it extends behind the top app bar (and the status bar) instead of stopping just below it. Set or change it on the Custom theme screen",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.19",
     "bullets": [
       "Simplified the look of the dashboard emergency-stop button — it's now a clean round button with a red rim (the soft glow added in v0.9.18 is gone). The post-shutdown restart button matches it in orange",

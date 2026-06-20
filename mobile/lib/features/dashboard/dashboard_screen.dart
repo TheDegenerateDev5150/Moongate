@@ -183,6 +183,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final isCustomTheme = ref.watch(themeModeProvider) == AppThemeMode.custom;
     final customBackground =
         isCustomTheme ? ref.watch(dashboardBackgroundProvider) : null;
+    // When a background image is set it covers the FULL screen: it wraps the
+    // whole Scaffold (see the return below) and the app bar + scaffold go
+    // transparent so it shows behind the top bar too, not just the body.
+    final hasCustomBg = customBackground != null && customBackground.isNotEmpty;
     // Printer-tile see-through (Custom theme only) so a custom background shows
     // through; 1.0 = opaque (the default, and all non-custom themes).
     final tileOpacity =
@@ -235,8 +239,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
     }
 
-    return Scaffold(
+    final scaffold = Scaffold(
+      backgroundColor: hasCustomBg ? Colors.transparent : null,
       appBar: AppBar(
+        backgroundColor: hasCustomBg ? Colors.transparent : null,
+        elevation: hasCustomBg ? 0 : null,
+        scrolledUnderElevation: hasCustomBg ? 0 : null,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -258,29 +266,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
       endDrawer: _buildDrawer(context),
-      // Optional custom background image sits behind the tiles, centred and
-      // scaled-down over the theme's scaffold colour — so a logo PNG or a
-      // wrong-aspect image still shows the theme colour around and behind it.
-      body: _DashboardBackground(
-        imagePath: customBackground,
-        child: ValueListenableBuilder<bool>(
-          valueListenable: SupabaseService.instance.signedIn,
-          builder: (context, signedIn, _) {
-            final banners = <Widget>[
-              if (update != null)
-                _UpdateBanner(
-                  update: update,
-                  onDismiss: () => setState(() => _updateDismissed = true),
-                  onWhatsNew: () => _showUpdateNotes(context, update),
-                ),
-              if (!signedIn) const _SignInBanner(),
-            ];
-            if (banners.isEmpty) return body;
-            return Column(
-              children: [...banners, Expanded(child: body)],
-            );
-          },
-        ),
+      // The custom background (when set) wraps the whole Scaffold below and the
+      // app bar is transparent, so the body just renders normally on top of it.
+      body: ValueListenableBuilder<bool>(
+        valueListenable: SupabaseService.instance.signedIn,
+        builder: (context, signedIn, _) {
+          final banners = <Widget>[
+            if (update != null)
+              _UpdateBanner(
+                update: update,
+                onDismiss: () => setState(() => _updateDismissed = true),
+                onWhatsNew: () => _showUpdateNotes(context, update),
+              ),
+            if (!signedIn) const _SignInBanner(),
+          ];
+          if (banners.isEmpty) return body;
+          return Column(
+            children: [...banners, Expanded(child: body)],
+          );
+        },
       ),
       floatingActionButton: _printers.isEmpty
           ? null
@@ -336,6 +340,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
+    // Full-screen custom background: paint it behind the whole (transparent)
+    // Scaffold so it covers the app bar + status-bar area, not just the body.
+    return hasCustomBg
+        ? _DashboardBackground(imagePath: customBackground, child: scaffold)
+        : scaffold;
   }
 
   /// Toggle the opt-in print-notification service. Turning it ON first asks for
@@ -1656,7 +1665,7 @@ class _ReorderHint extends StatelessWidget {
   }
 }
 
-/// Wraps the dashboard body with the user's custom background image when set.
+/// Wraps the whole dashboard screen with the user's custom background image.
 /// The image is centred and scaled-down (never upscaled, never distorted) over
 /// the theme's scaffold colour, so a small logo or a wrong-aspect picture still
 /// shows the theme colour around and behind it (and through any transparency).
