@@ -3,6 +3,7 @@
     "version": "v0.9.22",
     "bullets": [
       "Fixed alignment on webcam-hidden (compact) tiles — the connection icons and the E-STOP button now line up with full tiles stacked above or below them",
+      "Compact (webcam-hidden) tiles now show the power button too — it leads the row, before the printer's name, so you can switch a printer on/off without its webcam on screen",
       "No Pi update needed — just update the app"
     ]
   },
