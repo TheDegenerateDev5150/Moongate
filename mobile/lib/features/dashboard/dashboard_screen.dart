@@ -1141,10 +1141,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           if (update != null)
             FilledButton(
-              onPressed: () => launchUrl(
-                Uri.parse(update.apkUrl),
-                mode: LaunchMode.externalApplication,
-              ),
+              // Close the notes overlay, then run the SAME in-app OTA the update
+              // banner uses (download + install with a progress bar, browser
+              // fallback). This button previously opened the browser to the APK,
+              // bypassing the in-app updater; "View on GitHub" above stays the
+              // manual route.
+              onPressed: () {
+                Navigator.pop(ctx);
+                _startInAppUpdate(context, update);
+              },
               child: Text(l.dashboardUpdate),
             ),
         ],
