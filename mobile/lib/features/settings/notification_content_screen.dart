@@ -6,11 +6,10 @@ import '../../models/notif_fields.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/print_notification_service.dart';
 
-/// Lets the user choose which details appear in the persistent print
-/// notification — and drag them into the order they want on the phone. Reached
-/// from the dashboard drawer (under "Print notifications") at
-/// /settings/notifications. The printer name + status emoji are fixed and so
-/// aren't listed here.
+/// Lets the user choose which details appear on each print's notification card
+/// — and drag them into the order they want on the phone. Reached from the
+/// dashboard drawer (under "Print notifications") at /settings/notifications.
+/// The printer name is fixed and so isn't listed here.
 class NotificationContentScreen extends ConsumerWidget {
   const NotificationContentScreen({super.key});
 

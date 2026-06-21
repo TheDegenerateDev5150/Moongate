@@ -1353,7 +1353,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get notifContentIntro =>
-      'Wybierz, które informacje pojawiają się w powiadomieniu o druku, i przeciągnij je w żądanej kolejności.';
+      'Wybierz, które informacje pojawiają się na karcie powiadomienia każdego wydruku, i przeciągnij je w żądanej kolejności.';
 
   @override
   String get notifContentPreview => 'Podgląd';
@@ -1402,6 +1402,18 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get printStatusStartingUp => 'Uruchamianie…';
+
+  @override
+  String get printStatusPrinting => 'Drukowanie';
+
+  @override
+  String get printNotifStarted => 'Rozpoczęto drukowanie';
+
+  @override
+  String get printNotifFinished => 'Zakończono';
+
+  @override
+  String get notifClearAction => 'Wyczyść';
 
   @override
   String get printAlertStarted => 'Rozpoczęto druk';

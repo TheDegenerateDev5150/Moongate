@@ -1359,7 +1359,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notifContentIntro =>
-      'Wähle, welche Details in der Live-Druckbenachrichtigung erscheinen, und ziehe sie in die gewünschte Reihenfolge.';
+      'Wähle, welche Details auf der Benachrichtigungskarte jedes Drucks erscheinen, und ziehe sie in die gewünschte Reihenfolge.';
 
   @override
   String get notifContentPreview => 'Vorschau';
@@ -1408,6 +1408,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get printStatusStartingUp => 'Startet…';
+
+  @override
+  String get printStatusPrinting => 'Druckt';
+
+  @override
+  String get printNotifStarted => 'Druck gestartet';
+
+  @override
+  String get printNotifFinished => 'Fertig';
+
+  @override
+  String get notifClearAction => 'Löschen';
 
   @override
   String get printAlertStarted => 'Druck gestartet';

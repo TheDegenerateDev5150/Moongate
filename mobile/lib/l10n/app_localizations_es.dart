@@ -1367,7 +1367,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notifContentIntro =>
-      'Elige qué detalles aparecen en la notificación de impresión en directo y arrástralos en el orden que quieras.';
+      'Elige qué detalles aparecen en la tarjeta de notificación de cada impresión y arrástralos en el orden que quieras.';
 
   @override
   String get notifContentPreview => 'Vista previa';
@@ -1416,6 +1416,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get printStatusStartingUp => 'Iniciando…';
+
+  @override
+  String get printStatusPrinting => 'Imprimiendo';
+
+  @override
+  String get printNotifStarted => 'Impresión iniciada';
+
+  @override
+  String get printNotifFinished => 'Finalizado';
+
+  @override
+  String get notifClearAction => 'Borrar';
 
   @override
   String get printAlertStarted => 'Impresión iniciada';

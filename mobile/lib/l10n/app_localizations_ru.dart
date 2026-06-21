@@ -1354,7 +1354,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notifContentIntro =>
-      'Выберите, какие данные показывать в уведомлении о печати, и перетащите их в нужном порядке.';
+      'Выберите, какие данные показывать на карточке уведомления каждой печати, и перетащите их в нужном порядке.';
 
   @override
   String get notifContentPreview => 'Предпросмотр';
@@ -1403,6 +1403,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get printStatusStartingUp => 'Запуск…';
+
+  @override
+  String get printStatusPrinting => 'Печать';
+
+  @override
+  String get printNotifStarted => 'Печать началась';
+
+  @override
+  String get printNotifFinished => 'Завершено';
+
+  @override
+  String get notifClearAction => 'Очистить';
 
   @override
   String get printAlertStarted => 'Печать начата';

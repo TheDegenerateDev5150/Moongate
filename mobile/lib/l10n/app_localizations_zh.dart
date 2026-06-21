@@ -1284,7 +1284,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notifContentSubtitle => '选择并排序显示内容';
 
   @override
-  String get notifContentIntro => '选择实时打印通知中显示的信息，并拖动以排列顺序。';
+  String get notifContentIntro => '选择每个打印任务通知卡片上显示的信息，并拖动以排列顺序。';
 
   @override
   String get notifContentPreview => '预览';
@@ -1333,6 +1333,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get printStatusStartingUp => '正在启动…';
+
+  @override
+  String get printStatusPrinting => '打印中';
+
+  @override
+  String get printNotifStarted => '开始打印';
+
+  @override
+  String get printNotifFinished => '已完成';
+
+  @override
+  String get notifClearAction => '清除';
 
   @override
   String get printAlertStarted => '开始打印';
