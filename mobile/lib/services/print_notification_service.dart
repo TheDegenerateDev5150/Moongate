@@ -13,22 +13,29 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
 import '../models/notif_fields.dart';
 import '../models/printer_config.dart';
+import 'print_control_service.dart';
 import 'print_progress.dart';
 import 'printer_access_cache.dart';
 import 'printer_registry.dart';
 import 'supabase_service.dart';
 
 // ── Tuning ────────────────────────────────────────────────────────────────
-// The persistent foreground notification is the live STATUS list of every
-// printer, so its user-facing channel is named "Print status"; the discrete
-// one-shot pop-ups are "Print alerts". The channel IDs keep their original
-// 'progress'/'alerts' slugs so existing users' on/off choices carry over —
-// only the display names changed (v0.9.3; were "Print progress" / "Print
-// status", which read backwards relative to what each one controlled).
+// Two notification channels:
+//   • "Print status" — the persistent foreground-service notification: a
+//     status-only roster of every printer (Name — Printing / Ready / Idle /
+//     Offline). No numbers; the live detail lives on the cards below.
+//   • "Print jobs"   — one live card per active print: progress while it runs,
+//     then a clearable "Finished <time>" summary. Reuses the old 'alerts'
+//     channel id so existing users' on/off choice carries over — the one-shot
+//     pop-up alerts it used to host are gone; the card is the only surface now,
+//     buzzing once when a print starts and once when it finishes.
 const _serviceChannelId   = 'moongate_print_progress';
 const _serviceChannelName = 'Print status';
-const _alertsChannelId    = 'moongate_print_alerts';
-const _alertsChannelName   = 'Print alerts';
+const _cardsChannelId     = 'moongate_print_alerts';
+const _cardsChannelName   = 'Print jobs';
+const _cardsChannelDesc   =
+    'A live card for each print — progress while it runs, then a '
+    'tap-to-clear summary when it finishes.';
 const _serviceId          = 4711;
 
 // Default poll cadence, overridden by the user's "Update frequency" setting
@@ -164,12 +171,19 @@ void startPrintNotificationCallback() {
 }
 
 /// Runs in the background isolate. On each tick it polls every printer's
-/// `/status`, refreshes the persistent progress notification (one line per
-/// active print), and fires one-shot alerts on state transitions.
+/// `/status`, refreshes the persistent status roster (one line per printer),
+/// and maintains a live "Print jobs" card per active print — progress while it
+/// runs, a clearable summary when it finishes (clearing it resets the print so
+/// the dashboard and roster settle to Ready together).
 class _PrintTaskHandler extends TaskHandler {
   final _alerts = FlutterLocalNotificationsPlugin();
   bool _busy = false;
   final Map<String, String> _lastState = {};
+  // Per-printer lifecycle of its "Print jobs" card: none → active (a live print)
+  // → done (a clearable finished/cancelled/error summary). Drives when the card
+  // is posted, updated, buzzed and cleared. In-memory only — a service restart
+  // re-derives it from the next poll.
+  final Map<String, _CardPhase> _cardPhase = {};
   // Cloud last_seen per printer, refreshed once per tick by a single RLS-scoped
   // SELECT (PostgREST, NOT an Edge Function). Lets _poll skip the token mint for
   // a printer that's positively offline — see _isKnownOffline.
@@ -200,11 +214,23 @@ class _PrintTaskHandler extends TaskHandler {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(const AndroidNotificationChannel(
-          _alertsChannelId,
-          _alertsChannelName,
-          description: 'Print started / paused / finished / error alerts.',
+          _cardsChannelId,
+          _cardsChannelName,
+          description: _cardsChannelDesc,
           importance: Importance.high,
         ));
+
+    // Clear any per-print cards stranded by a previous run (force-stop / crash)
+    // so we never show a stale "printing" card. Only our card-id range is
+    // touched — never the foreground-service notification (id 4711).
+    try {
+      for (final a in await _alerts.getActiveNotifications()) {
+        final id = a.id;
+        if (id != null && id != _serviceId && (id & 0x10000000) != 0) {
+          await _alerts.cancel(id);
+        }
+      }
+    } catch (_) {}
 
     // Supabase in this isolate re-loads the persisted anon session, so it can
     // mint the same per-printer access tokens the app uses.
@@ -238,7 +264,15 @@ class _PrintTaskHandler extends TaskHandler {
   }
 
   @override
-  Future<void> onDestroy(DateTime timestamp) async {}
+  Future<void> onDestroy(DateTime timestamp) async {
+    // Service stopped (notifications turned off) — remove our per-print cards;
+    // the foreground-service roster is torn down by the plugin separately.
+    for (final pid in _cardPhase.keys.toList()) {
+      try {
+        await _alerts.cancel(_cardId(pid));
+      } catch (_) {}
+    }
+  }
 
   Future<void> _tick() async {
     if (_busy) return;
@@ -263,21 +297,21 @@ class _PrintTaskHandler extends TaskHandler {
       await _refreshLiveness();
 
       final entries = <(String, _Poll?)>[];
+      final postedDoneThisTick = <String>{};
 
       for (final p in printers) {
         final s = await _poll(p);
 
-        // Only a LIVE /status read (a genuine Klipper state) drives alerts and
-        // updates the remembered state. A connectivity placeholder (synthetic
-        // Idle, live == false) or an offline tick (s == null) must NOT touch
-        // _lastState — otherwise a transient network blip rewrites it, and the
-        // return to the real state then looks like a fresh transition. That was
-        // the "repeated print-cancelled alert on every WiFi⇄cellular switch".
+        // Only a LIVE /status read (a genuine Klipper state) drives the card
+        // lifecycle and the remembered state. A connectivity placeholder
+        // (synthetic Idle, live == false) or an offline tick (s == null) must
+        // NOT touch _lastState or the cards — otherwise a transient network blip
+        // rewrites it and the return to the real state looks like a fresh
+        // transition (the old "repeated cancelled alert on every WiFi⇄cellular
+        // switch"). Offline mid-print just leaves the existing card untouched.
         if (s != null && s.live) {
           final prev = _lastState[p.id];
-          if (prev != null && prev != s.state) {
-            _maybeAlert(p.name, prev, s.state);
-          }
+          await _updateCardFor(p, s, prev, postedDoneThisTick);
           _lastState[p.id] = s.state;
         }
 
@@ -295,6 +329,12 @@ class _PrintTaskHandler extends TaskHandler {
       final sorted = [for (final r in ranked) r.$2];
 
       await _updatePersistent(sorted);
+
+      // A "Finished" card that's vanished from the shade since a prior tick was
+      // swiped away or cleared via its ✕ action — treat that as the user
+      // clearing the print and reset Klipper to standby, so the dashboard badge
+      // and the roster line settle to Ready together.
+      await _detectClearedDoneCards(printers, postedDoneThisTick);
     } catch (e) {
       _log('tick failed: $e');
     } finally {
@@ -578,56 +618,41 @@ class _PrintTaskHandler extends TaskHandler {
       s.state != 'paused' &&
       (s.state != 'printing' || s.progress < 0.02);
 
-  /// One status line per printer for the persistent notification: Offline when
-  /// unreachable, Heating during warm-up, the rich progress line while printing,
-  /// otherwise a friendly label (Ready / Idle / Paused / Complete / Error).
+  /// One line per printer for the status roster: just the name and a plain
+  /// state word. All the live detail (progress, ETA, temps) lives on the
+  /// per-print "Print jobs" card now, not here.
   String _statusLine(String name, _Poll? s, {bool withEmoji = false}) {
     final e = withEmoji ? '${_emoji(s)} ' : '';
-    if (s == null) return '$e$name — ${_l.printStatusOffline}';
-    if (_warming(s)) {
-      final parts = <String>[
-        if (s.hotendTarget > 0) '${s.hotend.round()}→${s.hotendTarget.round()}°',
-        if (s.bedTarget > 0) '${s.bed.round()}→${s.bedTarget.round()}°',
-      ];
-      return '$e$name — ${_l.printStatusHeating} · ${parts.join(' · ')}';
-    }
+    return '$e$name — ${_rosterLabel(s)}';
+  }
+
+  /// The plain state word shown for a printer on the status roster: Offline /
+  /// Heating / Printing / Paused / Error / Starting up / Idle / Ready. A
+  /// finished or cancelled print reads "Ready" — the printer is free again and
+  /// the card carries the outcome.
+  String _rosterLabel(_Poll? s) {
+    if (s == null) return _l.printStatusOffline;
+    if (_warming(s)) return _l.printStatusHeating;
     switch (s.state) {
       case 'printing':
-        return _composeLine(e, name, s);
+        return _l.printStatusPrinting;
       case 'paused':
-        return _composeLine(e, name, s, label: _l.printStatusPaused);
+        return _l.printStatusPaused;
       case 'complete':
-        return '$e$name — ${_l.printStatusComplete}';
       case 'cancelled':
-        return '$e$name — ${_l.printStatusCancelled}';
+        return _l.printStatusReady;
       case 'error':
-        return '$e$name — ${_l.printStatusError}';
+        return _l.printStatusError;
       case 'startup':
       case 'starting_up':
       case 'connecting':
-        return '$e$name — ${_l.printStatusStartingUp}';
+        return _l.printStatusStartingUp;
       case 'waiting':
-        return '$e$name — ${_l.printStatusIdle}';
+        return _l.printStatusIdle;
       case 'standby':
       default:
-        return '$e$name — ${_l.printStatusReady}';
+        return _l.printStatusReady;
     }
-  }
-
-  /// Assemble a printer's line from the user-chosen field set + order
-  /// ([_fields]). [label] (e.g. "Paused") leads the detail when present; the
-  /// enabled segments follow, joined by " · ". A field that doesn't apply yet
-  /// (remaining/ETA too early) or is switched off is skipped; with every field
-  /// off the line collapses to just the emoji + name.
-  String _composeLine(String prefix, String name, _Poll s, {String? label}) {
-    final segs = <String>[];
-    if (label != null) segs.add(label);
-    for (final f in _fields.order) {
-      if (!_fields.enabled.contains(f)) continue;
-      final seg = _fieldSegment(f, s);
-      if (seg != null) segs.add(seg);
-    }
-    return segs.isEmpty ? '$prefix$name' : '$prefix$name — ${segs.join(' · ')}';
   }
 
   /// Render one configured [field] for state [s], or null when it doesn't apply
@@ -660,8 +685,10 @@ class _PrintTaskHandler extends TaskHandler {
         return '🖨️';
       case 'paused':
         return '⏸️';
+      // A finished print reads "Ready" on the roster (see _rosterLabel), so its
+      // glance emoji is the ready dot too — the card carries the ✓.
       case 'complete':
-        return '✅';
+        return '🟢';
       case 'error':
         return '🔴';
       case 'waiting':
@@ -709,44 +736,203 @@ class _PrintTaskHandler extends TaskHandler {
     }
   }
 
-  // ── State-change alerts ─────────────────────────────────────────────────────
+  // ── Print-job cards ─────────────────────────────────────────────────────────
+  //
+  // One "Print jobs" notification per actively-printing printer, separate from
+  // the status roster. It appears when a print starts (buzzing once), updates
+  // its progress silently while running, then collapses to a clearable
+  // "Finished <time>" card when the job ends (buzzing once). Clearing that card
+  // — by swipe or its ✕ action — is detected on the next poll and resets the
+  // print, so the dashboard badge and the roster line settle to Ready together.
 
-  void _maybeAlert(String name, String from, String to) {
-    // A finished / failed print is only a real *event* when we were actually
-    // printing just before. Klipper keeps the last result in print_stats.state
-    // (it stays 'complete' / 'cancelled' / 'error' until the next print), so
-    // arriving at one of those from an idle state is a re-observation, not a
-    // new event — alerting on it produces duplicate buzzes (the cross-network
-    // "cancelled" spam). Genuine transitions always come from printing/paused.
-    final wasPrinting = from == 'printing' || from == 'paused';
-    final String? body = switch (to) {
-      'printing'  => from == 'paused' ? _l.printAlertResumed : _l.printAlertStarted,
-      'paused'    => from == 'printing' ? _l.printAlertPaused : null,
-      'complete'  => wasPrinting ? _l.printAlertComplete  : null,
-      'cancelled' => wasPrinting ? _l.printAlertCancelled : null,
-      'error'     => wasPrinting ? _l.printAlertError     : null,
-      // Recovery: only when coming back from an error (e.g. a firmware restart),
-      // not on a normal idle/boot transition — those would be noise.
-      'standby'   => from == 'error' ? _l.printAlertReady : null,
-      _           => null,
-    };
-    if (body == null) return;
-    _alerts.show(
-      name.hashCode & 0x7fffffff, // one alert slot per printer (latest wins)
-      name,
-      body,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _alertsChannelId,
-          _alertsChannelName,
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: 'ic_stat_moongate',
-        ),
-      ),
+  /// Stable per-printer notification id for its card. High bit 0x10000000 marks
+  /// it as one of ours (and keeps it clear of the foreground-service id 4711),
+  /// so a stale card can be recognised and cancelled without touching the
+  /// roster notification.
+  int _cardId(String printerId) =>
+      0x10000000 | (printerId.hashCode & 0x0FFFFFFF);
+
+  /// Drive one printer's card from a fresh live poll. [prev] is its previous
+  /// Klipper state (null on the first observation since the service started).
+  Future<void> _updateCardFor(PrinterConfig p, _Poll s, String? prev,
+      Set<String> postedDoneThisTick) async {
+    final cur = s.state;
+    final phase = _cardPhase[p.id] ?? _CardPhase.none;
+    final isActive = cur == 'printing' || cur == 'paused';
+    final isTerminal =
+        cur == 'complete' || cur == 'cancelled' || cur == 'error';
+
+    if (isActive) {
+      // Buzz once on a real change into / within an active job (start, pause,
+      // resume); stay silent on plain progress ticks and on the first
+      // observation after a (re)start (prev == null) — that isn't a new event.
+      final alert = prev != null && prev != cur;
+      await _postActiveCard(p, s, alert: alert);
+      _cardPhase[p.id] = _CardPhase.active;
+    } else if (isTerminal) {
+      // Only collapse to a Done card if we were actually tracking a live print.
+      // Klipper holds the terminal state until the next print, so seeing it from
+      // `none` is a re-observation (launch / a reset elsewhere), not a fresh
+      // finish — posting then would buzz a stray card.
+      if (phase == _CardPhase.active) {
+        await _postDoneCard(p, cur, alert: true);
+        _cardPhase[p.id] = _CardPhase.done;
+        postedDoneThisTick.add(p.id);
+      }
+    } else {
+      // standby / idle / starting up: the printer is free. Clear any card we
+      // had — this is also how an in-app reset (or the next print) removes the
+      // Done card: the state returns to standby and we cancel here.
+      if (phase != _CardPhase.none) {
+        await _alerts.cancel(_cardId(p.id));
+        _cardPhase[p.id] = _CardPhase.none;
+      }
+    }
+  }
+
+  /// Post / update the live card for a running (or paused) print. Pinned
+  /// (`ongoing`) so it can't be swiped away mid-print; a determinate progress
+  /// bar tracks the percentage. Buzzes only when [alert] is set.
+  Future<void> _postActiveCard(PrinterConfig p, _Poll s,
+      {required bool alert}) async {
+    final pct = (s.progress * 100).round().clamp(0, 100);
+    final android = AndroidNotificationDetails(
+      _cardsChannelId,
+      _cardsChannelName,
+      channelDescription: _cardsChannelDesc,
+      importance: Importance.high,
+      priority: Priority.high,
+      onlyAlertOnce: !alert,
+      icon: 'ic_stat_moongate',
+      ongoing: true,
+      showProgress: true,
+      maxProgress: 100,
+      progress: pct,
     );
+    await _alerts.show(_cardId(p.id), p.name, _cardBody(s),
+        NotificationDetails(android: android));
+  }
+
+  /// Post the clearable summary card for a finished / cancelled / errored print.
+  /// Swipeable, with a ✕ "Clear" action; either way of dismissing it is picked
+  /// up by [_detectClearedDoneCards] on the next tick. Buzzes once.
+  Future<void> _postDoneCard(PrinterConfig p, String state,
+      {required bool alert}) async {
+    final clock = _nowClock();
+    final String body;
+    switch (state) {
+      case 'cancelled':
+        body = clock == null
+            ? _l.printStatusCancelled
+            : '${_l.printStatusCancelled} · $clock';
+        break;
+      case 'error':
+        body = _l.printStatusError;
+        break;
+      default: // complete
+        body = clock == null
+            ? _l.printNotifFinished
+            : '${_l.printNotifFinished} $clock';
+    }
+    final android = AndroidNotificationDetails(
+      _cardsChannelId,
+      _cardsChannelName,
+      channelDescription: _cardsChannelDesc,
+      importance: Importance.high,
+      priority: Priority.high,
+      onlyAlertOnce: !alert,
+      icon: 'ic_stat_moongate',
+      ongoing: false,
+      autoCancel: true,
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction('mg_clear', _l.notifClearAction,
+            cancelNotification: true),
+      ],
+    );
+    await _alerts.show(
+        _cardId(p.id), p.name, body, NotificationDetails(android: android));
+  }
+
+  /// Reset any printer whose Done card has disappeared from the shade since a
+  /// prior tick (the user swiped it or tapped ✕). Best-effort: if the active
+  /// notifications can't be enumerated (old Android), do nothing rather than
+  /// fire a spurious reset. Skips cards posted this very tick to avoid a race
+  /// with the OS reflecting a freshly-posted notification.
+  Future<void> _detectClearedDoneCards(
+      List<PrinterConfig> printers, Set<String> postedDoneThisTick) async {
+    final waiting = printers
+        .where((p) =>
+            _cardPhase[p.id] == _CardPhase.done &&
+            !postedDoneThisTick.contains(p.id))
+        .toList();
+    if (waiting.isEmpty) return;
+
+    final Set<int> activeIds;
+    try {
+      final active = await _alerts.getActiveNotifications();
+      activeIds = active.map((a) => a.id).whereType<int>().toSet();
+    } catch (_) {
+      return;
+    }
+
+    for (final p in waiting) {
+      if (activeIds.contains(_cardId(p.id))) continue;
+      _cardPhase[p.id] = _CardPhase.none; // clear first so we fire just once
+      unawaited(PrintControlService(p).resetPrintState());
+      _log('done card cleared (${p.name}) → SDCARD_RESET_FILE');
+    }
+  }
+
+  /// The card's text for a running / paused print: the user-chosen detail
+  /// segments (progress / remaining / finish-time / temps), or "Printing
+  /// started" until the print is far enough along to estimate.
+  String _cardBody(_Poll s) {
+    final segs = _enabledSegments(s);
+    if (s.state == 'paused') {
+      return segs.isEmpty
+          ? _l.printStatusPaused
+          : '${_l.printStatusPaused} · ${segs.join(' · ')}';
+    }
+    // printing
+    if (s.progress < 0.02) {
+      final warm = _warming(s) ? _heatingSegs(s) : const <String>[];
+      return [_l.printNotifStarted, ...warm].join(' · ');
+    }
+    return segs.isEmpty ? _l.printStatusPrinting : segs.join(' · ');
+  }
+
+  /// The enabled detail segments, in the user's chosen order, skipping any that
+  /// don't apply yet (e.g. remaining / ETA before the print can be estimated).
+  List<String> _enabledSegments(_Poll s) {
+    final segs = <String>[];
+    for (final f in _fields.order) {
+      if (!_fields.enabled.contains(f)) continue;
+      final seg = _fieldSegment(f, s);
+      if (seg != null) segs.add(seg);
+    }
+    return segs;
+  }
+
+  /// Heater ramp segments ("25→210°"), shown on the card before extrusion while
+  /// the printer is still warming up.
+  List<String> _heatingSegs(_Poll s) => [
+        if (s.hotendTarget > 0) '${s.hotend.round()}→${s.hotendTarget.round()}°',
+        if (s.bedTarget > 0) '${s.bed.round()}→${s.bedTarget.round()}°',
+      ];
+
+  /// Localised wall-clock now ("3:45 PM" / "15:45") for the finished card, or
+  /// null if the locale's date symbols didn't load.
+  String? _nowClock() {
+    try {
+      return DateFormat.jm(_l.localeName).format(DateTime.now());
+    } catch (_) {
+      return null;
+    }
   }
 }
+
+/// Lifecycle of a printer's "Print jobs" card.
+enum _CardPhase { none, active, done }
 
 /// The gcode body byte offsets for one printer's current file (from Moonraker
 /// metadata), used to compute Mainsail-style file-relative progress.

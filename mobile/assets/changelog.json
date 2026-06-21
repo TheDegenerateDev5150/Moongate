@@ -1,5 +1,16 @@
 [
   {
+    "version": "v0.9.25",
+    "bullets": [
+      "Reworked print notifications. The ongoing notification is now a clean status list — every printer with just its state (Printing / Ready / Idle / Offline), no progress numbers or temperatures",
+      "Each active print now gets its own separate notification with live progress, time remaining and the projected finish time; it appears when the print starts and updates as it runs",
+      "When a print finishes, its card shows the finish time and can be cleared — swipe it away or tap Clear and the print is reset on the printer too, so the dashboard's Done badge and the status list go back to Ready together. Clearing it from the dashboard removes the card as well",
+      "The separate pop-up alerts are gone — the card is the single surface, buzzing once when a print starts and once when it finishes",
+      "Choose what each print card shows under Print notifications → Notification content (progress, time remaining, finish time, hotend, bed)",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.24",
     "bullets": [
       "Printer tiles now show just the current temperature for the hotend, bed and chamber — the target reading (the “/265°” shown after the current “265°”) no longer appears on the tile. During a print that extra text had been widening the temperature row enough to push the Emergency-stop button off the edge of the tile; the row now stays compact and the E-STOP stays put. The heater icon still turns its accent colour while it's heating, and the live print notification still shows the target",

@@ -2519,7 +2519,7 @@ abstract class AppLocalizations {
   /// Intro text at the top of the Notification content screen.
   ///
   /// In en, this message translates to:
-  /// **'Pick which details appear in the live print notification, and drag them into the order you want.'**
+  /// **'Pick which details appear on each print\'s notification card, and drag them into the order you want.'**
   String get notifContentIntro;
 
   /// Label above the live preview of the notification line.
@@ -2617,6 +2617,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starting up'**
   String get printStatusStartingUp;
+
+  /// Printer status on the roster: a print is running.
+  ///
+  /// In en, this message translates to:
+  /// **'Printing'**
+  String get printStatusPrinting;
+
+  /// Per-print card text shown just as a print begins, before progress can be estimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Printing started'**
+  String get printNotifStarted;
+
+  /// Per-print card label for a completed print; followed by the finish time, e.g. 'Finished 3:45 PM'.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get printNotifFinished;
+
+  /// Action button on the finished-print card; clearing it resets the print so the dashboard and roster return to Ready.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get notifClearAction;
 
   /// Pop-up alert when a print begins.
   ///
