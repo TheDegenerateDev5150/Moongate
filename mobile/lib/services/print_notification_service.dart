@@ -791,11 +791,13 @@ class _PrintTaskHandler extends TaskHandler {
   }
 
   /// Post / update the live card for a running (or paused) print. Pinned
-  /// (`ongoing`) so it can't be swiped away mid-print; a determinate progress
-  /// bar tracks the percentage. Buzzes only when [alert] is set.
+  /// (`ongoing`) so it can't be swiped away mid-print. The detail (progress %,
+  /// remaining, ETA, temps) all rides in the one-line [_cardBody] so it reads in
+  /// the collapsed shade without expanding — deliberately NO progress bar: in the
+  /// collapsed view the bar sits in place of that body line, which is exactly
+  /// what users had to expand the card to get past. Buzzes only when [alert] set.
   Future<void> _postActiveCard(PrinterConfig p, _Poll s,
       {required bool alert}) async {
-    final pct = (s.progress * 100).round().clamp(0, 100);
     final android = AndroidNotificationDetails(
       _cardsChannelId,
       _cardsChannelName,
@@ -805,9 +807,6 @@ class _PrintTaskHandler extends TaskHandler {
       onlyAlertOnce: !alert,
       icon: 'ic_stat_moongate',
       ongoing: true,
-      showProgress: true,
-      maxProgress: 100,
-      progress: pct,
     );
     await _alerts.show(_cardId(p.id), p.name, _cardBody(s),
         NotificationDetails(android: android));
