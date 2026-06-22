@@ -1,7 +1,7 @@
 // POST /functions/v1/printer-access
 //
 // Called by the app immediately before sending a control command to the Pi.
-// Returns the current tunnel URL (decrypted) and a fresh 10-minute access
+// Returns the current tunnel URL (decrypted) and a fresh 30-minute access
 // token signed with the server's Ed25519 key.
 //
 // Caller MUST present a Supabase JWT in the Authorization header.
@@ -14,8 +14,8 @@
 // Response 200:
 //   {
 //     "tunnel_url":   "https://xxx.trycloudflare.com" | null,
-//     "access_token": "<EdDSA JWT, ~10 min TTL>",
-//     "expires_in":   600
+//     "access_token": "<EdDSA JWT, ~30 min TTL>",
+//     "expires_in":   1800
 //   }
 //
 // The access token is valid on the LAN OR the tunnel — the Pi verifies the
