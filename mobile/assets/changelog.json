@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.27",
+    "bullets": [
+      "Print notifications no longer swap places in the shade — the live card for a running print now stays pinned directly beneath the status notification, instead of jumping above it",
+      "To keep them together the print card now shares the status notification's quiet channel: a print starting or finishing no longer buzzes or pops up — the card simply appears, quietly, under the status list and updates there",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.26",
     "bullets": [
       "The Update button in the in-app \"What's new\" pop-up now installs the update inside the app — downloading the new version with a progress bar and launching the installer — instead of opening the browser to GitHub. It now matches the Update button on the update banner, and a \"View on GitHub\" option is still there if you'd rather download it manually",
