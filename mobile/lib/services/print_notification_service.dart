@@ -301,6 +301,7 @@ class _PrintTaskHandler extends TaskHandler {
         prefs.getString(kNotifFieldsOrderKey),
         prefs.getString(kNotifFieldsEnabledKey),
       );
+      final onlineOnly = prefs.getBool(kNotifOnlineOnlyKey) ?? false;
 
       await PrinterRegistry.instance.load();
       final printers = PrinterRegistry.instance.printers;
@@ -338,7 +339,13 @@ class _PrintTaskHandler extends TaskHandler {
       });
       final sorted = [for (final r in ranked) r.$2];
 
-      await _updatePersistent(sorted);
+      // "Show only online devices": drop offline / shut-down printers from the
+      // roster (the foreground service keeps running — this is display-only).
+      final shown =
+          onlineOnly ? [for (final e in sorted) if (!_isOffline(e.$2)) e] : sorted;
+
+      await _updatePersistent(shown,
+          noneOnline: onlineOnly && shown.isEmpty && printers.isNotEmpty);
 
       // A "Finished" card that's vanished from the shade since a prior tick was
       // swiped away or cleared via its ✕ action — treat that as the user
@@ -361,12 +368,17 @@ class _PrintTaskHandler extends TaskHandler {
     return printerStatusRank(s.state);
   }
 
-  Future<void> _updatePersistent(List<(String, _Poll?)> entries) async {
+  /// A roster entry that renders as "Offline": unreachable (null poll) or a
+  /// shut-down Klipper. The "show only online devices" filter hides these.
+  static bool _isOffline(_Poll? s) => s == null || s.state == 'shutdown';
+
+  Future<void> _updatePersistent(List<(String, _Poll?)> entries,
+      {bool noneOnline = false}) async {
     final String title;
     final String text;
     if (entries.isEmpty) {
       title = 'Moongate';
-      text = _l.printNotifNoPrinters;
+      text = noneOnline ? _l.printNotifNoneOnline : _l.printNotifNoPrinters;
     } else if (entries.length == 1) {
       // Single printer: emoji + full status on the title line.
       title = _statusLine(entries.first.$1, entries.first.$2, withEmoji: true);

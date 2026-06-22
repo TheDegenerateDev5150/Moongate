@@ -37,6 +37,7 @@ class SettingsBackup {
     'notif_poll_interval':         _Kind.string,
     'notif_fields_order':          _Kind.string,
     'notif_fields_enabled':        _Kind.string,
+    'notif_online_only':           _Kind.boolean,
     'app_locale':                  _Kind.string,
     'show_camera_config_icons':    _Kind.boolean,
   };

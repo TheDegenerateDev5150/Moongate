@@ -1344,6 +1344,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get printNotifNoPrinters => 'Нет принтеров';
 
   @override
+  String get printNotifNoneOnline => 'Нет принтеров в сети';
+
+  @override
+  String get notifOnlineOnlyTitle => 'Показывать только устройства в сети';
+
+  @override
+  String get notifOnlineOnlySubtitle =>
+      'Скрыть офлайн-устройства из уведомления о статусе';
+
+  @override
   String get notifPollIntervalTitle => 'Частота обновления';
 
   @override

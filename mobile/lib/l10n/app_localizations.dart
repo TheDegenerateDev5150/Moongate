@@ -2498,6 +2498,24 @@ abstract class AppLocalizations {
   /// **'No printers'**
   String get printNotifNoPrinters;
 
+  /// Persistent status-notification text shown when 'Show only online devices' is on and every printer is offline.
+  ///
+  /// In en, this message translates to:
+  /// **'No printers online'**
+  String get printNotifNoneOnline;
+
+  /// Drawer toggle under Print notifications: when on, the persistent status notification lists only online printers.
+  ///
+  /// In en, this message translates to:
+  /// **'Show only online devices'**
+  String get notifOnlineOnlyTitle;
+
+  /// Subtitle under the 'Show only online devices' drawer toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide offline machines from the status notification'**
+  String get notifOnlineOnlySubtitle;
+
   /// Heading above the print-notification poll-interval picker (5s / 10s / 15s / 30s / 1m).
   ///
   /// In en, this message translates to:

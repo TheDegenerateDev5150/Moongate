@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.29",
+    "bullets": [
+      "New: \"Show only online devices\" — a toggle under Print notifications. Turn it on and the ongoing status notification lists only your online printers; machines that are offline or switched off drop off the list, so it isn't cluttered with printers you're not using. Turn it off to see them all again",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.27",
     "bullets": [
       "Print notifications no longer swap places in the shade — the live card for a running print now stays pinned directly beneath the status notification, instead of jumping above it",

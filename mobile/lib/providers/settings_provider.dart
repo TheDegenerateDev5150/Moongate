@@ -376,6 +376,29 @@ final printNotificationsEnabledProvider =
   PrintNotificationsEnabledNotifier.new,
 );
 
+/// When on, the persistent status notification shows only online printers —
+/// offline / shut-down machines are hidden from the roster. Off by default.
+/// Travels in backups. The background isolate reads the same pref directly
+/// (kNotifOnlineOnlyKey), so the switch and the service stay in step.
+class NotifOnlineOnlyNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(kNotifOnlineOnlyKey) ?? false;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(kNotifOnlineOnlyKey, enabled);
+  }
+}
+
+final notifOnlineOnlyProvider =
+    NotifierProvider<NotifOnlineOnlyNotifier, bool>(NotifOnlineOnlyNotifier.new);
+
 // ---------------------------------------------------------------------------
 // App lock  (optional biometric / PIN gate on launch)
 // ---------------------------------------------------------------------------
