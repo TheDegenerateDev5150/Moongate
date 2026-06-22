@@ -20,23 +20,26 @@ import 'printer_registry.dart';
 import 'supabase_service.dart';
 
 // ── Tuning ────────────────────────────────────────────────────────────────
-// Two notification channels:
-//   • "Print status" — the persistent foreground-service notification: a
-//     status-only roster of every printer (Name — Printing / Ready / Idle /
-//     Offline). No numbers; the live detail lives on the cards below.
-//   • "Print jobs"   — one live card per active print: progress while it runs,
-//     then a clearable "Finished <time>" summary. Reuses the old 'alerts'
-//     channel id so existing users' on/off choice carries over — the one-shot
-//     pop-up alerts it used to host are gone; the card is the only surface now,
-//     buzzing once when a print starts and once when it finishes.
-const _serviceChannelId   = 'moongate_print_progress';
-const _serviceChannelName = 'Print status';
-const _cardsChannelId     = 'moongate_print_alerts';
-const _cardsChannelName   = 'Print jobs';
-const _cardsChannelDesc   =
-    'A live card for each print — progress while it runs, then a '
-    'tap-to-clear summary when it finishes.';
-const _serviceId          = 4711;
+// Everything posts on ONE silent channel, "Print status":
+//   • the persistent foreground-service notification — a status-only roster of
+//     every printer (Name — Printing / Ready / Idle / Offline). No numbers; the
+//     live detail lives on the cards below;
+//   • one live card per active print: progress while it runs, then a clearable
+//     "Finished <time>" summary.
+// The cards used to live on a separate HIGH-importance "Print jobs" channel so
+// they could buzz on start/finish — but a HIGH card always outranks the LOW,
+// silent roster in the shade, and as both refresh each poll Android kept
+// re-sorting them (the two "swapped places"). Sharing the LOW channel keeps each
+// card pinned directly under the roster and silent; _postActiveCard also fixes
+// each card's `when` to its print-start so the roster — refreshed to "now" every
+// poll — keeps sorting above it. The old 'alerts' channel is deleted on startup.
+const _serviceChannelId     = 'moongate_print_progress';
+const _serviceChannelName   = 'Print status';
+const _serviceChannelDesc   = 'A live, at-a-glance status of all your printers.';
+// Legacy HIGH-importance card channel, retired for the shared status channel
+// above. Kept only so onStart can delete it from existing installs.
+const _legacyCardsChannelId = 'moongate_print_alerts';
+const _serviceId            = 4711;
 
 // Default poll cadence, overridden by the user's "Update frequency" setting
 // (`notif_poll_interval`). The chosen interval is the ACTUAL poll rate — there
@@ -91,7 +94,7 @@ class PrintNotificationService {
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: _serviceChannelId,
         channelName: _serviceChannelName,
-        channelDescription: 'A live, at-a-glance status of all your printers.',
+        channelDescription: _serviceChannelDesc,
         // LOW + onlyAlertOnce: a silent, persistent progress notification that
         // updates in place without buzzing on every percent.
         channelImportance: NotificationChannelImportance.LOW,
@@ -178,12 +181,14 @@ void startPrintNotificationCallback() {
 class _PrintTaskHandler extends TaskHandler {
   final _alerts = FlutterLocalNotificationsPlugin();
   bool _busy = false;
-  final Map<String, String> _lastState = {};
-  // Per-printer lifecycle of its "Print jobs" card: none → active (a live print)
-  // → done (a clearable finished/cancelled/error summary). Drives when the card
-  // is posted, updated, buzzed and cleared. In-memory only — a service restart
-  // re-derives it from the next poll.
+  // Per-printer lifecycle of its print card: none → active (a live print) → done
+  // (a clearable finished/cancelled/error summary). Drives when the card is
+  // posted, updated and cleared. In-memory only — a service restart re-derives
+  // it from the next poll.
   final Map<String, _CardPhase> _cardPhase = {};
+  // Wall-clock (epoch ms) each printer's current card started. Used as the card's
+  // fixed `when` so it sorts just under the roster — see _postActiveCard.
+  final Map<String, int> _cardStartedAt = {};
   // Cloud last_seen per printer, refreshed once per tick by a single RLS-scoped
   // SELECT (PostgREST, NOT an Edge Function). Lets _poll skip the token mint for
   // a printer that's positively offline — see _isKnownOffline.
@@ -210,15 +215,24 @@ class _PrintTaskHandler extends TaskHandler {
     await _alerts.initialize(const InitializationSettings(
       android: AndroidInitializationSettings('ic_stat_moongate'),
     ));
-    await _alerts
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(const AndroidNotificationChannel(
-          _cardsChannelId,
-          _cardsChannelName,
-          description: _cardsChannelDesc,
-          importance: Importance.high,
-        ));
+    final androidPlugin = _alerts.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    // Live print cards share the foreground service's silent "Print status"
+    // channel so they sit with — and just under — the status roster instead of
+    // outranking it (a HIGH card always floats above the LOW roster, which made
+    // the two swap places). Ensure it exists at LOW importance; the service
+    // creates it too, so this is idempotent.
+    await androidPlugin?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _serviceChannelId,
+        _serviceChannelName,
+        description: _serviceChannelDesc,
+        importance: Importance.low,
+      ),
+    );
+    // Retire the old HIGH-importance "Print jobs" channel from earlier builds so
+    // it stops lingering in the user's notification settings. No-op if absent.
+    await androidPlugin?.deleteNotificationChannel(_legacyCardsChannelId);
 
     // Clear any per-print cards stranded by a previous run (force-stop / crash)
     // so we never show a stale "printing" card. Only our card-id range is
@@ -303,16 +317,12 @@ class _PrintTaskHandler extends TaskHandler {
         final s = await _poll(p);
 
         // Only a LIVE /status read (a genuine Klipper state) drives the card
-        // lifecycle and the remembered state. A connectivity placeholder
-        // (synthetic Idle, live == false) or an offline tick (s == null) must
-        // NOT touch _lastState or the cards — otherwise a transient network blip
-        // rewrites it and the return to the real state looks like a fresh
-        // transition (the old "repeated cancelled alert on every WiFi⇄cellular
-        // switch"). Offline mid-print just leaves the existing card untouched.
+        // lifecycle. A connectivity placeholder (synthetic Idle, live == false)
+        // or an offline tick (s == null) must NOT touch the cards — otherwise a
+        // transient network blip looks like the print ending and would wrongly
+        // clear the card. Offline mid-print just leaves the existing card alone.
         if (s != null && s.live) {
-          final prev = _lastState[p.id];
-          await _updateCardFor(p, s, prev, postedDoneThisTick);
-          _lastState[p.id] = s.state;
+          await _updateCardFor(p, s, postedDoneThisTick);
         }
 
         entries.add((p.name, s)); // every printer, online or not
@@ -738,12 +748,13 @@ class _PrintTaskHandler extends TaskHandler {
 
   // ── Print-job cards ─────────────────────────────────────────────────────────
   //
-  // One "Print jobs" notification per actively-printing printer, separate from
-  // the status roster. It appears when a print starts (buzzing once), updates
-  // its progress silently while running, then collapses to a clearable
-  // "Finished <time>" card when the job ends (buzzing once). Clearing that card
-  // — by swipe or its ✕ action — is detected on the next poll and resets the
-  // print, so the dashboard badge and the roster line settle to Ready together.
+  // One card per actively-printing printer, posted on the same silent "Print
+  // status" channel as the roster so it sits directly under it (never above).
+  // It appears quietly when a print starts, updates its progress silently while
+  // running, then collapses to a clearable "Finished <time>" card when the job
+  // ends. Clearing that card — by swipe or its ✕ action — is detected on the
+  // next poll and resets the print, so the dashboard badge and the roster line
+  // settle to Ready together.
 
   /// Stable per-printer notification id for its card. High bit 0x10000000 marks
   /// it as one of ours (and keeps it clear of the foreground-service id 4711),
@@ -754,8 +765,8 @@ class _PrintTaskHandler extends TaskHandler {
 
   /// Drive one printer's card from a fresh live poll. [prev] is its previous
   /// Klipper state (null on the first observation since the service started).
-  Future<void> _updateCardFor(PrinterConfig p, _Poll s, String? prev,
-      Set<String> postedDoneThisTick) async {
+  Future<void> _updateCardFor(
+      PrinterConfig p, _Poll s, Set<String> postedDoneThisTick) async {
     final cur = s.state;
     final phase = _cardPhase[p.id] ?? _CardPhase.none;
     final isActive = cur == 'printing' || cur == 'paused';
@@ -763,19 +774,21 @@ class _PrintTaskHandler extends TaskHandler {
         cur == 'complete' || cur == 'cancelled' || cur == 'error';
 
     if (isActive) {
-      // Buzz once on a real change into / within an active job (start, pause,
-      // resume); stay silent on plain progress ticks and on the first
-      // observation after a (re)start (prev == null) — that isn't a new event.
-      final alert = prev != null && prev != cur;
-      await _postActiveCard(p, s, alert: alert);
+      // Fix the card's timestamp at the print's start (first active tick) so it
+      // stays put under the ever-refreshed roster — see _postActiveCard.
+      final startedMs = _cardStartedAt.putIfAbsent(
+          p.id, () => DateTime.now().millisecondsSinceEpoch);
+      await _postActiveCard(p, s, startedMs);
       _cardPhase[p.id] = _CardPhase.active;
     } else if (isTerminal) {
       // Only collapse to a Done card if we were actually tracking a live print.
       // Klipper holds the terminal state until the next print, so seeing it from
       // `none` is a re-observation (launch / a reset elsewhere), not a fresh
-      // finish — posting then would buzz a stray card.
+      // finish — posting then would show a stray card.
       if (phase == _CardPhase.active) {
-        await _postDoneCard(p, cur, alert: true);
+        final startedMs =
+            _cardStartedAt[p.id] ?? DateTime.now().millisecondsSinceEpoch;
+        await _postDoneCard(p, cur, startedMs);
         _cardPhase[p.id] = _CardPhase.done;
         postedDoneThisTick.add(p.id);
       }
@@ -786,6 +799,7 @@ class _PrintTaskHandler extends TaskHandler {
       if (phase != _CardPhase.none) {
         await _alerts.cancel(_cardId(p.id));
         _cardPhase[p.id] = _CardPhase.none;
+        _cardStartedAt.remove(p.id);
       }
     }
   }
@@ -795,18 +809,26 @@ class _PrintTaskHandler extends TaskHandler {
   /// remaining, ETA, temps) all rides in the one-line [_cardBody] so it reads in
   /// the collapsed shade without expanding — deliberately NO progress bar: in the
   /// collapsed view the bar sits in place of that body line, which is exactly
-  /// what users had to expand the card to get past. Buzzes only when [alert] set.
-  Future<void> _postActiveCard(PrinterConfig p, _Poll s,
-      {required bool alert}) async {
+  /// what users had to expand the card to get past.
+  ///
+  /// Silent, on the shared "Print status" channel, with [startedMs] (the print's
+  /// start) as a fixed `when`: same LOW importance as the roster so it can't
+  /// outrank it, and an older timestamp so the roster — refreshed to "now" every
+  /// poll — keeps sorting above it. Together that pins the card just under the
+  /// roster and stops the two swapping places in the shade.
+  Future<void> _postActiveCard(PrinterConfig p, _Poll s, int startedMs) async {
     final android = AndroidNotificationDetails(
-      _cardsChannelId,
-      _cardsChannelName,
-      channelDescription: _cardsChannelDesc,
-      importance: Importance.high,
-      priority: Priority.high,
-      onlyAlertOnce: !alert,
+      _serviceChannelId,
+      _serviceChannelName,
+      channelDescription: _serviceChannelDesc,
+      importance: Importance.low,
+      priority: Priority.low,
+      silent: true,
+      onlyAlertOnce: true,
       icon: 'ic_stat_moongate',
       ongoing: true,
+      when: startedMs,
+      showWhen: false,
     );
     await _alerts.show(_cardId(p.id), p.name, _cardBody(s),
         NotificationDetails(android: android));
@@ -814,9 +836,11 @@ class _PrintTaskHandler extends TaskHandler {
 
   /// Post the clearable summary card for a finished / cancelled / errored print.
   /// Swipeable, with a ✕ "Clear" action; either way of dismissing it is picked
-  /// up by [_detectClearedDoneCards] on the next tick. Buzzes once.
-  Future<void> _postDoneCard(PrinterConfig p, String state,
-      {required bool alert}) async {
+  /// up by [_detectClearedDoneCards] on the next tick. Silent and on the shared
+  /// "Print status" channel, keeping [startedMs] as its `when` so it stays put
+  /// under the roster (see _postActiveCard).
+  Future<void> _postDoneCard(
+      PrinterConfig p, String state, int startedMs) async {
     final clock = _nowClock();
     final String body;
     switch (state) {
@@ -834,15 +858,18 @@ class _PrintTaskHandler extends TaskHandler {
             : '${_l.printNotifFinished} $clock';
     }
     final android = AndroidNotificationDetails(
-      _cardsChannelId,
-      _cardsChannelName,
-      channelDescription: _cardsChannelDesc,
-      importance: Importance.high,
-      priority: Priority.high,
-      onlyAlertOnce: !alert,
+      _serviceChannelId,
+      _serviceChannelName,
+      channelDescription: _serviceChannelDesc,
+      importance: Importance.low,
+      priority: Priority.low,
+      silent: true,
+      onlyAlertOnce: true,
       icon: 'ic_stat_moongate',
       ongoing: false,
       autoCancel: true,
+      when: startedMs,
+      showWhen: false,
       actions: <AndroidNotificationAction>[
         AndroidNotificationAction('mg_clear', _l.notifClearAction,
             cancelNotification: true),
@@ -877,6 +904,7 @@ class _PrintTaskHandler extends TaskHandler {
     for (final p in waiting) {
       if (activeIds.contains(_cardId(p.id))) continue;
       _cardPhase[p.id] = _CardPhase.none; // clear first so we fire just once
+      _cardStartedAt.remove(p.id);
       unawaited(PrintControlService(p).resetPrintState());
       _log('done card cleared (${p.name}) → SDCARD_RESET_FILE');
     }
