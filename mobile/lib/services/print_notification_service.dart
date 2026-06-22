@@ -357,6 +357,7 @@ class _PrintTaskHandler extends TaskHandler {
   /// counts as 'heating' (Printing tier); an unreachable one as 'offline'.
   int _rank(_Poll? s) {
     if (s == null) return printerStatusRank('offline');
+    if (s.state == 'shutdown') return printerStatusRank('offline');
     if (_warming(s)) return printerStatusRank('heating');
     return printerStatusRank(s.state);
   }
@@ -524,12 +525,34 @@ class _PrintTaskHandler extends TaskHandler {
       // progress lives in display_status & virtual_sdcard, which aren't in this
       // payload. Mirror PrinterStatusService and pull them from a supplementary
       // /printer/objects/query, otherwise % stays pinned at 0 the whole print.
-      var display = status['display_status'] as Map<String, dynamic>?;
-      var sdcard  = status['virtual_sdcard'] as Map<String, dynamic>?;
-      if (display == null || sdcard == null) {
+      var display  = status['display_status'] as Map<String, dynamic>?;
+      var sdcard   = status['virtual_sdcard'] as Map<String, dynamic>?;
+      var webhooks = status['webhooks'] as Map<String, dynamic>?;
+      if (display == null || sdcard == null || webhooks == null) {
         final supp = await _fetchProgress(base, token, isLan: isLan);
-        display ??= supp?['display_status'] as Map<String, dynamic>?;
-        sdcard  ??= supp?['virtual_sdcard'] as Map<String, dynamic>?;
+        display  ??= supp?['display_status'] as Map<String, dynamic>?;
+        sdcard   ??= supp?['virtual_sdcard'] as Map<String, dynamic>?;
+        webhooks ??= supp?['webhooks'] as Map<String, dynamic>?;
+      }
+
+      // Klipper not engaged — e.g. the printer's mainboard is switched off while
+      // the Pi stays powered (common, with a separate Pi supply). Moonraker still
+      // answers, but print_stats is FROZEN at its last value (often "printing")
+      // with no live temps — so trusting it shows a stale "Printing" and leaves
+      // the print card stuck. webhooks.state is the source of truth; mirror the
+      // dashboard (PrinterStatusService) and treat shutdown/error as offline, so
+      // the roster reads Offline and _updateCardFor clears the stuck card.
+      final klippyState = webhooks?['state'] as String?;
+      if (klippyState == 'shutdown' || klippyState == 'error') {
+        return const _Poll(
+          state:            'shutdown',
+          progress:         0,
+          printDurationSec: 0,
+          hotend:           0,
+          hotendTarget:     0,
+          bed:              0,
+          bedTarget:        0,
+        );
       }
 
       final state    = (printStats['state'] as String?) ?? 'standby';
@@ -566,8 +589,8 @@ class _PrintTaskHandler extends TaskHandler {
     }
   }
 
-  /// Supplementary progress fetch. The moongate /status payload omits
-  /// display_status & virtual_sdcard, so read them straight from Moonraker:
+  /// Supplementary fetch. The moongate /status payload omits display_status,
+  /// virtual_sdcard & webhooks (Klipper health), so read them from Moonraker:
   /// LAN goes through nginx untouched (no auth header — Moonraker would reject
   /// our EdDSA token as a bad JWT), the tunnel goes through the auth proxy
   /// (Bearer). Best-effort — null on any failure just leaves progress at 0.
@@ -575,7 +598,7 @@ class _PrintTaskHandler extends TaskHandler {
       {required bool isLan}) async {
     try {
       final uri = Uri.parse(
-          '$base/printer/objects/query?display_status&virtual_sdcard');
+          '$base/printer/objects/query?display_status&virtual_sdcard&webhooks');
       final resp = await http
           .get(uri, headers: isLan ? null : {'Authorization': 'Bearer $token'})
           .timeout(const Duration(seconds: 5));
@@ -653,6 +676,8 @@ class _PrintTaskHandler extends TaskHandler {
         return _l.printStatusReady;
       case 'error':
         return _l.printStatusError;
+      case 'shutdown':
+        return _l.printStatusOffline;
       case 'startup':
       case 'starting_up':
       case 'connecting':
@@ -701,6 +726,8 @@ class _PrintTaskHandler extends TaskHandler {
         return '🟢';
       case 'error':
         return '🔴';
+      case 'shutdown':
+        return '⚫';
       case 'waiting':
         return '🟡';
       case 'startup':

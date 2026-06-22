@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.28",
+    "bullets": [
+      "Fixed the status notification showing a printer as \"Printing\" after you'd switched it off. On machines that keep the Raspberry Pi powered when the printer's mainboard is off (e.g. a separate Pi supply), the printer now correctly shows as Offline and any stuck \"printing\" card is cleared",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.27",
     "bullets": [
       "Print notifications no longer swap places in the shade — the live card for a running print now stays pinned directly beneath the status notification, instead of jumping above it",
