@@ -377,6 +377,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final showCameraIcons = ref.watch(showCameraConfigIconsProvider);
     final printNotifications = ref.watch(printNotificationsEnabledProvider);
     final pollInterval = ref.watch(notifPollIntervalProvider);
+    final notifOnlineOnly = ref.watch(notifOnlineOnlyProvider);
 
     return Drawer(
       child: SafeArea(
@@ -716,6 +717,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           },
                         ),
                       ),
+                      // Hide offline printers from the persistent status list.
+                      SwitchListTile(
+                        dense: true,
+                        secondary: const Icon(Icons.filter_alt_outlined),
+                        title: Text(l.notifOnlineOnlyTitle),
+                        subtitle: Text(l.notifOnlineOnlySubtitle),
+                        value: notifOnlineOnly,
+                        onChanged: (v) {
+                          ref.read(notifOnlineOnlyProvider.notifier).set(v);
+                          PrintNotificationService.instance
+                              .refreshNow()
+                              .ignore();
+                        },
+                      ),
                       // Edit which fields show in the notification + their order.
                       ListTile(
                         leading: const Icon(Icons.format_list_bulleted),
@@ -1001,6 +1016,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(showCameraConfigIconsProvider.notifier).load();
     await ref.read(printNotificationsEnabledProvider.notifier).load();
     await ref.read(notificationFieldsProvider.notifier).load();
+    await ref.read(notifOnlineOnlyProvider.notifier).load();
     await PrintNotificationService.instance
         .sync(ref.read(printNotificationsEnabledProvider));
   }

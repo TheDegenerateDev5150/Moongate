@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.29",
+    "bullets": [
+      "New: \"Show only online devices\" — a toggle under Print notifications. Turn it on and the ongoing status notification lists only your online printers; machines that are offline or switched off drop off the list, so it isn't cluttered with printers you're not using. Turn it off to see them all again",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.28",
     "bullets": [
       "Fixed the status notification showing a printer as \"Printing\" after you'd switched it off. On machines that keep the Raspberry Pi powered when the printer's mainboard is off (e.g. a separate Pi supply), the printer now correctly shows as Offline and any stuck \"printing\" card is cleared",

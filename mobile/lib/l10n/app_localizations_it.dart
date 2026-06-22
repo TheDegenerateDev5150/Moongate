@@ -1356,6 +1356,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get printNotifNoPrinters => 'Nessuna stampante';
 
   @override
+  String get printNotifNoneOnline => 'Nessuna stampante online';
+
+  @override
+  String get notifOnlineOnlyTitle => 'Mostra solo dispositivi online';
+
+  @override
+  String get notifOnlineOnlySubtitle =>
+      'Nascondi le macchine offline dalla notifica di stato';
+
+  @override
   String get notifPollIntervalTitle => 'Frequenza di aggiornamento';
 
   @override

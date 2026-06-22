@@ -1275,6 +1275,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get printNotifNoPrinters => '没有打印机';
 
   @override
+  String get printNotifNoneOnline => '没有在线打印机';
+
+  @override
+  String get notifOnlineOnlyTitle => '仅显示在线设备';
+
+  @override
+  String get notifOnlineOnlySubtitle => '在状态通知中隐藏离线设备';
+
+  @override
   String get notifPollIntervalTitle => '更新频率';
 
   @override

@@ -13,6 +13,13 @@ enum NotifField { progress, remaining, eta, hotend, bed }
 const String kNotifFieldsOrderKey = 'notif_fields_order';
 const String kNotifFieldsEnabledKey = 'notif_fields_enabled';
 
+/// When true, the persistent status notification lists ONLY online printers —
+/// offline / shut-down machines are filtered out of the roster. The foreground
+/// service keeps running regardless; this is purely a display filter. Read by
+/// both the settings switch (notifOnlineOnlyProvider) and the background isolate
+/// (PrintNotificationService). Rides the settings backup.
+const String kNotifOnlineOnlyKey = 'notif_online_only';
+
 /// Inline markers prefixing the finish-time / temperature segments so each stays
 /// self-describing even when the user reorders them. Shared by the live
 /// notification renderer and the settings-screen preview so the two never drift.

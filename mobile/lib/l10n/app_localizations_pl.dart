@@ -1343,6 +1343,16 @@ class AppLocalizationsPl extends AppLocalizations {
   String get printNotifNoPrinters => 'Brak drukarek';
 
   @override
+  String get printNotifNoneOnline => 'Brak drukarek online';
+
+  @override
+  String get notifOnlineOnlyTitle => 'Pokaż tylko urządzenia online';
+
+  @override
+  String get notifOnlineOnlySubtitle =>
+      'Ukryj maszyny offline z powiadomienia o stanie';
+
+  @override
   String get notifPollIntervalTitle => 'Częstotliwość aktualizacji';
 
   @override
