@@ -271,6 +271,97 @@ class PrintControlService {
     return ok ?? false;
   }
 
+  // ── Heaters: detect object names + set target temperatures ─────────────────
+  //
+  // `SET_HEATER_TEMPERATURE HEATER=<name> TARGET=<°C>` is a core Klipper gcode,
+  // so it rides the same transparent `printer/gcode/script` proxy as [runMacro]
+  // — no plugin update. The one wrinkle is the heater's object NAME: it's almost
+  // always `extruder` / `heater_bed`, but a custom config can call them
+  // something else (e.g. `[heater_generic hotend]`). So we ask the printer for
+  // its `available_heaters` and map by convention, falling back to the Klipper
+  // defaults the rest of the app already assumes (PrinterStatusService reads
+  // `extruder` / `heater_bed` directly).
+
+  /// The printer's hotend + bed heater object names for SET_HEATER_TEMPERATURE.
+  /// Reads `available_heaters` from Moonraker; on any failure returns the
+  /// Klipper defaults (`extruder` / `heater_bed`) so a standard machine still
+  /// works without the probe.
+  Future<({String hotend, String bed})> detectHeaters() async {
+    final names =
+        await _viaLanThenTunnel<List<String>>((base, token, isLan) async {
+      try {
+        final uri = Uri.parse('$base/printer/objects/query?heaters');
+        final resp = await http
+            .get(uri,
+                headers: isLan ? null : {'Authorization': 'Bearer $token'})
+            .timeout(Duration(seconds: isLan ? 4 : 12));
+        if (resp.statusCode != 200) return null;
+        final body = jsonDecode(resp.body) as Map<String, dynamic>;
+        final result = body['result'] as Map<String, dynamic>?;
+        final status = result?['status'] as Map<String, dynamic>?;
+        final heaters = status?['heaters'] as Map<String, dynamic>?;
+        final raw = heaters?['available_heaters'] as List<dynamic>?;
+        return (raw ?? const []).whereType<String>().toList();
+      } catch (_) {
+        return null;
+      }
+    });
+    return mapHeaterNames(names ?? const []);
+  }
+
+  /// Pick the hotend + bed heater object names from a printer's [available]
+  /// heaters. Hotend: the primary `extruder`, else any `extruder<N>` / a name
+  /// containing "hotend", else the default `extruder`. Bed: `heater_bed`, else a
+  /// name containing "bed", else the default `heater_bed`. Static + visible for
+  /// testing the mapping without a live printer.
+  static ({String hotend, String bed}) mapHeaterNames(List<String> available) {
+    String resolve(
+        List<String> exact, bool Function(String) loose, String fallback) {
+      for (final want in exact) {
+        for (final a in available) {
+          if (a.toLowerCase() == want) return a;
+        }
+      }
+      for (final a in available) {
+        if (loose(a.toLowerCase())) return a;
+      }
+      return fallback;
+    }
+
+    final hotend = resolve(
+      const ['extruder'],
+      (a) => a.startsWith('extruder') || a.contains('hotend'),
+      'extruder',
+    );
+    final bed = resolve(
+      const ['heater_bed'],
+      (a) => a.contains('bed'),
+      'heater_bed',
+    );
+    return (hotend: hotend, bed: bed);
+  }
+
+  /// Set heater target temperatures via the gcode console. Sends one
+  /// `SET_HEATER_TEMPERATURE` per provided target (both in a single newline-
+  /// joined script when both are given). A null target leaves that heater
+  /// untouched; pass 0 to turn one off. Returns true once Moonraker accepts the
+  /// command, or false when nothing was requested.
+  Future<bool> setHeaters({
+    double? hotend,
+    double? bed,
+    required String hotendName,
+    required String bedName,
+  }) async {
+    final lines = <String>[
+      if (hotend != null)
+        'SET_HEATER_TEMPERATURE HEATER=$hotendName TARGET=${hotend.round()}',
+      if (bed != null)
+        'SET_HEATER_TEMPERATURE HEATER=$bedName TARGET=${bed.round()}',
+    ];
+    if (lines.isEmpty) return false;
+    return runMacro(lines.join('\n'));
+  }
+
   /// Clear a finished job and return Klipper's print state to standby (Idle).
   ///
   /// After a print ends, `print_stats.state` stays at `complete` (or

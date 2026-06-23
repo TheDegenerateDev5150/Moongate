@@ -1451,4 +1451,55 @@ class AppLocalizationsZh extends AppLocalizations {
   String macroFailed(String macro) {
     return '无法发送 $macro';
   }
+
+  @override
+  String get preheatTitle => '预热';
+
+  @override
+  String get preheatHotend => '热端';
+
+  @override
+  String get preheatBed => '热床';
+
+  @override
+  String get preheatHint => '留空某个输入框即可保持该加热器不变。';
+
+  @override
+  String get preheatSoakLabel => '热浸计时器';
+
+  @override
+  String get preheatSoakHelp => '经过这些分钟后通知我。0 = 不计时。';
+
+  @override
+  String get preheatMinutes => '分钟';
+
+  @override
+  String get preheatSet => '设置';
+
+  @override
+  String get preheatNotifWarning => '热浸提醒需要开启打印通知。';
+
+  @override
+  String get preheatNotifEnable => '开启';
+
+  @override
+  String preheatSetConfirm(String summary) {
+    return '已设置 $summary';
+  }
+
+  @override
+  String preheatSoakIn(int minutes) {
+    return '$minutes 分钟后提醒热浸';
+  }
+
+  @override
+  String get preheatFailed => '无法设置温度';
+
+  @override
+  String get heatsoakDoneTitle => '热浸完成';
+
+  @override
+  String heatsoakDoneBody(String printer) {
+    return '$printer 已达到温度';
+  }
 }

@@ -471,5 +471,20 @@
   "macroConfirmBody": "Выполнить {macro} на этом принтере?",
   "macroRunAction": "Выполнить",
   "macroSent": "{macro} отправлен",
-  "macroFailed": "Не удалось отправить {macro}"
+  "macroFailed": "Не удалось отправить {macro}",
+  "preheatTitle": "Прогрев",
+  "preheatHotend": "Хотенд",
+  "preheatBed": "Стол",
+  "preheatHint": "Оставьте поле пустым, чтобы не менять этот нагреватель.",
+  "preheatSoakLabel": "Таймер прогрева",
+  "preheatSoakHelp": "Уведомить через столько минут. 0 = без таймера.",
+  "preheatMinutes": "мин",
+  "preheatSet": "Задать",
+  "preheatNotifWarning": "Для оповещений о прогреве нужно включить уведомления о печати.",
+  "preheatNotifEnable": "Включить",
+  "preheatSetConfirm": "Задано: {summary}",
+  "preheatSoakIn": "оповещение о прогреве через {minutes} мин",
+  "preheatFailed": "Не удалось задать температуры",
+  "heatsoakDoneTitle": "Прогрев завершён",
+  "heatsoakDoneBody": "{printer} прогрет до температуры"
 }

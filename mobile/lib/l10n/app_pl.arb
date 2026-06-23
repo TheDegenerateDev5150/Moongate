@@ -471,5 +471,20 @@
   "macroConfirmBody": "Uruchomić {macro} na tej drukarce?",
   "macroRunAction": "Uruchom",
   "macroSent": "Wysłano {macro}",
-  "macroFailed": "Nie można wysłać {macro}"
+  "macroFailed": "Nie można wysłać {macro}",
+  "preheatTitle": "Nagrzewanie",
+  "preheatHotend": "Hotend",
+  "preheatBed": "Stół",
+  "preheatHint": "Pozostaw pole puste, aby nie zmieniać tej grzałki.",
+  "preheatSoakLabel": "Minutnik nagrzewania",
+  "preheatSoakHelp": "Powiadom mnie po tylu minutach. 0 = bez minutnika.",
+  "preheatMinutes": "min",
+  "preheatSet": "Ustaw",
+  "preheatNotifWarning": "Alerty nagrzewania wymagają włączonych powiadomień o druku.",
+  "preheatNotifEnable": "Włącz",
+  "preheatSetConfirm": "Ustawiono {summary}",
+  "preheatSoakIn": "alert nagrzewania za {minutes} min",
+  "preheatFailed": "Nie udało się ustawić temperatur",
+  "heatsoakDoneTitle": "Nagrzewanie zakończone",
+  "heatsoakDoneBody": "{printer} osiągnął temperaturę"
 }

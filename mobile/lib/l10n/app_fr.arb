@@ -471,5 +471,20 @@
   "macroConfirmBody": "Exécuter {macro} sur cette imprimante ?",
   "macroRunAction": "Exécuter",
   "macroSent": "{macro} envoyée",
-  "macroFailed": "Impossible d'envoyer {macro}"
+  "macroFailed": "Impossible d'envoyer {macro}",
+  "preheatTitle": "Préchauffer",
+  "preheatHotend": "Hotend",
+  "preheatBed": "Plateau",
+  "preheatHint": "Laissez un champ vide pour ne pas modifier ce chauffage.",
+  "preheatSoakLabel": "Minuteur de chauffe",
+  "preheatSoakHelp": "Me prévenir après ce nombre de minutes. 0 = aucun minuteur.",
+  "preheatMinutes": "min",
+  "preheatSet": "Appliquer",
+  "preheatNotifWarning": "Les alertes de chauffe nécessitent l'activation des notifications d'impression.",
+  "preheatNotifEnable": "Activer",
+  "preheatSetConfirm": "{summary} appliqué",
+  "preheatSoakIn": "alerte de chauffe dans {minutes} min",
+  "preheatFailed": "Impossible de régler les températures",
+  "heatsoakDoneTitle": "Chauffe terminée",
+  "heatsoakDoneBody": "{printer} est à température"
 }

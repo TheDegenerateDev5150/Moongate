@@ -1,5 +1,15 @@
 [
   {
+    "version": "v0.9.30",
+    "bullets": [
+      "New: long-press a printer's hotend/bed temperatures on its tile (while it's online and idle) to open a Preheat panel — set a hotend and/or bed temperature and tap Set to send it straight to that machine. Leave either box empty to heat just one (e.g. the hotend for a filament change, or the bed to warm up before a print)",
+      "Optional heat-soak timer: enter a number of minutes and you'll get a notification when it's up, so you know the machine has fully warmed through before you start a print. 0 means no timer — it just sets the temperatures",
+      "Works whether your config names the heaters extruder/heater_bed or something custom — Moongate detects the right names from the printer",
+      "The heat-soak alert rides the print-notification service, so it needs Print notifications switched on — the panel flags that (with a one-tap toggle) if they're off",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.29",
     "bullets": [
       "New: \"Show only online devices\" — a toggle under Print notifications. Turn it on and the ongoing status notification lists only your online printers; machines that are offline or switched off drop off the list, so it isn't cluttered with printers you're not using. Turn it off to see them all again",

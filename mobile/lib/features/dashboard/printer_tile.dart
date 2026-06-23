@@ -17,6 +17,7 @@ import '../../widgets/webcam_view.dart';
 import '../printer/printer_camera_screen.dart';
 import 'gcode_files_overlay.dart';
 import 'macros_overlay.dart';
+import 'preheat_overlay.dart';
 
 class PrinterTile extends StatefulWidget {
   final PrinterConfig printer;
@@ -222,6 +223,35 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
   /// Flexible lets a busy tile yield a few pixels instead of overflowing.
   Widget _webcamCell(Widget square) =>
       widget.bounded ? Flexible(fit: FlexFit.loose, child: square) : square;
+
+  /// Whether the preheat / heat-soak sheet can be opened for this tile: online
+  /// and idle — the same states the Macros button is offered on — so Klipper can
+  /// accept SET_HEATER_TEMPERATURE and we never fight a running print.
+  bool get _canPreheat =>
+      _status.connection != PrinterConnection.offline &&
+      (_status.state == 'standby' ||
+       _status.state == 'complete' ||
+       _status.state == 'cancelled');
+
+  /// Wrap the temperature chips so a long-press opens the preheat sheet — but
+  /// only when [_canPreheat]; otherwise the chips render plainly and a press does
+  /// nothing (a normal tap still opens the printer page via the tile's InkWell).
+  Widget _preheatable(Widget chips) {
+    if (!_canPreheat) return chips;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: () {
+        HapticFeedback.mediumImpact();
+        showPreheatSheet(
+          context,
+          widget.printer,
+          hotendTarget: _status.hotendTarget,
+          bedTarget: _status.bedTarget,
+        );
+      },
+      child: chips,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -456,28 +486,36 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        _TempChip(
-                          icon: Icons.whatshot,
-                          color: Colors.deepOrange,
-                          temp: _status.hotendTemp,
-                          target: _status.hotendTarget,
-                        ),
-                        const SizedBox(width: 8),
-                        _TempChip(
-                          icon: Icons.bed,
-                          color: Colors.blue,
-                          temp: _status.bedTemp,
-                          target: _status.bedTarget,
-                        ),
-                        if (_status.chamberTemp > 0) ...[
-                          const SizedBox(width: 8),
-                          _TempChip(
-                            icon: Icons.sensor_window,
-                            color: Colors.teal,
-                            temp: _status.chamberTemp,
-                            target: _status.chamberTarget,
-                          ),
-                        ],
+                        // Long-press the temps to open the preheat / heat-soak
+                        // sheet (online + idle only); the E-STOP at the row's
+                        // end is deliberately left outside the gesture.
+                        _preheatable(Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _TempChip(
+                              icon: Icons.whatshot,
+                              color: Colors.deepOrange,
+                              temp: _status.hotendTemp,
+                              target: _status.hotendTarget,
+                            ),
+                            const SizedBox(width: 8),
+                            _TempChip(
+                              icon: Icons.bed,
+                              color: Colors.blue,
+                              temp: _status.bedTemp,
+                              target: _status.bedTarget,
+                            ),
+                            if (_status.chamberTemp > 0) ...[
+                              const SizedBox(width: 8),
+                              _TempChip(
+                                icon: Icons.sensor_window,
+                                color: Colors.teal,
+                                temp: _status.chamberTemp,
+                                target: _status.chamberTarget,
+                              ),
+                            ],
+                          ],
+                        )),
                         // E-STOP at the right end of the temperature line.
                         const Spacer(),
                         if (_status.klippyShutdown)
@@ -606,28 +644,35 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                       padding: const EdgeInsets.only(top: 5),
                       child: Row(
                         children: [
-                          _TempChip(
-                            icon: Icons.whatshot,
-                            color: Colors.deepOrange,
-                            temp: _status.hotendTemp,
-                            target: _status.hotendTarget,
-                          ),
-                          const SizedBox(width: 8),
-                          _TempChip(
-                            icon: Icons.bed,
-                            color: Colors.blue,
-                            temp: _status.bedTemp,
-                            target: _status.bedTarget,
-                          ),
-                          if (_status.chamberTemp > 0) ...[
-                            const SizedBox(width: 8),
-                            _TempChip(
-                              icon: Icons.sensor_window,
-                              color: Colors.teal,
-                              temp: _status.chamberTemp,
-                              target: _status.chamberTarget,
-                            ),
-                          ],
+                          // Long-press the temps to open the preheat / heat-soak
+                          // sheet (online + idle only).
+                          _preheatable(Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _TempChip(
+                                icon: Icons.whatshot,
+                                color: Colors.deepOrange,
+                                temp: _status.hotendTemp,
+                                target: _status.hotendTarget,
+                              ),
+                              const SizedBox(width: 8),
+                              _TempChip(
+                                icon: Icons.bed,
+                                color: Colors.blue,
+                                temp: _status.bedTemp,
+                                target: _status.bedTarget,
+                              ),
+                              if (_status.chamberTemp > 0) ...[
+                                const SizedBox(width: 8),
+                                _TempChip(
+                                  icon: Icons.sensor_window,
+                                  color: Colors.teal,
+                                  temp: _status.chamberTemp,
+                                  target: _status.chamberTarget,
+                                ),
+                              ],
+                            ],
+                          )),
                           const Spacer(),
                           if (_status.klippyShutdown)
                             _RestartButton(

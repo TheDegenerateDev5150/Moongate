@@ -471,5 +471,20 @@
   "macroConfirmBody": "在此打印机上运行 {macro}？",
   "macroRunAction": "运行",
   "macroSent": "已发送 {macro}",
-  "macroFailed": "无法发送 {macro}"
+  "macroFailed": "无法发送 {macro}",
+  "preheatTitle": "预热",
+  "preheatHotend": "热端",
+  "preheatBed": "热床",
+  "preheatHint": "留空某个输入框即可保持该加热器不变。",
+  "preheatSoakLabel": "热浸计时器",
+  "preheatSoakHelp": "经过这些分钟后通知我。0 = 不计时。",
+  "preheatMinutes": "分钟",
+  "preheatSet": "设置",
+  "preheatNotifWarning": "热浸提醒需要开启打印通知。",
+  "preheatNotifEnable": "开启",
+  "preheatSetConfirm": "已设置 {summary}",
+  "preheatSoakIn": "{minutes} 分钟后提醒热浸",
+  "preheatFailed": "无法设置温度",
+  "heatsoakDoneTitle": "热浸完成",
+  "heatsoakDoneBody": "{printer} 已达到温度"
 }

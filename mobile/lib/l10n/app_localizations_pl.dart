@@ -1521,4 +1521,58 @@ class AppLocalizationsPl extends AppLocalizations {
   String macroFailed(String macro) {
     return 'Nie można wysłać $macro';
   }
+
+  @override
+  String get preheatTitle => 'Nagrzewanie';
+
+  @override
+  String get preheatHotend => 'Hotend';
+
+  @override
+  String get preheatBed => 'Stół';
+
+  @override
+  String get preheatHint =>
+      'Pozostaw pole puste, aby nie zmieniać tej grzałki.';
+
+  @override
+  String get preheatSoakLabel => 'Minutnik nagrzewania';
+
+  @override
+  String get preheatSoakHelp =>
+      'Powiadom mnie po tylu minutach. 0 = bez minutnika.';
+
+  @override
+  String get preheatMinutes => 'min';
+
+  @override
+  String get preheatSet => 'Ustaw';
+
+  @override
+  String get preheatNotifWarning =>
+      'Alerty nagrzewania wymagają włączonych powiadomień o druku.';
+
+  @override
+  String get preheatNotifEnable => 'Włącz';
+
+  @override
+  String preheatSetConfirm(String summary) {
+    return 'Ustawiono $summary';
+  }
+
+  @override
+  String preheatSoakIn(int minutes) {
+    return 'alert nagrzewania za $minutes min';
+  }
+
+  @override
+  String get preheatFailed => 'Nie udało się ustawić temperatur';
+
+  @override
+  String get heatsoakDoneTitle => 'Nagrzewanie zakończone';
+
+  @override
+  String heatsoakDoneBody(String printer) {
+    return '$printer osiągnął temperaturę';
+  }
 }

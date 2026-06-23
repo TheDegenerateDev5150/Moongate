@@ -471,5 +471,20 @@
   "macroConfirmBody": "{macro} auf diesem Drucker ausführen?",
   "macroRunAction": "Ausführen",
   "macroSent": "{macro} gesendet",
-  "macroFailed": "{macro} konnte nicht gesendet werden"
+  "macroFailed": "{macro} konnte nicht gesendet werden",
+  "preheatTitle": "Vorheizen",
+  "preheatHotend": "Hotend",
+  "preheatBed": "Bett",
+  "preheatHint": "Ein Feld leer lassen, um diesen Heizer unverändert zu lassen.",
+  "preheatSoakLabel": "Heat-Soak-Timer",
+  "preheatSoakHelp": "Nach so vielen Minuten benachrichtigen. 0 = kein Timer.",
+  "preheatMinutes": "Min.",
+  "preheatSet": "Setzen",
+  "preheatNotifWarning": "Heat-Soak-Hinweise erfordern aktivierte Druckbenachrichtigungen.",
+  "preheatNotifEnable": "Aktivieren",
+  "preheatSetConfirm": "{summary} gesetzt",
+  "preheatSoakIn": "Heat-Soak-Hinweis in {minutes} Min.",
+  "preheatFailed": "Temperaturen konnten nicht gesetzt werden",
+  "heatsoakDoneTitle": "Heat-Soak abgeschlossen",
+  "heatsoakDoneBody": "{printer} hat die Temperatur erreicht"
 }

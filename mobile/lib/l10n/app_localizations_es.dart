@@ -1535,4 +1535,58 @@ class AppLocalizationsEs extends AppLocalizations {
   String macroFailed(String macro) {
     return 'No se pudo enviar $macro';
   }
+
+  @override
+  String get preheatTitle => 'Precalentar';
+
+  @override
+  String get preheatHotend => 'Hotend';
+
+  @override
+  String get preheatBed => 'Cama';
+
+  @override
+  String get preheatHint =>
+      'Deja un campo vacío para no cambiar ese calentador.';
+
+  @override
+  String get preheatSoakLabel => 'Temporizador de calentamiento';
+
+  @override
+  String get preheatSoakHelp =>
+      'Avísame después de estos minutos. 0 = sin temporizador.';
+
+  @override
+  String get preheatMinutes => 'min';
+
+  @override
+  String get preheatSet => 'Aplicar';
+
+  @override
+  String get preheatNotifWarning =>
+      'Los avisos de calentamiento requieren activar las notificaciones de impresión.';
+
+  @override
+  String get preheatNotifEnable => 'Activar';
+
+  @override
+  String preheatSetConfirm(String summary) {
+    return '$summary aplicado';
+  }
+
+  @override
+  String preheatSoakIn(int minutes) {
+    return 'aviso de calentamiento en $minutes min';
+  }
+
+  @override
+  String get preheatFailed => 'No se pudieron establecer las temperaturas';
+
+  @override
+  String get heatsoakDoneTitle => 'Calentamiento completado';
+
+  @override
+  String heatsoakDoneBody(String printer) {
+    return '$printer está a temperatura';
+  }
 }

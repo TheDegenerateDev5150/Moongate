@@ -1522,4 +1522,58 @@ class AppLocalizationsRu extends AppLocalizations {
   String macroFailed(String macro) {
     return 'Не удалось отправить $macro';
   }
+
+  @override
+  String get preheatTitle => 'Прогрев';
+
+  @override
+  String get preheatHotend => 'Хотенд';
+
+  @override
+  String get preheatBed => 'Стол';
+
+  @override
+  String get preheatHint =>
+      'Оставьте поле пустым, чтобы не менять этот нагреватель.';
+
+  @override
+  String get preheatSoakLabel => 'Таймер прогрева';
+
+  @override
+  String get preheatSoakHelp =>
+      'Уведомить через столько минут. 0 = без таймера.';
+
+  @override
+  String get preheatMinutes => 'мин';
+
+  @override
+  String get preheatSet => 'Задать';
+
+  @override
+  String get preheatNotifWarning =>
+      'Для оповещений о прогреве нужно включить уведомления о печати.';
+
+  @override
+  String get preheatNotifEnable => 'Включить';
+
+  @override
+  String preheatSetConfirm(String summary) {
+    return 'Задано: $summary';
+  }
+
+  @override
+  String preheatSoakIn(int minutes) {
+    return 'оповещение о прогреве через $minutes мин';
+  }
+
+  @override
+  String get preheatFailed => 'Не удалось задать температуры';
+
+  @override
+  String get heatsoakDoneTitle => 'Прогрев завершён';
+
+  @override
+  String heatsoakDoneBody(String printer) {
+    return '$printer прогрет до температуры';
+  }
 }
