@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.31",
+    "bullets": [
+      "Fixed the \"Show only online devices\" toggle (added in v0.9.29) resetting itself to off every time you reopened the app. It saved your choice but didn't read it back when the app started, so the switch always looked off — and if your printers were offline you could be left with a \"no printers online\" notification that was hard to clear, because the switch showed off while the setting was actually still on. The toggle now remembers its setting and shows the right state when you reopen the app",
+      "No Pi update needed — just update the app"
+    ]
+  },
+  {
     "version": "v0.9.30",
     "bullets": [
       "New: long-press a printer's hotend/bed temperatures on its tile (while it's online and idle) to open a Preheat panel — set a hotend and/or bed temperature and tap Set to send it straight to that machine. Leave either box empty to heat just one (e.g. the hotend for a filament change, or the bed to warm up before a print)",
