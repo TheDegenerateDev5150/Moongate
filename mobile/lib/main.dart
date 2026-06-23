@@ -44,6 +44,7 @@ void main() async {
   await container.read(printNotificationsEnabledProvider.notifier).load();
   await container.read(notifPollIntervalProvider.notifier).load();
   await container.read(notificationFieldsProvider.notifier).load();
+  await container.read(notifOnlineOnlyProvider.notifier).load();
   await container.read(dashboardBackgroundProvider.notifier).load();
 
   // Start listening for Wi-Fi <-> mobile-data changes now, so the dashboard's
