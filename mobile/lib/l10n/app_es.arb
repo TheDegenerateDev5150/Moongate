@@ -471,5 +471,20 @@
   "macroConfirmBody": "¿Ejecutar {macro} en esta impresora?",
   "macroRunAction": "Ejecutar",
   "macroSent": "{macro} enviada",
-  "macroFailed": "No se pudo enviar {macro}"
+  "macroFailed": "No se pudo enviar {macro}",
+  "preheatTitle": "Precalentar",
+  "preheatHotend": "Hotend",
+  "preheatBed": "Cama",
+  "preheatHint": "Deja un campo vacío para no cambiar ese calentador.",
+  "preheatSoakLabel": "Temporizador de calentamiento",
+  "preheatSoakHelp": "Avísame después de estos minutos. 0 = sin temporizador.",
+  "preheatMinutes": "min",
+  "preheatSet": "Aplicar",
+  "preheatNotifWarning": "Los avisos de calentamiento requieren activar las notificaciones de impresión.",
+  "preheatNotifEnable": "Activar",
+  "preheatSetConfirm": "{summary} aplicado",
+  "preheatSoakIn": "aviso de calentamiento en {minutes} min",
+  "preheatFailed": "No se pudieron establecer las temperaturas",
+  "heatsoakDoneTitle": "Calentamiento completado",
+  "heatsoakDoneBody": "{printer} está a temperatura"
 }

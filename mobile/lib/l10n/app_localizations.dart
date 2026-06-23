@@ -2833,6 +2833,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t send {macro}'**
   String macroFailed(String macro);
+
+  /// Title of the bottom sheet for setting hotend/bed target temperatures and a heat-soak timer, opened by long-pressing a tile's temperatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Preheat'**
+  String get preheatTitle;
+
+  /// Label for the hotend temperature field in the preheat sheet; also used in the confirmation snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotend'**
+  String get preheatHotend;
+
+  /// Label for the bed temperature field in the preheat sheet; also used in the confirmation snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bed'**
+  String get preheatBed;
+
+  /// Helper text under the hotend/bed fields in the preheat sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a box empty to keep that heater unchanged.'**
+  String get preheatHint;
+
+  /// Label for the optional countdown field that alerts the user after the entered number of minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat-soak timer'**
+  String get preheatSoakLabel;
+
+  /// Helper text under the heat-soak timer field in the preheat sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me after this many minutes. 0 = no timer.'**
+  String get preheatSoakHelp;
+
+  /// Suffix on the heat-soak timer field: the abbreviation for minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get preheatMinutes;
+
+  /// Button that applies the entered temperatures and arms the heat-soak timer.
+  ///
+  /// In en, this message translates to:
+  /// **'Set'**
+  String get preheatSet;
+
+  /// Warning shown when a heat-soak timer is entered but the print-notification service is off, so the alert can't fire.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat-soak alerts need print notifications switched on.'**
+  String get preheatNotifWarning;
+
+  /// Button in the preheat sheet's warning that switches print notifications on.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get preheatNotifEnable;
+
+  /// Confirmation snackbar after applying temperatures. {summary} is e.g. 'Hotend 200 deg, Bed 60 deg'.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {summary}'**
+  String preheatSetConfirm(String summary);
+
+  /// Appended to the confirmation snackbar when a heat-soak timer is armed. {minutes} is the whole-minute countdown.
+  ///
+  /// In en, this message translates to:
+  /// **'heat-soak alert in {minutes} min'**
+  String preheatSoakIn(int minutes);
+
+  /// Snackbar shown when the SET_HEATER_TEMPERATURE command could not reach the printer.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t set the temperatures'**
+  String get preheatFailed;
+
+  /// Title of the notification fired when a heat-soak timer finishes.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat-soak complete'**
+  String get heatsoakDoneTitle;
+
+  /// Body of the heat-soak-complete notification. {printer} is the printer name.
+  ///
+  /// In en, this message translates to:
+  /// **'{printer} is up to temperature'**
+  String heatsoakDoneBody(String printer);
 }
 
 class _AppLocalizationsDelegate

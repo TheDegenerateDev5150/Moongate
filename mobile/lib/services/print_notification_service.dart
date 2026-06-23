@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
 import '../models/notif_fields.dart';
 import '../models/printer_config.dart';
+import 'heatsoak_timers.dart';
 import 'print_control_service.dart';
 import 'print_progress.dart';
 import 'printer_access_cache.dart';
@@ -40,6 +41,21 @@ const _serviceChannelDesc   = 'A live, at-a-glance status of all your printers.'
 // above. Kept only so onStart can delete it from existing installs.
 const _legacyCardsChannelId = 'moongate_print_alerts';
 const _serviceId            = 4711;
+
+// Discrete, attention-grabbing channel for the one-shot "Heat-soak complete"
+// alert fired when a preheat / soak timer set on a tile elapses. HIGH (it
+// buzzes) — unlike the silent status roster + cards — because the whole point is
+// to call the user back to the machine. A separate channel so it can be muted on
+// its own. See HeatsoakTimers (the armed deadlines) + _fireDueHeatsoaks.
+const _heatsoakChannelId   = 'moongate_heatsoak';
+const _heatsoakChannelName = 'Heatsoak timer';
+const _heatsoakChannelDesc =
+    'Alerts you when a preheat / heat-soak timer set on a printer finishes.';
+
+// A soak deadline this far past when the isolate finally sees it (e.g.
+// notifications were off across the deadline) is dropped without buzzing rather
+// than firing a confusing late alert.
+const _heatsoakStaleMs = 60 * 60 * 1000; // 1 hour
 
 // Default poll cadence, overridden by the user's "Update frequency" setting
 // (`notif_poll_interval`). The chosen interval is the ACTUAL poll rate — there
@@ -234,6 +250,18 @@ class _PrintTaskHandler extends TaskHandler {
     // it stops lingering in the user's notification settings. No-op if absent.
     await androidPlugin?.deleteNotificationChannel(_legacyCardsChannelId);
 
+    // Discrete HIGH channel for the one-shot heat-soak alert (buzzes, unlike the
+    // silent roster). Idempotent — created here so it exists the moment a timer
+    // is armed.
+    await androidPlugin?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _heatsoakChannelId,
+        _heatsoakChannelName,
+        description: _heatsoakChannelDesc,
+        importance: Importance.high,
+      ),
+    );
+
     // Clear any per-print cards stranded by a previous run (force-stop / crash)
     // so we never show a stale "printing" card. Only our card-id range is
     // touched — never the foreground-service notification (id 4711).
@@ -352,6 +380,12 @@ class _PrintTaskHandler extends TaskHandler {
       // clearing the print and reset Klipper to standby, so the dashboard badge
       // and the roster line settle to Ready together.
       await _detectClearedDoneCards(printers, postedDoneThisTick);
+
+      // Heat-soak timers: fire the one-shot alert for any printer whose soak
+      // deadline (armed from the tile's preheat sheet) has elapsed. Piggybacks
+      // this poll loop — so it only runs while notifications are enabled, which
+      // the preheat sheet warns about up front.
+      await _fireDueHeatsoaks(printers);
     } catch (e) {
       _log('tick failed: $e');
     } finally {
@@ -994,6 +1028,53 @@ class _PrintTaskHandler extends TaskHandler {
     } catch (_) {
       return null;
     }
+  }
+
+  // ── Heat-soak timers ────────────────────────────────────────────────────────
+
+  /// Per-printer notification id for its one-shot heat-soak alert. High bit
+  /// 0x20000000 keeps it clear of the service id (4711) and the print-card range
+  /// (0x10000000), so the three never collide.
+  int _heatsoakId(String printerId) =>
+      0x20000000 | (printerId.hashCode & 0x0FFFFFFF);
+
+  /// Fire the one-shot "Heat-soak complete" alert for any printer whose soak
+  /// deadline (armed from the tile's preheat sheet) has elapsed, then clear it. A
+  /// long-stale deadline is dropped without buzzing; deadlines for printers no
+  /// longer present are pruned.
+  Future<void> _fireDueHeatsoaks(List<PrinterConfig> printers) async {
+    final deadlines = await HeatsoakTimers.snapshot();
+    if (deadlines.isEmpty) return;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final known = {for (final p in printers) p.id};
+    for (final p in printers) {
+      final due = deadlines[p.id];
+      if (due == null || nowMs < due) continue;
+      if (nowMs - due <= _heatsoakStaleMs) await _postHeatsoakAlert(p);
+      await HeatsoakTimers.cancel(p.id);
+    }
+    for (final id in deadlines.keys) {
+      if (!known.contains(id)) await HeatsoakTimers.cancel(id);
+    }
+  }
+
+  /// Post the one-shot, attention-grabbing "Heat-soak complete" alert for [p].
+  Future<void> _postHeatsoakAlert(PrinterConfig p) async {
+    const android = AndroidNotificationDetails(
+      _heatsoakChannelId,
+      _heatsoakChannelName,
+      channelDescription: _heatsoakChannelDesc,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: 'ic_stat_moongate',
+      autoCancel: true,
+    );
+    await _alerts.show(
+      _heatsoakId(p.id),
+      _l.heatsoakDoneTitle,
+      _l.heatsoakDoneBody(p.name),
+      const NotificationDetails(android: android),
+    );
   }
 }
 

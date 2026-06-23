@@ -1507,4 +1507,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String macroFailed(String macro) {
     return 'Couldn\'t send $macro';
   }
+
+  @override
+  String get preheatTitle => 'Preheat';
+
+  @override
+  String get preheatHotend => 'Hotend';
+
+  @override
+  String get preheatBed => 'Bed';
+
+  @override
+  String get preheatHint => 'Leave a box empty to keep that heater unchanged.';
+
+  @override
+  String get preheatSoakLabel => 'Heat-soak timer';
+
+  @override
+  String get preheatSoakHelp =>
+      'Notify me after this many minutes. 0 = no timer.';
+
+  @override
+  String get preheatMinutes => 'min';
+
+  @override
+  String get preheatSet => 'Set';
+
+  @override
+  String get preheatNotifWarning =>
+      'Heat-soak alerts need print notifications switched on.';
+
+  @override
+  String get preheatNotifEnable => 'Turn on';
+
+  @override
+  String preheatSetConfirm(String summary) {
+    return 'Set $summary';
+  }
+
+  @override
+  String preheatSoakIn(int minutes) {
+    return 'heat-soak alert in $minutes min';
+  }
+
+  @override
+  String get preheatFailed => 'Couldn\'t set the temperatures';
+
+  @override
+  String get heatsoakDoneTitle => 'Heat-soak complete';
+
+  @override
+  String heatsoakDoneBody(String printer) {
+    return '$printer is up to temperature';
+  }
 }
