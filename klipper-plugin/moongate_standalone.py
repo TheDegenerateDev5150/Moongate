@@ -63,7 +63,7 @@ logger = logging.getLogger("moonraker.moongate")
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running — the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.9"
+MOONGATE_PLUGIN_VERSION = "0.6.10"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -579,17 +579,23 @@ class HeartbeatLoop:
     # seconds of cloudflared publishing it.
     _BOOTSTRAP_INTERVAL = 5
 
-    # After a pairing poke, keep the 5 s bootstrap cadence until a report
-    # actually succeeds — but no longer than this, so a genuinely-offline Pi
-    # eventually falls back to the steady interval instead of retrying forever.
-    # This is what stops a one-off "No route to host" during pairing from
-    # costing a full 5-minute heartbeat cycle (flaky-WiFi boards like the CB1).
+    # Upper bound on any fast-cadence window (bootstrap, post-poke, post-404).
+    # Inside a window we keep the 5 s bootstrap cadence until a report succeeds,
+    # but never longer than this, so a genuinely offline or orphaned Pi falls
+    # back to the steady interval instead of retrying forever. It is also what
+    # stops a one-off "No route to host" during pairing from costing a full
+    # 5-minute heartbeat cycle (flaky-WiFi boards like the CB1).
     _FAST_WINDOW_SECONDS = 180
 
     async def _run(self) -> None:
         # First heartbeat after a brief delay so cloudflared has time to come up
         await asyncio.sleep(5)
         self._poke_event = asyncio.Event()
+        # Arm the bootstrap fast window so we catch cloudflared's URL within a
+        # few seconds of it publishing. Bounded by _FAST_WINDOW_SECONDS so a Pi
+        # that never lands a cloud row (e.g. orphaned by reset-owner) does not
+        # poll /printer-heartbeat every 5 s forever.
+        self._fast_deadline = time.time() + self._FAST_WINDOW_SECONDS
         while True:
             try:
                 self._send_one()
@@ -599,13 +605,12 @@ class HeartbeatLoop:
             # so the cloud picks up the tunnel within seconds of
             # cloudflared coming online. After the first successful
             # heartbeat, drop to the configured cadence.
-            # Fast cadence while we still owe a report: before the first
-            # successful report at all (bootstrap), OR within the post-poke
-            # window where a transient failure must not cost a full interval.
-            fast = (
-                self._last_url_reported is None
-                or time.time() < self._fast_deadline
-            )
+            # Fast cadence only inside a bounded window: the bootstrap window
+            # (armed above), the post-poke window (request_immediate_send), or
+            # the post-404 re-pair window. Each is capped by _FAST_WINDOW_SECONDS
+            # so a Pi that never lands a cloud row falls back to the steady
+            # interval instead of polling every 5 s forever.
+            fast = time.time() < self._fast_deadline
             effective_interval = (
                 self._BOOTSTRAP_INTERVAL if fast else self.interval
             )
@@ -661,12 +666,21 @@ class HeartbeatLoop:
             return
         if status == 404:
             logger.warning("Heartbeat 404 — printer record gone server-side")
-            # The cloud row we knew is gone — typically a re-pair / reset-owner
-            # has created a NEW row. Drop back to the fast bootstrap cadence so
-            # we report our tunnel URL into that new row within ~5 s, instead of
-            # waiting up to a full heartbeat interval (5 min) for the next tick.
-            # Without this, re-pairing on a network that blocks mDNS left the
-            # tile "Starting up…" for minutes while the app waited on the tunnel.
+            # The cloud row we knew is gone, typically because a re-pair or
+            # reset-owner created a NEW row. On the FIRST 404 after we were
+            # healthy, hold the fast bootstrap cadence for a bounded window so we
+            # report our tunnel URL into that new row within ~5 s, instead of
+            # waiting up to a full heartbeat interval (5 min). Without this,
+            # re-pairing on a network that blocks mDNS left the tile
+            # "Starting up…" for minutes while the app waited.
+            #
+            # Crucially we only arm on that first 404 (while _last_url_reported
+            # is still set). Repeated 404s mean the Pi is genuinely orphaned and
+            # no new row is coming, so we must NOT keep re-arming or it would
+            # spin at 5 s forever (~720 calls/hour). Left alone the window lapses
+            # and the loop falls back to the steady cadence (~12 calls/hour).
+            if self._last_url_reported is not None:
+                self._fast_deadline = time.time() + self._FAST_WINDOW_SECONDS
             self._last_url_reported = None
             if self.on_unpaired:
                 try:
