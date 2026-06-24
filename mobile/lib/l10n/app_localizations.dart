@@ -302,6 +302,96 @@ abstract class AppLocalizations {
   /// **'Can\'t power off while printing'**
   String get powerLockedWhilePrinting;
 
+  /// Drawer toggle that adds a power-all-machines button to the dashboard top bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Global power button'**
+  String get globalPowerButtonTitle;
+
+  /// Subtitle under the global power button drawer toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'A top-bar button to power your machines on or off (needs smart-plug power devices)'**
+  String get globalPowerButtonSubtitle;
+
+  /// Tooltip on the global power button in the dashboard top bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Power all machines'**
+  String get globalPowerTooltip;
+
+  /// Title of the global power bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Power all machines'**
+  String get globalPowerSheetTitle;
+
+  /// Button that switches every reachable machine's power devices on.
+  ///
+  /// In en, this message translates to:
+  /// **'Power on all'**
+  String get globalPowerOnAll;
+
+  /// Label inside the slide-to-confirm control that powers every machine off.
+  ///
+  /// In en, this message translates to:
+  /// **'slide to power off all'**
+  String get globalPowerSlideOff;
+
+  /// Confirm dialog title before powering all machines on.
+  ///
+  /// In en, this message translates to:
+  /// **'Power on all machines?'**
+  String get globalPowerConfirmOnTitle;
+
+  /// Confirm dialog body before powering all machines on.
+  ///
+  /// In en, this message translates to:
+  /// **'This switches on every power device on the machines we can reach.'**
+  String get globalPowerConfirmOnBody;
+
+  /// Note in the global power sheet explaining printing machines are excluded from power-off.
+  ///
+  /// In en, this message translates to:
+  /// **'Machines that are printing are left on'**
+  String get globalPowerPrintingNote;
+
+  /// Per-machine label in the global power sheet: this machine will be switched off.
+  ///
+  /// In en, this message translates to:
+  /// **'will switch off'**
+  String get globalPowerStateWillSwitchOff;
+
+  /// Per-machine label: machine is printing so it is left powered on.
+  ///
+  /// In en, this message translates to:
+  /// **'printing, kept on'**
+  String get globalPowerStateKeptPrinting;
+
+  /// Per-machine label: machine is unreachable so it is skipped.
+  ///
+  /// In en, this message translates to:
+  /// **'offline, skipped'**
+  String get globalPowerStateOffline;
+
+  /// Shown in the global power sheet when no reachable machine exposes a power device.
+  ///
+  /// In en, this message translates to:
+  /// **'No reachable machines have power devices'**
+  String get globalPowerNothing;
+
+  /// Snackbar after powering machines on.
+  ///
+  /// In en, this message translates to:
+  /// **'Powered on {count} of {total} machines'**
+  String globalPowerResultOn(int count, int total);
+
+  /// Snackbar after powering machines off.
+  ///
+  /// In en, this message translates to:
+  /// **'Powered off {count} of {total} machines'**
+  String globalPowerResultOff(int count, int total);
+
   /// Title of the Advanced Power Switch setup screen.
   ///
   /// In en, this message translates to:

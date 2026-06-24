@@ -115,6 +115,58 @@ class AppLocalizationsIt extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Non spegnibile durante la stampa';
 
   @override
+  String get globalPowerButtonTitle => 'Pulsante di alimentazione globale';
+
+  @override
+  String get globalPowerButtonSubtitle =>
+      'Un pulsante nella barra superiore per accendere o spegnere le tue stampanti (richiede prese smart)';
+
+  @override
+  String get globalPowerTooltip => 'Alimenta tutte le stampanti';
+
+  @override
+  String get globalPowerSheetTitle => 'Alimenta tutte le stampanti';
+
+  @override
+  String get globalPowerOnAll => 'Accendi tutte';
+
+  @override
+  String get globalPowerSlideOff => 'scorri per spegnere tutte';
+
+  @override
+  String get globalPowerConfirmOnTitle => 'Accendere tutte le stampanti?';
+
+  @override
+  String get globalPowerConfirmOnBody =>
+      'Questo accende ogni dispositivo di alimentazione sulle stampanti che riusciamo a raggiungere.';
+
+  @override
+  String get globalPowerPrintingNote => 'Le stampanti in stampa restano accese';
+
+  @override
+  String get globalPowerStateWillSwitchOff => 'verrà spenta';
+
+  @override
+  String get globalPowerStateKeptPrinting => 'in stampa, lasciata accesa';
+
+  @override
+  String get globalPowerStateOffline => 'offline, saltata';
+
+  @override
+  String get globalPowerNothing =>
+      'Nessuna stampante raggiungibile ha dispositivi di alimentazione';
+
+  @override
+  String globalPowerResultOn(int count, int total) {
+    return 'Accese $count di $total stampanti';
+  }
+
+  @override
+  String globalPowerResultOff(int count, int total) {
+    return 'Spente $count di $total stampanti';
+  }
+
+  @override
   String get powerScreenTitle => 'Interruttore di alimentazione avanzato';
 
   @override

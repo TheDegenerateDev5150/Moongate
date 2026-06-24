@@ -115,6 +115,59 @@ class AppLocalizationsEs extends AppLocalizations {
   String get powerLockedWhilePrinting => 'No se puede apagar mientras imprime';
 
   @override
+  String get globalPowerButtonTitle => 'Botón de alimentación global';
+
+  @override
+  String get globalPowerButtonSubtitle =>
+      'Un botón en la barra superior para encender o apagar tus impresoras (requiere enchufes inteligentes)';
+
+  @override
+  String get globalPowerTooltip => 'Alimentar todas las impresoras';
+
+  @override
+  String get globalPowerSheetTitle => 'Alimentar todas las impresoras';
+
+  @override
+  String get globalPowerOnAll => 'Encender todas';
+
+  @override
+  String get globalPowerSlideOff => 'desliza para apagar todas';
+
+  @override
+  String get globalPowerConfirmOnTitle => '¿Encender todas las impresoras?';
+
+  @override
+  String get globalPowerConfirmOnBody =>
+      'Esto enciende todos los dispositivos de alimentación de las impresoras que podemos alcanzar.';
+
+  @override
+  String get globalPowerPrintingNote =>
+      'Las impresoras que están imprimiendo se dejan encendidas';
+
+  @override
+  String get globalPowerStateWillSwitchOff => 'se apagará';
+
+  @override
+  String get globalPowerStateKeptPrinting => 'imprimiendo, se deja encendida';
+
+  @override
+  String get globalPowerStateOffline => 'sin conexión, omitida';
+
+  @override
+  String get globalPowerNothing =>
+      'Ninguna impresora alcanzable tiene dispositivos de alimentación';
+
+  @override
+  String globalPowerResultOn(int count, int total) {
+    return 'Se encendieron $count de $total impresoras';
+  }
+
+  @override
+  String globalPowerResultOff(int count, int total) {
+    return 'Se apagaron $count de $total impresoras';
+  }
+
+  @override
   String get powerScreenTitle => 'Interruptor de alimentación avanzado';
 
   @override

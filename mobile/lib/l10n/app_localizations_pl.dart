@@ -114,6 +114,59 @@ class AppLocalizationsPl extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Nie można wyłączyć podczas druku';
 
   @override
+  String get globalPowerButtonTitle => 'Globalny przycisk zasilania';
+
+  @override
+  String get globalPowerButtonSubtitle =>
+      'Przycisk na górnym pasku do włączania lub wyłączania drukarek (wymaga inteligentnych gniazdek)';
+
+  @override
+  String get globalPowerTooltip => 'Zasil wszystkie drukarki';
+
+  @override
+  String get globalPowerSheetTitle => 'Zasil wszystkie drukarki';
+
+  @override
+  String get globalPowerOnAll => 'Włącz wszystkie';
+
+  @override
+  String get globalPowerSlideOff => 'przesuń, aby wyłączyć wszystkie';
+
+  @override
+  String get globalPowerConfirmOnTitle => 'Włączyć wszystkie drukarki?';
+
+  @override
+  String get globalPowerConfirmOnBody =>
+      'Spowoduje to włączenie każdego urządzenia zasilania w drukarkach, które są osiągalne.';
+
+  @override
+  String get globalPowerPrintingNote =>
+      'Drukarki, które drukują, pozostają włączone';
+
+  @override
+  String get globalPowerStateWillSwitchOff => 'zostanie wyłączona';
+
+  @override
+  String get globalPowerStateKeptPrinting => 'drukuje, pozostawiona włączona';
+
+  @override
+  String get globalPowerStateOffline => 'offline, pominięta';
+
+  @override
+  String get globalPowerNothing =>
+      'Żadna osiągalna drukarka nie ma urządzeń zasilania';
+
+  @override
+  String globalPowerResultOn(int count, int total) {
+    return 'Włączono $count z $total drukarek';
+  }
+
+  @override
+  String globalPowerResultOff(int count, int total) {
+    return 'Wyłączono $count z $total drukarek';
+  }
+
+  @override
   String get powerScreenTitle => 'Zaawansowany wyłącznik zasilania';
 
   @override

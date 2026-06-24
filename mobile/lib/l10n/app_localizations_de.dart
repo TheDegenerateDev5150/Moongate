@@ -116,6 +116,59 @@ class AppLocalizationsDe extends AppLocalizations {
       'Während des Drucks nicht ausschaltbar';
 
   @override
+  String get globalPowerButtonTitle => 'Globale Ein/Aus-Taste';
+
+  @override
+  String get globalPowerButtonSubtitle =>
+      'Eine Taste in der oberen Leiste, um deine Drucker ein- oder auszuschalten (erfordert Smart-Plug-Stromgeräte)';
+
+  @override
+  String get globalPowerTooltip => 'Alle Drucker schalten';
+
+  @override
+  String get globalPowerSheetTitle => 'Alle Drucker schalten';
+
+  @override
+  String get globalPowerOnAll => 'Alle einschalten';
+
+  @override
+  String get globalPowerSlideOff => 'wischen, um alle auszuschalten';
+
+  @override
+  String get globalPowerConfirmOnTitle => 'Alle Drucker einschalten?';
+
+  @override
+  String get globalPowerConfirmOnBody =>
+      'Dies schaltet jedes Stromgerät an den erreichbaren Druckern ein.';
+
+  @override
+  String get globalPowerPrintingNote =>
+      'Druckende Drucker bleiben eingeschaltet';
+
+  @override
+  String get globalPowerStateWillSwitchOff => 'wird ausgeschaltet';
+
+  @override
+  String get globalPowerStateKeptPrinting => 'druckt, bleibt an';
+
+  @override
+  String get globalPowerStateOffline => 'offline, übersprungen';
+
+  @override
+  String get globalPowerNothing =>
+      'Keine erreichbaren Drucker haben Stromgeräte';
+
+  @override
+  String globalPowerResultOn(int count, int total) {
+    return '$count von $total Druckern eingeschaltet';
+  }
+
+  @override
+  String globalPowerResultOff(int count, int total) {
+    return '$count von $total Druckern ausgeschaltet';
+  }
+
+  @override
   String get powerScreenTitle => 'Erweiterter Netzschalter';
 
   @override
