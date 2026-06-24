@@ -494,18 +494,37 @@ class PrinterStatusService {
         final body    = jsonDecode(response.body) as Map<String, dynamic>;
         final objects =
             (body['result']?['objects'] as List<dynamic>?) ?? [];
+        // A printer can expose several "chamber" sensors (e.g. a
+        // temperature_combined "Chamber" that averages "Chamber_Rear" and
+        // "Chamber_Y"). Prefer the sensor named exactly "chamber", the
+        // combined or standalone reading the user means, and only fall back to
+        // the first partial match when there is no exact one.
+        const prefixes = [
+          'temperature_sensor ',
+          'heater_generic ',
+          'temperature_fan ',
+        ];
+        String? exact;
+        String? partial;
         for (final obj in objects) {
-          final key = obj.toString();
-          if ((key.startsWith('temperature_sensor ') ||
-               key.startsWith('heater_generic ') ||
-               key.startsWith('temperature_fan ')) &&
-              key.toLowerCase().contains('chamber')) {
-            _chamberKey = key;
+          final key    = obj.toString();
+          final prefix = prefixes.firstWhere(
+              (p) => key.startsWith(p), orElse: () => '');
+          if (prefix.isEmpty) continue;
+          final name = key.substring(prefix.length).toLowerCase();
+          if (!name.contains('chamber')) continue;
+          partial ??= key;
+          if (name == 'chamber') {
+            exact = key;
             break;
           }
         }
+        _chamberKey = exact ?? partial;
+        // Only mark discovery done once the list call actually returned 200, so
+        // a cold-tunnel 502/503 on the first poll retries next time instead of
+        // giving up for the whole service lifetime (which left chamber blank).
+        _chamberDiscovered = true;
       }
-      _chamberDiscovered = true;
     } catch (_) {
       // Network blip — retry next poll.
     }
@@ -730,15 +749,22 @@ class PrinterStatusService {
     Map<String, dynamic>? chamberSensor = _chamberKey != null
         ? status[_chamberKey!] as Map<String, dynamic>?
         : null;
-    chamberSensor ??=
-        (status['temperature_sensor chamber'] ??
-         status['temperature_sensor CHAMBER'] ??
-         status['temperature_sensor chamber_temp'] ??
-         status['temperature_sensor CHAMBER_TEMP'] ??
-         status['heater_generic chamber'] ??
-         status['heater_generic CHAMBER'] ??
-         status['temperature_fan chamber'] ??
-         status['temperature_fan CHAMBER']) as Map<String, dynamic>?;
+    if (chamberSensor == null) {
+      // Fallback when discovery has not set a key yet: scan whatever sensors
+      // are in this payload for a chamber one, case-insensitively, so a
+      // mixed-case name like "Chamber" is caught too.
+      for (final entry in status.entries) {
+        final k = entry.key.toLowerCase();
+        if ((k.startsWith('temperature_sensor ') ||
+             k.startsWith('heater_generic ') ||
+             k.startsWith('temperature_fan ')) &&
+            k.contains('chamber')) {
+          final v = entry.value;
+          if (v is Map<String, dynamic>) chamberSensor = v;
+          break;
+        }
+      }
+    }
 
     final displayStatus = status['display_status'] as Map<String, dynamic>? ?? {};
     final virtualSdcard = status['virtual_sdcard'] as Map<String, dynamic>? ?? {};
