@@ -413,7 +413,11 @@ class _PrintTaskHandler extends TaskHandler {
     final String text;
     if (entries.isEmpty) {
       title = 'Moongate';
-      text = noneOnline ? _l.printNotifNoneOnline : _l.printNotifNoPrinters;
+      // "Show only online devices" on with every printer offline: show the calm
+      // idle watcher line (as at service start) instead of the alarming "No
+      // printers online", which a user flagged as naggy (#126). The real fix,
+      // letting the watcher sleep via push, is tracked separately.
+      text = noneOnline ? _l.printNotifWatching : _l.printNotifNoPrinters;
     } else if (entries.length == 1) {
       // Single printer: emoji + full status on the title line.
       title = _statusLine(entries.first.$1, entries.first.$2, withEmoji: true);
