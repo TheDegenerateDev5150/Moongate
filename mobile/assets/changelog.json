@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.32",
+    "bullets": [
+      "Fixed: the chamber temperature could be missing from the dashboard for some setups, in particular a combined chamber sensor (several probes averaged into one reading) or one whose name uses capital letters, and especially when connecting remotely over the tunnel. Moongate now finds the chamber reliably in those cases",
+      "Print notifications: when \"Show only online devices\" is on and every printer is currently offline, the ongoing notification now reads \"Watching your printers\" instead of \"No printers online\", which looked like an error",
+      "No Pi update needed, just update the app"
+    ]
+  },
+  {
     "version": "v0.9.31",
     "bullets": [
       "Fixed the \"Show only online devices\" toggle (added in v0.9.29) resetting itself to off every time you reopened the app. It saved your choice but didn't read it back when the app started, so the switch always looked off — and if your printers were offline you could be left with a \"no printers online\" notification that was hard to clear, because the switch showed off while the setting was actually still on. The toggle now remembers its setting and shows the right state when you reopen the app",
