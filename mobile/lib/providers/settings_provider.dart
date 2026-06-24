@@ -344,6 +344,38 @@ final showCameraConfigIconsProvider =
 );
 
 // ---------------------------------------------------------------------------
+// Global power button  (a "power all machines" control in the top bar)
+// ---------------------------------------------------------------------------
+
+/// Whether the dashboard shows a global power button in the top bar, beside the
+/// menu. OFF by default — only useful when machines expose Moonraker `[power …]`
+/// devices (smart plugs / relays). When on, the button opens a sheet that
+/// switches every reachable machine's power devices on, or off behind a
+/// slide-to-confirm; printing machines are left on. Travels in backups.
+class GlobalPowerButtonNotifier extends Notifier<bool> {
+  static const _key = 'global_power_button';
+
+  @override
+  bool build() => false;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? false;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, enabled);
+  }
+}
+
+final globalPowerButtonProvider =
+    NotifierProvider<GlobalPowerButtonNotifier, bool>(
+  GlobalPowerButtonNotifier.new,
+);
+
+// ---------------------------------------------------------------------------
 // Print notifications  (opt-in foreground-service progress + state alerts)
 // ---------------------------------------------------------------------------
 

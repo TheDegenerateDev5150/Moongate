@@ -114,6 +114,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Can\'t power off while printing';
 
   @override
+  String get globalPowerButtonTitle => 'Global power button';
+
+  @override
+  String get globalPowerButtonSubtitle =>
+      'A top-bar button to power your machines on or off (needs smart-plug power devices)';
+
+  @override
+  String get globalPowerTooltip => 'Power all machines';
+
+  @override
+  String get globalPowerSheetTitle => 'Power all machines';
+
+  @override
+  String get globalPowerOnAll => 'Power on all';
+
+  @override
+  String get globalPowerSlideOff => 'slide to power off all';
+
+  @override
+  String get globalPowerConfirmOnTitle => 'Power on all machines?';
+
+  @override
+  String get globalPowerConfirmOnBody =>
+      'This switches on every power device on the machines we can reach.';
+
+  @override
+  String get globalPowerPrintingNote =>
+      'Machines that are printing are left on';
+
+  @override
+  String get globalPowerStateWillSwitchOff => 'will switch off';
+
+  @override
+  String get globalPowerStateKeptPrinting => 'printing, kept on';
+
+  @override
+  String get globalPowerStateOffline => 'offline, skipped';
+
+  @override
+  String get globalPowerNothing => 'No reachable machines have power devices';
+
+  @override
+  String globalPowerResultOn(int count, int total) {
+    return 'Powered on $count of $total machines';
+  }
+
+  @override
+  String globalPowerResultOff(int count, int total) {
+    return 'Powered off $count of $total machines';
+  }
+
+  @override
   String get powerScreenTitle => 'Advanced Power Switch';
 
   @override

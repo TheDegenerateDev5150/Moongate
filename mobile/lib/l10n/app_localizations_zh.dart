@@ -111,6 +111,55 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerLockedWhilePrinting => '打印时无法关机';
 
   @override
+  String get globalPowerButtonTitle => '全局电源按钮';
+
+  @override
+  String get globalPowerButtonSubtitle => '顶部栏中的一个按钮，用于开启或关闭你的打印机（需要智能插座电源设备）';
+
+  @override
+  String get globalPowerTooltip => '打开所有打印机电源';
+
+  @override
+  String get globalPowerSheetTitle => '打开所有打印机电源';
+
+  @override
+  String get globalPowerOnAll => '全部开启';
+
+  @override
+  String get globalPowerSlideOff => '滑动以关闭全部';
+
+  @override
+  String get globalPowerConfirmOnTitle => '要开启所有打印机吗？';
+
+  @override
+  String get globalPowerConfirmOnBody => '这将开启所有可连接打印机上的每个电源设备。';
+
+  @override
+  String get globalPowerPrintingNote => '正在打印的打印机将保持开启';
+
+  @override
+  String get globalPowerStateWillSwitchOff => '将关闭';
+
+  @override
+  String get globalPowerStateKeptPrinting => '正在打印，保持开启';
+
+  @override
+  String get globalPowerStateOffline => '离线，已跳过';
+
+  @override
+  String get globalPowerNothing => '没有可连接的打印机配有电源设备';
+
+  @override
+  String globalPowerResultOn(int count, int total) {
+    return '已开启 $total 台打印机中的 $count 台';
+  }
+
+  @override
+  String globalPowerResultOff(int count, int total) {
+    return '已关闭 $total 台打印机中的 $count 台';
+  }
+
+  @override
   String get powerScreenTitle => '高级电源开关';
 
   @override

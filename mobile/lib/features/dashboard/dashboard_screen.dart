@@ -37,6 +37,7 @@ import 'feedback_sheet.dart';
 import 'printer_tile.dart';
 import 'camera_feeds_overlay.dart';
 import 'webcams_overlay.dart';
+import 'power_all_sheet.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -176,6 +177,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final gridColumns = ref.watch(gridColumnsProvider);
     final autoArrange = ref.watch(autoArrangeProvider);
+    final globalPowerButton = ref.watch(globalPowerButtonProvider);
     // The custom dashboard background is part of the Custom theme — render it
     // only while that theme is active (it's configured on the Custom theme
     // screen, which is only reachable when Custom is selected, so this also
@@ -256,6 +258,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ],
         ),
         actions: [
+          // Global power button (opt-in, drawer toggle): sits left of the menu
+          // and opens the power-all sheet. Hidden unless turned on and there's
+          // at least one printer to act on.
+          if (globalPowerButton && _printers.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.power_settings_new),
+              tooltip: l.globalPowerTooltip,
+              onPressed: () => showGlobalPowerSheet(context, _printers),
+            ),
           Builder(
             builder: (ctx) => IconButton(
               icon: const Icon(Icons.menu),
@@ -378,6 +389,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final printNotifications = ref.watch(printNotificationsEnabledProvider);
     final pollInterval = ref.watch(notifPollIntervalProvider);
     final notifOnlineOnly = ref.watch(notifOnlineOnlyProvider);
+    final globalPowerButton = ref.watch(globalPowerButtonProvider);
 
     return Drawer(
       child: SafeArea(
@@ -624,6 +636,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       subtitle: Text(l.dashboardAutoArrangeSubtitle),
                       value: autoArrange,
                       onChanged: _setAutoArrange,
+                    ),
+                    // Global power button: adds a power-all control to the top
+                    // bar. Off by default — only useful with Moonraker [power]
+                    // devices (smart plugs / relays).
+                    SwitchListTile(
+                      dense: true,
+                      secondary: const Icon(Icons.power_settings_new),
+                      title: Text(l.globalPowerButtonTitle),
+                      subtitle: Text(l.globalPowerButtonSubtitle),
+                      value: globalPowerButton,
+                      onChanged: (v) =>
+                          ref.read(globalPowerButtonProvider.notifier).set(v),
                     ),
 
                     const Divider(),
@@ -1017,6 +1041,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(printNotificationsEnabledProvider.notifier).load();
     await ref.read(notificationFieldsProvider.notifier).load();
     await ref.read(notifOnlineOnlyProvider.notifier).load();
+    await ref.read(globalPowerButtonProvider.notifier).load();
     await PrintNotificationService.instance
         .sync(ref.read(printNotificationsEnabledProvider));
   }

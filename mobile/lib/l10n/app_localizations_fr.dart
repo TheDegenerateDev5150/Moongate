@@ -117,6 +117,59 @@ class AppLocalizationsFr extends AppLocalizations {
       'Extinction impossible pendant l\'impression';
 
   @override
+  String get globalPowerButtonTitle => 'Bouton d\'alimentation global';
+
+  @override
+  String get globalPowerButtonSubtitle =>
+      'Un bouton dans la barre supérieure pour allumer ou éteindre vos imprimantes (nécessite des prises connectées)';
+
+  @override
+  String get globalPowerTooltip => 'Alimenter toutes les imprimantes';
+
+  @override
+  String get globalPowerSheetTitle => 'Alimenter toutes les imprimantes';
+
+  @override
+  String get globalPowerOnAll => 'Tout allumer';
+
+  @override
+  String get globalPowerSlideOff => 'glisser pour tout éteindre';
+
+  @override
+  String get globalPowerConfirmOnTitle => 'Allumer toutes les imprimantes ?';
+
+  @override
+  String get globalPowerConfirmOnBody =>
+      'Cela allume chaque périphérique d\'alimentation des imprimantes que nous pouvons joindre.';
+
+  @override
+  String get globalPowerPrintingNote =>
+      'Les imprimantes en cours d\'impression restent allumées';
+
+  @override
+  String get globalPowerStateWillSwitchOff => 'sera éteinte';
+
+  @override
+  String get globalPowerStateKeptPrinting => 'en impression, laissée allumée';
+
+  @override
+  String get globalPowerStateOffline => 'hors ligne, ignorée';
+
+  @override
+  String get globalPowerNothing =>
+      'Aucune imprimante joignable n\'a de périphérique d\'alimentation';
+
+  @override
+  String globalPowerResultOn(int count, int total) {
+    return '$count imprimantes sur $total allumées';
+  }
+
+  @override
+  String globalPowerResultOff(int count, int total) {
+    return '$count imprimantes sur $total éteintes';
+  }
+
+  @override
   String get powerScreenTitle => 'Interrupteur d\'alimentation avancé';
 
   @override

@@ -113,6 +113,59 @@ class AppLocalizationsRu extends AppLocalizations {
   String get powerLockedWhilePrinting => 'Нельзя выключить во время печати';
 
   @override
+  String get globalPowerButtonTitle => 'Глобальная кнопка питания';
+
+  @override
+  String get globalPowerButtonSubtitle =>
+      'Кнопка в верхней панели для включения или выключения принтеров (нужны умные розетки)';
+
+  @override
+  String get globalPowerTooltip => 'Питание всех принтеров';
+
+  @override
+  String get globalPowerSheetTitle => 'Питание всех принтеров';
+
+  @override
+  String get globalPowerOnAll => 'Включить все';
+
+  @override
+  String get globalPowerSlideOff => 'проведите, чтобы выключить все';
+
+  @override
+  String get globalPowerConfirmOnTitle => 'Включить все принтеры?';
+
+  @override
+  String get globalPowerConfirmOnBody =>
+      'Это включит каждое устройство питания на принтерах, до которых мы можем достучаться.';
+
+  @override
+  String get globalPowerPrintingNote =>
+      'Печатающие принтеры остаются включёнными';
+
+  @override
+  String get globalPowerStateWillSwitchOff => 'будет выключен';
+
+  @override
+  String get globalPowerStateKeptPrinting => 'печатает, оставлен включённым';
+
+  @override
+  String get globalPowerStateOffline => 'не в сети, пропущен';
+
+  @override
+  String get globalPowerNothing =>
+      'Ни у одного доступного принтера нет устройств питания';
+
+  @override
+  String globalPowerResultOn(int count, int total) {
+    return 'Включено $count из $total принтеров';
+  }
+
+  @override
+  String globalPowerResultOff(int count, int total) {
+    return 'Выключено $count из $total принтеров';
+  }
+
+  @override
   String get powerScreenTitle => 'Расширенный выключатель питания';
 
   @override
