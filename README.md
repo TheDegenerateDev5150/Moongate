@@ -9,12 +9,15 @@
 [![Latest release](https://img.shields.io/github/v/release/PEEKYPAUL/Moongate?label=latest%20release&color=6C63FF)](https://github.com/PEEKYPAUL/Moongate/releases/latest)
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)](#quick-start)
+![iOS](https://img.shields.io/badge/iOS-in%20development-A2AAAD?logo=apple&logoColor=white)
 
 <img src="docs/screenshots/generated/hero.png" width="820" alt="Moongate on Android — fleet dashboard, the full Mainsail UI in-app, and custom themes"/>
 
 Free, open-source Android control for your **Klipper 3D printer** — live webcam, print controls, temperatures, and the complete Mainsail/Fluidd UI — over home WiFi and **automatically over the internet** when you're away. No Tailscale, no VPN, no port forwarding, no subscriptions.
 
 <a href="https://github.com/PEEKYPAUL/Moongate/releases/latest"><img src="https://img.shields.io/badge/%E2%AC%87%20Download%20the%20APK-6C63FF?style=for-the-badge&logo=android&logoColor=white" alt="Download the APK"/></a>
+
+**🍎 Apple app development has started.** A native iPhone and iPad version is on the way alongside Android.
 
 </div>
 
