@@ -47,6 +47,22 @@ sudo systemctl restart KlipperScreen
 
 `127.0.0.1` is also sturdier than a LAN IP — it survives the Pi's address changing on a DHCP renewal. A client on a **separate device** (a standalone KlipperScreen tablet, a second Pi) can't use localhost and is fundamentally incompatible with the rebind; run it on the printer Pi instead.
 
+## All your printers suddenly show offline (and you use a VPN)
+
+If every printer goes offline at once, especially after reinstalling the app or changing networks, and trying to connect shows a `trycloudflare.com` address failing, check whether a **VPN** on your phone is in the way.
+
+Moongate reaches your printers either on your home Wi-Fi or over a Cloudflare tunnel. A VPN reroutes the app's traffic through the VPN's own servers, which usually can't reach your home network or the tunnel, so every printer reads offline.
+
+- **If you use a VPN with per-app "split tunnelling"** (Mullvad and similar), Moongate needs to be on the **excluded / bypass** list so it skips the VPN. **Reinstalling the app removes it from that list**, so re-add Moongate to the split-tunnelling exclusions after any reinstall.
+- **Otherwise, turn the VPN off** and reopen Moongate. If the printers come back, the VPN was the cause.
+- The same applies to ad-blocker, private-DNS, and firewall apps that run as a "VPN" on Android. They can block the connection the same way.
+
+If a printer still shows offline with the right address after the printer's Pi has rebooted, **force-stop Moongate and reopen it**. The app caches a printer's remote address for a while, and a reboot can change it, so a force-stop makes the app fetch the current one.
+
+## Chamber temperature missing on the dashboard
+
+If a printer's chamber temperature doesn't appear on its tile even though it shows in Mainsail, update to **v0.9.32 or newer**. That release made chamber detection robust for combined chamber sensors (`temperature_combined`) and sensors named with capital letters, especially over the remote tunnel.
+
 ## The light bulb shows the wrong state (on when the light's off)
 
 The bulb's on/off comes from the **Light Status Source** you set for that printer (**menu → Lighting**). If it's blank, the bulb just tracks your taps and assumes the light starts *off* — so it can read backwards. Set it to the light's Klipper object: the `[output_pin …]`, `[led …]` or `[neopixel …]` section name from your `printer.cfg` — e.g. `output_pin caselight` (the object name, **not** a raw pin like `PE3`). The bulb then follows that object's real value and self-corrects on each poll, even when you switch the light from Mainsail.
