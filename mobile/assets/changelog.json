@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.33",
+    "bullets": [
+      "New: an optional Global power button in the top bar. Turn it on under the menu and it adds a button that opens a \"power all machines\" sheet. Switch every machine's power on with a tap, or off with a deliberate slide-to-confirm. Machines that are printing are left on, unreachable ones are skipped, and the sheet shows exactly which machines will switch before you commit",
+      "It is off by default, and only useful if your machines have a Moonraker power device (a smart plug or relay) set up",
+      "Pi plugin fix (a separate, optional update): a printer that had lost its pairing used to retry every few seconds forever in the background. It now backs off to the normal interval, which cuts wasted battery, data and cloud load. Get it from Moonraker's update panel. The app feature itself needs no Pi update"
+    ]
+  },
+  {
     "version": "v0.9.32",
     "bullets": [
       "Fixed: the chamber temperature could be missing from the dashboard for some setups, in particular a combined chamber sensor (several probes averaged into one reading) or one whose name uses capital letters, and especially when connecting remotely over the tunnel. Moongate now finds the chamber reliably in those cases",
