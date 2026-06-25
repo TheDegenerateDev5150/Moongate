@@ -120,7 +120,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get globalPowerButtonSubtitle =>
-      'Eine Taste in der oberen Leiste, um deine Drucker ein- oder auszuschalten (erfordert Smart-Plug-Stromgeräte)';
+      'Eine Taste in der oberen Leiste, um deine gesamte Flotte ein- oder auszuschalten';
 
   @override
   String get globalPowerTooltip => 'Alle Drucker schalten';
@@ -139,7 +139,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get globalPowerConfirmOnBody =>
-      'Dies schaltet jedes Stromgerät an den erreichbaren Druckern ein.';
+      'Dies schaltet jede erreichbare Maschine ein.';
 
   @override
   String get globalPowerPrintingNote =>
@@ -155,8 +155,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get globalPowerStateOffline => 'offline, übersprungen';
 
   @override
+  String get globalPowerStateOnOff => 'ein/aus';
+
+  @override
+  String get globalPowerStateOffOnly => 'nur aus';
+
+  @override
+  String get globalPowerStateOnOnly => 'nur ein';
+
+  @override
+  String get globalPowerStateToggleOnly => 'nur Umschalten';
+
+  @override
   String get globalPowerNothing =>
-      'Keine erreichbaren Drucker haben Stromgeräte';
+      'Für noch keine Maschine ist eine Stromsteuerung eingerichtet';
 
   @override
   String globalPowerResultOn(int count, int total) {
@@ -173,14 +185,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get powerScreenBanner =>
-      'Für Drucker, deren Stromversorgung ein Klipper-Makro statt eines Moonraker-Stromgeräts ist. Aktivieren und ein Ein/Aus-Paar oder ein einzelnes Umschalt-Makro wählen — die Ein/Aus-Taste der Kachel verwendet sie.';
+      'Für Drucker, deren Stromversorgung ein Klipper-Makro statt eines Moonraker-Stromgeräts ist. Aktiviere sie und lege ein Ausschalt-Makro fest (der häufige Fall), ein Einschalt-Makro, beide oder ein einzelnes Umschalt-Makro. Die Ein/Aus-Taste der Kachel nutzt jedes davon.';
 
   @override
   String get powerUseSwitch => 'Makros verwenden';
 
   @override
   String get powerNeedMacro =>
-      'Ein Ein/Aus-Paar oder ein Umschalt-Makro festlegen.';
+      'Lege mindestens ein Makro fest: ein Ausschalt-Makro (oder Einschalt-Makro) oder ein Umschalt-Makro.';
 
   @override
   String get powerOnMacro => 'Einschalt-Makro';
@@ -193,6 +205,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get powerToggleMacro => 'Umschalt-Makro';
+
+  @override
+  String get powerToggleBulkNote =>
+      'Ein Umschalt-Makro bedient die Ein/Aus-Taste der Kachel. Für „Alle Drucker schalten“ lege ein Einschalt- und/oder ein Ausschalt-Makro fest.';
 
   @override
   String get powerMenuTitle => 'Erweiterter Netzschalter';

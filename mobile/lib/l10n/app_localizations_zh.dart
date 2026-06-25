@@ -114,7 +114,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get globalPowerButtonTitle => '全局电源按钮';
 
   @override
-  String get globalPowerButtonSubtitle => '顶部栏中的一个按钮，用于开启或关闭你的打印机（需要智能插座电源设备）';
+  String get globalPowerButtonSubtitle => '顶部栏中的一个按钮，用于开启或关闭你的整组打印机';
 
   @override
   String get globalPowerTooltip => '打开所有打印机电源';
@@ -132,7 +132,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get globalPowerConfirmOnTitle => '要开启所有打印机吗？';
 
   @override
-  String get globalPowerConfirmOnBody => '这将开启所有可连接打印机上的每个电源设备。';
+  String get globalPowerConfirmOnBody => '这将开启每一台可连接的打印机。';
 
   @override
   String get globalPowerPrintingNote => '正在打印的打印机将保持开启';
@@ -147,7 +147,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get globalPowerStateOffline => '离线，已跳过';
 
   @override
-  String get globalPowerNothing => '没有可连接的打印机配有电源设备';
+  String get globalPowerStateOnOff => '开 / 关';
+
+  @override
+  String get globalPowerStateOffOnly => '仅关';
+
+  @override
+  String get globalPowerStateOnOnly => '仅开';
+
+  @override
+  String get globalPowerStateToggleOnly => '仅切换';
+
+  @override
+  String get globalPowerNothing => '尚无打印机设置了电源控制';
 
   @override
   String globalPowerResultOn(int count, int total) {
@@ -164,13 +176,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get powerScreenBanner =>
-      '适用于电源由 Klipper 宏（而非 Moonraker 电源设备）控制的打印机。开启后选择一对开/关宏，或单个切换宏——磁贴的电源按钮将使用它们。';
+      '适用于电源由 Klipper 宏（而非 Moonraker 电源设备）控制的打印机。开启后设置一个关机宏（常见情况）、一个开机宏、两者，或单个切换宏。磁贴的电源按钮会使用其中任意一个。';
 
   @override
   String get powerUseSwitch => '使用宏';
 
   @override
-  String get powerNeedMacro => '设置一对开/关宏，或一个切换宏。';
+  String get powerNeedMacro => '至少设置一个宏：一个关机宏（或开机宏），或一个切换宏。';
 
   @override
   String get powerOnMacro => '开机宏';
@@ -183,6 +195,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get powerToggleMacro => '电源切换宏';
+
+  @override
+  String get powerToggleBulkNote =>
+      '切换宏可用于磁贴的电源按钮。若要使用“打开所有打印机电源”，请设置一个开机宏和/或关机宏。';
 
   @override
   String get powerMenuTitle => '高级电源开关';

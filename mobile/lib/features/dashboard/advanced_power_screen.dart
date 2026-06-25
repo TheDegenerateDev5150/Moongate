@@ -85,12 +85,13 @@ class _PowerPrinterCardState extends State<_PowerPrinterCard> {
     _future = PrintControlService(widget.printer).listMacros();
   }
 
-  /// A usable control path exists — an on+off pair, or a toggle macro.
-  bool get _canEnable {
-    final hasPair = (_onMacro?.isNotEmpty ?? false) &&
-        (_offMacro?.isNotEmpty ?? false);
-    return hasPair || (_toggleMacro?.isNotEmpty ?? false);
-  }
+  /// A usable control path exists — any one of: an off macro (the common case,
+  /// a Klipper power-off macro), an on macro, or a toggle. A full on+off pair is
+  /// fine too. Off-only / on-only are allowed; you don't need both.
+  bool get _canEnable =>
+      (_onMacro?.isNotEmpty ?? false) ||
+      (_offMacro?.isNotEmpty ?? false) ||
+      (_toggleMacro?.isNotEmpty ?? false);
 
   void _persist() {
     // Never store "enabled" without a usable control path.
@@ -208,6 +209,12 @@ class _PowerPrinterCardState extends State<_PowerPrinterCard> {
                   options: macros,
                   onChanged: (v) =>
                       setState(() { _toggleMacro = v; _persist(); }),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(l.powerToggleBulkNote,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: theme.colorScheme.outline)),
                 ),
               ],
             );
