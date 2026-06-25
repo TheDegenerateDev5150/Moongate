@@ -70,4 +70,19 @@ class OtaInstaller {
     await _channel.invokeMethod('installApk', {'path': filePath});
     return true;
   }
+
+  /// Delete the downloaded update APK left in the cache. Call it at startup, not
+  /// straight after [installApk]: the system installer reads the file
+  /// asynchronously (and shows its own confirmation), so deleting it too early
+  /// would break the install. By the next launch the install has finished (or
+  /// was declined), so the ~80 MB file is just dead weight, and users were
+  /// seeing it as the app hogging storage. Best-effort; never throws.
+  static Future<void> clearDownloadedApks() async {
+    try {
+      final dir = Directory('${(await getTemporaryDirectory()).path}/updates');
+      if (await dir.exists()) await dir.delete(recursive: true);
+    } catch (_) {
+      // A leftover file is harmless; cleanup must never break startup.
+    }
+  }
 }

@@ -6,6 +6,7 @@ import 'providers/custom_theme_provider.dart';
 import 'providers/dashboard_background_provider.dart';
 import 'providers/settings_provider.dart';
 import 'services/lan_discovery_service.dart';
+import 'services/ota_installer.dart';
 import 'services/print_notification_service.dart';
 import 'services/printer_liveness_service.dart';
 import 'services/printer_registry.dart';
@@ -71,6 +72,12 @@ void main() async {
   // offline printers and skip minting tokens for them — keeping an offline Pi at
   // zero Edge Function cost. No-ops until the anon session lands, then self-starts.
   PrinterLivenessService.instance.start();
+
+  // Clean up the APK left behind by a previous in-app update. By now its install
+  // has finished (or was declined), so the ~80 MB file is just dead weight in
+  // the cache — users were seeing it as the app eating storage. Best-effort, off
+  // the startup path.
+  OtaInstaller.clearDownloadedApks().ignore();
 
   runApp(UncontrolledProviderScope(container: container, child: const MoongateApp()));
 }
