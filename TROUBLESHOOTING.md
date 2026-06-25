@@ -184,6 +184,12 @@ The power button (bottom-left of a tile's camera) appears only when **Moonraker 
 
 Mid-print, the button is **greyed out** for a device Moonraker marks `locked_while_printing` — it won't cut power to a running print.
 
+## "Power all machines" skips a printer, or won't switch a macro printer
+
+The top-bar **Power all machines** button (switch it on in the menu) powers your whole fleet at once, and it only shows the buttons your fleet supports. A printer that's **printing** is always left on, and one that's **offline** is skipped.
+
+If a printer's power is a **Klipper macro** (the Advanced Power Switch) rather than a Moonraker power device, give it a **Power Off** (and/or Power On) macro and the fleet button will use it. A single **toggle** macro works only from that printer's own tile button, not from Power all machines, because a toggle can't tell which way to switch a whole fleet at once. Most macro setups are **power-off only** (you can't switch a machine back on with a Klipper macro once it's off), and that's fine: the fleet button just shows that printer as "off only".
+
 ## What's the red triangle on a tile? (Emergency stop)
 
 Every **online** tile shows a small red warning triangle by its temperatures — it's an **emergency stop**. **Double-tap** it to halt the printer immediately with Klipper's `M112`; a single tap does nothing, so a stray touch can't fire it, and there's no confirm dialog (the double-tap *is* the safeguard).
