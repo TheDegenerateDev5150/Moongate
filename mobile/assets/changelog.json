@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.34",
+    "bullets": [
+      "Power all machines now works with printers powered by a Klipper macro (the Advanced Power Switch), not only smart-plug power devices. It also reads how each printer is set up and shows the right buttons, so a machine can be off only, on only, or both.",
+      "Advanced Power Switch now lets you set just a Power Off macro (the common case), without forcing a Power On macro too. A single toggle macro keeps working from the tile's own power button.",
+      "After an in-app update installs, the downloaded file is cleared from the cache, so the app no longer holds on to that extra storage."
+    ]
+  },
+  {
     "version": "v0.9.33",
     "bullets": [
       "New: an optional Global power button in the top bar. Turn it on under the menu and it adds a button that opens a \"power all machines\" sheet. Switch every machine's power on with a tap, or off with a deliberate slide-to-confirm. Machines that are printing are left on, unreachable ones are skipped, and the sheet shows exactly which machines will switch before you commit",
