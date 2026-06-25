@@ -117,7 +117,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get globalPowerButtonSubtitle =>
-      'Кнопка в верхней панели для включения или выключения принтеров (нужны умные розетки)';
+      'Кнопка в верхней панели для включения или выключения всего парка';
 
   @override
   String get globalPowerTooltip => 'Питание всех принтеров';
@@ -136,7 +136,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get globalPowerConfirmOnBody =>
-      'Это включит каждое устройство питания на принтерах, до которых мы можем достучаться.';
+      'Это включит каждую машину, до которой мы можем достучаться.';
 
   @override
   String get globalPowerPrintingNote =>
@@ -152,8 +152,20 @@ class AppLocalizationsRu extends AppLocalizations {
   String get globalPowerStateOffline => 'не в сети, пропущен';
 
   @override
+  String get globalPowerStateOnOff => 'вкл / выкл';
+
+  @override
+  String get globalPowerStateOffOnly => 'только выкл';
+
+  @override
+  String get globalPowerStateOnOnly => 'только вкл';
+
+  @override
+  String get globalPowerStateToggleOnly => 'только переключение';
+
+  @override
   String get globalPowerNothing =>
-      'Ни у одного доступного принтера нет устройств питания';
+      'Ни для одной машины ещё не настроено управление питанием';
 
   @override
   String globalPowerResultOn(int count, int total) {
@@ -170,14 +182,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get powerScreenBanner =>
-      'Для принтеров, питание которых задаётся макросом Klipper, а не устройством питания Moonraker. Включите и выберите пару «Вкл + Выкл» или один макрос переключения — кнопка питания на плитке будет использовать их.';
+      'Для принтеров, питание которых задаётся макросом Klipper, а не устройством питания Moonraker. Включите и задайте макрос выключения (частый случай), макрос включения, оба или один макрос переключения. Кнопка питания на плитке использует любой из них.';
 
   @override
   String get powerUseSwitch => 'Использовать макросы';
 
   @override
   String get powerNeedMacro =>
-      'Задайте пару «Вкл + Выкл» или макрос переключения.';
+      'Задайте хотя бы один макрос: макрос выключения (или включения) либо макрос переключения.';
 
   @override
   String get powerOnMacro => 'Макрос включения';
@@ -190,6 +202,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get powerToggleMacro => 'Макрос переключения питания';
+
+  @override
+  String get powerToggleBulkNote =>
+      'Макрос переключения управляет кнопкой питания на плитке. Для «Питание всех принтеров» задайте макрос включения и/или выключения.';
 
   @override
   String get powerMenuTitle => 'Расширенный выключатель питания';

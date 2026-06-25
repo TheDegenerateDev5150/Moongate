@@ -121,7 +121,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get globalPowerButtonSubtitle =>
-      'Un bouton dans la barre supérieure pour allumer ou éteindre vos imprimantes (nécessite des prises connectées)';
+      'Un bouton dans la barre supérieure pour allumer ou éteindre tout votre parc';
 
   @override
   String get globalPowerTooltip => 'Alimenter toutes les imprimantes';
@@ -140,7 +140,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get globalPowerConfirmOnBody =>
-      'Cela allume chaque périphérique d\'alimentation des imprimantes que nous pouvons joindre.';
+      'Cela allume chaque machine que nous pouvons joindre.';
 
   @override
   String get globalPowerPrintingNote =>
@@ -156,8 +156,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get globalPowerStateOffline => 'hors ligne, ignorée';
 
   @override
+  String get globalPowerStateOnOff => 'marche / arrêt';
+
+  @override
+  String get globalPowerStateOffOnly => 'arrêt seul';
+
+  @override
+  String get globalPowerStateOnOnly => 'marche seule';
+
+  @override
+  String get globalPowerStateToggleOnly => 'bascule seule';
+
+  @override
   String get globalPowerNothing =>
-      'Aucune imprimante joignable n\'a de périphérique d\'alimentation';
+      'Aucune machine n\'a encore de contrôle d\'alimentation configuré';
 
   @override
   String globalPowerResultOn(int count, int total) {
@@ -174,14 +186,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get powerScreenBanner =>
-      'Pour les imprimantes dont l\'alimentation est une macro Klipper plutôt qu\'un périphérique d\'alimentation Moonraker. Activez-le et choisissez une paire Marche + Arrêt, ou une seule macro de bascule — le bouton d\'alimentation de la tuile les utilisera.';
+      'Pour les imprimantes dont l\'alimentation est une macro Klipper plutôt qu\'un périphérique d\'alimentation Moonraker. Activez-le et définissez une macro Arrêt (le cas courant), une macro Marche, les deux, ou une seule bascule. Le bouton d\'alimentation de la tuile utilise l\'une d\'elles.';
 
   @override
   String get powerUseSwitch => 'Utiliser des macros';
 
   @override
   String get powerNeedMacro =>
-      'Définissez une paire Marche + Arrêt, ou une macro de bascule.';
+      'Définissez au moins une macro : une macro Arrêt (ou Marche), ou une bascule.';
 
   @override
   String get powerOnMacro => 'Macro de mise sous tension';
@@ -194,6 +206,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get powerToggleMacro => 'Macro de bascule d\'alimentation';
+
+  @override
+  String get powerToggleBulkNote =>
+      'Une bascule actionne le bouton d\'alimentation de la tuile. Pour Alimenter toutes les imprimantes, définissez une macro Marche et/ou Arrêt.';
 
   @override
   String get powerMenuTitle => 'Interrupteur d\'alimentation avancé';

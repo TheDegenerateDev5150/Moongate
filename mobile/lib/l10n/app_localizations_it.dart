@@ -119,7 +119,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get globalPowerButtonSubtitle =>
-      'Un pulsante nella barra superiore per accendere o spegnere le tue stampanti (richiede prese smart)';
+      'Un pulsante nella barra superiore per accendere o spegnere tutta la tua flotta';
 
   @override
   String get globalPowerTooltip => 'Alimenta tutte le stampanti';
@@ -138,7 +138,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get globalPowerConfirmOnBody =>
-      'Questo accende ogni dispositivo di alimentazione sulle stampanti che riusciamo a raggiungere.';
+      'Questo accende ogni macchina che riusciamo a raggiungere.';
 
   @override
   String get globalPowerPrintingNote => 'Le stampanti in stampa restano accese';
@@ -153,8 +153,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get globalPowerStateOffline => 'offline, saltata';
 
   @override
+  String get globalPowerStateOnOff => 'on / off';
+
+  @override
+  String get globalPowerStateOffOnly => 'solo off';
+
+  @override
+  String get globalPowerStateOnOnly => 'solo on';
+
+  @override
+  String get globalPowerStateToggleOnly => 'solo commutazione';
+
+  @override
   String get globalPowerNothing =>
-      'Nessuna stampante raggiungibile ha dispositivi di alimentazione';
+      'Nessuna macchina ha ancora un controllo dell\'alimentazione configurato';
 
   @override
   String globalPowerResultOn(int count, int total) {
@@ -171,14 +183,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get powerScreenBanner =>
-      'Per le stampanti la cui alimentazione è una macro di Klipper anziché un dispositivo di alimentazione di Moonraker. Attivalo e scegli una coppia Accensione + Spegnimento, oppure una singola macro di commutazione: il pulsante di accensione del riquadro le userà.';
+      'Per le stampanti la cui alimentazione è una macro di Klipper anziché un dispositivo di alimentazione di Moonraker. Attivalo e imposta una macro di Spegnimento (il caso più comune), una macro di Accensione, entrambe, oppure una singola di commutazione. Il pulsante di accensione del riquadro usa una qualsiasi di esse.';
 
   @override
   String get powerUseSwitch => 'Usa le macro';
 
   @override
   String get powerNeedMacro =>
-      'Imposta una coppia Accensione + Spegnimento, oppure una macro di commutazione.';
+      'Imposta almeno una macro: una di Spegnimento (o Accensione), oppure una di commutazione.';
 
   @override
   String get powerOnMacro => 'Macro di accensione';
@@ -191,6 +203,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get powerToggleMacro => 'Macro di commutazione';
+
+  @override
+  String get powerToggleBulkNote =>
+      'Una macro di commutazione aziona il pulsante di accensione del riquadro. Per Alimenta tutte le stampanti, imposta una macro di Accensione e/o di Spegnimento.';
 
   @override
   String get powerMenuTitle => 'Interruttore di alimentazione avanzato';

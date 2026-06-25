@@ -1764,8 +1764,9 @@ class _PowerButtonState extends State<_PowerButton> {
   }
 
   // ── Macro mode (Advanced Power Switch) ─────────────────────────────────────
-  // Stateless: with a toggle macro we confirm then run it; with an on/off pair
-  // we ask On or Off explicitly, since the real state isn't knowable.
+  // Stateless: a toggle macro confirms then runs; an on+off pair asks On or Off
+  // (the real state isn't knowable); a single-direction macro (off-only is the
+  // common case — a Klipper power-off macro) confirms then runs that direction.
   Future<void> _macroTap() async {
     if (_busy) return;
     final p = widget.printer;
@@ -1792,29 +1793,55 @@ class _PowerButtonState extends State<_PowerButton> {
       if (ok != true) return;
       macro = p.powerToggleMacro;
     } else {
-      // No toggle: don't assume state — let the user pick On or Off.
-      final choice = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l.powerMacroChooseTitle(p.name)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l.commonCancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l.powerTurnOff),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l.powerTurnOn),
-            ),
-          ],
-        ),
-      );
-      if (choice == null) return; // cancelled
-      macro = choice ? p.powerOnMacro : p.powerOffMacro;
+      final hasOn = p.powerOnMacro?.isNotEmpty ?? false;
+      final hasOff = p.powerOffMacro?.isNotEmpty ?? false;
+      if (hasOn && hasOff) {
+        // A pair: don't assume state — let the user pick On or Off.
+        final choice = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(l.powerMacroChooseTitle(p.name)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l.commonCancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l.powerTurnOff),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(l.powerTurnOn),
+              ),
+            ],
+          ),
+        );
+        if (choice == null) return; // cancelled
+        macro = choice ? p.powerOnMacro : p.powerOffMacro;
+      } else {
+        // A single-direction macro: confirm, then run that one direction.
+        final on = hasOn;
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(
+                on ? l.powerConfirmOn(p.name) : l.powerConfirmOff(p.name)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l.commonCancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(on ? l.powerTurnOn : l.powerTurnOff),
+              ),
+            ],
+          ),
+        );
+        if (ok != true) return;
+        macro = on ? p.powerOnMacro : p.powerOffMacro;
+      }
     }
     if (macro == null || macro.isEmpty || !mounted) return;
     setState(() => _busy = true);

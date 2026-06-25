@@ -118,7 +118,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalPowerButtonSubtitle =>
-      'A top-bar button to power your machines on or off (needs smart-plug power devices)';
+      'A top-bar button to power your whole fleet on or off';
 
   @override
   String get globalPowerTooltip => 'Power all machines';
@@ -137,7 +137,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalPowerConfirmOnBody =>
-      'This switches on every power device on the machines we can reach.';
+      'This switches on every machine we can reach.';
 
   @override
   String get globalPowerPrintingNote =>
@@ -153,7 +153,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get globalPowerStateOffline => 'offline, skipped';
 
   @override
-  String get globalPowerNothing => 'No reachable machines have power devices';
+  String get globalPowerStateOnOff => 'on / off';
+
+  @override
+  String get globalPowerStateOffOnly => 'off only';
+
+  @override
+  String get globalPowerStateOnOnly => 'on only';
+
+  @override
+  String get globalPowerStateToggleOnly => 'toggle only';
+
+  @override
+  String get globalPowerNothing => 'No machines have power control set up yet';
 
   @override
   String globalPowerResultOn(int count, int total) {
@@ -170,13 +182,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get powerScreenBanner =>
-      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.';
+      'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and set a Power Off macro (the common case), a Power On macro, both, or a single toggle. The tile\'s power button uses any of them.';
 
   @override
   String get powerUseSwitch => 'Use macros';
 
   @override
-  String get powerNeedMacro => 'Set an On + Off pair, or a toggle macro.';
+  String get powerNeedMacro =>
+      'Set at least one macro: a Power Off (or Power On) macro, or a toggle.';
 
   @override
   String get powerOnMacro => 'Power On macro';
@@ -189,6 +202,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get powerToggleMacro => 'Power Toggle macro';
+
+  @override
+  String get powerToggleBulkNote =>
+      'A toggle works the tile\'s power button. For Power all machines, set a Power On and/or Power Off macro.';
 
   @override
   String get powerMenuTitle => 'Advanced Power Switch';

@@ -311,7 +311,7 @@ abstract class AppLocalizations {
   /// Subtitle under the global power button drawer toggle.
   ///
   /// In en, this message translates to:
-  /// **'A top-bar button to power your machines on or off (needs smart-plug power devices)'**
+  /// **'A top-bar button to power your whole fleet on or off'**
   String get globalPowerButtonSubtitle;
 
   /// Tooltip on the global power button in the dashboard top bar.
@@ -347,7 +347,7 @@ abstract class AppLocalizations {
   /// Confirm dialog body before powering all machines on.
   ///
   /// In en, this message translates to:
-  /// **'This switches on every power device on the machines we can reach.'**
+  /// **'This switches on every machine we can reach.'**
   String get globalPowerConfirmOnBody;
 
   /// Note in the global power sheet explaining printing machines are excluded from power-off.
@@ -374,10 +374,34 @@ abstract class AppLocalizations {
   /// **'offline, skipped'**
   String get globalPowerStateOffline;
 
-  /// Shown in the global power sheet when no reachable machine exposes a power device.
+  /// Per-machine capability label in the global power sheet: this machine can be switched on or off.
   ///
   /// In en, this message translates to:
-  /// **'No reachable machines have power devices'**
+  /// **'on / off'**
+  String get globalPowerStateOnOff;
+
+  /// Per-machine capability label: this machine can only be switched off.
+  ///
+  /// In en, this message translates to:
+  /// **'off only'**
+  String get globalPowerStateOffOnly;
+
+  /// Per-machine capability label: this machine can only be switched on.
+  ///
+  /// In en, this message translates to:
+  /// **'on only'**
+  String get globalPowerStateOnOnly;
+
+  /// Per-machine label: only a toggle macro is set, usable from the tile button but not the bulk on/off action.
+  ///
+  /// In en, this message translates to:
+  /// **'toggle only'**
+  String get globalPowerStateToggleOnly;
+
+  /// Shown in the global power sheet when no machine has a power device or power macro configured.
+  ///
+  /// In en, this message translates to:
+  /// **'No machines have power control set up yet'**
   String get globalPowerNothing;
 
   /// Snackbar after powering machines on.
@@ -401,7 +425,7 @@ abstract class AppLocalizations {
   /// Instruction banner at the top of the Advanced Power Switch screen.
   ///
   /// In en, this message translates to:
-  /// **'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and pick an On + Off pair, or a single Toggle macro — the tile\'s power button will use them.'**
+  /// **'For printers whose power is a Klipper macro rather than a Moonraker power device. Turn it on and set a Power Off macro (the common case), a Power On macro, both, or a single toggle. The tile\'s power button uses any of them.'**
   String get powerScreenBanner;
 
   /// Per-printer switch on the Advanced Power screen: drive the power button with macros.
@@ -413,7 +437,7 @@ abstract class AppLocalizations {
   /// Hint shown when a printer has no usable power macro configured yet.
   ///
   /// In en, this message translates to:
-  /// **'Set an On + Off pair, or a toggle macro.'**
+  /// **'Set at least one macro: a Power Off (or Power On) macro, or a toggle.'**
   String get powerNeedMacro;
 
   /// Label for the macro that powers the printer on.
@@ -439,6 +463,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Power Toggle macro'**
   String get powerToggleMacro;
+
+  /// Note under the toggle macro field explaining a toggle is not used by the global Power all machines action.
+  ///
+  /// In en, this message translates to:
+  /// **'A toggle works the tile\'s power button. For Power all machines, set a Power On and/or Power Off macro.'**
+  String get powerToggleBulkNote;
 
   /// Drawer menu entry that opens the Advanced Power Switch screen.
   ///

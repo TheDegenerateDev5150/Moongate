@@ -119,7 +119,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get globalPowerButtonSubtitle =>
-      'Un botón en la barra superior para encender o apagar tus impresoras (requiere enchufes inteligentes)';
+      'Un botón en la barra superior para encender o apagar toda tu flota';
 
   @override
   String get globalPowerTooltip => 'Alimentar todas las impresoras';
@@ -138,7 +138,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get globalPowerConfirmOnBody =>
-      'Esto enciende todos los dispositivos de alimentación de las impresoras que podemos alcanzar.';
+      'Esto enciende todas las máquinas que podemos alcanzar.';
 
   @override
   String get globalPowerPrintingNote =>
@@ -154,8 +154,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get globalPowerStateOffline => 'sin conexión, omitida';
 
   @override
+  String get globalPowerStateOnOff => 'encender / apagar';
+
+  @override
+  String get globalPowerStateOffOnly => 'solo apagar';
+
+  @override
+  String get globalPowerStateOnOnly => 'solo encender';
+
+  @override
+  String get globalPowerStateToggleOnly => 'solo alternar';
+
+  @override
   String get globalPowerNothing =>
-      'Ninguna impresora alcanzable tiene dispositivos de alimentación';
+      'Aún no hay ninguna máquina con control de alimentación configurado';
 
   @override
   String globalPowerResultOn(int count, int total) {
@@ -172,14 +184,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get powerScreenBanner =>
-      'Para impresoras cuya alimentación es una macro de Klipper en lugar de un dispositivo de alimentación de Moonraker. Actívalo y elige un par de Encendido + Apagado, o una sola macro de alternancia: el botón de encendido de la tarjeta las usará.';
+      'Para impresoras cuya alimentación es una macro de Klipper en lugar de un dispositivo de alimentación de Moonraker. Actívalo y define una macro de Apagado (el caso habitual), una macro de Encendido, ambas, o una sola de alternancia. El botón de encendido de la tarjeta usa cualquiera de ellas.';
 
   @override
   String get powerUseSwitch => 'Usar macros';
 
   @override
   String get powerNeedMacro =>
-      'Define un par de Encendido + Apagado, o una macro de alternancia.';
+      'Define al menos una macro: una de Apagado (o Encendido), o una de alternancia.';
 
   @override
   String get powerOnMacro => 'Macro de encendido';
@@ -192,6 +204,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get powerToggleMacro => 'Macro de alternancia';
+
+  @override
+  String get powerToggleBulkNote =>
+      'Una macro de alternancia acciona el botón de encendido de la tarjeta. Para Alimentar todas las impresoras, define una macro de Encendido o de Apagado.';
 
   @override
   String get powerMenuTitle => 'Interruptor de alimentación avanzado';

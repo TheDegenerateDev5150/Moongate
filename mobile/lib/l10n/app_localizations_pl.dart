@@ -118,7 +118,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get globalPowerButtonSubtitle =>
-      'Przycisk na górnym pasku do włączania lub wyłączania drukarek (wymaga inteligentnych gniazdek)';
+      'Przycisk na górnym pasku do włączania lub wyłączania całej floty';
 
   @override
   String get globalPowerTooltip => 'Zasil wszystkie drukarki';
@@ -137,7 +137,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get globalPowerConfirmOnBody =>
-      'Spowoduje to włączenie każdego urządzenia zasilania w drukarkach, które są osiągalne.';
+      'Spowoduje to włączenie każdej osiągalnej maszyny.';
 
   @override
   String get globalPowerPrintingNote =>
@@ -153,8 +153,20 @@ class AppLocalizationsPl extends AppLocalizations {
   String get globalPowerStateOffline => 'offline, pominięta';
 
   @override
+  String get globalPowerStateOnOff => 'wł. / wył.';
+
+  @override
+  String get globalPowerStateOffOnly => 'tylko wył.';
+
+  @override
+  String get globalPowerStateOnOnly => 'tylko wł.';
+
+  @override
+  String get globalPowerStateToggleOnly => 'tylko przełączanie';
+
+  @override
   String get globalPowerNothing =>
-      'Żadna osiągalna drukarka nie ma urządzeń zasilania';
+      'Żadna maszyna nie ma jeszcze skonfigurowanego sterowania zasilaniem';
 
   @override
   String globalPowerResultOn(int count, int total) {
@@ -171,13 +183,14 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get powerScreenBanner =>
-      'Dla drukarek, których zasilanie jest makrem Klippera, a nie urządzeniem zasilania Moonrakera. Włącz i wybierz parę Wł. + Wył. lub pojedyncze makro przełączające — przycisk zasilania kafelka ich użyje.';
+      'Dla drukarek, których zasilanie jest makrem Klippera, a nie urządzeniem zasilania Moonrakera. Włącz i ustaw makro Wyłączania (częsty przypadek), makro Włączania, oba albo pojedyncze makro przełączające. Przycisk zasilania kafelka użyje dowolnego z nich.';
 
   @override
   String get powerUseSwitch => 'Użyj makr';
 
   @override
-  String get powerNeedMacro => 'Ustaw parę Wł. + Wył. lub makro przełączające.';
+  String get powerNeedMacro =>
+      'Ustaw co najmniej jedno makro: makro Wyłączania (lub Włączania) albo makro przełączające.';
 
   @override
   String get powerOnMacro => 'Makro włączania';
@@ -190,6 +203,10 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get powerToggleMacro => 'Makro przełączania zasilania';
+
+  @override
+  String get powerToggleBulkNote =>
+      'Makro przełączające obsługuje przycisk zasilania kafelka. Aby użyć „Zasil wszystkie drukarki”, ustaw makro Włączania i/lub Wyłączania.';
 
   @override
   String get powerMenuTitle => 'Zaawansowany wyłącznik zasilania';
