@@ -132,10 +132,13 @@ safeguards.
 
 ## 5. How long we keep data
 
-- **Inactive anonymous identities and their printer records** are deleted
-  automatically after a period of inactivity (currently around six weeks).
+- **Printer records** are deleted automatically after about six weeks without
+  activity (no contact from the printer).
 - **Unpaired/removed printers** are permanently deleted shortly after removal
   (within about a week).
+- **The anonymous identifier** itself holds no personal data (it is just a random
+  id). It may persist after your printers are gone, but you can erase it and
+  everything tied to it at any time with **"Delete my data"** in the app.
 - **Bug reports** are retained so we can investigate and track issues; tell us
   (using the contact above) if you want a report you submitted deleted.
 - **Local data** on your device remains until you delete it or uninstall the app.
@@ -144,9 +147,12 @@ safeguards.
 
 Because we don't collect your name or email, most data is tied only to an
 anonymous identifier. You can:
-- **Stop all remote data** by removing your printers and/or uninstalling the app;
-  uninstalling removes the local session, and your anonymous identity and its
-  records are then cleaned up automatically (see retention above).
+- **Delete everything** with **"Delete my data"** in the app's menu — this
+  immediately erases your anonymous account and removes your printers,
+  notification tokens, and related records from our servers.
+- **Stop remote data** by removing individual printers; uninstalling the app
+  removes the local session, and your printer records are then deleted after the
+  inactivity period above.
 - **Disable notifications** at any time in the app's menu.
 - **Decline or revoke permissions** (camera, local network, notifications) in
   your device settings; some features will simply stop working.
