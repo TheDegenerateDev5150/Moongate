@@ -695,21 +695,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           .set(v),
                     ),
 
-                    const Divider(),
+                    // Print notifications run on an Android foreground service;
+                    // iOS has no equivalent yet, so the whole section (and its
+                    // leading divider) is Android-only — don't offer a feature
+                    // that does nothing on iOS. See docs/ios-port-plan.md.
+                    if (Platform.isAndroid) const Divider(),
 
                     // ── Print notifications ──────────────────────────────────
                     // Opt-in foreground service: live progress + state alerts.
-                    SwitchListTile(
-                      dense: true,
-                      secondary:
-                          const Icon(Icons.notifications_active_outlined),
-                      title: Text(l.printNotifTitle),
-                      subtitle: Text(l.printNotifSubtitle),
-                      value: printNotifications,
-                      onChanged: _togglePrintNotifications,
-                    ),
+                    if (Platform.isAndroid)
+                      SwitchListTile(
+                        dense: true,
+                        secondary:
+                            const Icon(Icons.notifications_active_outlined),
+                        title: Text(l.printNotifTitle),
+                        subtitle: Text(l.printNotifSubtitle),
+                        value: printNotifications,
+                        onChanged: _togglePrintNotifications,
+                      ),
                     // Poll cadence — only relevant while notifications are on.
-                    if (printNotifications) ...[
+                    if (Platform.isAndroid && printNotifications) ...[
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                         child: Text(l.notifPollIntervalTitle,
@@ -1249,6 +1254,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// install pairs first). Tapping "Turn on" requests the OS permission and
   /// enables the service.
   Future<void> _maybeOfferNotifications() async {
+    // Background print notifications need an Android foreground service; iOS
+    // has no equivalent yet, so never offer them there. (The settings toggle
+    // is hidden on iOS the same way.)
+    if (!Platform.isAndroid) return;
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_notifPromptedKey) ?? false) return;
     if (PrinterRegistry.instance.printers.isEmpty) return;
