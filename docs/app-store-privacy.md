@@ -70,12 +70,20 @@ this as a possible rejection reason. Decide before submission.
 > - **Notifications** are opt-in and report the user's own print status.
 > - No analytics, advertising, or tracking. No data is sold or shared for third-
 >   party purposes.
-> - To test without hardware: [provide a demo path, or a paired test printer the
->   reviewer can reach — TBD before submission].
+> - **Hardware note:** the app controls a physical Klipper/Moonraker 3D printer,
+>   so it can't be fully exercised without one. A short screen recording showing
+>   pairing (QR scan) and the live dashboard is provided here: [DEMO VIDEO URL].
+>   The App Store screenshots also show the main flows. We're happy to provide
+>   anything else the review needs.
+
+> Privacy policy: https://peekypaul.github.io/Moongate/privacy-policy.html
 
 ## Still to do before submission
-- [ ] Host `privacy-policy.md` at a public URL and put it in App Store Connect (and in the app/README).
-- [ ] Fill the controller name, contact email, and effective date placeholders in the policy.
-- [ ] Decide on the in-app "Delete my data" action (account-deletion guideline).
-- [ ] Confirm the retention periods in the policy against the live cleanup cron.
-- [ ] Provide a reviewer demo path (a reachable test printer, or screenshots/video) since the app needs real hardware.
+- [x] **Privacy policy hosted** — live at https://peekypaul.github.io/Moongate/privacy-policy.html (GitHub Pages, master `/docs`).
+- [x] **Policy placeholders filled** — controller = Moongate, contact = psychoshaft@live.co.uk, effective 26 June 2026.
+- [x] **In-app "Delete my data"** — built + merged (#146); `delete-account` function deletes the anon user, cascades wipe the rest.
+- [ ] Put the policy URL in **App Store Connect** (App Privacy → Privacy Policy URL) and link it from the README.
+- [ ] Record a short **demo video** (pairing + dashboard) for the reviewer and drop its URL into the reviewer notes above (the app needs real hardware).
+- [ ] Confirm the **retention periods** in the policy against the live cleanup cron.
+- [ ] Deploy the Supabase functions (`register-push-token`, `send-push`, `delete-account`) + apply the push-token migration.
+- [ ] Enrol the **$99 Apple Developer Program** (gates push delivery, TestFlight, and submission).
