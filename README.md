@@ -148,6 +148,7 @@ Your Pi runs Klipper, Moonraker, the Moongate plugin, and an **auth proxy** that
 | [SECURITY.md](SECURITY.md) | Threat model, what the tunnel does and doesn't expose, the empirical verification, vulnerability reporting |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common failure modes — offline tiles, tunnel issues, pairing failures — each with copy-paste diagnostics |
 | [CHANGELOG.md](CHANGELOG.md) | Every release with a one-line summary of what changed and why |
+| [Privacy policy](https://peekypaul.github.io/Moongate/privacy-policy.html) | What data the app handles and why — anonymous, no analytics, no tracking, no data sold |
 
 > **Building from source?** `cd mobile && flutter pub get && flutter build apk --release`. Full developer workflow in [DEVELOPMENT.md](DEVELOPMENT.md).
 
