@@ -1022,6 +1022,42 @@ abstract class AppLocalizations {
   /// **'Tip the dev via PayPal'**
   String get dashboardBuyMeCoffeeSubtitle;
 
+  /// Destructive drawer item that deletes the user's anonymous account and cloud records.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my data'**
+  String get dashboardDeleteData;
+
+  /// Subtitle for the Delete my data drawer item.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase your account and printers from the cloud'**
+  String get dashboardDeleteDataSubtitle;
+
+  /// Title of the confirmation dialog for deleting all of the user's data.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my data?'**
+  String get deleteDataConfirmTitle;
+
+  /// Body of the confirmation dialog warning what Delete my data does.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your anonymous account and removes your printers and notification settings from the cloud. Your printers will need to be paired again. This can\'t be undone.'**
+  String get deleteDataConfirmBody;
+
+  /// Snackbar shown after the user's data is successfully deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data has been deleted'**
+  String get deleteDataDone;
+
+  /// Snackbar shown when data deletion fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete your data. Please try again.'**
+  String get deleteDataError;
+
   /// Title of the one-time first-run donation prompt.
   ///
   /// In en, this message translates to:

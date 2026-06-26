@@ -255,6 +255,14 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Wipe the local printer list. Used by "Delete my data" once the cloud
+  /// records have been deleted, so the dashboard reflects the empty state
+  /// immediately instead of waiting on a Supabase refresh.
+  Future<void> clear() async {
+    _printers = [];
+    await _save();
+  }
+
   /// Persist a user-defined ordering of the printer list (set by drag-to-reorder
   /// on the dashboard when auto-arrange is off). The persisted list order *is*
   /// the dashboard order, so this just re-sequences and saves — it rides backups

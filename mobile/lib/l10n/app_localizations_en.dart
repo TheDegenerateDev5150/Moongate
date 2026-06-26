@@ -513,6 +513,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardBuyMeCoffeeSubtitle => 'Tip the dev via PayPal';
 
   @override
+  String get dashboardDeleteData => 'Delete my data';
+
+  @override
+  String get dashboardDeleteDataSubtitle =>
+      'Erase your account and printers from the cloud';
+
+  @override
+  String get deleteDataConfirmTitle => 'Delete my data?';
+
+  @override
+  String get deleteDataConfirmBody =>
+      'This permanently deletes your anonymous account and removes your printers and notification settings from the cloud. Your printers will need to be paired again. This can\'t be undone.';
+
+  @override
+  String get deleteDataDone => 'Your data has been deleted';
+
+  @override
+  String get deleteDataError => 'Couldn\'t delete your data. Please try again.';
+
+  @override
   String get donationPromptTitle => 'Enjoying Moongate?';
 
   @override
