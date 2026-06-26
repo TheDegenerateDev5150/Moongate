@@ -10,6 +10,7 @@ import 'services/ota_installer.dart';
 import 'services/print_notification_service.dart';
 import 'services/printer_liveness_service.dart';
 import 'services/printer_registry.dart';
+import 'services/push_notification_service.dart';
 import 'services/supabase_service.dart';
 
 void main() async {
@@ -72,6 +73,12 @@ void main() async {
   // offline printers and skip minting tokens for them — keeping an offline Pi at
   // zero Edge Function cost. No-ops until the anon session lands, then self-starts.
   PrinterLivenessService.instance.start();
+
+  // iOS background push notifications: ask for permission and register this
+  // device's APNs token so the cloud can alert it when a print finishes. iOS
+  // only (Android keeps its foreground-service notifications); a no-op there
+  // and best-effort everywhere (degrades silently without a paid Apple account).
+  PushNotificationService.instance.start();
 
   // Clean up the APK left behind by a previous in-app update. By now its install
   // has finished (or was declined), so the ~80 MB file is just dead weight in

@@ -278,6 +278,31 @@ class SupabaseService {
     _log('Feedback submitted');
   }
 
+  // ── Push notifications ──────────────────────────────────────────────────────
+
+  /// Register (or refresh) this device's push token via the register-push-token
+  /// Edge Function — clients can't write the device_push_tokens table directly
+  /// (same lockdown as every other table here). [platform] is 'ios' or
+  /// 'android'.
+  ///
+  /// Best effort: failures are logged, not thrown. A missing notification is
+  /// never worth disrupting startup, and the app re-registers on the next
+  /// launch anyway.
+  Future<void> registerPushToken({
+    required String token,
+    required String platform,
+  }) async {
+    try {
+      await client.functions.invoke(
+        'register-push-token',
+        body: {'token': token, 'platform': platform},
+      );
+      _log('Push token registered ($platform)');
+    } catch (e) {
+      _log('register-push-token failed (will retry next launch): $e');
+    }
+  }
+
   // ── Backup restore grants ──────────────────────────────────────────────────
 
   /// Mint a single-use restore code for the current identity (called when
