@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -27,6 +28,13 @@ class UpdateService {
       'https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/APK/latest_version.json';
 
   Future<UpdateInfo?> checkForUpdate() async {
+    // Android only: this self-update path tracks the GitHub APK build. On iOS
+    // the App Store handles updates, and the manifest's build number / apk_url
+    // refer to the Android build — surfacing them on an iPhone is meaningless
+    // (you can't install an APK) and pointing users at an off-store download is
+    // an App Store review risk. Returning null suppresses the update banner and
+    // the in-app updater on iOS; the "What's new" changelog still shows.
+    if (!Platform.isAndroid) return null;
     try {
       final info          = await PackageInfo.fromPlatform();
       final installedBuild = int.tryParse(info.buildNumber) ?? 0;
