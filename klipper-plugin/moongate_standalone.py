@@ -63,7 +63,7 @@ logger = logging.getLogger("moonraker.moongate")
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running — the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.10"
+MOONGATE_PLUGIN_VERSION = "0.6.11"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -514,6 +514,26 @@ class SupabaseClient:
             "signature":     signature_b64,
         })
 
+    def send_push(
+        self,
+        pi_public_key_b64: str,
+        event: str,
+        detail: str,
+        timestamp: int,
+        signature_b64: str,
+    ) -> tuple[int, dict]:
+        """Tell the cloud a print changed state so it can push a notification
+        to the owner's phone(s). Pi-signed, verified server-side against
+        pi_public_key exactly like the heartbeat. Fires only on real events
+        (start / finish / fail), so it's a trickle, not a poll."""
+        return self._post("/send-push", {
+            "pi_public_key": pi_public_key_b64,
+            "event":         event,
+            "detail":        detail,
+            "timestamp":     timestamp,
+            "signature":     signature_b64,
+        })
+
     def release_pi_signed(
         self,
         pi_public_key_b64: str,
@@ -705,6 +725,111 @@ class HeartbeatLoop:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# PrintEventWatcher — local print-state watch → push notifications
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class PrintEventWatcher:
+    """Polls Moonraker's print_stats locally and, on a meaningful state change
+    (a print starting, finishing, or failing), sends a Pi-signed event to the
+    send-push Edge Function so the printer owner's iPhone gets a background
+    alert.
+
+    Detection is entirely local — we poll our own Moonraker, never the cloud —
+    so the only Supabase call is the one-shot send when an event actually fires
+    (~2 per print, not a continuous stream). Signed with the same Ed25519
+    device key as the heartbeat; the server verifies it identically.
+
+    Unpaired / pre-APNs Pis degrade quietly: the send simply 404s (no printer
+    row server-side), and we log at debug and carry on."""
+
+    # Local poll cadence. A localhost call is cheap, so this is small enough to
+    # catch a finished print promptly without being chatty.
+    _POLL_INTERVAL = 20
+
+    def __init__(self, device: DeviceKey, sb: SupabaseClient, moonraker_port: int = 7125) -> None:
+        self.device = device
+        self.sb     = sb
+        self.port   = moonraker_port
+        self._task: Optional[asyncio.Task] = None
+        # Last print_stats.state we saw. None until the first poll, which only
+        # establishes a baseline — we never fire an event for whatever state
+        # the printer happens to be in when the plugin loads.
+        self._last_state: Optional[str] = None
+
+    def start(self) -> None:
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            logger.warning("No running event loop; print watcher will be deferred")
+            return
+        self._task = loop.create_task(self._run())
+
+    async def _run(self) -> None:
+        loop = asyncio.get_event_loop()
+        while True:
+            try:
+                state, filename = await loop.run_in_executor(None, self._poll_print_state)
+                if state is not None and state != self._last_state:
+                    event = self._event_for(self._last_state, state)
+                    self._last_state = state
+                    if event:
+                        await loop.run_in_executor(None, self._send_event, event, filename)
+            except asyncio.CancelledError:
+                return
+            except Exception as exc:
+                logger.warning("Print watcher iteration crashed: %s", exc)
+            try:
+                await asyncio.sleep(self._POLL_INTERVAL)
+            except asyncio.CancelledError:
+                return
+
+    @staticmethod
+    def _event_for(prev: Optional[str], state: str) -> Optional[str]:
+        """Map a print_stats transition to a push event, or None for the ones
+        we don't alert on. prev is None on the first poll (baseline, no event).
+        A user-initiated 'cancelled' is deliberately not alerted in v1, and a
+        'paused' → 'printing' resume is not treated as a fresh start."""
+        if prev is None:
+            return None
+        if state == "printing" and prev != "paused":
+            return "started"
+        if state == "complete":
+            return "completed"
+        if state == "error":
+            return "failed"
+        return None
+
+    def _poll_print_state(self) -> tuple[Optional[str], str]:
+        """Read print_stats.state and .filename from the local Moonraker.
+        Returns (None, "") on any failure so the loop simply skips this tick
+        without disturbing the baseline."""
+        try:
+            url = f"http://127.0.0.1:{self.port}/printer/objects/query?print_stats"
+            with urllib.request.urlopen(url, timeout=5) as resp:
+                data = json.loads(resp.read().decode())
+            ps = data["result"]["status"]["print_stats"]
+            return ps.get("state"), (ps.get("filename") or "")
+        except Exception as exc:
+            logger.debug("print_stats poll failed: %s", exc)
+            return None, ""
+
+    def _send_event(self, event: str, filename: str) -> None:
+        ts        = int(time.time())
+        pk_b64    = self.device.public_key_b64
+        detail    = (filename or "")[:200]
+        canonical = f"moongate-push\n{pk_b64}\n{event}\n{detail}\n{ts}".encode()
+        sig_b64   = self.device.sign_b64(canonical)
+
+        status, body = self.sb.send_push(pk_b64, event, detail, ts, sig_b64)
+        if status in (200, 204):
+            logger.info("Push event '%s' sent", event)
+        elif status == 404:
+            logger.debug("Push event '%s' skipped — printer not paired server-side", event)
+        else:
+            logger.warning("Push event '%s' failed: HTTP %s %s", event, status, body)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # PendingPair — the active enrollment-token session
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -747,6 +872,7 @@ class MoongatePlugin:
             int(self._config["heartbeat_interval_seconds"]),
             on_unpaired_cb=self._on_unpaired,
         )
+        self.watcher   = PrintEventWatcher(self.device, self.sb)
 
         self._pending: Optional[PendingPair]   = None
         self._chamber_key: Optional[str]       = None
@@ -764,9 +890,10 @@ class MoongatePlugin:
         self.server.register_remote_method("moongate_generate_pair_code", self._klipper_pair)
         self.server.register_remote_method("moongate_reset_owner",        self._klipper_reset_owner)
 
-        # Bootstrap JWKS (best effort) and start the heartbeat loop
+        # Bootstrap JWKS (best effort) and start the heartbeat + print-watch loops
         self.jwks.fetch_now()
         self.heartbeat.start()
+        self.watcher.start()
 
         owner_str = (
             f"{self.owner.owner_user_id[:8]}.../{self.owner.printer_id[:8]}..."
