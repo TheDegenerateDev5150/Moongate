@@ -303,6 +303,23 @@ class SupabaseService {
     }
   }
 
+  // ── Account deletion ────────────────────────────────────────────────────────
+
+  /// Delete the current anonymous account and every cloud record tied to it
+  /// (printers, push tokens, enrollment tokens; bug reports are de-identified).
+  /// Backs the in-app "Delete my data" action (App Store guideline 5.1.1(v)).
+  ///
+  /// After the server deletes the auth user, the local session is invalid, so
+  /// we sign out and start a FRESH anonymous identity — the app keeps working
+  /// with an empty slate. Throws on failure so the UI can surface an error.
+  Future<void> deleteAccount() async {
+    await client.functions.invoke('delete-account');
+    await client.auth.signOut();
+    signedIn.value = false;
+    _log('Account deleted; signing in fresh anonymous identity');
+    await _trySignIn();
+  }
+
   // ── Backup restore grants ──────────────────────────────────────────────────
 
   /// Mint a single-use restore code for the current identity (called when

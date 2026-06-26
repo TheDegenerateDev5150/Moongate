@@ -85,6 +85,41 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     PrintNotificationService.instance.refreshNow().ignore();
   }
 
+  /// Confirm + perform "Delete my data": wipes the anonymous account and all
+  /// its cloud records, clears the local printer list, and carries on with a
+  /// fresh anonymous identity. App Store guideline 5.1.1(v).
+  Future<void> _confirmDeleteData(BuildContext context) async {
+    final l         = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.deleteDataConfirmTitle),
+        content: Text(l.deleteDataConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.commonCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await SupabaseService.instance.deleteAccount();
+      await PrinterRegistry.instance.clear();
+      _load();
+      messenger.showSnackBar(SnackBar(content: Text(l.deleteDataDone)));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l.deleteDataError)));
+    }
+  }
+
   /// Persist a drag-to-reorder from the dashboard grid (manual mode only).
   /// reorderable_grid_view reports the *final* index directly, so this is a
   /// plain removeAt/insert — no ReorderableListView-style `-1` fix-up. The new
@@ -869,6 +904,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         showLanguagePicker(context);
+                      },
+                    ),
+
+                    const Divider(),
+
+                    // Account/data deletion (App Store guideline 5.1.1(v)):
+                    // wipes the anonymous account and its cloud records.
+                    // Destructive, so it lives at the very bottom behind a
+                    // confirmation dialog.
+                    ListTile(
+                      leading: const Icon(Icons.delete_forever_outlined,
+                          color: Colors.redAccent),
+                      title: Text(l.dashboardDeleteData,
+                          style: const TextStyle(color: Colors.redAccent)),
+                      subtitle: Text(l.dashboardDeleteDataSubtitle),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _confirmDeleteData(context);
                       },
                     ),
                   ],
