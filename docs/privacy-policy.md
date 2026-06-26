@@ -1,7 +1,7 @@
 # Moongate Privacy Policy
 
-**Effective date:** _[EFFECTIVE DATE — set on publish]_
-**Last updated:** _[EFFECTIVE DATE]_
+**Effective date:** 26 June 2026
+**Last updated:** 26 June 2026
 
 Moongate ("the app", "we", "us") is a free, open-source app for monitoring and
 controlling your own Klipper/Moonraker 3D printers from your phone. This policy
@@ -9,8 +9,8 @@ explains exactly what data the app handles, why, where it goes, and your
 choices. It is written to be accurate to what the app actually does — nothing
 more is collected than is described here.
 
-**Data controller:** _[CONTROLLER NAME — the developer/individual or entity]_
-**Contact:** _[CONTACT EMAIL]_
+**Data controller:** Moongate
+**Contact:** psychoshaft@live.co.uk
 
 ---
 
@@ -179,4 +179,4 @@ effective date. Material changes will be noted in the app's release notes.
 ## 10. Contact
 
 Questions or requests about this policy or your data:
-_[CONTACT EMAIL]_
+psychoshaft@live.co.uk
