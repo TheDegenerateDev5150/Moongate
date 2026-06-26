@@ -825,19 +825,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         context.push('/settings/app-lock');
                       },
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.coffee_outlined,
-                          color: Colors.amber),
-                      title: Text(l.dashboardBuyMeCoffee),
-                      subtitle: Text(l.dashboardBuyMeCoffeeSubtitle),
-                      onTap: () async {
-                        Navigator.pop(context);
-                        await launchUrl(
-                          Uri.parse(kDonationUrl),
-                          mode: LaunchMode.externalApplication,
-                        );
-                      },
-                    ),
+                    // Hidden on iOS: Apple rejects in-app donation links to
+                    // the developer, so the tip jar is Android-only.
+                    if (Platform.isAndroid)
+                      ListTile(
+                        leading: const Icon(Icons.coffee_outlined,
+                            color: Colors.amber),
+                        title: Text(l.dashboardBuyMeCoffee),
+                        subtitle: Text(l.dashboardBuyMeCoffeeSubtitle),
+                        onTap: () async {
+                          Navigator.pop(context);
+                          await launchUrl(
+                            Uri.parse(kDonationUrl),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        },
+                      ),
 
                     const Divider(),
 
@@ -1227,6 +1230,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// [_donationPromptedKey] flag is a first-run flag, so it's excluded from
   /// backups and can't carry over to a fresh install.
   Future<void> _maybeShowDonationPrompt() async {
+    // Apple rejects in-app donation links to the developer, so the first-run
+    // tip-jar nudge is Android-only. (The drawer item is guarded the same way.)
+    if (!Platform.isAndroid) return;
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_donationPromptedKey) ?? false) return;
     if (PrinterRegistry.instance.printers.isEmpty) return;
