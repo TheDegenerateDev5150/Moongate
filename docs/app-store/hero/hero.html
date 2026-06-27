@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1320px; height:2868px; }
+  .stage {
+    position:relative; width:1320px; height:2868px; overflow:hidden;
+    background:#0E0E10;
+    font-family:-apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .glow {
+    position:absolute; left:50%; top:1180px; transform:translateX(-50%);
+    width:1700px; height:1700px; border-radius:50%;
+    background:radial-gradient(circle,
+      rgba(255,59,48,0.30) 0%, rgba(255,59,48,0.12) 34%, rgba(255,59,48,0) 64%);
+    filter:blur(10px);
+  }
+  .wordmark {
+    position:absolute; top:150px; width:100%; text-align:center;
+    color:#FF3B30; font-weight:800; letter-spacing:16px; font-size:44px;
+  }
+  .headline {
+    position:absolute; top:266px; width:100%; text-align:center;
+    color:#ffffff; font-weight:800; font-size:118px; line-height:1.02;
+    letter-spacing:-3px;
+  }
+  .headline .red { color:#FF3B30; }
+  .subtitle {
+    position:absolute; top:586px; left:150px; right:150px; text-align:center;
+    color:rgba(255,255,255,0.56); font-weight:500; font-size:44px; line-height:1.42;
+  }
+  .phone {
+    position:absolute; top:872px; left:50%; transform:translateX(-50%);
+    width:1004px; border-radius:78px; border:14px solid #1c1c20;
+    box-shadow:0 44px 130px rgba(255,59,48,0.38), 0 0 0 2px rgba(255,255,255,0.05);
+    overflow:hidden; background:#000;
+  }
+  .phone img { display:block; width:100%; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="glow"></div>
+    <div class="wordmark">MOONGATE</div>
+    <div class="headline">Your 3D printers,<br><span class="red">anywhere.</span></div>
+    <div class="subtitle">Live webcam, full control and push alerts for every Klipper machine, straight from your iPhone.</div>
+    <div class="phone"><img src="shot.png"></div>
+  </div>
+</body>
+</html>
