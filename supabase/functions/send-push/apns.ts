@@ -10,8 +10,14 @@
 //   MOONGATE_APNS_KEY_ID    the 10-char Key ID for that .p8
 //   MOONGATE_APNS_TEAM_ID   the 10-char Apple Team ID
 //   MOONGATE_APNS_BUNDLE_ID the app bundle id, used as apns-topic (com.moongate.app.moongate)
-//   MOONGATE_APNS_HOST      optional; defaults to api.push.apple.com
-//                           (use api.sandbox.push.apple.com for dev builds)
+//   MOONGATE_APNS_HOST      optional; which APNs host to TRY FIRST. Defaults to
+//                           the production host. A device token belongs to one
+//                           environment (sandbox for dev/local builds,
+//                           production for TestFlight + App Store) and the two
+//                           are indistinguishable server-side, so sendApns falls
+//                           back to the other host on BadDeviceToken — meaning
+//                           one deploy serves dev and shipped builds at once and
+//                           this secret never has to be flipped.
 //
 // NOTE: untestable end to end until the $99 Apple Developer account exists
 // (the .p8 key is issued there). The structure follows Apple's documented
@@ -19,7 +25,8 @@
 
 import { base64ToBytes } from "../_shared/cryptoUtils.ts";
 
-const DEFAULT_HOST = "api.push.apple.com";
+const PROD_HOST = "api.push.apple.com";
+const SANDBOX_HOST = "api.sandbox.push.apple.com";
 
 // APNs JWTs are valid up to 60 min and Apple rejects regenerating them too
 // often, so we sign once and reuse for ~50 min.
@@ -106,12 +113,15 @@ export interface ApnsAlert {
   body: string;
 }
 
-// Deliver one alert to one device token.
-export async function sendApns(deviceToken: string, alert: ApnsAlert): Promise<ApnsResult> {
-  const host = Deno.env.get("MOONGATE_APNS_HOST") || DEFAULT_HOST;
-  const topic = env("MOONGATE_APNS_BUNDLE_ID");
-  const jwt = await providerToken();
-
+// One POST of one alert to one APNs host. Returns the raw status and APNs
+// reason string (empty on success or a body-less response).
+async function postToHost(
+  host: string,
+  deviceToken: string,
+  topic: string,
+  jwt: string,
+  alert: ApnsAlert,
+): Promise<{ status: number; reason: string }> {
   const res = await fetch(`https://${host}/3/device/${deviceToken}`, {
     method: "POST",
     headers: {
@@ -127,7 +137,7 @@ export async function sendApns(deviceToken: string, alert: ApnsAlert): Promise<A
 
   if (res.status === 200) {
     await res.body?.cancel();
-    return { ok: true, unregistered: false, status: 200 };
+    return { status: 200, reason: "" };
   }
 
   let reason = "";
@@ -136,7 +146,38 @@ export async function sendApns(deviceToken: string, alert: ApnsAlert): Promise<A
   } catch {
     // no/!json body
   }
-  const unregistered = res.status === 410 || reason === "BadDeviceToken" ||
-    reason === "Unregistered";
-  return { ok: false, unregistered, status: res.status, reason };
+  return { status: res.status, reason };
+}
+
+// Deliver one alert to one device token, picking the APNs environment
+// automatically. A token is only valid against the host matching the build it
+// came from (sandbox for dev/local, production for TestFlight + App Store), and
+// APNs answers 400 BadDeviceToken when a token hits the wrong host. Since the
+// two environments can't be told apart server-side, we try the preferred host
+// (MOONGATE_APNS_HOST, default production) and retry the other on BadDeviceToken
+// before treating the token as dead. One deploy thus serves dev and shipped
+// builds simultaneously, with no host secret to flip.
+export async function sendApns(deviceToken: string, alert: ApnsAlert): Promise<ApnsResult> {
+  const topic = env("MOONGATE_APNS_BUNDLE_ID");
+  const jwt = await providerToken();
+
+  const primary = Deno.env.get("MOONGATE_APNS_HOST") || PROD_HOST;
+  const secondary = primary === PROD_HOST ? SANDBOX_HOST : PROD_HOST;
+
+  const r = await postToHost(primary, deviceToken, topic, jwt, alert);
+  if (r.status === 200) return { ok: true, unregistered: false, status: 200 };
+
+  // Wrong environment — the token belongs to the other host. Retry there before
+  // giving up; only a failure in BOTH environments means it is truly dead.
+  if (r.reason === "BadDeviceToken") {
+    const r2 = await postToHost(secondary, deviceToken, topic, jwt, alert);
+    if (r2.status === 200) return { ok: true, unregistered: false, status: 200 };
+    const unregistered = r2.status === 410 || r2.reason === "BadDeviceToken" ||
+      r2.reason === "Unregistered";
+    return { ok: false, unregistered, status: r2.status, reason: r2.reason };
+  }
+
+  // 410 Unregistered (app uninstalled) on the matching environment → prune.
+  const unregistered = r.status === 410 || r.reason === "Unregistered";
+  return { ok: false, unregistered, status: r.status, reason: r.reason };
 }
