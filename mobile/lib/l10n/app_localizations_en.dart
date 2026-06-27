@@ -610,6 +610,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get dashboardPairingHelpPluginTitle => 'First: install the Pi plugin';
+
+  @override
+  String get dashboardPairingHelpPluginBody =>
+      'Moongate needs its plugin running on your Klipper printer before you can pair. If you haven\'t installed it yet, open the quick-start guide.';
+
+  @override
+  String get dashboardPairingHelpPluginAction => 'Open the setup guide';
+
+  @override
   String get dashboardPairingHelpPairOnceTitle => 'Pair once';
 
   @override

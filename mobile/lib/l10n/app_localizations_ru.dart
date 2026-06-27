@@ -617,6 +617,17 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get dashboardPairingHelpPluginTitle =>
+      'Сначала: установите плагин для Pi';
+
+  @override
+  String get dashboardPairingHelpPluginBody =>
+      'Moongate требует, чтобы его плагин работал на вашем принтере Klipper до сопряжения. Если вы ещё не установили его, откройте руководство по быстрому старту.';
+
+  @override
+  String get dashboardPairingHelpPluginAction => 'Открыть руководство';
+
+  @override
   String get dashboardPairingHelpPairOnceTitle => 'Сопряжение — один раз';
 
   @override
