@@ -144,9 +144,17 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
         data: MediaQuery.of(context).copyWith(
           textScaler: TextScaler.linear(fontScale),
         ),
-        // The app-lock overlay sits above the router's Navigator, so no route
-        // can render without the lock and the underlying screen is preserved.
-        child: AppLockGate(child: child!),
+        // Scale icons by the same factor as text. An Icon defaults to a fixed
+        // pixel size; applyTextScaling multiplies that by the ambient textScaler,
+        // so the display-size slider grows text and icons together across the
+        // whole app rather than fonts alone. Merged at the root so every Icon
+        // inherits it (a widget can still opt out with applyTextScaling: false).
+        child: IconTheme.merge(
+          data: const IconThemeData(applyTextScaling: true),
+          // The app-lock overlay sits above the router's Navigator, so no route
+          // can render without the lock and the underlying screen is preserved.
+          child: AppLockGate(child: child!),
+        ),
       ),
     );
   }

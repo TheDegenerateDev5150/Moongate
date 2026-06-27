@@ -404,7 +404,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardCustomiseColoursSubtitle => '编辑五个主题色槽 — HEX 或调色板';
 
   @override
-  String get dashboardFontSizeHeading => '字体大小';
+  String get dashboardFontSizeHeading => '显示大小';
 
   @override
   String get dashboardLayoutHeading => '仪表盘布局';

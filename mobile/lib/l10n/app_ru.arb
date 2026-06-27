@@ -142,7 +142,7 @@
   "dashboardThemeCustom": "Своя",
   "dashboardCustomiseColours": "Настроить цвета",
   "dashboardCustomiseColoursSubtitle": "Измените пять цветов темы — HEX или палитра",
-  "dashboardFontSizeHeading": "Размер шрифта",
+  "dashboardFontSizeHeading": "Размер интерфейса",
   "dashboardLayoutHeading": "Вид панели",
   "dashboardColumnCount": "{count} стлб.",
   "dashboardRotateWithDevice": "Поворот с устройством",

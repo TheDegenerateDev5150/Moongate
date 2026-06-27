@@ -419,7 +419,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Edit the five theme slots — HEX or palette';
 
   @override
-  String get dashboardFontSizeHeading => 'Font size';
+  String get dashboardFontSizeHeading => 'Display size';
 
   @override
   String get dashboardLayoutHeading => 'Dashboard layout';

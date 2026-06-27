@@ -142,7 +142,7 @@
   "dashboardThemeCustom": "自定义",
   "dashboardCustomiseColours": "自定义配色",
   "dashboardCustomiseColoursSubtitle": "编辑五个主题色槽 — HEX 或调色板",
-  "dashboardFontSizeHeading": "字体大小",
+  "dashboardFontSizeHeading": "显示大小",
   "dashboardLayoutHeading": "仪表盘布局",
   "dashboardColumnCount": "{count} 列",
   "dashboardRotateWithDevice": "随设备旋转",

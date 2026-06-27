@@ -1022,6 +1022,10 @@ class _EstopButton extends ConsumerWidget {
     final c = ref.watch(themeModeProvider) == AppThemeMode.custom
         ? ref.watch(customThemeProvider).estop
         : Colors.red;
+    // Scale the ring with the display-size slider so it tracks its icon (which
+    // scales via applyTextScaling). Base kept compact — it was oversized and
+    // frozen before.
+    final ring = MediaQuery.textScalerOf(context).scale(24);
     return Tooltip(
       message: tooltip,
       child: GestureDetector(
@@ -1029,15 +1033,15 @@ class _EstopButton extends ConsumerWidget {
         onTap: () {}, // swallow single taps — must not fire or navigate
         onDoubleTap: onFire,
         child: Container(
-          width: 28,
-          height: 28,
+          width: ring,
+          height: ring,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: c.withValues(alpha: 0.15),
             shape: BoxShape.circle,
             border: Border.all(color: c, width: 2),
           ),
-          child: Icon(Icons.warning_rounded, color: c, size: 16),
+          child: Icon(Icons.warning_rounded, color: c, size: 14),
         ),
       ),
     );
@@ -1061,15 +1065,15 @@ class _RestartButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          width: 28,
-          height: 28,
+          width: MediaQuery.textScalerOf(context).scale(24),
+          height: MediaQuery.textScalerOf(context).scale(24),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.orange.withValues(alpha: 0.15),
             shape: BoxShape.circle,
             border: Border.all(color: Colors.orange, width: 2),
           ),
-          child: const Icon(Icons.restart_alt, color: Colors.orange, size: 16),
+          child: const Icon(Icons.restart_alt, color: Colors.orange, size: 14),
         ),
       ),
     );
@@ -1366,19 +1370,29 @@ class _TempChip extends StatelessWidget {
     // colour (orange/blue/teal) on the icon while it has a target set.
     const neutral = Colors.blueGrey;
     final muted   = neutral.withValues(alpha: 0.7);
+    final iconWidget = Icon(icon, size: 13, color: target > 0 ? color : muted);
+    final valueWidget = Text(
+      '${temp.toStringAsFixed(0)}°',
+      style: TextStyle(
+        fontSize: 12,
+        color: target > 0 ? neutral : muted,
+      ),
+    );
+
+    // With the display-size slider turned up, three "icon value" chips in one
+    // row overflow a narrow tile. Past a threshold, stack each chip vertically
+    // (icon over value) so the three read as two tidy rows — icons on top,
+    // values beneath — instead of running off the edge.
+    final stacked = MediaQuery.textScalerOf(context).scale(1.0) >= 1.15;
+    if (stacked) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [iconWidget, const SizedBox(height: 1), valueWidget],
+      );
+    }
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: target > 0 ? color : muted),
-        const SizedBox(width: 2),
-        Text(
-          '${temp.toStringAsFixed(0)}°',
-          style: TextStyle(
-            fontSize: 12,
-            color: target > 0 ? neutral : muted,
-          ),
-        ),
-      ],
+      children: [iconWidget, const SizedBox(width: 2), valueWidget],
     );
   }
 }

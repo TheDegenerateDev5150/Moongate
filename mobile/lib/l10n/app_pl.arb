@@ -142,7 +142,7 @@
   "dashboardThemeCustom": "Niestandardowy",
   "dashboardCustomiseColours": "Dostosuj kolory",
   "dashboardCustomiseColoursSubtitle": "Edytuj pięć slotów motywu — HEX lub paleta",
-  "dashboardFontSizeHeading": "Rozmiar czcionki",
+  "dashboardFontSizeHeading": "Rozmiar interfejsu",
   "dashboardLayoutHeading": "Układ pulpitu",
   "dashboardColumnCount": "{count} kol.",
   "dashboardRotateWithDevice": "Obracaj z urządzeniem",

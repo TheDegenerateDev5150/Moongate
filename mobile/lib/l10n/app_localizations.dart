@@ -848,10 +848,10 @@ abstract class AppLocalizations {
   /// **'Edit the five theme slots — HEX or palette'**
   String get dashboardCustomiseColoursSubtitle;
 
-  /// Section heading for the font-size slider in the drawer.
+  /// Section heading for the display-size slider in the drawer (scales both text and icons).
   ///
   /// In en, this message translates to:
-  /// **'Font size'**
+  /// **'Display size'**
   String get dashboardFontSizeHeading;
 
   /// Section heading for dashboard layout options in the drawer.

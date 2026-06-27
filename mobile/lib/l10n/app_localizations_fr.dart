@@ -427,7 +427,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Modifier les cinq emplacements du thème — HEX ou palette';
 
   @override
-  String get dashboardFontSizeHeading => 'Taille de police';
+  String get dashboardFontSizeHeading => 'Taille d\'affichage';
 
   @override
   String get dashboardLayoutHeading => 'Disposition du tableau de bord';
