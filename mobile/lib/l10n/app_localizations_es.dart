@@ -424,7 +424,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Edita los cinco espacios de color del tema — HEX o paleta';
 
   @override
-  String get dashboardFontSizeHeading => 'Tamaño de fuente';
+  String get dashboardFontSizeHeading => 'Tamaño de visualización';
 
   @override
   String get dashboardLayoutHeading => 'Diseño del panel';

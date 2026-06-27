@@ -424,7 +424,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bearbeite die fünf Design-Slots — HEX oder Palette';
 
   @override
-  String get dashboardFontSizeHeading => 'Schriftgröße';
+  String get dashboardFontSizeHeading => 'Anzeigegröße';
 
   @override
   String get dashboardLayoutHeading => 'Dashboard-Layout';

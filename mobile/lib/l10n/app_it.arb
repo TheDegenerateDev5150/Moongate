@@ -142,7 +142,7 @@
   "dashboardThemeCustom": "Personalizzato",
   "dashboardCustomiseColours": "Personalizza colori",
   "dashboardCustomiseColoursSubtitle": "Modifica i cinque slot del tema — HEX o tavolozza",
-  "dashboardFontSizeHeading": "Dimensione carattere",
+  "dashboardFontSizeHeading": "Dimensione del display",
   "dashboardLayoutHeading": "Layout dashboard",
   "dashboardColumnCount": "{count} col",
   "dashboardRotateWithDevice": "Ruota con il dispositivo",

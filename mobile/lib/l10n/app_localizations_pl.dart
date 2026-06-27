@@ -423,7 +423,7 @@ class AppLocalizationsPl extends AppLocalizations {
       'Edytuj pięć slotów motywu — HEX lub paleta';
 
   @override
-  String get dashboardFontSizeHeading => 'Rozmiar czcionki';
+  String get dashboardFontSizeHeading => 'Rozmiar interfejsu';
 
   @override
   String get dashboardLayoutHeading => 'Układ pulpitu';

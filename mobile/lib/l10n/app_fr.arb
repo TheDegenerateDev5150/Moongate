@@ -142,7 +142,7 @@
   "dashboardThemeCustom": "Personnalisé",
   "dashboardCustomiseColours": "Personnaliser les couleurs",
   "dashboardCustomiseColoursSubtitle": "Modifier les cinq emplacements du thème — HEX ou palette",
-  "dashboardFontSizeHeading": "Taille de police",
+  "dashboardFontSizeHeading": "Taille d'affichage",
   "dashboardLayoutHeading": "Disposition du tableau de bord",
   "dashboardColumnCount": "{count} col.",
   "dashboardRotateWithDevice": "Pivoter avec l'appareil",

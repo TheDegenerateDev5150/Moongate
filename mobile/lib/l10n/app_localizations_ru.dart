@@ -421,7 +421,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Измените пять цветов темы — HEX или палитра';
 
   @override
-  String get dashboardFontSizeHeading => 'Размер шрифта';
+  String get dashboardFontSizeHeading => 'Размер интерфейса';
 
   @override
   String get dashboardLayoutHeading => 'Вид панели';

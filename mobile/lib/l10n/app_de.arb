@@ -142,7 +142,7 @@
   "dashboardThemeCustom": "Benutzerdefiniert",
   "dashboardCustomiseColours": "Farben anpassen",
   "dashboardCustomiseColoursSubtitle": "Bearbeite die fünf Design-Slots — HEX oder Palette",
-  "dashboardFontSizeHeading": "Schriftgröße",
+  "dashboardFontSizeHeading": "Anzeigegröße",
   "dashboardLayoutHeading": "Dashboard-Layout",
   "dashboardColumnCount": "{count} Sp.",
   "dashboardRotateWithDevice": "Mit Gerät drehen",

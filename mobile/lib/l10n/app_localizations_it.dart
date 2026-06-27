@@ -422,7 +422,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Modifica i cinque slot del tema — HEX o tavolozza';
 
   @override
-  String get dashboardFontSizeHeading => 'Dimensione carattere';
+  String get dashboardFontSizeHeading => 'Dimensione del display';
 
   @override
   String get dashboardLayoutHeading => 'Layout dashboard';
