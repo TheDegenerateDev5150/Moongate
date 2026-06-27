@@ -8,7 +8,7 @@ import '../../services/print_control_service.dart';
 
 /// Bottom-sheet G-code browser. Lists the files already stored on the printer
 /// (Moonraker's `gcodes` root), lets the user pick one, and starts it after a
-/// confirmation. Opened from the folder button on an online-and-ready tile —
+/// confirmation. Opened from the folder button on an online-and-ready tile -
 /// see `printer_tile.dart`. The button itself is hidden while a print is
 /// running, so this sheet is only ever reached when the printer can accept a
 /// new job.
@@ -249,7 +249,7 @@ class _GcodeFilesSheetState extends State<_GcodeFilesSheet> {
     );
   }
 
-  /// "subfolder · 12 Jun 2026 · 4.2 MB" — parts omitted when unknown.
+  /// "subfolder · 12 Jun 2026 · 4.2 MB" - parts omitted when unknown.
   String _subtitle(BuildContext context, GcodeFile f) {
     final parts = <String>[];
     if (f.folder != null) parts.add(f.folder!);
@@ -330,7 +330,7 @@ class _GcodeThumb extends StatelessWidget {
               return Image.memory(bytes,
                   fit: BoxFit.cover, gaplessPlayback: true);
             }
-            // Loading, or the file has no embedded thumbnail — show a clear
+            // Loading, or the file has no embedded thumbnail - show a clear
             // glyph rather than the faint outline icon it replaces.
             return Icon(Icons.description,
                 size: 24, color: theme.colorScheme.onSurfaceVariant);

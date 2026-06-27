@@ -13,7 +13,7 @@ enum NotifField { progress, remaining, eta, hotend, bed }
 const String kNotifFieldsOrderKey = 'notif_fields_order';
 const String kNotifFieldsEnabledKey = 'notif_fields_enabled';
 
-/// When true, the persistent status notification lists ONLY online printers —
+/// When true, the persistent status notification lists ONLY online printers -
 /// offline / shut-down machines are filtered out of the roster. The foreground
 /// service keeps running regardless; this is purely a display filter. Read by
 /// both the settings switch (notifOnlineOnlyProvider) and the background isolate
@@ -38,7 +38,7 @@ class NotifFieldsConfig {
 
   const NotifFieldsConfig(this.order, this.enabled);
 
-  /// Default order — everything on, in the historic reading order.
+  /// Default order - everything on, in the historic reading order.
   static const List<NotifField> defaultOrder = [
     NotifField.progress,
     NotifField.remaining,
@@ -99,7 +99,7 @@ class NotifFieldsConfig {
       order.where(enabled.contains).map((f) => f.name).join(',');
 }
 
-/// A representative rendering of [f] for the settings-screen live preview — the
+/// A representative rendering of [f] for the settings-screen live preview - the
 /// real values come from the printer at notification time.
 String notifFieldExample(NotifField f) => switch (f) {
       NotifField.progress => '56%',

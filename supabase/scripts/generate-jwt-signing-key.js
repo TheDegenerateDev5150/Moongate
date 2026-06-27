@@ -3,7 +3,7 @@
 // Generates an Ed25519 keypair and prints the PRIVATE key as a JWK JSON
 // string. That JSON goes into MOONGATE_JWT_SIGNING_KEY (Supabase Edge
 // Functions secrets). The public key is derivable from the private key
-// and is automatically exposed via the /jwks Edge Function — you don't
+// and is automatically exposed via the /jwks Edge Function - you don't
 // need to copy it anywhere.
 //
 // Run from PowerShell:
@@ -27,7 +27,7 @@ privateJwk.use = "sig";
 const json = JSON.stringify(privateJwk);
 
 console.log("");
-console.log("MOONGATE_JWT_SIGNING_KEY (private JWK JSON — secret):");
+console.log("MOONGATE_JWT_SIGNING_KEY (private JWK JSON - secret):");
 console.log("");
 console.log("    " + json);
 console.log("");

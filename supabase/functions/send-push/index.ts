@@ -22,7 +22,7 @@
 // Canonical payload (UTF-8 bytes signed by Pi):
 //   "moongate-push\n" + pi_public_key + "\n" + event + "\n" + detail + "\n" + timestamp
 //
-// Response 204 on success (including "owner has no iOS devices" — nothing to do
+// Response 204 on success (including "owner has no iOS devices" - nothing to do
 // is still success). Errors mirror printer-heartbeat: 400 / 401 / 404 / 500.
 
 import { handleCorsPreflight } from "../_shared/cors.ts";
@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
     console.error("printer lookup error", pErr);
     return internalError();
   }
-  if (!printer) return notFound(); // unpaired / revoked — Pi should re-pair
+  if (!printer) return notFound(); // unpaired / revoked - Pi should re-pair
 
   // Fetch the owner's iOS device tokens.
   const { data: rows, error: tErr } = await db

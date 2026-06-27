@@ -2,12 +2,12 @@
 //
 // Backs the "Report a problem" item in the app drawer. Verifies the caller's
 // Supabase JWT (anonymous is fine), validates the payload, and inserts one
-// row into public.feedback via the service role — clients have no direct
+// row into public.feedback via the service role - clients have no direct
 // access to that table (see migration 20260609120000_feedback).
 //
 // The destination is the feedback table ONLY; nothing is sent anywhere else.
 // A future version could forward to GitHub / email from here without any app
-// change — that's the reason for the indirection instead of a direct insert.
+// change - that's the reason for the indirection instead of a direct insert.
 //
 // Caller MUST present a Supabase JWT (anonymous or otherwise) in the
 // Authorization header.
@@ -18,16 +18,16 @@
 //     "contact":      "<optional, how to reach the reporter>",
 //     "printer_name": "<optional, which printer the report is about>",
 //     "app_version":  "<optional, e.g. 0.6.2 (build 55)>",
-//     "platform":     "<optional, e.g. Android 14 (API 34) — samsung SM-S911B>",
+//     "platform":     "<optional, e.g. Android 14 (API 34) - samsung SM-S911B>",
 //     "diagnostics":  { ... }   // optional JSON object (printer list, counts…)
 //   }
 //
 // Response 200: { "ok": true }
 //
 // Errors:
-//   400 — malformed body / empty comment
-//   401 — no/invalid JWT
-//   500 — internal
+//   400 - malformed body / empty comment
+//   401 - no/invalid JWT
+//   500 - internal
 
 import { handleCorsPreflight } from "../_shared/cors.ts";
 import {

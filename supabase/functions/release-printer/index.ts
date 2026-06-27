@@ -16,10 +16,10 @@
 // Idempotent in both modes. 200 even if the row was already gone.
 //
 // Errors:
-//   400 — malformed body
-//   401 — user mode: missing/invalid JWT; Pi mode: bad signature or replay window
-//   404 — user mode only: printer exists but caller isn't the owner (constant shape)
-//   500 — internal
+//   400 - malformed body
+//   401 - user mode: missing/invalid JWT; Pi mode: bad signature or replay window
+//   404 - user mode only: printer exists but caller isn't the owner (constant shape)
+//   500 - internal
 
 import { handleCorsPreflight } from "../_shared/cors.ts";
 import {
@@ -78,7 +78,7 @@ async function handlePiSignedRelease(body: {
     return badRequest("invalid pi_public_key base64");
   }
 
-  // Replay window — mirrors printer-heartbeat (±60s on server clock).
+  // Replay window - mirrors printer-heartbeat (±60s on server clock).
   const now = Math.floor(Date.now() / 1000);
   if (Math.abs(now - timestamp) > REPLAY_WINDOW_SECONDS) {
     return unauthorized();

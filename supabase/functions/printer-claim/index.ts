@@ -18,17 +18,17 @@
 // defense-in-depth match against the server-side enrollment row.
 // The manual-code-entry path (camera failure fallback) omits it; the
 // server then trusts the enrollment_tokens row's own pi_public_key
-// (which IS the source of truth — see the claim_printer SQL).
+// (which IS the source of truth - see the claim_printer SQL).
 //
 // Response 200:
 //   { "printer_id": "<uuid>" }
 //
 // Errors:
-//   400 — malformed body
-//   401 — no/invalid JWT
-//   404 — token invalid for any reason (expired, used, mismatched, not found)
-//   409 — this Pi pubkey is already paired (use MOONGATE_RESET_OWNER on Pi)
-//   500 — internal
+//   400 - malformed body
+//   401 - no/invalid JWT
+//   404 - token invalid for any reason (expired, used, mismatched, not found)
+//   409 - this Pi pubkey is already paired (use MOONGATE_RESET_OWNER on Pi)
+//   500 - internal
 
 import { handleCorsPreflight } from "../_shared/cors.ts";
 import {

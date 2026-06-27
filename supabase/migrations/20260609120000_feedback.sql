@@ -1,4 +1,4 @@
--- Moongate v0.6.x — In-app feedback / bug reports table.
+-- Moongate v0.6.x - In-app feedback / bug reports table.
 --
 -- Backs the "Report a problem" item in the app drawer. The app POSTs a
 -- comment (+ optional contact, the printer it's about, and auto-collected
@@ -6,11 +6,11 @@
 -- here via the service role.
 --
 -- Consistent with the rest of the schema (see 20260526120000_v03_initial):
---   • Clients NEVER write directly — only the Edge Function (service role)
+--   • Clients NEVER write directly - only the Edge Function (service role)
 --     does, so ALL privileges are revoked from anon/authenticated and no
 --     RLS policy is defined. Reads happen in the dashboard / SQL editor.
 --   • user_id is the anonymous submitter. ON DELETE SET NULL (not CASCADE)
---     so a report survives the 6-week orphan-user cleanup sweep — the text
+--     so a report survives the 6-week orphan-user cleanup sweep - the text
 --     is what we care about, not the throwaway anon identity.
 --
 -- Idempotent (IF NOT EXISTS). Safe to re-run.

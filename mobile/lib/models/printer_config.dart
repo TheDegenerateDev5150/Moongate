@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-/// v0.3.0 printer config — minimal.
+/// v0.3.0 printer config - minimal.
 ///
 /// In v0.2.x this held the printer's local IP, the Pi-issued HS256 token,
 /// and a Cloudflare tunnel URL. v0.3.0 mediates every call through
@@ -38,14 +38,14 @@ class PrinterConfig {
   final int  webcamRotation; // 0 | 90 | 180 | 270
   final int  webcamTargetFps;
 
-  /// 'mainsail' | 'fluidd' | null — sniffed once on first successful poll.
+  /// 'mainsail' | 'fluidd' | null - sniffed once on first successful poll.
   /// Persisted so the tile can show the right logo on a cold launch
   /// (e.g. when the printer is powered off and the tile would otherwise
   /// be a blank spinner).
   final String? uiType;
 
   /// User-supplied camera override, set from the gear on the dashboard tile.
-  /// An absolute URL to a camera on the LAN that Klipper doesn't serve — e.g.
+  /// An absolute URL to a camera on the LAN that Klipper doesn't serve - e.g.
   /// an old phone running an IP-webcam app at
   /// `http://192.168.0.107:8080/video`. When set it takes priority over the
   /// Pi-reported webcam: fetched directly on LAN, or routed through the Pi's
@@ -55,7 +55,7 @@ class PrinterConfig {
   final String? customCameraUrl;
 
   /// Macro names the user has starred in the macro sheet to pin them to the
-  /// top of the list (per-printer — some machines have dozens of macros and
+  /// top of the list (per-printer - some machines have dozens of macros and
   /// only a handful are run often). Stored as the raw Klipper macro names.
   /// Additive and optional, so it rides the v3 backup envelope without a
   /// schema bump. Empty when nothing is starred.
@@ -75,7 +75,7 @@ class PrinterConfig {
 
   /// Per-printer advanced power control (v0.9.11). [powerMacroEnabled] makes the
   /// tile's power button drive the printer via macros instead of a Moonraker
-  /// `[power …]` device — for printers whose power is a Klipper macro. EITHER an
+  /// `[power …]` device - for printers whose power is a Klipper macro. EITHER an
   /// on+off macro pair OR a single toggle macro. Stateless by design: power-by-
   /// macro can't reliably report state (powering off takes Klipper down), so the
   /// button offers an explicit On/Off choice rather than guessing. Additive +
@@ -181,10 +181,10 @@ class PrinterConfig {
   /// host, `host:port`, or a full `http(s)://` URL; defaults to http, drops
   /// any path, and validates host + port so a typo never gets persisted.
   ///
-  /// Used by the "Advanced — custom network" field on the add-printer screen
+  /// Used by the "Advanced - custom network" field on the add-printer screen
   /// and the edit-printer dialog so people behind a reverse proxy / Docker can
   /// point the app straight at the address that serves their Mainsail/Fluidd
-  /// page (the same origin that proxies the Moonraker API) — bypassing mDNS
+  /// page (the same origin that proxies the Moonraker API) - bypassing mDNS
   /// and the Pi-advertised IP/port entirely. Returns a clean base ready to
   /// have `/server/...` paths appended.
   static String? parseLanUrl(String input) {
@@ -336,14 +336,14 @@ int printerStatusRank(String state) => switch (state) {
 class PrinterStatus {
   /// Klipper print_stats state plus our synthetic states:
   ///   'printing' | 'paused' | 'standby' | 'complete' | 'cancelled' | 'error'
-  ///   'startup'      — Klipper reachable but still initialising
-  ///   'connecting'   — before the first status poll completes
-  ///   'starting_up'  — Pi hasn't heartbeated to Supabase yet (just paired)
-  ///   'waiting'      — Pi reachable, but the printer-side stack isn't
+  ///   'startup'      - Klipper reachable but still initialising
+  ///   'connecting'   - before the first status poll completes
+  ///   'starting_up'  - Pi hasn't heartbeated to Supabase yet (just paired)
+  ///   'waiting'      - Pi reachable, but the printer-side stack isn't
   ///                    (K3 printer power off, Klipper not running, etc.)
-  ///   'offline'      — all network paths exhausted, Pi unreachable
+  ///   'offline'      - all network paths exhausted, Pi unreachable
   final String state;
-  final double progress; // 0.0 – 1.0
+  final double progress; // 0.0 - 1.0
   final double hotendTemp;
   final double hotendTarget;
   final double bedTemp;
@@ -353,14 +353,14 @@ class PrinterStatus {
   final String? filename;
   final PrinterConnection connection;
 
-  /// v0.5.0: whether the cloud currently knows the printer's tunnel URL —
+  /// v0.5.0: whether the cloud currently knows the printer's tunnel URL -
   /// i.e. remote access is ready, independent of which path THIS poll won
   /// on. The tile uses it to show a "remote connecting…" vs "remote ready"
   /// hint next to the Local badge, so a freshly-paired printer that came up
   /// Local can show the tunnel still being established in the background.
   final bool tunnelReady;
 
-  /// Absolute, ready-to-fetch snapshot URL — base + path + (mg_token for
+  /// Absolute, ready-to-fetch snapshot URL - base + path + (mg_token for
   /// tunnel mode). Built fresh each poll by PrinterStatusService so the
   /// URL always reflects the path the service is currently using and
   /// carries a valid access token. Null when no webcam is configured or
@@ -384,7 +384,7 @@ class PrinterStatus {
   final bool? lightOn;
 
   /// True when Moonraker reports Klipper is shut down or errored
-  /// (webhooks.state == "shutdown" / "error") — e.g. after an emergency stop.
+  /// (webhooks.state == "shutdown" / "error") - e.g. after an emergency stop.
   /// The tile swaps the E-STOP triangle for a firmware-restart button then.
   final bool klippyShutdown;
 
@@ -433,7 +433,7 @@ class PrinterStatus {
     connection: PrinterConnection.offline,
   );
 
-  /// Pi is reachable but its printer-side stack isn't responding — e.g.
+  /// Pi is reachable but its printer-side stack isn't responding - e.g.
   /// the K3's printer power is toggled off so Klipper isn't running, or
   /// Moonraker hasn't come back up yet after a restart.
   static const waiting = PrinterStatus(

@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// In-app updater: downloads a release APK with progress, then hands it to
-/// Android's package installer (which still shows its own install confirmation —
+/// Android's package installer (which still shows its own install confirmation -
 /// a sideloaded app can't install silently). Android-only; callers must guard
 /// with `Platform.isAndroid` and fall back to opening [UpdateInfo.apkUrl] in a
 /// browser elsewhere (iOS can't sideload).

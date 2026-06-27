@@ -57,7 +57,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get lightingToggleMacro => 'Macro Bascule';
 
   @override
-  String get lightingToggleSection => 'Facultatif — méthode bascule';
+  String get lightingToggleSection => 'Facultatif - méthode bascule';
 
   @override
   String get lightingStatusSource => 'Source d\'état de la lumière';
@@ -241,7 +241,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tileOpacityDesc =>
-      'Niveau de transparence des tuiles (0–100), pour laisser apparaître un arrière-plan. Le flux caméra reste opaque.';
+      'Niveau de transparence des tuiles (0-100), pour laisser apparaître un arrière-plan. Le flux caméra reste opaque.';
 
   @override
   String get dashboardShowWebcams => 'Webcams';
@@ -252,7 +252,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get updateNotesUnavailable =>
-      'Impossible de charger les nouveautés — vérifiez votre connexion, ou consultez-les sur GitHub.';
+      'Impossible de charger les nouveautés - vérifiez votre connexion, ou consultez-les sur GitHub.';
 
   @override
   String get updateViewOnGithub => 'Voir sur GitHub';
@@ -265,7 +265,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cameraConfigDescription =>
-      'Affichez une caméra qui n\'est pas connectée à Klipper — par exemple un ancien téléphone utilisé comme webcam. Saisissez l\'adresse indiquée dans les paramètres webcam de Mainsail.';
+      'Affichez une caméra qui n\'est pas connectée à Klipper - par exemple un ancien téléphone utilisé comme webcam. Saisissez l\'adresse indiquée dans les paramètres webcam de Mainsail.';
 
   @override
   String get cameraConfigUrlLabel => 'URL de la caméra';
@@ -333,7 +333,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dashboardSignInRetrying =>
-      'Reconnexion au cloud — la connexion est occupée, nouvelle tentative. Vos imprimantes reviendront automatiquement.';
+      'Reconnexion au cloud - la connexion est occupée, nouvelle tentative. Vos imprimantes reviendront automatiquement.';
 
   @override
   String get commonRemove => 'Retirer';
@@ -424,7 +424,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dashboardCustomiseColoursSubtitle =>
-      'Modifier les cinq emplacements du thème — HEX ou palette';
+      'Modifier les cinq emplacements du thème - HEX ou palette';
 
   @override
   String get dashboardFontSizeHeading => 'Taille d\'affichage';
@@ -476,7 +476,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cameraFeedsIntro =>
-      'Fréquence de rafraîchissement de la caméra de chaque tuile. Moongate utilise le débit Local tant que vous êtes en Wi-Fi (même hors de chez vous) et le débit Tunnel en données mobiles — un flux rapide en Wi-Fi et plus léger en cellulaire pour économiser les données.';
+      'Fréquence de rafraîchissement de la caméra de chaque tuile. Moongate utilise le débit Local tant que vous êtes en Wi-Fi (même hors de chez vous) et le débit Tunnel en données mobiles - un flux rapide en Wi-Fi et plus léger en cellulaire pour économiser les données.';
 
   @override
   String get cameraFeedsLocalRate => 'Débit du flux local';
@@ -513,7 +513,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dashboardAppLockOn =>
-      'Activé — déverrouillage requis au lancement';
+      'Activé - déverrouillage requis au lancement';
 
   @override
   String get dashboardAppLockOff => 'Désactivé';
@@ -550,7 +550,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get donationPromptBody =>
-      'Moongate est un projet perso gratuit que je développe sur mon temps libre. S\'il vous est utile, un petit pourboire aide à le faire vivre — sans pression, et je ne le redemanderai pas.';
+      'Moongate est un projet perso gratuit que je développe sur mon temps libre. S\'il vous est utile, un petit pourboire aide à le faire vivre - sans pression, et je ne le redemanderai pas.';
 
   @override
   String get donationPromptLater => 'Plus tard';
@@ -569,30 +569,30 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dashboardBackupFailed =>
-      'Échec de la sauvegarde — impossible d\'enregistrer le fichier.';
+      'Échec de la sauvegarde - impossible d\'enregistrer le fichier.';
 
   @override
   String dashboardBackupSuccess(int count) {
-    return '$count imprimante(s) sauvegardée(s). Ce fichier permet de les restaurer sur une nouvelle installation — gardez-le confidentiel.';
+    return '$count imprimante(s) sauvegardée(s). Ce fichier permet de les restaurer sur une nouvelle installation - gardez-le confidentiel.';
   }
 
   @override
   String dashboardBackupSuccessListOnly(int count) {
-    return '$count imprimante(s) sauvegardée(s) (liste uniquement — le cloud était injoignable pour générer un code de restauration).';
+    return '$count imprimante(s) sauvegardée(s) (liste uniquement - le cloud était injoignable pour générer un code de restauration).';
   }
 
   @override
   String get dashboardInvalidBackupFile =>
-      'Fichier de sauvegarde non valide — veuillez choisir un fichier de config Moongate.';
+      'Fichier de sauvegarde non valide - veuillez choisir un fichier de config Moongate.';
 
   @override
   String dashboardRestoreReconnected(int added, int count) {
-    return '$added imprimante(s) restaurée(s) — $count reconnectée(s) et bientôt en ligne.';
+    return '$added imprimante(s) restaurée(s) - $count reconnectée(s) et bientôt en ligne.';
   }
 
   @override
   String dashboardRestoreNoneReconnected(int added) {
-    return '$added imprimante(s) restaurée(s), mais aucune reconnectée — le code de restauration de la sauvegarde ne correspond à aucune imprimante (il provient peut-être d\'une ancienne sauvegarde, ou a déjà été utilisé). Réappairez-les pour les remettre en ligne.';
+    return '$added imprimante(s) restaurée(s), mais aucune reconnectée - le code de restauration de la sauvegarde ne correspond à aucune imprimante (il provient peut-être d\'une ancienne sauvegarde, ou a déjà été utilisé). Réappairez-les pour les remettre en ligne.';
   }
 
   @override
@@ -609,7 +609,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String dashboardRestoreReplaceBody(String names) {
-    return 'Ces imprimantes sont sur ce tableau de bord mais pas dans la sauvegarde : $names. La restauration les supprimera pour que le tableau de bord corresponde exactement à la sauvegarde. Elles restent appairées — vous pourrez les rajouter ou les restaurer plus tard.';
+    return 'Ces imprimantes sont sur ce tableau de bord mais pas dans la sauvegarde : $names. La restauration les supprimera pour que le tableau de bord corresponde exactement à la sauvegarde. Elles restent appairées - vous pourrez les rajouter ou les restaurer plus tard.';
   }
 
   @override
@@ -639,7 +639,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpPairOnceBody =>
-      'Scannez le QR (ou saisissez le code GATE) pour ajouter une imprimante — ce lien est enregistré dans cette app.';
+      'Scannez le QR (ou saisissez le code GATE) pour ajouter une imprimante - ce lien est enregistré dans cette app.';
 
   @override
   String get dashboardPairingHelpUpdatesTitle =>
@@ -655,7 +655,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpReinstallBody =>
-      'Sauvegardez d\'abord (Menu → Sauvegarder la config), puis Restaurer remet vos imprimantes en ligne — sans réappairage.';
+      'Sauvegardez d\'abord (Menu → Sauvegarder la config), puis Restaurer remet vos imprimantes en ligne - sans réappairage.';
 
   @override
   String get dashboardPairingHelpNoBackupTitle => 'Pas de sauvegarde ?';
@@ -669,7 +669,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String dashboardUpdateAvailable(String version) {
-    return 'Mise à jour disponible — v$version';
+    return 'Mise à jour disponible - v$version';
   }
 
   @override
@@ -690,7 +690,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pairingIntro =>
-      'Exécutez MOONGATE_PAIR dans votre console Klipper — scannez le QR ou saisissez le code GATE affiché dans la console.';
+      'Exécutez MOONGATE_PAIR dans votre console Klipper - scannez le QR ou saisissez le code GATE affiché dans la console.';
 
   @override
   String get pairingNameLabel => 'Nom de l\'imprimante';
@@ -702,7 +702,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pairingScanButton => 'Scanner le QR code';
 
   @override
-  String get pairingScanRecommended => 'Recommandé — connexion instantanée';
+  String get pairingScanRecommended => 'Recommandé - connexion instantanée';
 
   @override
   String get pairingOr => 'OU';
@@ -719,7 +719,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pairingGateCodeWarning =>
-      'Méthode alternative. Sans le QR, l\'imprimante peut mettre jusqu\'à une minute environ à se connecter — elle attend l\'établissement du tunnel sécurisé. Scannez le QR code ci-dessus pour une connexion instantanée.';
+      'Méthode alternative. Sans le QR, l\'imprimante peut mettre jusqu\'à une minute environ à se connecter - elle attend l\'établissement du tunnel sécurisé. Scannez le QR code ci-dessus pour une connexion instantanée.';
 
   @override
   String get pairingCameraPermissionNeeded => 'Autorisation caméra requise';
@@ -732,7 +732,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String pairingQrScanned(String code) {
-    return 'QR scanné — code $code';
+    return 'QR scanné - code $code';
   }
 
   @override
@@ -740,7 +740,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pairingAdvancedTitle =>
-      'Avancé — imprimante sur un réseau personnalisé ?';
+      'Avancé - imprimante sur un réseau personnalisé ?';
 
   @override
   String get pairingAdvancedBody =>
@@ -790,7 +790,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pairingErrorBadAddress =>
-      'Cette adresse d\'imprimante semble incorrecte — essayez par ex. 192.168.1.50:7125';
+      'Cette adresse d\'imprimante semble incorrecte - essayez par ex. 192.168.1.50:7125';
 
   @override
   String pairingErrorFailed(String error) {
@@ -799,7 +799,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pairingImportInvalidFile =>
-      'Fichier de sauvegarde non valide — veuillez choisir un fichier de config Moongate.';
+      'Fichier de sauvegarde non valide - veuillez choisir un fichier de config Moongate.';
 
   @override
   String get pairingImportNoNewPrinters =>
@@ -807,12 +807,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String pairingImportRestoredReconnected(int count, int reconnected) {
-    return '$count imprimante(s) restaurée(s) — $reconnected reconnectée(s), bientôt en ligne.';
+    return '$count imprimante(s) restaurée(s) - $reconnected reconnectée(s), bientôt en ligne.';
   }
 
   @override
   String pairingImportRestoredRepair(int count) {
-    return '$count imprimante(s) restaurée(s) — réappairez chaque Pi pour le remettre en ligne.';
+    return '$count imprimante(s) restaurée(s) - réappairez chaque Pi pour le remettre en ligne.';
   }
 
   @override
@@ -889,10 +889,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tilePauseFailed =>
-      'Imprimante injoignable — échec de la mise en pause';
+      'Imprimante injoignable - échec de la mise en pause';
 
   @override
-  String get tileResumeFailed => 'Imprimante injoignable — échec de la reprise';
+  String get tileResumeFailed => 'Imprimante injoignable - échec de la reprise';
 
   @override
   String get tileStopAgainToCancel =>
@@ -930,7 +930,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tileEmergencyStopFailed =>
-      'Imprimante injoignable — échec de l\'arrêt d\'urgence';
+      'Imprimante injoignable - échec de l\'arrêt d\'urgence';
 
   @override
   String get tilePrintComplete => 'Impression terminée';
@@ -996,7 +996,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardBackgroundTitle => 'Arrière-plan du tableau de bord';
 
   @override
-  String get dashboardBackgroundNone => 'Aucun — couleur du thème';
+  String get dashboardBackgroundNone => 'Aucun - couleur du thème';
 
   @override
   String get dashboardBackgroundCustom => 'Image personnalisée';
@@ -1073,7 +1073,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appLockIntro =>
-      'Exiger un code PIN — et éventuellement votre empreinte ou votre visage — avant l\'ouverture de Moongate. Le verrouillage apparaît toujours lorsque l\'app est lancée à neuf.';
+      'Exiger un code PIN - et éventuellement votre empreinte ou votre visage - avant l\'ouverture de Moongate. Le verrouillage apparaît toujours lorsque l\'app est lancée à neuf.';
 
   @override
   String get appLockSubtitle => 'Code PIN requis pour ouvrir l\'app';
@@ -1083,7 +1083,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appLockBiometricSubtitle =>
-      'Utiliser l\'empreinte ou le visage — le PIN reste un recours';
+      'Utiliser l\'empreinte ou le visage - le PIN reste un recours';
 
   @override
   String get appLockChangePin => 'Modifier le code PIN';
@@ -1152,7 +1152,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get lockResetBody =>
-      'Cela supprime le verrouillage de l\'app et efface les imprimantes appairées de cet appareil pour repartir de zéro. Vos imprimantes ne sont pas supprimées — réappairez-les en exécutant MOONGATE_PAIR sur chacune.';
+      'Cela supprime le verrouillage de l\'app et efface les imprimantes appairées de cet appareil pour repartir de zéro. Vos imprimantes ne sont pas supprimées - réappairez-les en exécutant MOONGATE_PAIR sur chacune.';
 
   @override
   String get lockResetConfirm => 'Réinitialiser';
@@ -1202,7 +1202,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cameraHintBody =>
-      'La webcam ne se charge pas ici à distance — ouvrez la caméra Moongate.';
+      'La webcam ne se charge pas ici à distance - ouvrez la caméra Moongate.';
 
   @override
   String get cameraHintOpen => 'Ouvrir';
@@ -1254,7 +1254,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get feedbackCommentHint =>
-      'ex. « L\'imprimante affiche Connectée / inactive mais elle est en réalité prête — elle s\'ouvre normalement quand je touche la tuile. »';
+      'ex. « L\'imprimante affiche Connectée / inactive mais elle est en réalité prête - elle s\'ouvre normalement quand je touche la tuile. »';
 
   @override
   String get feedbackContactLabel => 'E-mail ou contact (facultatif)';
@@ -1269,11 +1269,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get feedbackSend => 'Envoyer le rapport';
 
   @override
-  String get feedbackSuccess => 'Merci — votre rapport a été envoyé.';
+  String get feedbackSuccess => 'Merci - votre rapport a été envoyé.';
 
   @override
   String get feedbackError =>
-      'Envoi impossible — vérifiez votre connexion et réessayez.';
+      'Envoi impossible - vérifiez votre connexion et réessayez.';
 
   @override
   String get splashTagline => 'Contrôle à distance pour Klipper';
@@ -1309,7 +1309,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get uiGuideLocalDesc =>
-      'Connecté directement via votre Wi-Fi — le chemin le plus rapide.';
+      'Connecté directement via votre Wi-Fi - le chemin le plus rapide.';
 
   @override
   String get uiGuideTunnelTitle => 'À distance (tunnel)';
@@ -1349,7 +1349,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get uiGuideChamberDesc =>
-      'Température du caisson — affichée uniquement si votre imprimante en signale une.';
+      'Température du caisson - affichée uniquement si votre imprimante en signale une.';
 
   @override
   String get uiGuideResumeTitle => 'Reprendre';
@@ -1368,7 +1368,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get uiGuideStopDesc =>
-      'Annuler l\'impression — touchez deux fois pour confirmer.';
+      'Annuler l\'impression - touchez deux fois pour confirmer.';
 
   @override
   String get uiGuideEstopTitle => 'Arrêt d\'urgence';
@@ -1403,7 +1403,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get uiGuideStatusErrorDesc =>
-      'Klipper a signalé une erreur — ouvrez l\'imprimante pour plus de détails.';
+      'Klipper a signalé une erreur - ouvrez l\'imprimante pour plus de détails.';
 
   @override
   String get uiGuideStatusStartingTitle => 'Démarrage';
@@ -1446,7 +1446,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get printNotifPromptBody =>
-      'Voyez le statut en direct de vos imprimantes — progression, températures et alertes au démarrage, à la fin ou en cas d\'erreur d\'une impression. Vous pouvez changer cela à tout moment dans le menu.';
+      'Voyez le statut en direct de vos imprimantes - progression, températures et alertes au démarrage, à la fin ou en cas d\'erreur d\'une impression. Vous pouvez changer cela à tout moment dans le menu.';
 
   @override
   String get printNotifPromptEnable => 'Activer';

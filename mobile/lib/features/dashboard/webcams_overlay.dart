@@ -7,7 +7,7 @@ import '../../services/printer_registry.dart';
 /// Bottom sheet listing every dashboard printer with an on/off switch for its
 /// webcam pane. Switching a printer off sets [PrinterConfig.hideWebcam], so its
 /// dashboard tile collapses to the compact (no-camera) layout and the masonry
-/// grid packs it tightly under the full tiles — and that tile stops fetching
+/// grid packs it tightly under the full tiles - and that tile stops fetching
 /// snapshots, so it's also a per-printer data saver. Each change persists
 /// immediately via the registry; the dashboard reloads when the sheet closes to
 /// re-pack the grid.

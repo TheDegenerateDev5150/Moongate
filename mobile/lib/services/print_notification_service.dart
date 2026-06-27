@@ -22,18 +22,18 @@ import 'supabase_service.dart';
 
 // ── Tuning ────────────────────────────────────────────────────────────────
 // Everything posts on ONE silent channel, "Print status":
-//   • the persistent foreground-service notification — a status-only roster of
-//     every printer (Name — Printing / Ready / Idle / Offline). No numbers; the
+//   • the persistent foreground-service notification - a status-only roster of
+//     every printer (Name - Printing / Ready / Idle / Offline). No numbers; the
 //     live detail lives on the cards below;
 //   • one live card per active print: progress while it runs, then a clearable
 //     "Finished <time>" summary.
 // The cards used to live on a separate HIGH-importance "Print jobs" channel so
-// they could buzz on start/finish — but a HIGH card always outranks the LOW,
+// they could buzz on start/finish - but a HIGH card always outranks the LOW,
 // silent roster in the shade, and as both refresh each poll Android kept
 // re-sorting them (the two "swapped places"). Sharing the LOW channel keeps each
 // card pinned directly under the roster and silent; _postActiveCard also fixes
-// each card's `when` to its print-start so the roster — refreshed to "now" every
-// poll — keeps sorting above it. The old 'alerts' channel is deleted on startup.
+// each card's `when` to its print-start so the roster - refreshed to "now" every
+// poll - keeps sorting above it. The old 'alerts' channel is deleted on startup.
 const _serviceChannelId     = 'moongate_print_progress';
 const _serviceChannelName   = 'Print status';
 const _serviceChannelDesc   = 'A live, at-a-glance status of all your printers.';
@@ -44,7 +44,7 @@ const _serviceId            = 4711;
 
 // Discrete, attention-grabbing channel for the one-shot "Heat-soak complete"
 // alert fired when a preheat / soak timer set on a tile elapses. HIGH (it
-// buzzes) — unlike the silent status roster + cards — because the whole point is
+// buzzes) - unlike the silent status roster + cards - because the whole point is
 // to call the user back to the machine. A separate channel so it can be muted on
 // its own. See HeatsoakTimers (the armed deadlines) + _fireDueHeatsoaks.
 const _heatsoakChannelId   = 'moongate_heatsoak';
@@ -58,7 +58,7 @@ const _heatsoakChannelDesc =
 const _heatsoakStaleMs = 60 * 60 * 1000; // 1 hour
 
 // Default poll cadence, overridden by the user's "Update frequency" setting
-// (`notif_poll_interval`). The chosen interval is the ACTUAL poll rate — there
+// (`notif_poll_interval`). The chosen interval is the ACTUAL poll rate - there
 // is no idle backoff, so a print start / error / recovery shows within one
 // tick. LAN-first, so it's free at home and a long print costs ~1-2 MB cellular.
 const _defaultPollIntervalMs = 30000;
@@ -73,8 +73,8 @@ int _pollIntervalMsFromPref(String? name) => switch (name) {
     };
 
 /// Load the user's chosen UI locale (or the system / English fallback) and
-/// return its AppLocalizations. Usable from the background isolate — it's a pure
-/// Dart load with no BuildContext — so the notification reads in the same
+/// return its AppLocalizations. Usable from the background isolate - it's a pure
+/// Dart load with no BuildContext - so the notification reads in the same
 /// language as the app even though it runs outside the widget tree.
 Future<AppLocalizations> _loadL10n() async {
   var code = (await SharedPreferences.getInstance()).getString('app_locale');
@@ -88,7 +88,7 @@ Future<AppLocalizations> _loadL10n() async {
 
 /// Main-isolate manager for the opt-in print-notification foreground service.
 /// The actual polling runs in a background isolate (`_PrintTaskHandler`) so it
-/// survives the UI being backgrounded. OFF by default — see
+/// survives the UI being backgrounded. OFF by default - see
 /// `printNotificationsEnabledProvider`.
 class PrintNotificationService {
   PrintNotificationService._();
@@ -173,7 +173,7 @@ class PrintNotificationService {
     }
   }
 
-  /// Poke the running background task to refresh the notification immediately —
+  /// Poke the running background task to refresh the notification immediately -
   /// call after the printer set changes (pair / remove / restore) so it updates
   /// at once instead of waiting for the next poll. No-op when off.
   Future<void> refreshNow() async {
@@ -191,7 +191,7 @@ void startPrintNotificationCallback() {
 
 /// Runs in the background isolate. On each tick it polls every printer's
 /// `/status`, refreshes the persistent status roster (one line per printer),
-/// and maintains a live "Print jobs" card per active print — progress while it
+/// and maintains a live "Print jobs" card per active print - progress while it
 /// runs, a clearable summary when it finishes (clearing it resets the print so
 /// the dashboard and roster settle to Ready together).
 class _PrintTaskHandler extends TaskHandler {
@@ -199,22 +199,22 @@ class _PrintTaskHandler extends TaskHandler {
   bool _busy = false;
   // Per-printer lifecycle of its print card: none → active (a live print) → done
   // (a clearable finished/cancelled/error summary). Drives when the card is
-  // posted, updated and cleared. In-memory only — a service restart re-derives
+  // posted, updated and cleared. In-memory only - a service restart re-derives
   // it from the next poll.
   final Map<String, _CardPhase> _cardPhase = {};
   // Wall-clock (epoch ms) each printer's current card started. Used as the card's
-  // fixed `when` so it sorts just under the roster — see _postActiveCard.
+  // fixed `when` so it sorts just under the roster - see _postActiveCard.
   final Map<String, int> _cardStartedAt = {};
   // Cloud last_seen per printer, refreshed once per tick by a single RLS-scoped
   // SELECT (PostgREST, NOT an Edge Function). Lets _poll skip the token mint for
-  // a printer that's positively offline — see _isKnownOffline.
+  // a printer that's positively offline - see _isKnownOffline.
   Map<String, DateTime> _lastSeen = {};
   // Per-printer gcode byte offsets (from file metadata), cached per filename so
   // the notification's progress matches Mainsail's file-relative default and the
-  // dashboard. Fetched once per print — see _fetchOffsets.
+  // dashboard. Fetched once per print - see _fetchOffsets.
   final Map<String, _MetaOffsets> _meta = {};
   late AppLocalizations _l;
-  // Which notification segments to show + their order — re-read from prefs each
+  // Which notification segments to show + their order - re-read from prefs each
   // tick (the user edits them on the main isolate). Defaults to all-on.
   NotifFieldsConfig _fields = NotifFieldsConfig.defaults();
 
@@ -234,7 +234,7 @@ class _PrintTaskHandler extends TaskHandler {
     final androidPlugin = _alerts.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     // Live print cards share the foreground service's silent "Print status"
-    // channel so they sit with — and just under — the status roster instead of
+    // channel so they sit with - and just under - the status roster instead of
     // outranking it (a HIGH card always floats above the LOW roster, which made
     // the two swap places). Ensure it exists at LOW importance; the service
     // creates it too, so this is idempotent.
@@ -251,7 +251,7 @@ class _PrintTaskHandler extends TaskHandler {
     await androidPlugin?.deleteNotificationChannel(_legacyCardsChannelId);
 
     // Discrete HIGH channel for the one-shot heat-soak alert (buzzes, unlike the
-    // silent roster). Idempotent — created here so it exists the moment a timer
+    // silent roster). Idempotent - created here so it exists the moment a timer
     // is armed.
     await androidPlugin?.createNotificationChannel(
       const AndroidNotificationChannel(
@@ -264,7 +264,7 @@ class _PrintTaskHandler extends TaskHandler {
 
     // Clear any per-print cards stranded by a previous run (force-stop / crash)
     // so we never show a stale "printing" card. Only our card-id range is
-    // touched — never the foreground-service notification (id 4711).
+    // touched - never the foreground-service notification (id 4711).
     try {
       for (final a in await _alerts.getActiveNotifications()) {
         final id = a.id;
@@ -299,7 +299,7 @@ class _PrintTaskHandler extends TaskHandler {
 
   @override
   void onReceiveData(Object data) {
-    // Main app signalled a printer add / remove / restore — refresh now rather
+    // Main app signalled a printer add / remove / restore - refresh now rather
     // than waiting for the next 30s/2min tick. _tick() reloads the registry
     // from disk, so it picks up the change immediately.
     _tick();
@@ -307,7 +307,7 @@ class _PrintTaskHandler extends TaskHandler {
 
   @override
   Future<void> onDestroy(DateTime timestamp) async {
-    // Service stopped (notifications turned off) — remove our per-print cards;
+    // Service stopped (notifications turned off) - remove our per-print cards;
     // the foreground-service roster is torn down by the plugin separately.
     for (final pid in _cardPhase.keys.toList()) {
       try {
@@ -347,7 +347,7 @@ class _PrintTaskHandler extends TaskHandler {
 
         // Only a LIVE /status read (a genuine Klipper state) drives the card
         // lifecycle. A connectivity placeholder (synthetic Idle, live == false)
-        // or an offline tick (s == null) must NOT touch the cards — otherwise a
+        // or an offline tick (s == null) must NOT touch the cards - otherwise a
         // transient network blip looks like the print ending and would wrongly
         // clear the card. Offline mid-print just leaves the existing card alone.
         if (s != null && s.live) {
@@ -357,7 +357,7 @@ class _PrintTaskHandler extends TaskHandler {
         entries.add((p.name, s)); // every printer, online or not
       }
 
-      // Float active prints to the top — same ranking the dashboard uses
+      // Float active prints to the top - same ranking the dashboard uses
       // (printerStatusRank), stable within a tier (original order preserved).
       final ranked = [for (var i = 0; i < entries.length; i++) (i, entries[i])];
       ranked.sort((a, b) {
@@ -368,7 +368,7 @@ class _PrintTaskHandler extends TaskHandler {
       final sorted = [for (final r in ranked) r.$2];
 
       // "Show only online devices": drop offline / shut-down printers from the
-      // roster (the foreground service keeps running — this is display-only).
+      // roster (the foreground service keeps running - this is display-only).
       final shown =
           onlineOnly ? [for (final e in sorted) if (!_isOffline(e.$2)) e] : sorted;
 
@@ -376,14 +376,14 @@ class _PrintTaskHandler extends TaskHandler {
           noneOnline: onlineOnly && shown.isEmpty && printers.isNotEmpty);
 
       // A "Finished" card that's vanished from the shade since a prior tick was
-      // swiped away or cleared via its ✕ action — treat that as the user
+      // swiped away or cleared via its ✕ action - treat that as the user
       // clearing the print and reset Klipper to standby, so the dashboard badge
       // and the roster line settle to Ready together.
       await _detectClearedDoneCards(printers, postedDoneThisTick);
 
       // Heat-soak timers: fire the one-shot alert for any printer whose soak
       // deadline (armed from the tile's preheat sheet) has elapsed. Piggybacks
-      // this poll loop — so it only runs while notifications are enabled, which
+      // this poll loop - so it only runs while notifications are enabled, which
       // the preheat sheet warns about up front.
       await _fireDueHeatsoaks(printers);
     } catch (e) {
@@ -393,7 +393,7 @@ class _PrintTaskHandler extends TaskHandler {
     }
   }
 
-  /// Sort rank for a printer's notification line — shares printerStatusRank
+  /// Sort rank for a printer's notification line - shares printerStatusRank
   /// with the dashboard so the two orderings stay identical. A warming printer
   /// counts as 'heating' (Printing tier); an unreachable one as 'offline'.
   int _rank(_Poll? s) {
@@ -438,7 +438,7 @@ class _PrintTaskHandler extends TaskHandler {
   // ── Liveness (offline gate) ─────────────────────────────────────────────────
 
   /// Refresh every owned printer's cloud last_seen in one RLS-scoped query
-  /// (PostgREST — not an Edge Function). Best-effort: on failure we keep the
+  /// (PostgREST - not an Edge Function). Best-effort: on failure we keep the
   /// previous snapshot, and the gate fails open on anything unknown.
   Future<void> _refreshLiveness() async {
     try {
@@ -485,8 +485,8 @@ class _PrintTaskHandler extends TaskHandler {
   // ── Polling ───────────────────────────────────────────────────────────────
 
   Future<_Poll?> _poll(PrinterConfig p) async {
-    // Liveness gate (mirrors the dashboard): skip the token mint — an Edge call
-    // — for a printer with positive evidence of being offline (stale cloud
+    // Liveness gate (mirrors the dashboard): skip the token mint - an Edge call
+    // - for a printer with positive evidence of being offline (stale cloud
     // last_seen) and no token-free LAN answer. Fails open on unknown last_seen.
     if (_isKnownOffline(p.id) && !await _lanHeadReachable(p)) {
       return null; // offline → no token, zero Edge Function cost
@@ -496,7 +496,7 @@ class _PrintTaskHandler extends TaskHandler {
       // Cached per-isolate so a 30 s / 5 s poll loop reuses one token for
       // ~4.5 min instead of minting a fresh one from /printer-access on every
       // single tick. Running 24/7 in this foreground service, the uncached call
-      // was a major source of Edge Function invocations — even for printers
+      // was a major source of Edge Function invocations - even for printers
       // that are powered off (their last token mints fine regardless).
       access = await PrinterAccessCache.instance.get(p.id);
     } catch (_) {
@@ -515,7 +515,7 @@ class _PrintTaskHandler extends TaskHandler {
     // Moongate/Klipper stack isn't responding (Idle) from one that's genuinely
     // unreachable / powered off (Offline). A stale tunnel URL lingers in the
     // cloud after a Pi shuts down (printer-access still hands back the last
-    // known one), so "a tunnel URL exists" is NOT proof of life — probe like
+    // known one), so "a tunnel URL exists" is NOT proof of life - probe like
     // the dashboard does. The synthetic Idle is marked live: false so it never
     // drives a state-change alert.
     if (await _isReachable(p, access)) {
@@ -549,7 +549,7 @@ class _PrintTaskHandler extends TaskHandler {
         await http.head(Uri.parse(base)).timeout(const Duration(seconds: 4));
         return true;
       } catch (_) {
-        // Refused / timeout / DNS — try the next candidate.
+        // Refused / timeout / DNS - try the next candidate.
       }
     }
     return false;
@@ -571,7 +571,7 @@ class _PrintTaskHandler extends TaskHandler {
       final extruder   = status['extruder']     as Map<String, dynamic>? ?? const {};
       final bed        = status['heater_bed']   as Map<String, dynamic>? ?? const {};
 
-      // The plugin's /status returns ONLY print_stats / heater_bed / extruder —
+      // The plugin's /status returns ONLY print_stats / heater_bed / extruder -
       // progress lives in display_status & virtual_sdcard, which aren't in this
       // payload. Mirror PrinterStatusService and pull them from a supplementary
       // /printer/objects/query, otherwise % stays pinned at 0 the whole print.
@@ -585,10 +585,10 @@ class _PrintTaskHandler extends TaskHandler {
         webhooks ??= supp?['webhooks'] as Map<String, dynamic>?;
       }
 
-      // Klipper not engaged — e.g. the printer's mainboard is switched off while
+      // Klipper not engaged - e.g. the printer's mainboard is switched off while
       // the Pi stays powered (common, with a separate Pi supply). Moonraker still
       // answers, but print_stats is FROZEN at its last value (often "printing")
-      // with no live temps — so trusting it shows a stale "Printing" and leaves
+      // with no live temps - so trusting it shows a stale "Printing" and leaves
       // the print card stuck. webhooks.state is the source of truth; mirror the
       // dashboard (PrinterStatusService) and treat shutdown/error as offline, so
       // the roster reads Offline and _updateCardFor clears the stuck card.
@@ -641,9 +641,9 @@ class _PrintTaskHandler extends TaskHandler {
 
   /// Supplementary fetch. The moongate /status payload omits display_status,
   /// virtual_sdcard & webhooks (Klipper health), so read them from Moonraker:
-  /// LAN goes through nginx untouched (no auth header — Moonraker would reject
+  /// LAN goes through nginx untouched (no auth header - Moonraker would reject
   /// our EdDSA token as a bad JWT), the tunnel goes through the auth proxy
-  /// (Bearer). Best-effort — null on any failure just leaves progress at 0.
+  /// (Bearer). Best-effort - null on any failure just leaves progress at 0.
   Future<Map<String, dynamic>?> _fetchProgress(String base, String token,
       {required bool isLan}) async {
     try {
@@ -662,7 +662,7 @@ class _PrintTaskHandler extends TaskHandler {
 
   /// Fetch + cache the printing file's gcode body byte offsets (per printer, per
   /// filename) so progress can be computed file-relative like Mainsail. Fetched
-  /// once per print — the offsets don't change — so it adds no per-tick cost. On
+  /// once per print - the offsets don't change - so it adds no per-tick cost. On
   /// any failure the previous cache entry is kept (progress just falls back).
   Future<_MetaOffsets?> _fetchOffsets(
       String printerId, String base, String token, String filename,
@@ -693,7 +693,7 @@ class _PrintTaskHandler extends TaskHandler {
   // ── Formatting ──────────────────────────────────────────────────────────────
 
   /// True while a heater is still ramping to a set target and we should show a
-  /// "Heating" line instead of the static Ready/Idle/0% label — i.e. pre-print
+  /// "Heating" line instead of the static Ready/Idle/0% label - i.e. pre-print
   /// soak, or the start of a print before extrusion (progress still ~0). Not
   /// for a paused print, where "Paused x%" is the more useful line.
   bool _warming(_Poll s) =>
@@ -706,12 +706,12 @@ class _PrintTaskHandler extends TaskHandler {
   /// per-print "Print jobs" card now, not here.
   String _statusLine(String name, _Poll? s, {bool withEmoji = false}) {
     final e = withEmoji ? '${_emoji(s)} ' : '';
-    return '$e$name — ${_rosterLabel(s)}';
+    return '$e$name - ${_rosterLabel(s)}';
   }
 
   /// The plain state word shown for a printer on the status roster: Offline /
   /// Heating / Printing / Paused / Error / Starting up / Idle / Ready. A
-  /// finished or cancelled print reads "Ready" — the printer is free again and
+  /// finished or cancelled print reads "Ready" - the printer is free again and
   /// the card carries the outcome.
   String _rosterLabel(_Poll? s) {
     if (s == null) return _l.printStatusOffline;
@@ -771,7 +771,7 @@ class _PrintTaskHandler extends TaskHandler {
       case 'paused':
         return '⏸️';
       // A finished print reads "Ready" on the roster (see _rosterLabel), so its
-      // glance emoji is the ready dot too — the card carries the ✓.
+      // glance emoji is the ready dot too - the card carries the ✓.
       case 'complete':
         return '🟢';
       case 'error':
@@ -791,7 +791,7 @@ class _PrintTaskHandler extends TaskHandler {
   }
 
   /// Print time remaining (seconds), estimated from elapsed/progress with no
-  /// extra metadata call. Null while it's too early — or implausibly long — to
+  /// extra metadata call. Null while it's too early - or implausibly long - to
   /// be meaningful.
   double? _remainingSeconds(_Poll s) {
     if (s.state != 'printing') return null;
@@ -801,7 +801,7 @@ class _PrintTaskHandler extends TaskHandler {
     return remaining;
   }
 
-  /// "1h05m" / "14m" — how much longer the print has to run.
+  /// "1h05m" / "14m" - how much longer the print has to run.
   String _formatRemaining(double seconds) {
     final d = Duration(seconds: seconds.round());
     final h = d.inHours;
@@ -810,7 +810,7 @@ class _PrintTaskHandler extends TaskHandler {
   }
 
   /// Wall-clock time the print is projected to finish ("1:20 AM" / "13:20"),
-  /// localised 12/24h via the loaded UI locale — the same "ETA" Klipper and
+  /// localised 12/24h via the loaded UI locale - the same "ETA" Klipper and
   /// Mainsail display. Null if the locale's date symbols didn't load, so the
   /// line just falls back to showing the remaining duration alone.
   String? _formatFinishClock(double remainingSeconds) {
@@ -829,7 +829,7 @@ class _PrintTaskHandler extends TaskHandler {
   // status" channel as the roster so it sits directly under it (never above).
   // It appears quietly when a print starts, updates its progress silently while
   // running, then collapses to a clearable "Finished <time>" card when the job
-  // ends. Clearing that card — by swipe or its ✕ action — is detected on the
+  // ends. Clearing that card - by swipe or its ✕ action - is detected on the
   // next poll and resets the print, so the dashboard badge and the roster line
   // settle to Ready together.
 
@@ -852,7 +852,7 @@ class _PrintTaskHandler extends TaskHandler {
 
     if (isActive) {
       // Fix the card's timestamp at the print's start (first active tick) so it
-      // stays put under the ever-refreshed roster — see _postActiveCard.
+      // stays put under the ever-refreshed roster - see _postActiveCard.
       final startedMs = _cardStartedAt.putIfAbsent(
           p.id, () => DateTime.now().millisecondsSinceEpoch);
       await _postActiveCard(p, s, startedMs);
@@ -861,7 +861,7 @@ class _PrintTaskHandler extends TaskHandler {
       // Only collapse to a Done card if we were actually tracking a live print.
       // Klipper holds the terminal state until the next print, so seeing it from
       // `none` is a re-observation (launch / a reset elsewhere), not a fresh
-      // finish — posting then would show a stray card.
+      // finish - posting then would show a stray card.
       if (phase == _CardPhase.active) {
         final startedMs =
             _cardStartedAt[p.id] ?? DateTime.now().millisecondsSinceEpoch;
@@ -871,7 +871,7 @@ class _PrintTaskHandler extends TaskHandler {
       }
     } else {
       // standby / idle / starting up: the printer is free. Clear any card we
-      // had — this is also how an in-app reset (or the next print) removes the
+      // had - this is also how an in-app reset (or the next print) removes the
       // Done card: the state returns to standby and we cancel here.
       if (phase != _CardPhase.none) {
         await _alerts.cancel(_cardId(p.id));
@@ -884,14 +884,14 @@ class _PrintTaskHandler extends TaskHandler {
   /// Post / update the live card for a running (or paused) print. Pinned
   /// (`ongoing`) so it can't be swiped away mid-print. The detail (progress %,
   /// remaining, ETA, temps) all rides in the one-line [_cardBody] so it reads in
-  /// the collapsed shade without expanding — deliberately NO progress bar: in the
+  /// the collapsed shade without expanding - deliberately NO progress bar: in the
   /// collapsed view the bar sits in place of that body line, which is exactly
   /// what users had to expand the card to get past.
   ///
   /// Silent, on the shared "Print status" channel, with [startedMs] (the print's
   /// start) as a fixed `when`: same LOW importance as the roster so it can't
-  /// outrank it, and an older timestamp so the roster — refreshed to "now" every
-  /// poll — keeps sorting above it. Together that pins the card just under the
+  /// outrank it, and an older timestamp so the roster - refreshed to "now" every
+  /// poll - keeps sorting above it. Together that pins the card just under the
   /// roster and stops the two swapping places in the shade.
   Future<void> _postActiveCard(PrinterConfig p, _Poll s, int startedMs) async {
     final android = AndroidNotificationDetails(
@@ -1094,7 +1094,7 @@ class _MetaOffsets {
   const _MetaOffsets(this.filename, this.startByte, this.endByte);
 }
 
-/// A single printer's parsed status — just what the notification needs.
+/// A single printer's parsed status - just what the notification needs.
 class _Poll {
   final String state;
   final double progress;        // 0..1
@@ -1106,7 +1106,7 @@ class _Poll {
 
   /// True when this came from a real /status read (a genuine Klipper state).
   /// False for the synthesized "reachable but /status didn't answer" Idle
-  /// placeholder — those must never drive a state-change alert (see _tick).
+  /// placeholder - those must never drive a state-change alert (see _tick).
   final bool live;
   const _Poll({
     required this.state,
@@ -1121,7 +1121,7 @@ class _Poll {
 
   // A heater is actively ramping when it has a real target set and the current
   // reading is still meaningfully below it. Drives the "Heating" line during
-  // pre-print soak / the start of a print before extrusion — when print_stats
+  // pre-print soak / the start of a print before extrusion - when print_stats
   // is still standby (or printing at 0%) and nothing about the heaters would
   // otherwise show. `_heatTargetFloor` ignores low "keep-warm" trickle targets.
   static const double _heatTargetFloor = 35;

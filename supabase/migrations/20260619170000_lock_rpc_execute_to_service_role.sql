@@ -1,4 +1,4 @@
--- Moongate — Restrict the internal RPCs to the service role (least privilege).
+-- Moongate - Restrict the internal RPCs to the service role (least privilege).
 --
 -- These SECURITY DEFINER functions are an implementation detail of the Edge
 -- Functions, which authenticate every caller and then invoke them via the

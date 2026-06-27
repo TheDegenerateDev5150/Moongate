@@ -197,7 +197,7 @@ abstract class AppLocalizations {
   /// Section caption above the optional single-toggle macro field.
   ///
   /// In en, this message translates to:
-  /// **'Optional — toggle method'**
+  /// **'Optional - toggle method'**
   String get lightingToggleSection;
 
   /// Label for the optional Klipper object that reports the light's on/off state.
@@ -209,7 +209,7 @@ abstract class AppLocalizations {
   /// Help text under the light status source field.
   ///
   /// In en, this message translates to:
-  /// **'Optional. The Klipper object that reports the light\'s state — e.g. output_pin caselight (not a raw pin like PE3). Leave blank to just track your taps.'**
+  /// **'Optional. The Klipper object that reports the light\'s state - e.g. output_pin caselight (not a raw pin like PE3). Leave blank to just track your taps.'**
   String get lightingStatusSourceHelp;
 
   /// Italic placeholder inside the Light Status Source text field; clears when the user types.
@@ -515,7 +515,7 @@ abstract class AppLocalizations {
   /// Help text for the tile opacity field on the Custom theme screen.
   ///
   /// In en, this message translates to:
-  /// **'How see-through the tiles are (0–100), so a background shows through. The camera feed stays solid.'**
+  /// **'How see-through the tiles are (0-100), so a background shows through. The camera feed stays solid.'**
   String get tileOpacityDesc;
 
   /// Drawer entry that opens the per-printer Webcams sheet.
@@ -533,7 +533,7 @@ abstract class AppLocalizations {
   /// Shown in the update overlay when the changelog couldn't be fetched.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t load what\'s new — check your connection, or view it on GitHub.'**
+  /// **'Couldn\'t load what\'s new - check your connection, or view it on GitHub.'**
   String get updateNotesUnavailable;
 
   /// Button in the update overlay that opens the GitHub releases page.
@@ -557,7 +557,7 @@ abstract class AppLocalizations {
   /// Explanatory text at the top of the custom-camera dialog.
   ///
   /// In en, this message translates to:
-  /// **'Show a camera that isn\'t connected to Klipper — like an old phone used as a webcam. Enter the address shown in Mainsail\'s webcam settings.'**
+  /// **'Show a camera that isn\'t connected to Klipper - like an old phone used as a webcam. Enter the address shown in Mainsail\'s webcam settings.'**
   String get cameraConfigDescription;
 
   /// Label for the camera URL text field.
@@ -683,7 +683,7 @@ abstract class AppLocalizations {
   /// Dashboard banner shown while the app has no cloud session yet (anonymous sign-in rate-limited); it retries automatically and clears once connected.
   ///
   /// In en, this message translates to:
-  /// **'Reconnecting to the cloud — sign-in is busy, retrying. Your printers will come back automatically.'**
+  /// **'Reconnecting to the cloud - sign-in is busy, retrying. Your printers will come back automatically.'**
   String get dashboardSignInRetrying;
 
   /// Generic Remove button label.
@@ -845,7 +845,7 @@ abstract class AppLocalizations {
   /// Subtitle for the customise-colours drawer item.
   ///
   /// In en, this message translates to:
-  /// **'Edit the five theme slots — HEX or palette'**
+  /// **'Edit the five theme slots - HEX or palette'**
   String get dashboardCustomiseColoursSubtitle;
 
   /// Section heading for the display-size slider in the drawer (scales both text and icons).
@@ -935,7 +935,7 @@ abstract class AppLocalizations {
   /// Explanatory line at the top of the Dashboard Camera Feeds sheet.
   ///
   /// In en, this message translates to:
-  /// **'How often each tile refreshes its camera. Moongate uses the Local rate while you\'re on Wi-Fi (even away from home), and the Tunnel rate on mobile data — keeping a fast feed on Wi-Fi and a lighter one on cellular to save data.'**
+  /// **'How often each tile refreshes its camera. Moongate uses the Local rate while you\'re on Wi-Fi (even away from home), and the Tunnel rate on mobile data - keeping a fast feed on Wi-Fi and a lighter one on cellular to save data.'**
   String get cameraFeedsIntro;
 
   /// Label above the Raw/1s/3s/5s picker for the LAN webcam refresh rate.
@@ -1001,7 +1001,7 @@ abstract class AppLocalizations {
   /// App-lock drawer subtitle when the lock is enabled.
   ///
   /// In en, this message translates to:
-  /// **'On — unlock required on launch'**
+  /// **'On - unlock required on launch'**
   String get dashboardAppLockOn;
 
   /// App-lock drawer subtitle when the lock is disabled.
@@ -1067,7 +1067,7 @@ abstract class AppLocalizations {
   /// Body text of the one-time first-run donation prompt.
   ///
   /// In en, this message translates to:
-  /// **'Moongate is a free side-project I build in my spare time. If it\'s useful to you, a small tip helps keep it going — no pressure, and I won\'t ask again.'**
+  /// **'Moongate is a free side-project I build in my spare time. If it\'s useful to you, a small tip helps keep it going - no pressure, and I won\'t ask again.'**
   String get donationPromptBody;
 
   /// Dismiss button on the donation prompt.
@@ -1097,37 +1097,37 @@ abstract class AppLocalizations {
   /// Snackbar shown when saving the backup file fails.
   ///
   /// In en, this message translates to:
-  /// **'Backup failed — could not save the file.'**
+  /// **'Backup failed - could not save the file.'**
   String get dashboardBackupFailed;
 
   /// Snackbar after a successful backup that includes a restore code.
   ///
   /// In en, this message translates to:
-  /// **'Backed up {count} printer(s). This file can restore them on a new install — keep it private.'**
+  /// **'Backed up {count} printer(s). This file can restore them on a new install - keep it private.'**
   String dashboardBackupSuccess(int count);
 
   /// Snackbar after a backup when the cloud restore code could not be minted.
   ///
   /// In en, this message translates to:
-  /// **'Backed up {count} printer(s) (list only — couldn’t reach the cloud for a restore code).'**
+  /// **'Backed up {count} printer(s) (list only - couldn’t reach the cloud for a restore code).'**
   String dashboardBackupSuccessListOnly(int count);
 
   /// Snackbar shown when the chosen restore file is not a valid Moongate backup.
   ///
   /// In en, this message translates to:
-  /// **'Invalid backup file — please pick a Moongate config file.'**
+  /// **'Invalid backup file - please pick a Moongate config file.'**
   String get dashboardInvalidBackupFile;
 
   /// Snackbar after restore when some printers reconnected via the restore code.
   ///
   /// In en, this message translates to:
-  /// **'{added} printer(s) restored — {count} reconnected and coming back online.'**
+  /// **'{added} printer(s) restored - {count} reconnected and coming back online.'**
   String dashboardRestoreReconnected(int added, int count);
 
   /// Snackbar after restore when a restore code was present but matched no printers.
   ///
   /// In en, this message translates to:
-  /// **'{added} printer(s) restored, but none reconnected — the backup’s restore code didn’t match any printers (it may be from an older backup, or already used). Re-pair them to bring them online.'**
+  /// **'{added} printer(s) restored, but none reconnected - the backup’s restore code didn’t match any printers (it may be from an older backup, or already used). Re-pair them to bring them online.'**
   String dashboardRestoreNoneReconnected(int added);
 
   /// Snackbar after restore when the backup had no restore code.
@@ -1151,7 +1151,7 @@ abstract class AppLocalizations {
   /// Body of the restore-replace confirm dialog; lists the printers that would be removed.
   ///
   /// In en, this message translates to:
-  /// **'These printers are on this dashboard but not in the backup: {names}. Restoring will remove them so the dashboard matches the backup exactly. They stay paired — you can re-add or restore them later.'**
+  /// **'These printers are on this dashboard but not in the backup: {names}. Restoring will remove them so the dashboard matches the backup exactly. They stay paired - you can re-add or restore them later.'**
   String dashboardRestoreReplaceBody(String names);
 
   /// Confirm button on the restore-replace dialog; proceeds with removing printers not in the backup.
@@ -1199,7 +1199,7 @@ abstract class AppLocalizations {
   /// Pairing-help item body for 'Pair once'.
   ///
   /// In en, this message translates to:
-  /// **'Scan the QR (or enter the GATE code) to add a printer — that link is saved in this app.'**
+  /// **'Scan the QR (or enter the GATE code) to add a printer - that link is saved in this app.'**
   String get dashboardPairingHelpPairOnceBody;
 
   /// Pairing-help item title: updating the app does not lose printers.
@@ -1223,7 +1223,7 @@ abstract class AppLocalizations {
   /// Pairing-help item body about backing up and restoring.
   ///
   /// In en, this message translates to:
-  /// **'Back up first (Menu → Back up config), then Restore brings your printers back online — no re-pairing.'**
+  /// **'Back up first (Menu → Back up config), then Restore brings your printers back online - no re-pairing.'**
   String get dashboardPairingHelpReinstallBody;
 
   /// Pairing-help item title for the no-backup recovery path.
@@ -1247,7 +1247,7 @@ abstract class AppLocalizations {
   /// Update banner text announcing a newer app version.
   ///
   /// In en, this message translates to:
-  /// **'Update available — v{version}'**
+  /// **'Update available - v{version}'**
   String dashboardUpdateAvailable(String version);
 
   /// Update banner button to dismiss the banner for now.
@@ -1283,7 +1283,7 @@ abstract class AppLocalizations {
   /// Intro text at the top of the pairing screen. 'MOONGATE_PAIR' is a literal console command.
   ///
   /// In en, this message translates to:
-  /// **'Run MOONGATE_PAIR in your Klipper console — scan the QR or type the GATE code shown on the console.'**
+  /// **'Run MOONGATE_PAIR in your Klipper console - scan the QR or type the GATE code shown on the console.'**
   String get pairingIntro;
 
   /// Label for the printer-name text field.
@@ -1307,7 +1307,7 @@ abstract class AppLocalizations {
   /// Subtext under the Scan QR button promoting it as the fast path.
   ///
   /// In en, this message translates to:
-  /// **'Recommended — connects instantly'**
+  /// **'Recommended - connects instantly'**
   String get pairingScanRecommended;
 
   /// Divider label between the QR-scan option and the manual GATE-code option.
@@ -1337,7 +1337,7 @@ abstract class AppLocalizations {
   /// Warning that the manual GATE-code path is slower than scanning the QR.
   ///
   /// In en, this message translates to:
-  /// **'Alternative method. Without the QR, the printer can take up to about a minute to come online — it\'s waiting for the secure tunnel to connect. Scan the QR code above for an instant connection.'**
+  /// **'Alternative method. Without the QR, the printer can take up to about a minute to come online - it\'s waiting for the secure tunnel to connect. Scan the QR code above for an instant connection.'**
   String get pairingGateCodeWarning;
 
   /// Scanner overlay message when camera permission was denied.
@@ -1361,7 +1361,7 @@ abstract class AppLocalizations {
   /// Confirmation banner after a successful QR scan, showing the enrollment code.
   ///
   /// In en, this message translates to:
-  /// **'QR scanned — code {code}'**
+  /// **'QR scanned - code {code}'**
   String pairingQrScanned(String code);
 
   /// Button that discards the scanned code and reopens the scanner.
@@ -1373,7 +1373,7 @@ abstract class AppLocalizations {
   /// Expandable section title for entering a custom printer address.
   ///
   /// In en, this message translates to:
-  /// **'Advanced — printer on a custom network?'**
+  /// **'Advanced - printer on a custom network?'**
   String get pairingAdvancedTitle;
 
   /// Explanation of when to use the advanced custom-address field. Traefik, Caddy, NPM, Docker, Mainsail, Fluidd are product names.
@@ -1457,7 +1457,7 @@ abstract class AppLocalizations {
   /// Error when the advanced custom address cannot be parsed.
   ///
   /// In en, this message translates to:
-  /// **'That printer address doesn\'t look right — try e.g. 192.168.1.50:7125'**
+  /// **'That printer address doesn\'t look right - try e.g. 192.168.1.50:7125'**
   String get pairingErrorBadAddress;
 
   /// Generic pairing failure message with the underlying error detail.
@@ -1469,7 +1469,7 @@ abstract class AppLocalizations {
   /// Snackbar shown when the chosen restore file is not a valid Moongate backup.
   ///
   /// In en, this message translates to:
-  /// **'Invalid backup file — please pick a Moongate config file.'**
+  /// **'Invalid backup file - please pick a Moongate config file.'**
   String get pairingImportInvalidFile;
 
   /// Snackbar shown when a restore file contains no printers to add.
@@ -1481,13 +1481,13 @@ abstract class AppLocalizations {
   /// Snackbar after restoring printers when some reconnected automatically.
   ///
   /// In en, this message translates to:
-  /// **'{count} printer(s) restored — {reconnected} reconnected, coming back online.'**
+  /// **'{count} printer(s) restored - {reconnected} reconnected, coming back online.'**
   String pairingImportRestoredReconnected(int count, int reconnected);
 
   /// Snackbar after restoring printers when the user must re-pair each one.
   ///
   /// In en, this message translates to:
-  /// **'{count} printer(s) restored — re-pair each Pi to bring it online.'**
+  /// **'{count} printer(s) restored - re-pair each Pi to bring it online.'**
   String pairingImportRestoredRepair(int count);
 
   /// Title of the custom-theme colour editor screen.
@@ -1625,13 +1625,13 @@ abstract class AppLocalizations {
   /// Snackbar shown when a pause command could not reach the printer.
   ///
   /// In en, this message translates to:
-  /// **'Could not reach printer — pause failed'**
+  /// **'Could not reach printer - pause failed'**
   String get tilePauseFailed;
 
   /// Snackbar shown when a resume command could not reach the printer.
   ///
   /// In en, this message translates to:
-  /// **'Could not reach printer — resume failed'**
+  /// **'Could not reach printer - resume failed'**
   String get tileResumeFailed;
 
   /// Snackbar prompting the user to tap stop a second time to confirm cancelling the print.
@@ -1703,7 +1703,7 @@ abstract class AppLocalizations {
   /// Snackbar shown when an emergency-stop command could not reach the printer.
   ///
   /// In en, this message translates to:
-  /// **'Could not reach printer — emergency stop failed'**
+  /// **'Could not reach printer - emergency stop failed'**
   String get tileEmergencyStopFailed;
 
   /// Idle-row label shown when the last print finished successfully.
@@ -1835,7 +1835,7 @@ abstract class AppLocalizations {
   /// Subtitle for the dashboard background row when no custom image is set.
   ///
   /// In en, this message translates to:
-  /// **'None — theme colour'**
+  /// **'None - theme colour'**
   String get dashboardBackgroundNone;
 
   /// Subtitle for the dashboard background row when a custom image is set.
@@ -1973,7 +1973,7 @@ abstract class AppLocalizations {
   /// Introductory paragraph explaining what the app lock does.
   ///
   /// In en, this message translates to:
-  /// **'Require a PIN — and optionally your fingerprint or face — before Moongate will open. The lock always appears when the app is started fresh.'**
+  /// **'Require a PIN - and optionally your fingerprint or face - before Moongate will open. The lock always appears when the app is started fresh.'**
   String get appLockIntro;
 
   /// Subtitle under the App lock enable switch.
@@ -1991,7 +1991,7 @@ abstract class AppLocalizations {
   /// Subtitle under the biometric unlock toggle.
   ///
   /// In en, this message translates to:
-  /// **'Use fingerprint or face — PIN stays as a fallback'**
+  /// **'Use fingerprint or face - PIN stays as a fallback'**
   String get appLockBiometricSubtitle;
 
   /// List tile that opens the change-PIN flow in App lock settings.
@@ -2018,10 +2018,10 @@ abstract class AppLocalizations {
   /// **'Choose a PIN'**
   String get appLockChoosePinTitle;
 
-  /// Subtitle of the choose-PIN sheet. '4–6' is a digit-length range.
+  /// Subtitle of the choose-PIN sheet. '4-6' is a digit-length range.
   ///
   /// In en, this message translates to:
-  /// **'Enter 4–6 digits'**
+  /// **'Enter 4-6 digits'**
   String get appLockChoosePinSubtitle;
 
   /// Title of the sheet where the user re-enters the PIN to confirm it.
@@ -2123,7 +2123,7 @@ abstract class AppLocalizations {
   /// Body of the reset confirmation dialog. 'MOONGATE_PAIR' is a literal command name.
   ///
   /// In en, this message translates to:
-  /// **'This removes the app lock and clears the paired printers from this device so you can start over. Your printers are not deleted — re-pair them by running MOONGATE_PAIR on each one.'**
+  /// **'This removes the app lock and clears the paired printers from this device so you can start over. Your printers are not deleted - re-pair them by running MOONGATE_PAIR on each one.'**
   String get lockResetBody;
 
   /// Confirm button that resets the app from the 'Forgot PIN?' dialog.
@@ -2207,7 +2207,7 @@ abstract class AppLocalizations {
   /// Dismissible hint on the printer page, shown only over the tunnel for an external camera, pointing the user to the native full-screen camera view.
   ///
   /// In en, this message translates to:
-  /// **'Webcam won\'t load here remotely — open the Moongate camera.'**
+  /// **'Webcam won\'t load here remotely - open the Moongate camera.'**
   String get cameraHintBody;
 
   /// Button on the camera-discoverability hint that opens the full-screen Moongate camera view.
@@ -2303,7 +2303,7 @@ abstract class AppLocalizations {
   /// Example placeholder text shown in the main feedback field.
   ///
   /// In en, this message translates to:
-  /// **'e.g. \"Printer shows Connected / idle but it\'s actually ready — opens fine when I tap the tile.\"'**
+  /// **'e.g. \"Printer shows Connected / idle but it\'s actually ready - opens fine when I tap the tile.\"'**
   String get feedbackCommentHint;
 
   /// Label for the optional contact field on the feedback sheet.
@@ -2333,13 +2333,13 @@ abstract class AppLocalizations {
   /// Snackbar confirming the feedback report was submitted.
   ///
   /// In en, this message translates to:
-  /// **'Thanks — your report was sent.'**
+  /// **'Thanks - your report was sent.'**
   String get feedbackSuccess;
 
   /// Snackbar shown when submitting the feedback report fails.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t send — check your connection and try again.'**
+  /// **'Couldn\'t send - check your connection and try again.'**
   String get feedbackError;
 
   /// Tagline under the MOONGATE wordmark on the splash screen. 'Klipper' is a product name.
@@ -2405,7 +2405,7 @@ abstract class AppLocalizations {
   /// Icon-guide description for the local-network connection icon.
   ///
   /// In en, this message translates to:
-  /// **'Connected directly over your Wi-Fi — the fastest path.'**
+  /// **'Connected directly over your Wi-Fi - the fastest path.'**
   String get uiGuideLocalDesc;
 
   /// Icon-guide entry title for the remote/tunnel connection icon.
@@ -2477,7 +2477,7 @@ abstract class AppLocalizations {
   /// Icon-guide description for the chamber temperature icon.
   ///
   /// In en, this message translates to:
-  /// **'Chamber temperature — shown only if your printer reports one.'**
+  /// **'Chamber temperature - shown only if your printer reports one.'**
   String get uiGuideChamberDesc;
 
   /// Icon-guide entry title for the resume-print control.
@@ -2513,7 +2513,7 @@ abstract class AppLocalizations {
   /// Icon-guide description for the stop-print control.
   ///
   /// In en, this message translates to:
-  /// **'Cancel the print — tap twice to confirm.'**
+  /// **'Cancel the print - tap twice to confirm.'**
   String get uiGuideStopDesc;
 
   /// Icon-guide entry title for the emergency-stop control.
@@ -2573,7 +2573,7 @@ abstract class AppLocalizations {
   /// Icon-guide description for the error status icon. 'Klipper' is a product name.
   ///
   /// In en, this message translates to:
-  /// **'Klipper reported an error — open the printer for details.'**
+  /// **'Klipper reported an error - open the printer for details.'**
   String get uiGuideStatusErrorDesc;
 
   /// Icon-guide entry title for the starting-up status icon.
@@ -2645,7 +2645,7 @@ abstract class AppLocalizations {
   /// Body of the first-run print-notifications prompt.
   ///
   /// In en, this message translates to:
-  /// **'See live status for your printers — progress, temperatures, and alerts when a print starts, finishes or errors. You can change this any time in the menu.'**
+  /// **'See live status for your printers - progress, temperatures, and alerts when a print starts, finishes or errors. You can change this any time in the menu.'**
   String get printNotifPromptBody;
 
   /// Button that enables print notifications from the first-run prompt.

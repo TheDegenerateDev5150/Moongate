@@ -7,11 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// User-configurable theme colours.  Five slots cover every meaningful
 /// surface in the app:
 ///
-///   • [accent]      — primary colour: FAB, buttons, progress bars, links
-///   • [background]  — scaffold (page) background
-///   • [surface]     — cards, sheets, drawer, dashboard tiles
-///   • [text]        — primary on-surface text
-///   • [error]       — destructive actions, error overlays, "Stop" button
+///   • [accent]      - primary colour: FAB, buttons, progress bars, links
+///   • [background]  - scaffold (page) background
+///   • [surface]     - cards, sheets, drawer, dashboard tiles
+///   • [text]        - primary on-surface text
+///   • [error]       - destructive actions, error overlays, "Stop" button
 ///
 /// Persisted as a JSON-encoded `{slot → "#RRGGBB"}` map under a single
 /// SharedPreferences key.  Defaults match the seeded purple dark theme so
@@ -29,7 +29,7 @@ class CustomTheme {
   /// printer_tile's _EstopButton); rides the custom_theme backup.
   final Color estop;
 
-  /// Printer-tile background opacity, 0.0–1.0 (default 1.0 = opaque). Lets the
+  /// Printer-tile background opacity, 0.0-1.0 (default 1.0 = opaque). Lets the
   /// custom dashboard background show through the tiles' card/stats area; the
   /// camera feed stays opaque. Applied on the Custom theme only (see
   /// printer_tile / dashboard_screen). Rides the custom_theme backup.
@@ -133,7 +133,7 @@ class CustomThemeNotifier extends Notifier<CustomTheme> {
       final j = jsonDecode(raw) as Map<String, dynamic>;
       state = CustomTheme.fromJson(j);
     } catch (_) {
-      // Corrupted saved data — fall back to defaults rather than crashing.
+      // Corrupted saved data - fall back to defaults rather than crashing.
       state = CustomTheme.defaults;
     }
   }

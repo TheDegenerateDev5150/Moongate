@@ -56,7 +56,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lightingToggleMacro => 'Umschalt-Makro';
 
   @override
-  String get lightingToggleSection => 'Optional – Umschalt-Methode';
+  String get lightingToggleSection => 'Optional - Umschalt-Methode';
 
   @override
   String get lightingStatusSource => 'Lichtstatus-Quelle';
@@ -239,7 +239,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tileOpacityDesc =>
-      'Wie durchsichtig die Kacheln sind (0–100), damit ein Hintergrund durchscheint. Das Kamerabild bleibt deckend.';
+      'Wie durchsichtig die Kacheln sind (0-100), damit ein Hintergrund durchscheint. Das Kamerabild bleibt deckend.';
 
   @override
   String get dashboardShowWebcams => 'Webcams';
@@ -250,7 +250,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get updateNotesUnavailable =>
-      'Neuigkeiten konnten nicht geladen werden – prüfe deine Verbindung oder sieh sie dir auf GitHub an.';
+      'Neuigkeiten konnten nicht geladen werden - prüfe deine Verbindung oder sieh sie dir auf GitHub an.';
 
   @override
   String get updateViewOnGithub => 'Auf GitHub ansehen';
@@ -263,7 +263,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cameraConfigDescription =>
-      'Zeige eine Kamera, die nicht mit Klipper verbunden ist – etwa ein altes Handy als Webcam. Gib die Adresse ein, die in den Webcam-Einstellungen von Mainsail steht.';
+      'Zeige eine Kamera, die nicht mit Klipper verbunden ist - etwa ein altes Handy als Webcam. Gib die Adresse ein, die in den Webcam-Einstellungen von Mainsail steht.';
 
   @override
   String get cameraConfigUrlLabel => 'Kamera-URL';
@@ -331,7 +331,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dashboardSignInRetrying =>
-      'Verbindung zur Cloud wird wiederhergestellt – die Anmeldung ist ausgelastet, neuer Versuch. Deine Drucker kommen automatisch zurück.';
+      'Verbindung zur Cloud wird wiederhergestellt - die Anmeldung ist ausgelastet, neuer Versuch. Deine Drucker kommen automatisch zurück.';
 
   @override
   String get commonRemove => 'Entfernen';
@@ -421,7 +421,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dashboardCustomiseColoursSubtitle =>
-      'Bearbeite die fünf Design-Slots — HEX oder Palette';
+      'Bearbeite die fünf Design-Slots - HEX oder Palette';
 
   @override
   String get dashboardFontSizeHeading => 'Anzeigegröße';
@@ -471,7 +471,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cameraFeedsIntro =>
-      'Wie oft jede Kachel ihr Kamerabild aktualisiert. Moongate nutzt die lokale Rate, solange du im WLAN bist (auch unterwegs), und die Tunnel-Rate bei mobilen Daten – so bleibt das Bild im WLAN schnell und schont unterwegs dein Datenvolumen.';
+      'Wie oft jede Kachel ihr Kamerabild aktualisiert. Moongate nutzt die lokale Rate, solange du im WLAN bist (auch unterwegs), und die Tunnel-Rate bei mobilen Daten - so bleibt das Bild im WLAN schnell und schont unterwegs dein Datenvolumen.';
 
   @override
   String get cameraFeedsLocalRate => 'Rate des lokalen Feeds';
@@ -506,7 +506,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dashboardAppLock => 'App-Sperre';
 
   @override
-  String get dashboardAppLockOn => 'Ein — Entsperren beim Start erforderlich';
+  String get dashboardAppLockOn => 'Ein - Entsperren beim Start erforderlich';
 
   @override
   String get dashboardAppLockOff => 'Aus';
@@ -543,7 +543,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get donationPromptBody =>
-      'Moongate ist ein kostenloses Hobbyprojekt, das ich in meiner Freizeit entwickle. Wenn es dir hilft, hält ein kleiner Beitrag die Entwicklung am Laufen – ganz ohne Druck, und ich frage nur dieses eine Mal.';
+      'Moongate ist ein kostenloses Hobbyprojekt, das ich in meiner Freizeit entwickle. Wenn es dir hilft, hält ein kleiner Beitrag die Entwicklung am Laufen - ganz ohne Druck, und ich frage nur dieses eine Mal.';
 
   @override
   String get donationPromptLater => 'Vielleicht später';
@@ -561,30 +561,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dashboardBackupFailed =>
-      'Sicherung fehlgeschlagen — die Datei konnte nicht gespeichert werden.';
+      'Sicherung fehlgeschlagen - die Datei konnte nicht gespeichert werden.';
 
   @override
   String dashboardBackupSuccess(int count) {
-    return '$count Drucker gesichert. Mit dieser Datei kannst du sie bei einer Neuinstallation wiederherstellen — bewahre sie privat auf.';
+    return '$count Drucker gesichert. Mit dieser Datei kannst du sie bei einer Neuinstallation wiederherstellen - bewahre sie privat auf.';
   }
 
   @override
   String dashboardBackupSuccessListOnly(int count) {
-    return '$count Drucker gesichert (nur Liste — Cloud für einen Wiederherstellungscode nicht erreichbar).';
+    return '$count Drucker gesichert (nur Liste - Cloud für einen Wiederherstellungscode nicht erreichbar).';
   }
 
   @override
   String get dashboardInvalidBackupFile =>
-      'Ungültige Sicherungsdatei — bitte wähle eine Moongate-Konfigurationsdatei.';
+      'Ungültige Sicherungsdatei - bitte wähle eine Moongate-Konfigurationsdatei.';
 
   @override
   String dashboardRestoreReconnected(int added, int count) {
-    return '$added Drucker wiederhergestellt — $count wieder verbunden und kommen online.';
+    return '$added Drucker wiederhergestellt - $count wieder verbunden und kommen online.';
   }
 
   @override
   String dashboardRestoreNoneReconnected(int added) {
-    return '$added Drucker wiederhergestellt, aber keiner wurde wieder verbunden — der Wiederherstellungscode der Sicherung passte zu keinem Drucker (er stammt möglicherweise aus einer älteren Sicherung oder wurde bereits verwendet). Koppele sie erneut, um sie online zu bringen.';
+    return '$added Drucker wiederhergestellt, aber keiner wurde wieder verbunden - der Wiederherstellungscode der Sicherung passte zu keinem Drucker (er stammt möglicherweise aus einer älteren Sicherung oder wurde bereits verwendet). Koppele sie erneut, um sie online zu bringen.';
   }
 
   @override
@@ -601,7 +601,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String dashboardRestoreReplaceBody(String names) {
-    return 'Diese Drucker sind auf diesem Dashboard, aber nicht im Backup: $names. Beim Wiederherstellen werden sie entfernt, damit das Dashboard exakt dem Backup entspricht. Sie bleiben gekoppelt – du kannst sie später wieder hinzufügen oder wiederherstellen.';
+    return 'Diese Drucker sind auf diesem Dashboard, aber nicht im Backup: $names. Beim Wiederherstellen werden sie entfernt, damit das Dashboard exakt dem Backup entspricht. Sie bleiben gekoppelt - du kannst sie später wieder hinzufügen oder wiederherstellen.';
   }
 
   @override
@@ -631,7 +631,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpPairOnceBody =>
-      'Scanne den QR-Code (oder gib den GATE-Code ein), um einen Drucker hinzuzufügen — diese Verbindung wird in dieser App gespeichert.';
+      'Scanne den QR-Code (oder gib den GATE-Code ein), um einen Drucker hinzuzufügen - diese Verbindung wird in dieser App gespeichert.';
 
   @override
   String get dashboardPairingHelpUpdatesTitle =>
@@ -647,7 +647,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpReinstallBody =>
-      'Sichere zuerst (Menü → Konfiguration sichern), dann bringt die Wiederherstellung deine Drucker wieder online — ohne erneute Kopplung.';
+      'Sichere zuerst (Menü → Konfiguration sichern), dann bringt die Wiederherstellung deine Drucker wieder online - ohne erneute Kopplung.';
 
   @override
   String get dashboardPairingHelpNoBackupTitle => 'Keine Sicherung?';
@@ -661,7 +661,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String dashboardUpdateAvailable(String version) {
-    return 'Update verfügbar — v$version';
+    return 'Update verfügbar - v$version';
   }
 
   @override
@@ -682,7 +682,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pairingIntro =>
-      'Führe MOONGATE_PAIR in deiner Klipper-Konsole aus — scanne den QR-Code oder gib den in der Konsole angezeigten GATE-Code ein.';
+      'Führe MOONGATE_PAIR in deiner Klipper-Konsole aus - scanne den QR-Code oder gib den in der Konsole angezeigten GATE-Code ein.';
 
   @override
   String get pairingNameLabel => 'Druckername';
@@ -694,7 +694,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pairingScanButton => 'QR-Code scannen';
 
   @override
-  String get pairingScanRecommended => 'Empfohlen — verbindet sofort';
+  String get pairingScanRecommended => 'Empfohlen - verbindet sofort';
 
   @override
   String get pairingOr => 'ODER';
@@ -711,7 +711,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pairingGateCodeWarning =>
-      'Alternative Methode. Ohne den QR-Code kann es bis zu etwa einer Minute dauern, bis der Drucker online ist — er wartet auf die Verbindung des sicheren Tunnels. Scanne den QR-Code oben für eine sofortige Verbindung.';
+      'Alternative Methode. Ohne den QR-Code kann es bis zu etwa einer Minute dauern, bis der Drucker online ist - er wartet auf die Verbindung des sicheren Tunnels. Scanne den QR-Code oben für eine sofortige Verbindung.';
 
   @override
   String get pairingCameraPermissionNeeded => 'Kameraberechtigung erforderlich';
@@ -724,7 +724,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String pairingQrScanned(String code) {
-    return 'QR-Code gescannt — Code $code';
+    return 'QR-Code gescannt - Code $code';
   }
 
   @override
@@ -732,7 +732,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pairingAdvancedTitle =>
-      'Erweitert — Drucker in einem benutzerdefinierten Netzwerk?';
+      'Erweitert - Drucker in einem benutzerdefinierten Netzwerk?';
 
   @override
   String get pairingAdvancedBody =>
@@ -781,7 +781,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pairingErrorBadAddress =>
-      'Diese Druckeradresse sieht nicht richtig aus — versuche z. B. 192.168.1.50:7125';
+      'Diese Druckeradresse sieht nicht richtig aus - versuche z. B. 192.168.1.50:7125';
 
   @override
   String pairingErrorFailed(String error) {
@@ -790,7 +790,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pairingImportInvalidFile =>
-      'Ungültige Sicherungsdatei — bitte wähle eine Moongate-Konfigurationsdatei.';
+      'Ungültige Sicherungsdatei - bitte wähle eine Moongate-Konfigurationsdatei.';
 
   @override
   String get pairingImportNoNewPrinters =>
@@ -798,12 +798,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String pairingImportRestoredReconnected(int count, int reconnected) {
-    return '$count Drucker wiederhergestellt — $reconnected wieder verbunden, kommen online.';
+    return '$count Drucker wiederhergestellt - $reconnected wieder verbunden, kommen online.';
   }
 
   @override
   String pairingImportRestoredRepair(int count) {
-    return '$count Drucker wiederhergestellt — koppele jeden Pi erneut, um ihn online zu bringen.';
+    return '$count Drucker wiederhergestellt - koppele jeden Pi erneut, um ihn online zu bringen.';
   }
 
   @override
@@ -879,11 +879,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tilePauseFailed =>
-      'Drucker nicht erreichbar — Pausieren fehlgeschlagen';
+      'Drucker nicht erreichbar - Pausieren fehlgeschlagen';
 
   @override
   String get tileResumeFailed =>
-      'Drucker nicht erreichbar — Fortsetzen fehlgeschlagen';
+      'Drucker nicht erreichbar - Fortsetzen fehlgeschlagen';
 
   @override
   String get tileStopAgainToCancel =>
@@ -921,7 +921,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tileEmergencyStopFailed =>
-      'Drucker nicht erreichbar — Notstopp fehlgeschlagen';
+      'Drucker nicht erreichbar - Notstopp fehlgeschlagen';
 
   @override
   String get tilePrintComplete => 'Druck abgeschlossen';
@@ -987,7 +987,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dashboardBackgroundTitle => 'Dashboard-Hintergrund';
 
   @override
-  String get dashboardBackgroundNone => 'Keiner — Themenfarbe';
+  String get dashboardBackgroundNone => 'Keiner - Themenfarbe';
 
   @override
   String get dashboardBackgroundCustom => 'Eigenes Bild';
@@ -1063,7 +1063,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get appLockIntro =>
-      'Erfordere eine PIN — und optional deinen Fingerabdruck oder dein Gesicht —, bevor Moongate geöffnet wird. Die Sperre erscheint immer, wenn die App neu gestartet wird.';
+      'Erfordere eine PIN - und optional deinen Fingerabdruck oder dein Gesicht -, bevor Moongate geöffnet wird. Die Sperre erscheint immer, wenn die App neu gestartet wird.';
 
   @override
   String get appLockSubtitle => 'PIN zum Öffnen der App erforderlich';
@@ -1073,7 +1073,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get appLockBiometricSubtitle =>
-      'Fingerabdruck oder Gesicht verwenden — PIN bleibt als Ausweichlösung';
+      'Fingerabdruck oder Gesicht verwenden - PIN bleibt als Ausweichlösung';
 
   @override
   String get appLockChangePin => 'PIN ändern';
@@ -1088,7 +1088,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appLockChoosePinTitle => 'PIN wählen';
 
   @override
-  String get appLockChoosePinSubtitle => '4–6 Ziffern eingeben';
+  String get appLockChoosePinSubtitle => '4-6 Ziffern eingeben';
 
   @override
   String get appLockConfirmPinTitle => 'PIN bestätigen';
@@ -1142,7 +1142,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lockResetBody =>
-      'Dies entfernt die App-Sperre und löscht die gekoppelten Drucker von diesem Gerät, damit du neu beginnen kannst. Deine Drucker werden nicht gelöscht — koppele sie erneut, indem du MOONGATE_PAIR auf jedem ausführst.';
+      'Dies entfernt die App-Sperre und löscht die gekoppelten Drucker von diesem Gerät, damit du neu beginnen kannst. Deine Drucker werden nicht gelöscht - koppele sie erneut, indem du MOONGATE_PAIR auf jedem ausführst.';
 
   @override
   String get lockResetConfirm => 'Zurücksetzen';
@@ -1192,7 +1192,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cameraHintBody =>
-      'Webcam lädt hier aus der Ferne nicht — Moongate-Kamera öffnen.';
+      'Webcam lädt hier aus der Ferne nicht - Moongate-Kamera öffnen.';
 
   @override
   String get cameraHintOpen => 'Öffnen';
@@ -1244,7 +1244,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get feedbackCommentHint =>
-      'z. B. „Drucker zeigt Verbunden / Leerlauf, ist aber tatsächlich bereit — öffnet einwandfrei, wenn ich auf die Kachel tippe.“';
+      'z. B. „Drucker zeigt Verbunden / Leerlauf, ist aber tatsächlich bereit - öffnet einwandfrei, wenn ich auf die Kachel tippe.“';
 
   @override
   String get feedbackContactLabel => 'E-Mail oder Kontakt (optional)';
@@ -1259,11 +1259,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get feedbackSend => 'Bericht senden';
 
   @override
-  String get feedbackSuccess => 'Danke — dein Bericht wurde gesendet.';
+  String get feedbackSuccess => 'Danke - dein Bericht wurde gesendet.';
 
   @override
   String get feedbackError =>
-      'Senden fehlgeschlagen — prüfe deine Verbindung und versuche es erneut.';
+      'Senden fehlgeschlagen - prüfe deine Verbindung und versuche es erneut.';
 
   @override
   String get splashTagline => 'Klipper-Fernsteuerung';
@@ -1298,7 +1298,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get uiGuideLocalDesc =>
-      'Direkt über dein Wi-Fi verbunden — der schnellste Weg.';
+      'Direkt über dein Wi-Fi verbunden - der schnellste Weg.';
 
   @override
   String get uiGuideTunnelTitle => 'Fern (Tunnel)';
@@ -1338,7 +1338,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get uiGuideChamberDesc =>
-      'Kammertemperatur — wird nur angezeigt, wenn dein Drucker eine meldet.';
+      'Kammertemperatur - wird nur angezeigt, wenn dein Drucker eine meldet.';
 
   @override
   String get uiGuideResumeTitle => 'Fortsetzen';
@@ -1357,7 +1357,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get uiGuideStopDesc =>
-      'Den Druck abbrechen — zweimal tippen zum Bestätigen.';
+      'Den Druck abbrechen - zweimal tippen zum Bestätigen.';
 
   @override
   String get uiGuideEstopTitle => 'Not-Aus';
@@ -1392,7 +1392,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get uiGuideStatusErrorDesc =>
-      'Klipper hat einen Fehler gemeldet — öffne den Drucker für Details.';
+      'Klipper hat einen Fehler gemeldet - öffne den Drucker für Details.';
 
   @override
   String get uiGuideStatusStartingTitle => 'Startet';
@@ -1434,7 +1434,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get printNotifPromptBody =>
-      'Sieh den Live-Status deiner Drucker — Fortschritt, Temperaturen und Hinweise, wenn ein Druck startet, endet oder fehlschlägt. Du kannst dies jederzeit im Menü ändern.';
+      'Sieh den Live-Status deiner Drucker - Fortschritt, Temperaturen und Hinweise, wenn ein Druck startet, endet oder fehlschlägt. Du kannst dies jederzeit im Menü ändern.';
 
   @override
   String get printNotifPromptEnable => 'Aktivieren';

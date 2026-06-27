@@ -1,10 +1,10 @@
 """
-Moongate — single-file Moonraker component.
+Moongate - single-file Moonraker component.
 
 The version Mainsail's Software Update panel shows is derived from the repo's
 git tags (the vX.Y.Z release tags), not from a version string in this file;
 see install.sh for the clone settings that make tag-based detection work. The
-MOONGATE_PLUGIN_VERSION constant below is separate — it is reported only in
+MOONGATE_PLUGIN_VERSION constant below is separate - it is reported only in
 bug-report diagnostics to identify the exact plugin build, and does not drive
 the update panel.
 
@@ -15,21 +15,21 @@ Supabase Edge Functions. The Pi:
   • Heartbeats the current Cloudflare Quick Tunnel URL (signed) every 5 min
   • Verifies inbound EdDSA JWTs against Supabase's /jwks (cached, 1 h TTL)
   • Stores the bound owner_user_id after the first valid /status or /control
-    call — that user is the printer's owner from then on
+    call - that user is the printer's owner from then on
 
 Deploy as ~/moonraker/moonraker/components/moongate.py (install.sh symlinks).
 
 Endpoints registered:
-  POST /server/moongate/pair          — start a pairing session (called by macro)
-  GET  /server/moongate/qr            — return the current QR URL
-  GET  /server/moongate/status        — printer state (EdDSA-authed)
-  POST /server/moongate/control       — pause/resume/cancel/etc. (EdDSA-authed)
-  POST /server/moongate/reset-owner   — wipe pairing (LAN-only)
-  GET  /server/moongate/pair-page     — JSON metadata for the HTML pair page
+  POST /server/moongate/pair          - start a pairing session (called by macro)
+  GET  /server/moongate/qr            - return the current QR URL
+  GET  /server/moongate/status        - printer state (EdDSA-authed)
+  POST /server/moongate/control       - pause/resume/cancel/etc. (EdDSA-authed)
+  POST /server/moongate/reset-owner   - wipe pairing (LAN-only)
+  GET  /server/moongate/pair-page     - JSON metadata for the HTML pair page
 
 Macros (in moongate.cfg via install.sh):
-  MOONGATE_PAIR           — start a new pairing session
-  MOONGATE_RESET_OWNER    — clear local owner state to allow re-pairing
+  MOONGATE_PAIR           - start a new pairing session
+  MOONGATE_RESET_OWNER    - clear local owner state to allow re-pairing
 """
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 logger = logging.getLogger("moonraker.moongate")
 
 # Bumped on each release; surfaced in the /status response so the app's bug
-# reports show which plugin a Pi is actually running — the #1 triage blind spot
+# reports show which plugin a Pi is actually running - the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
 MOONGATE_PLUGIN_VERSION = "0.6.11"
 
@@ -76,7 +76,7 @@ OWNER_FILE   = CONFIG_DIR / "owner.json"
 CONFIG_FILE  = CONFIG_DIR / "config.json"
 JWKS_CACHE   = CONFIG_DIR / "jwks.json"
 
-# v0.4.4 — Avahi mDNS advertisement for LAN discovery from the v0.5+ app.
+# v0.4.4 - Avahi mDNS advertisement for LAN discovery from the v0.5+ app.
 # See docs/v0.5-lan-discovery-design.md §6 for the full design.
 # AVAHI_SERVICE_TMP lives in the pi-owned config dir; the install-time
 # sudoers entry at /etc/sudoers.d/moongate-avahi permits exactly one cp
@@ -125,7 +125,7 @@ CODE_CHARS = string.digits
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Network helpers (kept from v0.2.x — same cloudflared URL detection logic)
+# Network helpers (kept from v0.2.x - same cloudflared URL detection logic)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _get_local_ip() -> str:
@@ -141,7 +141,7 @@ def _get_local_ip() -> str:
 
 
 # Cloudflare's tunnel-provisioning API lives on the same trycloudflare.com
-# domain but is NOT a tunnel — cloudflared prints it in its own output/logs, and
+# domain but is NOT a tunnel - cloudflared prints it in its own output/logs, and
 # the loose regex below otherwise matches it (seen in the wild as a bogus
 # reported URL, https://api.trycloudflare.com). Never treat it as our tunnel.
 _NON_TUNNEL_URLS = {"https://api.trycloudflare.com"}
@@ -157,7 +157,7 @@ def _get_tunnel_url() -> Optional[str]:
             return None
         return urls[-1] if last else urls[0]
 
-    # 1. cloudflared local REST API — always-live URL
+    # 1. cloudflared local REST API - always-live URL
     for port in (20241, 2000):
         for path in ("/quicktunnel", "/metrics", "/"):
             try:
@@ -169,7 +169,7 @@ def _get_tunnel_url() -> Optional[str]:
             except Exception:
                 pass
 
-    # 2. log file — last match survives URL rotation
+    # 2. log file - last match survives URL rotation
     for p in (Path("/run/moongate-tunnel.log"), Path("/tmp/moongate-tunnel.log")):
         if p.exists():
             try:
@@ -210,7 +210,7 @@ def _b64url_pad(s: str) -> bytes:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# DeviceKey — Ed25519 keypair persisted on disk
+# DeviceKey - Ed25519 keypair persisted on disk
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class DeviceKey:
@@ -254,7 +254,7 @@ class DeviceKey:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# JwksCache — fetch + cache the EdDSA verification keys
+# JwksCache - fetch + cache the EdDSA verification keys
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class JwksCache:
@@ -310,7 +310,7 @@ class JwksCache:
             self._add_jwk(jwk)
 
         if not self._keys:
-            # Bad fetch — keep prior cache rather than going zero-key.
+            # Bad fetch - keep prior cache rather than going zero-key.
             self._keys = prior
             logger.warning("JWKS fetch returned no usable keys; keeping prior cache")
             return False
@@ -410,7 +410,7 @@ class AccessTokenVerifier:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# OwnerState — persisted (printer_id, owner_user_id) after first claim
+# OwnerState - persisted (printer_id, owner_user_id) after first claim
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @dataclass
@@ -448,8 +448,8 @@ class SupabaseClient:
         self.url      = url.rstrip("/")
         self.anon_key = anon_key
         # Clock delta (local − server) in seconds, taken from the most recent
-        # response's Date header. Lets a 401 be explained as clock drift — the
-        # usual cause of "everything's running but remote never connects" — rather
+        # response's Date header. Lets a 401 be explained as clock drift - the
+        # usual cause of "everything's running but remote never connects" - rather
         # than a bald "signature or replay window failure". None until first seen.
         self._server_skew: Optional[float] = None
 
@@ -478,7 +478,7 @@ class SupabaseClient:
 
     def _note_server_date(self, headers: Any) -> None:
         """Record clock skew (local − server, seconds) from a response's Date
-        header. Cheap and side-channel — every Edge Function response carries one,
+        header. Cheap and side-channel - every Edge Function response carries one,
         so a later 401 can be attributed to a wrong Pi clock with no extra call."""
         try:
             date_hdr = headers.get("Date") if headers is not None else None
@@ -642,7 +642,7 @@ class HeartbeatLoop:
             try:
                 await asyncio.wait_for(self._poke_event.wait(), timeout=effective_interval)
                 self._poke_event.clear()
-                logger.debug("Heartbeat poked — sending early")
+                logger.debug("Heartbeat poked - sending early")
             except asyncio.TimeoutError:
                 pass  # Normal interval elapsed
             except asyncio.CancelledError:
@@ -655,7 +655,7 @@ class HeartbeatLoop:
         This is what makes re-pairing resilient to a transient network blip: a
         single failed heartbeat (e.g. 'No route to host' on flaky WiFi) used to
         drop the loop back to the 5-minute interval, so the freshly-created cloud
-        row didn't get its tunnel URL for minutes — a long "Starting up…" wait.
+        row didn't get its tunnel URL for minutes - a long "Starting up…" wait.
         Now we keep retrying every few seconds until the cloud accepts it.
 
         Idempotent; the poke itself is a no-op until the loop has started (the
@@ -667,7 +667,7 @@ class HeartbeatLoop:
     def _send_one(self) -> None:
         tunnel = _get_tunnel_url()
         if not tunnel:
-            logger.debug("Heartbeat skipped — tunnel URL not yet available")
+            logger.debug("Heartbeat skipped - tunnel URL not yet available")
             return
 
         ts        = int(time.time())
@@ -677,7 +677,7 @@ class HeartbeatLoop:
 
         status, body = self.sb.heartbeat(pk_b64, tunnel, ts, sig_b64)
         if status in (200, 204):
-            # Got through — drop out of the post-poke fast window and resume the
+            # Got through - drop out of the post-poke fast window and resume the
             # steady cadence.
             self._fast_deadline = 0.0
             if tunnel != self._last_url_reported:
@@ -685,7 +685,7 @@ class HeartbeatLoop:
                 self._last_url_reported = tunnel
             return
         if status == 404:
-            logger.warning("Heartbeat 404 — printer record gone server-side")
+            logger.warning("Heartbeat 404 - printer record gone server-side")
             # The cloud row we knew is gone, typically because a re-pair or
             # reset-owner created a NEW row. On the FIRST 404 after we were
             # healthy, hold the fast bootstrap cadence for a bounded window so we
@@ -712,20 +712,20 @@ class HeartbeatLoop:
             skew = self.sb.clock_skew_seconds()
             if skew is not None and abs(skew) > 60:
                 logger.warning(
-                    "Heartbeat 401: Pi clock is ~%+ds vs server time (limit ±60s) — "
+                    "Heartbeat 401: Pi clock is ~%+ds vs server time (limit ±60s) - "
                     "remote access will keep failing until the clock is synced. A Pi "
                     "has no battery clock; if NTP is blocked, sync over HTTPS (htpdate). "
                     "Check with: timedatectl",
                     int(skew),
                 )
             else:
-                logger.warning("Heartbeat 401 — signature or replay window failure")
+                logger.warning("Heartbeat 401 - signature or replay window failure")
             return
         logger.warning("Heartbeat HTTP %s: %s", status, body)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PrintEventWatcher — local print-state watch → push notifications
+# PrintEventWatcher - local print-state watch → push notifications
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class PrintEventWatcher:
@@ -734,7 +734,7 @@ class PrintEventWatcher:
     send-push Edge Function so the printer owner's iPhone gets a background
     alert.
 
-    Detection is entirely local — we poll our own Moonraker, never the cloud —
+    Detection is entirely local - we poll our own Moonraker, never the cloud -
     so the only Supabase call is the one-shot send when an event actually fires
     (~2 per print, not a continuous stream). Signed with the same Ed25519
     device key as the heartbeat; the server verifies it identically.
@@ -752,7 +752,7 @@ class PrintEventWatcher:
         self.port   = moonraker_port
         self._task: Optional[asyncio.Task] = None
         # Last print_stats.state we saw. None until the first poll, which only
-        # establishes a baseline — we never fire an event for whatever state
+        # establishes a baseline - we never fire an event for whatever state
         # the printer happens to be in when the plugin loads.
         self._last_state: Optional[str] = None
 
@@ -824,13 +824,13 @@ class PrintEventWatcher:
         if status in (200, 204):
             logger.info("Push event '%s' sent", event)
         elif status == 404:
-            logger.debug("Push event '%s' skipped — printer not paired server-side", event)
+            logger.debug("Push event '%s' skipped - printer not paired server-side", event)
         else:
             logger.warning("Push event '%s' failed: HTTP %s %s", event, status, body)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PendingPair — the active enrollment-token session
+# PendingPair - the active enrollment-token session
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @dataclass
@@ -947,13 +947,13 @@ class MoongatePlugin:
             return None
 
         # v0.5.1: embed the Pi's LAN address in the QR so the app can connect
-        # Local the instant it scans — no mDNS round-trip, no waiting for the
+        # Local the instant it scans - no mDNS round-trip, no waiting for the
         # cloud heartbeat. This is the key to "instant Local on pair": a fresh
         # pair has no mDNS advert yet (the Pi only advertises AFTER an owner
-        # binds, and binding needs a LAN call first — a chicken-and-egg the
+        # binds, and binding needs a LAN call first - a chicken-and-egg the
         # app can't break on its own). The QR is generated here (we know our
         # own IP) and scanned on the same network, so the private IP is a pure
-        # LAN-local hand-off — it never travels through the cloud. After the
+        # LAN-local hand-off - it never travels through the cloud. After the
         # owner binds over this URL, mDNS takes over to keep Local alive across
         # IP changes. Older apps ignore unknown query params, so this is
         # backward-compatible.
@@ -983,7 +983,7 @@ class MoongatePlugin:
         if pending is not None:
             # User is now actively waiting to scan. Kick the heartbeat so
             # the cloud has a fresh tunnel URL by the time their app calls
-            # /printer-access — saves up to `heartbeat_interval_seconds`
+            # /printer-access - saves up to `heartbeat_interval_seconds`
             # (5 min default) of "Starting up..." tile state.
             self.heartbeat.request_immediate_send()
 
@@ -1005,7 +1005,7 @@ class MoongatePlugin:
             # v0.4: the pair page is intentionally only reachable on LAN.
             # The tunnel-side moongate-pair.html sits behind the EdDSA
             # auth proxy and returns 401 to anyone without a valid token
-            # — which a new user pairing for the first time doesn't have
+            # - which a new user pairing for the first time doesn't have
             # yet. Initial pairing requires being on the same network as
             # the printer; after pairing, the app uses the tunnel for
             # remote access transparently and the user never sees the
@@ -1018,13 +1018,13 @@ class MoongatePlugin:
                 "M118 DO NOT SHARE the code above.",
                 "M118 If shared by accident: MOONGATE_RESET_OWNER",
                 "M118 ==========================================",
-                "M118 Option A — Scan the QR. Open this URL on a",
+                "M118 Option A - Scan the QR. Open this URL on a",
                 "M118 PC, tablet, or other phone:",
                 f"M118   {local_page}",
                 "M118 then scan the QR with the Moongate app",
                 "M118 (Add Printer > Scan QR code).",
                 "M118 ==========================================",
-                "M118 Option B — Type the code in the app:",
+                "M118 Option B - Type the code in the app:",
                 "M118 Add Printer > GATE code field.",
                 "M118 ==========================================",
                 f"M118 Code expires in {ttl_min} minutes.",
@@ -1103,8 +1103,8 @@ class MoongatePlugin:
         if status == 200:
             return "M118 Cloud row released."
         if status == 0:
-            return "M118 Cloud release skipped — network unavailable."
-        return f"M118 Cloud release failed — HTTP {status}."
+            return "M118 Cloud release skipped - network unavailable."
+        return f"M118 Cloud release failed - HTTP {status}."
 
     def _wipe_owner(self) -> None:
         self.owner = None
@@ -1113,14 +1113,14 @@ class MoongatePlugin:
                 OWNER_FILE.unlink()
         except OSError as exc:
             logger.warning("Failed to delete %s: %s", OWNER_FILE, exc)
-        # v0.4.4: stop advertising on mDNS when we lose owner state — the Pi
+        # v0.4.4: stop advertising on mDNS when we lose owner state - the Pi
         # is no longer paired so it shouldn't be discoverable.
         self._remove_avahi_service()
 
     def _on_unpaired(self) -> None:
         """Heartbeat callback: server says printer is gone."""
         if self.owner is not None:
-            logger.warning("Server has no record of this printer — wiping local owner state")
+            logger.warning("Server has no record of this printer - wiping local owner state")
             self._wipe_owner()
 
     # ── v0.4.4: Avahi mDNS advertisement ──────────────────────────────────────
@@ -1133,7 +1133,7 @@ class MoongatePlugin:
     # tightly-scoped sudoers entry installed by install.sh.
 
     def _write_avahi_service(self) -> None:
-        """Install the Avahi service file. Idempotent. Best-effort —
+        """Install the Avahi service file. Idempotent. Best-effort -
         failures are logged but never interrupt pairing or polling."""
         if self.owner is None:
             return
@@ -1159,7 +1159,7 @@ class MoongatePlugin:
                 )
             else:
                 # Most common cause: sudoers entry missing. Tell the user
-                # how to fix without scaring them — pairing itself succeeded.
+                # how to fix without scaring them - pairing itself succeeded.
                 logger.warning(
                     "Avahi mDNS advertisement skipped (re-run install.sh "
                     "to enable LAN discovery from the v0.5+ app): %s",
@@ -1211,7 +1211,7 @@ class MoongatePlugin:
         # printer_id appears for this same Pi is a deliberate re-pair that
         # re-enrolled us under a fresh cloud row (the old row was released /
         # recreated, so the cloud id changed). That only happens while a pairing
-        # session the user just started on the LAN/console is live — during that
+        # session the user just started on the LAN/console is live - during that
         # window we drop the pin so the new id can first-bind below. Outside
         # pairing the pin stands and an id mismatch is a hard 401.
         pairing = (self._pending is not None
@@ -1225,8 +1225,8 @@ class MoongatePlugin:
             raise self.server.error("Invalid or expired token", 401)
 
         # Bind the owner on first contact, AND re-bind if a validly-signed token
-        # presents a new owner ("sub") — a cloud ownership transfer such as a
-        # backup restore on a fresh install — or a new printer_id from the
+        # presents a new owner ("sub") - a cloud ownership transfer such as a
+        # backup restore on a fresh install - or a new printer_id from the
         # re-pair described above. The cloud only ever mints a valid, printer-
         # scoped token to the current owner, so the Pi follows the cloud rather
         # than refusing.
@@ -1247,17 +1247,17 @@ class MoongatePlugin:
             except OSError as exc:
                 logger.error("Failed to persist owner.json: %s", exc)
             # A pairing session (if one was active) has served its purpose now
-            # that a valid token has bound — close it so the printer_id pin is
+            # that a valid token has bound - close it so the printer_id pin is
             # back in force on the very next poll.
             self._pending = None
             # The Pi is discoverable on the LAN only once it has a valid owner
-            # (unpaired Pis are intentionally invisible on mDNS — see
+            # (unpaired Pis are intentionally invisible on mDNS - see
             # docs/v0.5-lan-discovery-design.md §6.4). Idempotent on re-bind.
             self._write_avahi_service()
             # Poke a heartbeat so the cloud's last_seen / tunnel URL refresh
             # immediately: on first bind the app reached us over LAN before the
             # cloud knows our tunnel; on a transfer the new owner wants the
-            # tunnel reported promptly too — instead of a "Starting up…" wait.
+            # tunnel reported promptly too - instead of a "Starting up…" wait.
             self.heartbeat.request_immediate_send()
         return claims
 
@@ -1353,7 +1353,7 @@ class MoongatePlugin:
         result["tunnel_url"] = _get_tunnel_url()
         # Surface the Pi's LAN address so the app can prefer a direct LAN
         # call (with the same EdDSA token) when it's on the same network,
-        # skipping the Cloudflare round-trip. Doesn't add port — app pairs
+        # skipping the Cloudflare round-trip. Doesn't add port - app pairs
         # it with the configured http_port from its own knowledge.
         result["local_ip"]   = _get_local_ip()
         result["http_port"]  = self.http_port
@@ -1368,7 +1368,7 @@ class MoongatePlugin:
         # Absolute URL of a camera that lives on another device on the LAN
         # (e.g. an old phone used as a webcam), read from Mainsail's webcam
         # config; None for the normal Pi-served camera. The app auto-uses it
-        # — directly on LAN, or through the /mg-extcam proxy when remote.
+        # - directly on LAN, or through the /mg-extcam proxy when remote.
         result["webcam_stream_external"]   = webcam["stream_external"]
         result["webcam_snapshot_external"] = webcam["snapshot_external"]
         return result
@@ -1441,7 +1441,7 @@ class MoongatePlugin:
 
         def _ext(raw: Any) -> Optional[str]:
             # An absolute http(s) URL whose host is some OTHER device on the
-            # network (not localhost / 127.x) — i.e. a camera Moonraker can't
+            # network (not localhost / 127.x) - i.e. a camera Moonraker can't
             # snapshot for us, e.g. an old phone running an IP-webcam app and
             # configured in Mainsail as a stream_url like
             # http://192.168.0.107:8080/video. Returns the URL, else None. The
@@ -1474,8 +1474,8 @@ class MoongatePlugin:
 
             # Relative Pi-served snapshot path for the normal (Crowsnest /
             # uv4l) case. An absolute EXTERNAL snapshot_url must NOT leak into
-            # snapshot_path — the app would build tunnel_base + absolute_url
-            # and get garbage — so fall back to the default and surface the
+            # snapshot_path - the app would build tunnel_base + absolute_url
+            # and get garbage - so fall back to the default and surface the
             # external URL separately via snapshot_external instead.
             snap_raw = (cam.get("snapshot_url") or "").strip()
             if snapshot_external:

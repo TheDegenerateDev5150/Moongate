@@ -1,7 +1,7 @@
 // POST /functions/v1/redeem-restore-grant
 //
 // After a reinstall, the freshly-signed-in anonymous user redeems the restore
-// code from their backup to reclaim their printers — the RPC re-assigns the
+// code from their backup to reclaim their printers - the RPC re-assigns the
 // grantor's live printer rows to the caller. Single-use; an expired/used/
 // unknown code returns 404. See migration 20260609130000_restore_grants.
 //

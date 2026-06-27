@@ -41,7 +41,7 @@ Future<void> showGlobalPowerSheet(
 
 /// How one dashboard printer can be powered in bulk, resolved when the sheet
 /// opened. A printer drives EITHER its Advanced Power macros ([macroMode]) or a
-/// Moonraker `[power …]` device, never both — mirroring the per-tile button.
+/// Moonraker `[power …]` device, never both - mirroring the per-tile button.
 class _Row {
   final PrinterConfig printer;
 
@@ -52,7 +52,7 @@ class _Row {
   final List<PowerDevice> devices;
 
   /// Reachable enough to act on now: the Pi answered for its devices (device
-  /// mode), or the live status says it's online with Klipper up (macro mode — a
+  /// mode), or the live status says it's online with Klipper up (macro mode - a
   /// Klipper power macro can't run on a machine that's off).
   final bool reachable;
 

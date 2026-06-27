@@ -1,8 +1,8 @@
--- Moongate v0.3.0 — FK cascade fix
+-- Moongate v0.3.0 - FK cascade fix
 --
 -- The initial migration created enrollment_tokens.used_by_user_id with a
 -- default-RESTRICT foreign key to auth.users. That blocks user deletion as
--- soon as the user has redeemed an enrollment token — which is the common
+-- soon as the user has redeemed an enrollment token - which is the common
 -- case (every paired printer leaves a `used` token row behind for ~1 day
 -- until the cleanup cron sweeps it).
 --

@@ -1,6 +1,6 @@
 // Print-progress maths shared by the dashboard tile ([PrinterStatusService])
 // and the print notification ([PrintNotificationService]) so the two can never
-// disagree — and so both match what Mainsail shows.
+// disagree - and so both match what Mainsail shows.
 //
 // They used to drift: the tile preferred an elapsed-time ÷ slicer-estimate
 // calculation while the notification used the raw file fraction, and neither
@@ -18,10 +18,10 @@
 ///
 /// Fallback chain when the byte offsets or file position aren't known yet (e.g.
 /// the file metadata hasn't loaded for the first second of a print):
-///   1. file-relative — needs [filePosition] + both valid gcode byte offsets
-///   2. [displayProgress] — Klipper's `display_status.progress` (mirrors the
+///   1. file-relative - needs [filePosition] + both valid gcode byte offsets
+///   2. [displayProgress] - Klipper's `display_status.progress` (mirrors the
 ///      file fraction when the slice has no M73; honours M73 when it does)
-///   3. [sdcardProgress]  — raw `virtual_sdcard.progress` (file-absolute)
+///   3. [sdcardProgress]  - raw `virtual_sdcard.progress` (file-absolute)
 ///   4. 0
 double computePrintProgress({
   double? filePosition,

@@ -4,7 +4,7 @@ import 'dart:developer' as dev;
 import 'supabase_service.dart';
 
 /// In-memory cache of `PrinterAccess` results, one per printer_id. Status
-/// and control services call [get] before every HTTP request — the cache
+/// and control services call [get] before every HTTP request - the cache
 /// reuses the same access token until ~30s before expiry, then refreshes.
 ///
 /// Concurrent callers for the same printer share an in-flight Future so
@@ -44,7 +44,7 @@ class PrinterAccessCache {
     return SupabaseService.instance.getPrinterAccess(printerId);
   }
 
-  /// Drop the cached entry for [printerId] — call after a 401 from the Pi
+  /// Drop the cached entry for [printerId] - call after a 401 from the Pi
   /// (the token may be stale despite our local clock saying otherwise).
   void invalidate(String printerId) {
     _cached.remove(printerId);

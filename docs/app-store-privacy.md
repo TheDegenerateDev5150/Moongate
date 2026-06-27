@@ -1,16 +1,16 @@
-# App Store submission — privacy answers and reviewer notes
+# App Store submission - privacy answers and reviewer notes
 
 Companion to `docs/privacy-policy.md`. This maps what the app actually does to
 Apple's **App Privacy** questionnaire in App Store Connect, plus the **review
 notes** to head off rejections. Grounded in a code audit (see
 `diagnostics_service.dart`, `supabase_service.dart`, the Supabase functions, and
-the dependency list — no analytics/ads/tracking SDKs are present).
+the dependency list - no analytics/ads/tracking SDKs are present).
 
 ## Key facts that shape the answers
 
 - Sign-in is **anonymous** (a random UUID); no name/email/password.
 - The **only** data sent off-device that contains device/network details is the
-  **opt-in bug report** — nothing is transmitted unless the user taps Submit.
+  **opt-in bug report** - nothing is transmitted unless the user taps Submit.
 - There are **no analytics, advertising, or tracking SDKs**. Nothing is used to
   track across apps/sites → **no App Tracking Transparency prompt is required**,
   and "Used to Track You" is **No** for every data type.
@@ -18,7 +18,7 @@ the dependency list — no analytics/ads/tracking SDKs are present).
   items (settings, app-lock PIN hash, biometrics, the QR camera, custom
   background image) are **not** "collected".
 
-## App Privacy questionnaire — recommended answers
+## App Privacy questionnaire - recommended answers
 
 Mark these as **Collected**, **Linked to the user** (everything ties to the
 anonymous account id), **Not used for tracking**:
@@ -40,10 +40,10 @@ Data (no analytics), Audio, Photos, etc.
 Apple's questionnaire has no explicit "IP address" type. Our providers
 (Supabase/Cloudflare) log IPs **only** for security, abuse-prevention, and
 operations. Data collected solely for those purposes is exempt from the
-"collected" disclosure, so it is **not** declared as a collected data type — but
+"collected" disclosure, so it is **not** declared as a collected data type - but
 it **is** disclosed in the privacy policy (section 1.5) for transparency.
 
-## Account deletion (Guideline 5.1.1(v)) — DECISION NEEDED
+## Account deletion (Guideline 5.1.1(v)) - DECISION NEEDED
 
 Apps that "support account creation" must offer in-app account/data deletion.
 Moongate creates an **anonymous** backend account, which is a grey area, but
@@ -60,7 +60,7 @@ this as a possible rejection reason. Decide before submission.
 > Moongate is a self-hosted 3D-printer dashboard. It connects to the user's own
 > Raspberry Pi running Klipper/Moonraker.
 >
-> - **Sign-in is anonymous** — no account, email, or password. An anonymous id
+> - **Sign-in is anonymous** - no account, email, or password. An anonymous id
 >   is created automatically so the user's own printers can be associated with
 >   their install.
 > - **Local Network** permission is used to discover (Bonjour/mDNS,
@@ -79,9 +79,9 @@ this as a possible rejection reason. Decide before submission.
 > Privacy policy: https://peekypaul.github.io/Moongate/privacy-policy.html
 
 ## Still to do before submission
-- [x] **Privacy policy hosted** — live at https://peekypaul.github.io/Moongate/privacy-policy.html (GitHub Pages, master `/docs`).
-- [x] **Policy placeholders filled** — controller = Moongate, contact = psychoshaft@live.co.uk, effective 26 June 2026.
-- [x] **In-app "Delete my data"** — built + merged (#146); `delete-account` function deletes the anon user, cascades wipe the rest.
+- [x] **Privacy policy hosted** - live at https://peekypaul.github.io/Moongate/privacy-policy.html (GitHub Pages, master `/docs`).
+- [x] **Policy placeholders filled** - controller = Moongate, contact = psychoshaft@live.co.uk, effective 26 June 2026.
+- [x] **In-app "Delete my data"** - built + merged (#146); `delete-account` function deletes the anon user, cascades wipe the rest.
 - [ ] Put the policy URL in **App Store Connect** (App Privacy → Privacy Policy URL) and link it from the README.
 - [ ] Record a short **demo video** (pairing + dashboard) for the reviewer and drop its URL into the reviewer notes above (the app needs real hardware).
 - [ ] Confirm the **retention periods** in the policy against the live cleanup cron.

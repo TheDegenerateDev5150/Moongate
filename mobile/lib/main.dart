@@ -25,7 +25,7 @@ void main() async {
   await SupabaseService.instance.initialize();
 
   // Load the local printer registry. In v0.3.0 this is a cache of the
-  // Supabase printers table that this user owns — we refresh from
+  // Supabase printers table that this user owns - we refresh from
   // Supabase asynchronously in the dashboard.
   await PrinterRegistry.instance.load();
 
@@ -55,7 +55,7 @@ void main() async {
   container.read(onMobileDataProvider);
 
   // Bring the print-notification foreground service in line with the saved
-  // preference — starts it if the user left notifications on. Best-effort.
+  // preference - starts it if the user left notifications on. Best-effort.
   PrintNotificationService.instance
       .sync(container.read(printNotificationsEnabledProvider))
       .ignore();
@@ -63,14 +63,14 @@ void main() async {
   // v0.5.0: kick off the first mDNS browse in the background so the
   // LanDiscoveryService cache is (ideally) populated by the time the
   // dashboard fires its first poll. The browse races against the
-  // 2 s splash screen + the first 4 s poll interval — a typical home
+  // 2 s splash screen + the first 4 s poll interval - a typical home
   // WiFi resolves mDNS in <500 ms, so the cache wins the race in
   // practice. If it doesn't, the first poll falls back to the persisted
   // lanUrl exactly as v0.4.x did. See docs/v0.5-lan-discovery-design.md §7.
   LanDiscoveryService.instance.refresh().ignore();
 
   // Track printer liveness (last_seen) over Realtime so the dashboard can show
-  // offline printers and skip minting tokens for them — keeping an offline Pi at
+  // offline printers and skip minting tokens for them - keeping an offline Pi at
   // zero Edge Function cost. No-ops until the anon session lands, then self-starts.
   PrinterLivenessService.instance.start();
 
@@ -82,7 +82,7 @@ void main() async {
 
   // Clean up the APK left behind by a previous in-app update. By now its install
   // has finished (or was declined), so the ~80 MB file is just dead weight in
-  // the cache — users were seeing it as the app eating storage. Best-effort, off
+  // the cache - users were seeing it as the app eating storage. Best-effort, off
   // the startup path.
   OtaInstaller.clearDownloadedApks().ignore();
 

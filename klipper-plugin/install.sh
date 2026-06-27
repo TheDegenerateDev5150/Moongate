@@ -4,7 +4,7 @@
 # Run on your Klipper Pi:
 #   curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/install.sh | bash
 #
-# Re-running is safe — existing tokens, config, and cloudflared are untouched.
+# Re-running is safe - existing tokens, config, and cloudflared are untouched.
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 [[ "$MOONGATE_PORT" =~ ^[0-9]+$ ]] \
-    || die "Port must be numeric — got: $MOONGATE_PORT"
+    || die "Port must be numeric - got: $MOONGATE_PORT"
 [[ "$MOONGATE_PORT" -ge 1 && "$MOONGATE_PORT" -le 65535 ]] \
     || die "Port out of range (1-65535): $MOONGATE_PORT"
 info "HTTP port: $MOONGATE_PORT"
@@ -59,12 +59,12 @@ KLIPPER_CFG_DIR="$PRINTER_DATA/config"
 # Moongate's remote access is cryptographically time-bound: the Pi signs every
 # heartbeat with its clock and the cloud REJECTS anything more than 60s off its
 # own (replay protection); the short-lived access tokens are time-checked too. A
-# Raspberry Pi has no battery-backed clock, so when NTP (UDP/123) is blocked —
-# common on locked-down networks — the clock silently drifts and ALL remote
+# Raspberry Pi has no battery-backed clock, so when NTP (UDP/123) is blocked -
+# common on locked-down networks - the clock silently drifts and ALL remote
 # access fails with cryptic 401s while everything else looks perfectly fine.
 #
 # timedatectl can't be trusted here (it happily reports an active-but-never-synced
-# client), so measure the REAL skew against an HTTPS Date header — the same path
+# client), so measure the REAL skew against an HTTPS Date header - the same path
 # the Pi uses to reach Supabase. -k because a badly-wrong clock fails TLS validity
 # (chicken-and-egg) and we're only reading a timestamp, not trusting a secret.
 # When NTP can't sync, keep time honest with htpdate (HTTP-based, survives blocked
@@ -79,7 +79,7 @@ MG_HTTP_DATE=${MG_HTTP_DATE%$'\r'}
 MG_HTTP_EPOCH=$(date -d "$MG_HTTP_DATE" +%s 2>/dev/null || true)
 
 if [[ -z "$MG_HTTP_DATE" || -z "$MG_HTTP_EPOCH" ]]; then
-    warn "Couldn't verify the clock against network time — skipping (non-fatal)."
+    warn "Couldn't verify the clock against network time - skipping (non-fatal)."
     warn "If remote access later fails with repeated 'Heartbeat 401', check 'timedatectl' first."
 else
     MG_NOW_EPOCH=$(date +%s)
@@ -87,7 +87,7 @@ else
     if (( MG_SKEW <= MG_CLOCK_MAX_SKEW )); then
         success "Clock is accurate (within ${MG_SKEW}s of network time)."
     else
-        warn "Pi clock is off by ~${MG_SKEW}s — remote auth needs it within 60s, correcting now."
+        warn "Pi clock is off by ~${MG_SKEW}s - remote auth needs it within 60s, correcting now."
         warn "(No battery clock + blocked NTP makes it drift; every signed heartbeat is then"
         warn " rejected as a replay, so remote access silently fails.)"
         if sudo date -s "$MG_HTTP_DATE" >/dev/null 2>&1; then
@@ -99,12 +99,12 @@ else
         # Keep it correct across reboots. If NTP genuinely works, leave it alone;
         # otherwise install htpdate + a small timer so it can't drift back.
         if timedatectl show -p NTPSynchronized --value 2>/dev/null | grep -qi true; then
-            info "NTP is working — no extra time daemon needed."
+            info "NTP is working - no extra time daemon needed."
         elif sudo apt-get install -y htpdate >/dev/null 2>&1; then
             MG_HTPDATE_BIN=$(command -v htpdate || echo /usr/sbin/htpdate)
             sudo tee /etc/systemd/system/moongate-timesync.service >/dev/null <<UNIT
 [Unit]
-Description=Moongate HTTPS time sync (htpdate) — for networks where NTP is blocked
+Description=Moongate HTTPS time sync (htpdate) - for networks where NTP is blocked
 After=network-online.target
 Wants=network-online.target
 
@@ -127,7 +127,7 @@ UNIT
             sudo systemctl daemon-reload >/dev/null 2>&1 || true
             sudo systemctl enable --now moongate-timesync.timer >/dev/null 2>&1 || true
             sudo systemctl start moongate-timesync.service >/dev/null 2>&1 || true
-            success "htpdate installed + timer enabled — clock stays synced over HTTPS (NTP is blocked here)."
+            success "htpdate installed + timer enabled - clock stays synced over HTTPS (NTP is blocked here)."
         else
             warn "Couldn't install htpdate. Open outbound UDP/123 (NTP) on your router, or"
             warn "re-sync after each reboot with the 'sudo date -s' command above."
@@ -154,7 +154,7 @@ if command -v dpkg &>/dev/null; then
         *) die "Unsupported dpkg architecture: $DPKG_ARCH (uname: $ARCH)" ;;
     esac
 else
-    # No dpkg — unusual on a Klipper Pi, but fall back to uname so the
+    # No dpkg - unusual on a Klipper Pi, but fall back to uname so the
     # diagnostic still fires before we try to install cloudflared.
     case "$ARCH" in
         aarch64|arm64) CF_ARCH="arm64" ;;
@@ -170,16 +170,16 @@ info "Architecture: $ARCH (dpkg: ${DPKG_ARCH:-n/a}) → cloudflared: $CF_ARCH"
 
 # ── 1. Clone or update the Moongate repo ─────────────────────────────────────
 # Cloning to ~/moongate lets Moonraker's update manager track the repo and
-# show updates in Mainsail's update panel — just like Klipper/Mainsail itself.
+# show updates in Mainsail's update panel - just like Klipper/Mainsail itself.
 info "Setting up Moongate repository at $MOONGATE_DIR..."
 
 if [[ -d "$MOONGATE_DIR/.git" ]]; then
     CURRENT_BRANCH="$(git -C "$MOONGATE_DIR" branch --show-current 2>/dev/null || echo unknown)"
     if [[ "$CURRENT_BRANCH" != "master" ]]; then
-        warn "Repo on branch '$CURRENT_BRANCH' (not master) — skipping git pull."
+        warn "Repo on branch '$CURRENT_BRANCH' (not master) - skipping git pull."
         warn "Run 'git pull' manually if you intended to update."
     elif [[ -f "$MOONGATE_DIR/.git/shallow" ]]; then
-        # Older installs used `git clone --depth=1` — a shallow clone carries
+        # Older installs used `git clone --depth=1` - a shallow clone carries
         # no git tags, so Moonraker can't determine a version and Mainsail's
         # Software Update panel shows "v0.0.0-…-inferred" instead of vX.Y.Z.
         # A shallow clone can't be cheaply converted in place, so re-clone.
@@ -187,15 +187,15 @@ if [[ -d "$MOONGATE_DIR/.git" ]]; then
         # release APKs that lived in this repo's history before they moved to
         # GitHub Release assets. Old clone preserved for safety.
         BROKEN_DIR="${MOONGATE_DIR}.shallow-$(date +%Y%m%d-%H%M%S)"
-        warn "Existing clone is shallow — no tags, so the update panel can't show a version."
+        warn "Existing clone is shallow - no tags, so the update panel can't show a version."
         warn "Re-cloning with full tag history. Old clone preserved at $BROKEN_DIR"
         mv "$MOONGATE_DIR" "$BROKEN_DIR"
         git clone --filter=blob:none "$MOONGATE_REPO" "$MOONGATE_DIR"
         success "Repository re-cloned with tags. Old clone preserved at $BROKEN_DIR"
     else
-        info "Repo on master — pulling latest..."
+        info "Repo on master - pulling latest..."
         # Robust update: `git pull --ff-only` can fail fatally for several
-        # reasons — divergent history (force-push upstream), dirty working
+        # reasons - divergent history (force-push upstream), dirty working
         # tree (CRLF conversion, manual edits), untracked files that would
         # be overwritten, or local commits ahead of master. set -e would
         # then abort the installer mid-way. Fall back to re-cloning fresh,
@@ -222,7 +222,7 @@ fi
 PLUGIN_SRC="$MOONGATE_DIR/klipper-plugin/moongate_standalone.py"
 
 # ── 2. Install Moongate Moonraker plugin (symlink) ───────────────────────────
-# Using a symlink means git pull automatically gives you the new plugin —
+# Using a symlink means git pull automatically gives you the new plugin -
 # no manual file copy needed. Moonraker's update manager restarts Moonraker
 # after each pull so the new version loads cleanly.
 info "Linking plugin into Moonraker components..."
@@ -260,7 +260,7 @@ fi
 
 # ── 2c. Wipe v0.2.x state if migrating ───────────────────────────────────────
 # v0.2.x stored tokens.json / secret.key / peers.json in ~/.config/moongate/.
-# v0.3 uses device_ed25519 / owner.json / jwks.json — none of the old files
+# v0.3 uses device_ed25519 / owner.json / jwks.json - none of the old files
 # are valid for the new model. Move them aside so re-running install.sh on
 # a v0.2.x box gets a clean v0.3 install.
 LEGACY_DIR="$HOME/.config/moongate/legacy-v0.2.x"
@@ -276,7 +276,7 @@ fi
 # ── 2d. v0.4 backup directory ────────────────────────────────────────────────
 # Originals of every system config we patch (moonraker.conf, nginx vhosts,
 # moongate-tunnel.service) land here. uninstall.sh restores from these on
-# downgrade. Each file is backed up exactly once — re-running install.sh
+# downgrade. Each file is backed up exactly once - re-running install.sh
 # doesn't overwrite an existing backup with an already-patched copy.
 V04_BACKUP_DIR="$HOME/.config/moongate/v0.4-backup"
 mkdir -p "$V04_BACKUP_DIR"
@@ -310,7 +310,7 @@ with open(path) as f:
 # Find or create the [server] section.
 server_match = re.search(r'(?m)^\[server\]\s*$', content)
 if not server_match:
-    # No [server] block at all — append one with our settings.
+    # No [server] block at all - append one with our settings.
     content = content.rstrip() + "\n\n[server]\nhost: 127.0.0.1\nport: 7125\n"
 else:
     # Locate the end of the [server] block (next [section] or EOF).
@@ -320,7 +320,7 @@ else:
     section = content[start:end]
 
     if re.search(r'(?m)^\s*host\s*[:=]', section):
-        # host: already set — force to 127.0.0.1.
+        # host: already set - force to 127.0.0.1.
         new_section = re.sub(
             r'(?m)^(\s*host\s*[:=]\s*).*$',
             r'\g<1>127.0.0.1',
@@ -328,7 +328,7 @@ else:
             count=1,
         )
     else:
-        # No host: line in [server] — inject one right after the header.
+        # No host: line in [server] - inject one right after the header.
         new_section = "\nhost: 127.0.0.1" + section
 
     content = content[:start] + new_section + content[end:]
@@ -341,13 +341,13 @@ success "Moonraker bound to 127.0.0.1"
 
 # NOTE: We intentionally do NOT patch nginx vhosts in v0.4.0. The original
 # v0.4 design considered binding nginx to 127.0.0.1 (defense in depth), but
-# that would break the LAN-first path that v0.3 introduced — Mainsail loaded
+# that would break the LAN-first path that v0.3 introduced - Mainsail loaded
 # from http://<pi-lan-ip>/ would 404 because nothing would be listening on
 # the LAN interface. The actual security guarantee comes from retargeting
 # cloudflared (step 7 below) to the auth proxy: the tunnel no longer reaches
 # nginx, only the EdDSA gate. nginx stays reachable on LAN exactly as today.
 # If a user explicitly port-forwards :80, they have made nginx public on
-# their own initiative — same risk profile as v0.3 in that scenario.
+# their own initiative - same risk profile as v0.3 in that scenario.
 
 if grep -q '^\[moongate\]' "$MOONRAKER_CONF"; then
     info "[moongate] already in moonraker.conf"
@@ -357,7 +357,7 @@ else
 fi
 
 # ── 3. Register with Moonraker's update manager ───────────────────────────────
-# This adds Moongate to the Software Updates panel in Mainsail — same as
+# This adds Moongate to the Software Updates panel in Mainsail - same as
 # Klipper, Mainsail, etc. One-click updates from the web UI from now on.
 info "Registering with Moonraker update manager..."
 
@@ -392,7 +392,7 @@ for candidate in \
 done
 
 if [[ -z "$PRINTER_CFG" ]]; then
-    die "Cannot find printer.cfg — tried:
+    die "Cannot find printer.cfg - tried:
   $PRINTER_DATA/config/printer.cfg
   $HOME/klipper_config/printer.cfg
   $HOME/printer_data/config/printer.cfg
@@ -428,7 +428,7 @@ done < <(find "$KLIPPER_CFG_DIR" -maxdepth 2 -name "*.cfg" 2>/dev/null)
 {
     cat << 'HEADER'
 # ── Moongate ──────────────────────────────────────────────────────────────────
-# Managed by the Moongate installer — do not edit manually.
+# Managed by the Moongate installer - do not edit manually.
 # Updates are handled automatically via Moonraker's update manager.
 
 HEADER
@@ -439,7 +439,7 @@ HEADER
 # the pair code, QR URL, and instructions to the Mainsail/Fluidd console.
 # Without this, MOONGATE_PAIR would log "Unknown command: M118" instead.
 # If you later add [respond] elsewhere in your config, remove this block
-# — Klipper refuses to start with two [respond] sections.
+# - Klipper refuses to start with two [respond] sections.
 [respond]
 
 RESPONDSECTION
@@ -459,7 +459,7 @@ MACROS
 } > "$MOONGATE_CFG"
 
 if [[ $RESPOND_PRESENT -eq 1 ]]; then
-    info "[respond] already enabled in your config — moongate.cfg uses your existing one"
+    info "[respond] already enabled in your config - moongate.cfg uses your existing one"
 else
     success "[respond] auto-added to moongate.cfg (required for MOONGATE_PAIR's M118 output)"
 fi
@@ -483,7 +483,7 @@ for webroot in "$MAINSAIL_DIR" "$HOME/printer_data/www" "$HOME/fluidd"; do
         DEPLOYED=1
     fi
 done
-[[ $DEPLOYED -eq 0 ]] && warn "No web-root found — skipping QR page"
+[[ $DEPLOYED -eq 0 ]] && warn "No web-root found - skipping QR page"
 
 # ── 5b. Persist HTTP port to the plugin config ────────────────────────────────
 # The plugin reads this file on each Moonraker start and embeds the port in
@@ -509,7 +509,7 @@ with open(path, "w") as f:
     json.dump(data, f, indent=2)
 PY
 else
-    # Best-effort fallback when python3 isn't on PATH — overwrites other keys
+    # Best-effort fallback when python3 isn't on PATH - overwrites other keys
     cat > "$PLUGIN_CFG_FILE" << EOF
 {
   "http_port": $MOONGATE_PORT
@@ -529,7 +529,7 @@ success "Plugin HTTP port saved to $PLUGIN_CFG_FILE"
 # Cloudflare publishes both shapes for every arch we care about, so a
 # single $CF_ARCH variable drives both paths.
 if command -v cloudflared &>/dev/null; then
-    info "cloudflared already installed at $(command -v cloudflared) — skipping."
+    info "cloudflared already installed at $(command -v cloudflared) - skipping."
 else
     CF_BASE="https://github.com/cloudflare/cloudflared/releases/latest/download"
     if command -v dpkg &>/dev/null; then
@@ -540,7 +540,7 @@ else
         sudo dpkg -i "$TMP_DEB" || die "dpkg failed installing $TMP_DEB"
         rm -f "$TMP_DEB"
     else
-        # No dpkg — install the binary directly. /usr/local/bin is on
+        # No dpkg - install the binary directly. /usr/local/bin is on
         # PATH on every Linux we'd realistically run on. systemd will
         # find it via the resolved $CLOUDFLARED_BIN below.
         info "Installing cloudflared binary to /usr/local/bin (no dpkg detected)..."
@@ -567,7 +567,7 @@ CLOUDFLARED_BIN="$(command -v cloudflared)"
 #
 # The unit file in the repo (moongate-authproxy.service) is a template with
 # REPLACE_ placeholders documenting the intended shape. Here we write the
-# real unit inline with the actual paths substituted — same pattern as the
+# real unit inline with the actual paths substituted - same pattern as the
 # moongate-tunnel unit below.
 info "Installing moongate-authproxy systemd service..."
 
@@ -578,7 +578,7 @@ if [[ -n "$MOONRAKER_VENV" && -x "$MOONRAKER_VENV/bin/python3" ]]; then
     MG_PYTHON="$MOONRAKER_VENV/bin/python3"
 else
     MG_PYTHON="$(command -v python3 || true)"
-    warn "Using system python3 ($MG_PYTHON) — make sure aiohttp/PyJWT/cryptography are installed."
+    warn "Using system python3 ($MG_PYTHON) - make sure aiohttp/PyJWT/cryptography are installed."
 fi
 
 PLUGIN_DIR="$MOONGATE_DIR/klipper-plugin"
@@ -680,7 +680,7 @@ sleep 1
 sudo systemctl restart moongate-tunnel
 success "moongate-tunnel service started"
 
-# ── 7b. Avahi mDNS advertisement — sudoers + daemon (v0.4.4) ────────────────
+# ── 7b. Avahi mDNS advertisement - sudoers + daemon (v0.4.4) ────────────────
 # Lets the plugin advertise this Pi on the local network as _moongate._tcp
 # so the v0.5+ app can find it without depending on Supabase + Cloudflare.
 # See docs/v0.5-lan-discovery-design.md §6 for the full design.
@@ -697,7 +697,7 @@ success "moongate-tunnel service started"
 info "Installing Avahi mDNS sudoers entry..."
 SUDOERS_FILE="/etc/sudoers.d/moongate-avahi"
 sudo tee "$SUDOERS_FILE" > /dev/null << SUDOERS
-# Moongate v0.4.4 — installed by klipper-plugin/install.sh
+# Moongate v0.4.4 - installed by klipper-plugin/install.sh
 # Allows the Moonraker user to manage the Avahi mDNS advertisement.
 # Tightly scoped: exactly one cp source/dest pair and one rm target.
 $USER ALL=(root) NOPASSWD: /bin/cp $HOME/.config/moongate/moongate-avahi.service.tmp /etc/avahi/services/moongate.service
@@ -711,7 +711,7 @@ if sudo visudo -c -f "$SUDOERS_FILE" >/dev/null 2>&1; then
     success "Avahi sudoers entry installed at $SUDOERS_FILE"
 else
     sudo rm -f "$SUDOERS_FILE"
-    warn "Avahi sudoers entry rejected by visudo — mDNS will be unavailable."
+    warn "Avahi sudoers entry rejected by visudo - mDNS will be unavailable."
     warn "Other Moongate features are unaffected; tunnel + LAN-via-IP still work."
 fi
 
@@ -723,7 +723,7 @@ elif command -v systemctl &>/dev/null; then
     if sudo systemctl enable --now avahi-daemon 2>/dev/null; then
         success "avahi-daemon enabled"
     else
-        warn "avahi-daemon could not be enabled (not installed?) — mDNS will be unavailable."
+        warn "avahi-daemon could not be enabled (not installed?) - mDNS will be unavailable."
         warn "On Debian/Ubuntu: sudo apt install avahi-daemon"
     fi
 fi
@@ -750,13 +750,13 @@ if [[ -n "$KLIPPER_SVC" ]]; then
     sudo systemctl restart "$KLIPPER_SVC"
     sleep 3
     if systemctl is-active --quiet "$KLIPPER_SVC"; then
-        success "Klipper restarted — MOONGATE_PAIR macro is ready"
+        success "Klipper restarted - MOONGATE_PAIR macro is ready"
     else
         warn "Klipper restart may have failed. Check: sudo systemctl status $KLIPPER_SVC"
         warn "Then do a Firmware Restart in Mainsail."
     fi
 else
-    warn "Could not find Klipper service — please do a Firmware Restart in Mainsail."
+    warn "Could not find Klipper service - please do a Firmware Restart in Mainsail."
 fi
 
 # ── 9. Show tunnel URL ────────────────────────────────────────────────────────
@@ -785,7 +785,7 @@ if [[ -n "$TUNNEL_URL" ]]; then
     echo -e "  Tunnel    : ${GREEN}$TUNNEL_URL${NC} ✓"
     echo -e "  Subdomain : ${GREEN}$SUBDOMAIN${NC} (paste into app tunnel field)"
 else
-    echo -e "  Tunnel    : ${YELLOW}still starting — check in 30s:${NC}"
+    echo -e "  Tunnel    : ${YELLOW}still starting - check in 30s:${NC}"
     echo -e "    grep -o 'https://.*trycloudflare.com' /run/moongate-tunnel.log"
 fi
 echo ""
@@ -794,12 +794,12 @@ echo ""
 
 # ── 10. KlipperScreen heads-up ────────────────────────────────────────────────
 # The 127.0.0.1 rebind in step 2e hides Moonraker from the LAN, which breaks any
-# ON-DEVICE client that reaches it by IP — most commonly KlipperScreen, which then
-# shows "Cannot connect to Moonraker — Connection refused". Pointing such a client
+# ON-DEVICE client that reaches it by IP - most commonly KlipperScreen, which then
+# shows "Cannot connect to Moonraker - Connection refused". Pointing such a client
 # at 127.0.0.1 fixes it (and survives future DHCP IP changes). We only PROMPT when
 # a real terminal is attached: an interactive `curl | bash` can still read the
 # answer from /dev/tty even though its stdin is the pipe, while a headless / KIAUH
-# / MOONGATE_YES run has none — there we just print the notice so it's never lost,
+# / MOONGATE_YES run has none - there we just print the notice so it's never lost,
 # and never block on a `read` under `set -e`.
 mg_klipperscreen_box() {
     local line
@@ -833,7 +833,7 @@ if [[ -z "${MOONGATE_YES:-}" && -r /dev/tty ]]; then
     read -r MG_KS_ANS < /dev/tty || MG_KS_ANS=""
     case "$MG_KS_ANS" in
         [Yy]*) mg_klipperscreen_box ;;
-        *)     info "No KlipperScreen — nothing else to do." ;;
+        *)     info "No KlipperScreen - nothing else to do." ;;
     esac
 else
     mg_klipperscreen_box

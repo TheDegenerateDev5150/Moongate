@@ -29,7 +29,7 @@ dependencies:
   # metered mobile data. See onMobileDataProvider / WebcamView.
   connectivity_plus: ^6.1.0
 
-  # Supabase — anonymous auth, Edge Function calls, printers table queries.
+  # Supabase - anonymous auth, Edge Function calls, printers table queries.
   # v0.3.0 routes every printer call through Supabase: app signs in
   # anonymously, gets a JWT, calls /printer-access to fetch the current
   # tunnel URL + a short-lived EdDSA access token, then hits the Pi.
@@ -39,7 +39,7 @@ dependencies:
   flutter_secure_storage: ^9.0.0
 
   # QR code scanning (pairing screen).
-  # 7.x rewrites the Android start path — fixes the `analysis.resolutionInfo!!`
+  # 7.x rewrites the Android start path - fixes the `analysis.resolutionInfo!!`
   # NPE in 5.x that fired on Samsung One UI as `genericError / NPE getClass()`.
   mobile_scanner: ^7.0.0
 
@@ -79,7 +79,7 @@ dependencies:
 
   # Backup/restore: save/load the printer list as a file via the Android
   # Storage Access Framework (saveFile + pickFiles). Replaces the old
-  # clipboard round-trip, which was fragile. No storage permission needed —
+  # clipboard round-trip, which was fragile. No storage permission needed -
   # SAF hands back a user-chosen document URI.
   file_picker: ^8.0.0
 

@@ -18,7 +18,7 @@ class SupabaseService {
   static final SupabaseService instance = SupabaseService._();
 
   // ── Project identifiers ────────────────────────────────────────────────────
-  // The anon key is intentionally embedded in the APK — it grants only
+  // The anon key is intentionally embedded in the APK - it grants only
   // anon-role permissions, all of which are locked down to "your own rows"
   // by Row-Level Security policies. Service role is NEVER in the app.
   static const _supabaseUrl     = 'https://wlmmaoupmupbrrkcjglj.supabase.co';
@@ -40,7 +40,7 @@ class SupabaseService {
   void _log(String msg) => dev.log(msg, name: 'MOONGATE/SUPABASE');
 
   /// Initialise the Supabase client and ensure there's an authenticated
-  /// session. Idempotent — safe to call from main() and re-call after
+  /// session. Idempotent - safe to call from main() and re-call after
   /// hot-restart.
   Future<void> initialize() async {
     if (_initialized) return;
@@ -55,14 +55,14 @@ class SupabaseService {
       signedIn.value = true;
       return;
     }
-    _log('No session yet — signing in anonymously');
+    _log('No session yet - signing in anonymously');
     await _trySignIn();
   }
 
   /// One anonymous-sign-in attempt. NEVER throws: on success it flips
   /// [signedIn] true and stops retrying; on failure (typically a 429 rate
   /// limit after repeated reinstalls) it leaves [signedIn] false and schedules
-  /// a backoff retry — so the app still launches and self-heals once the limit
+  /// a backoff retry - so the app still launches and self-heals once the limit
   /// clears, instead of crashing on first frame or stranding every tile offline
   /// with no explanation.
   Future<void> _trySignIn() async {
@@ -112,8 +112,8 @@ class SupabaseService {
   /// lets the server trust its own stored pubkey.
   ///
   /// Throws:
-  ///   • [PairingNotFoundException] for 404 — token expired / used / mismatched
-  ///   • [PairingConflictException] for 409 — Pi already paired (run RESET_OWNER)
+  ///   • [PairingNotFoundException] for 404 - token expired / used / mismatched
+  ///   • [PairingConflictException] for 409 - Pi already paired (run RESET_OWNER)
   ///   • [Exception] for any other failure
   Future<String> claimPrinter({
     required String  enrollmentToken,
@@ -149,9 +149,9 @@ class SupabaseService {
   /// The token expires in ~5 minutes; callers should cache and refresh.
   ///
   /// Throws:
-  ///   • [PrinterNotFoundException] for 404 — printer doesn't exist or
+  ///   • [PrinterNotFoundException] for 404 - printer doesn't exist or
   ///     isn't owned by this user.
-  ///   • [PrinterUnavailableException] for 503 — printer exists but the Pi
+  ///   • [PrinterUnavailableException] for 503 - printer exists but the Pi
   ///     hasn't sent its first heartbeat yet (just paired).
   ///     The exception's [retryAfter] tells the caller how long to wait.
   Future<PrinterAccess> getPrinterAccess(String printerId) async {
@@ -169,7 +169,7 @@ class SupabaseService {
         final tunnel = data['tunnel_url']   as String?; // nullable in v0.5.0
         final token  = data['access_token'] as String?;
         final expIn  = (data['expires_in']  as num?)?.toInt() ?? 300;
-        // Only the token is mandatory now — tunnel may legitimately be null.
+        // Only the token is mandatory now - tunnel may legitimately be null.
         if (token != null) {
           return PrinterAccess(
             tunnelUrl:   tunnel,
@@ -196,7 +196,7 @@ class SupabaseService {
 
   /// Delete the printer row from Supabase so the same Pi can be re-paired.
   /// Idempotent: a 404 (row already gone, or never owned by us) is treated
-  /// as success — the user's intent ("forget this printer") is satisfied
+  /// as success - the user's intent ("forget this printer") is satisfied
   /// either way.
   ///
   /// Returns true on remote success, false on network/auth failure. The
@@ -212,7 +212,7 @@ class SupabaseService {
       return true;
     } on FunctionException catch (e) {
       if (e.status == 404) {
-        _log('release-printer 404 for $printerId — already gone, treating as success');
+        _log('release-printer 404 for $printerId - already gone, treating as success');
         return true;
       }
       _log('release-printer HTTP ${e.status}: ${e.details}');
@@ -246,7 +246,7 @@ class SupabaseService {
   // ── Feedback / bug reports ─────────────────────────────────────────────────
 
   /// Submit an in-app bug report / feedback. Routed through the
-  /// submit-feedback Edge Function — clients can't write the feedback table
+  /// submit-feedback Edge Function - clients can't write the feedback table
   /// directly (same lockdown as every other table in this project). The
   /// destination is the feedback table only; a future version could forward
   /// to GitHub from the function without an app change.
@@ -281,7 +281,7 @@ class SupabaseService {
   // ── Push notifications ──────────────────────────────────────────────────────
 
   /// Register (or refresh) this device's push token via the register-push-token
-  /// Edge Function — clients can't write the device_push_tokens table directly
+  /// Edge Function - clients can't write the device_push_tokens table directly
   /// (same lockdown as every other table here). [platform] is 'ios' or
   /// 'android'.
   ///
@@ -310,7 +310,7 @@ class SupabaseService {
   /// Backs the in-app "Delete my data" action (App Store guideline 5.1.1(v)).
   ///
   /// After the server deletes the auth user, the local session is invalid, so
-  /// we sign out and start a FRESH anonymous identity — the app keeps working
+  /// we sign out and start a FRESH anonymous identity - the app keeps working
   /// with an empty slate. Throws on failure so the UI can surface an error.
   Future<void> deleteAccount() async {
     await client.functions.invoke('delete-account');
@@ -324,7 +324,7 @@ class SupabaseService {
 
   /// Mint a single-use restore code for the current identity (called when
   /// exporting a backup). Returns the raw code to embed in the backup file, or
-  /// null on failure — export then falls back to a printer-list-only backup.
+  /// null on failure - export then falls back to a printer-list-only backup.
   Future<String?> createRestoreGrant() async {
     try {
       final res  = await client.functions.invoke('create-restore-grant');
@@ -361,14 +361,14 @@ class SupabaseService {
 class PrinterAccess {
   /// Cloudflare tunnel base URL, or null when the Pi hasn't reported one
   /// yet (fresh pair / Pi just rebooted). The access token is still valid
-  /// on the LAN in that window — the app goes LAN-first via mDNS and the
+  /// on the LAN in that window - the app goes LAN-first via mDNS and the
   /// tunnel populates on the next heartbeat. A non-null value also doubles
   /// as the "remote access ready" signal surfaced on the tile.
   final String?  tunnelUrl;
   final String   accessToken;
   final DateTime expiresAt;
 
-  /// True once the cloud knows the printer's tunnel URL — i.e. remote
+  /// True once the cloud knows the printer's tunnel URL - i.e. remote
   /// access is available, not just LAN.
   bool get tunnelReady => tunnelUrl != null;
 

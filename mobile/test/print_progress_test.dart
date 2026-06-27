@@ -4,7 +4,7 @@ import 'package:moongate/services/print_progress.dart';
 
 /// Locks the progress maths to Mainsail's default "file position (relative)"
 /// mode. The headline case uses a real snapshot captured live from a print on
-/// the Micron — at that moment the old elapsed-time calc read ~12% while
+/// the Micron - at that moment the old elapsed-time calc read ~12% while
 /// Mainsail (and now this) read ~10.85%.
 void main() {
   group('computePrintProgress', () {
@@ -27,7 +27,7 @@ void main() {
         filePosition: 1812366, // halfway through the body below
         gcodeStartByte: 10286,
         gcodeEndByte: 3614739,
-        displayProgress: 0.9, // bogus on purpose — must be ignored
+        displayProgress: 0.9, // bogus on purpose - must be ignored
         sdcardProgress: 0.9,
       );
       expect(p, closeTo(0.5, 0.001));

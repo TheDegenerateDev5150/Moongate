@@ -52,7 +52,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lightingToggleMacro => '切换宏';
 
   @override
-  String get lightingToggleSection => '可选 — 切换方式';
+  String get lightingToggleSection => '可选 - 切换方式';
 
   @override
   String get lightingStatusSource => '灯光状态来源';
@@ -228,7 +228,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tileOpacityTitle => '磁贴不透明度';
 
   @override
-  String get tileOpacityDesc => '磁贴的透明程度（0–100），让背景透出。摄像头画面保持不透明。';
+  String get tileOpacityDesc => '磁贴的透明程度（0-100），让背景透出。摄像头画面保持不透明。';
 
   @override
   String get dashboardShowWebcams => '摄像头';
@@ -315,7 +315,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonShowKeyboard => '显示键盘';
 
   @override
-  String get dashboardSignInRetrying => '正在重新连接云端——登录繁忙，正在重试。您的打印机将自动恢复。';
+  String get dashboardSignInRetrying => '正在重新连接云端--登录繁忙，正在重试。您的打印机将自动恢复。';
 
   @override
   String get commonRemove => '移除';
@@ -401,7 +401,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardCustomiseColours => '自定义配色';
 
   @override
-  String get dashboardCustomiseColoursSubtitle => '编辑五个主题色槽 — HEX 或调色板';
+  String get dashboardCustomiseColoursSubtitle => '编辑五个主题色槽 - HEX 或调色板';
 
   @override
   String get dashboardFontSizeHeading => '显示大小';
@@ -449,7 +449,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cameraFeedsIntro =>
-      '每个磁贴刷新摄像头画面的频率。只要连接 Wi-Fi（即使在外、通过隧道访问），都会使用“本地”速率；使用移动数据时则使用“隧道”速率——这样在 Wi-Fi 下更流畅，在移动网络下更省流量。';
+      '每个磁贴刷新摄像头画面的频率。只要连接 Wi-Fi（即使在外、通过隧道访问），都会使用“本地”速率；使用移动数据时则使用“隧道”速率--这样在 Wi-Fi 下更流畅，在移动网络下更省流量。';
 
   @override
   String get cameraFeedsLocalRate => '本地画面刷新频率';
@@ -482,7 +482,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardAppLock => '应用锁';
 
   @override
-  String get dashboardAppLockOn => '已开启 — 启动时需要解锁';
+  String get dashboardAppLockOn => '已开启 - 启动时需要解锁';
 
   @override
   String get dashboardAppLockOff => '已关闭';
@@ -518,7 +518,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get donationPromptBody =>
-      'Moongate 是我利用业余时间开发的免费项目。如果它对你有帮助，一点小小的打赏能帮助它继续发展——绝不强求，而且我只会问这一次。';
+      'Moongate 是我利用业余时间开发的免费项目。如果它对你有帮助，一点小小的打赏能帮助它继续发展--绝不强求，而且我只会问这一次。';
 
   @override
   String get donationPromptLater => '以后再说';
@@ -535,29 +535,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardSaveBackupDialogTitle => '保存 Moongate 备份';
 
   @override
-  String get dashboardBackupFailed => '备份失败 — 无法保存文件。';
+  String get dashboardBackupFailed => '备份失败 - 无法保存文件。';
 
   @override
   String dashboardBackupSuccess(int count) {
-    return '已备份 $count 台打印机。此文件可在新安装时恢复它们 — 请妥善保管。';
+    return '已备份 $count 台打印机。此文件可在新安装时恢复它们 - 请妥善保管。';
   }
 
   @override
   String dashboardBackupSuccessListOnly(int count) {
-    return '已备份 $count 台打印机（仅列表 — 无法连接云端获取恢复码）。';
+    return '已备份 $count 台打印机（仅列表 - 无法连接云端获取恢复码）。';
   }
 
   @override
-  String get dashboardInvalidBackupFile => '备份文件无效 — 请选择 Moongate 配置文件。';
+  String get dashboardInvalidBackupFile => '备份文件无效 - 请选择 Moongate 配置文件。';
 
   @override
   String dashboardRestoreReconnected(int added, int count) {
-    return '已恢复 $added 台打印机 — $count 台已重新连接，正在恢复在线。';
+    return '已恢复 $added 台打印机 - $count 台已重新连接，正在恢复在线。';
   }
 
   @override
   String dashboardRestoreNoneReconnected(int added) {
-    return '已恢复 $added 台打印机，但没有任何一台重新连接 — 备份的恢复码与任何打印机都不匹配（可能来自较旧的备份，或已被使用）。请重新配对以使它们恢复在线。';
+    return '已恢复 $added 台打印机，但没有任何一台重新连接 - 备份的恢复码与任何打印机都不匹配（可能来自较旧的备份，或已被使用）。请重新配对以使它们恢复在线。';
   }
 
   @override
@@ -573,7 +573,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String dashboardRestoreReplaceBody(String names) {
-    return '以下打印机在此仪表板上，但不在备份中：$names。恢复将移除它们，使仪表板与备份完全一致。它们仍保持配对——你可以稍后重新添加或恢复。';
+    return '以下打印机在此仪表板上，但不在备份中：$names。恢复将移除它们，使仪表板与备份完全一致。它们仍保持配对--你可以稍后重新添加或恢复。';
   }
 
   @override
@@ -602,7 +602,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpPairOnceBody =>
-      '扫描二维码（或输入 GATE code）即可添加打印机 — 该连接会保存在此应用中。';
+      '扫描二维码（或输入 GATE code）即可添加打印机 - 该连接会保存在此应用中。';
 
   @override
   String get dashboardPairingHelpUpdatesTitle => '应用更新不影响您的打印机';
@@ -615,7 +615,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpReinstallBody =>
-      '请先备份（菜单 → 备份配置），然后“恢复”即可使您的打印机重新上线 — 无需重新配对。';
+      '请先备份（菜单 → 备份配置），然后“恢复”即可使您的打印机重新上线 - 无需重新配对。';
 
   @override
   String get dashboardPairingHelpNoBackupTitle => '没有备份？';
@@ -629,7 +629,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String dashboardUpdateAvailable(String version) {
-    return '有可用更新 — v$version';
+    return '有可用更新 - v$version';
   }
 
   @override
@@ -649,7 +649,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pairingIntro =>
-      '在您的 Klipper 控制台运行 MOONGATE_PAIR — 扫描二维码或输入控制台上显示的 GATE code。';
+      '在您的 Klipper 控制台运行 MOONGATE_PAIR - 扫描二维码或输入控制台上显示的 GATE code。';
 
   @override
   String get pairingNameLabel => '打印机名称';
@@ -661,7 +661,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairingScanButton => '扫描二维码';
 
   @override
-  String get pairingScanRecommended => '推荐 — 即时连接';
+  String get pairingScanRecommended => '推荐 - 即时连接';
 
   @override
   String get pairingOr => '或';
@@ -677,7 +677,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pairingGateCodeWarning =>
-      '替代方法。不使用二维码时，打印机最多可能需要约一分钟才能连接——它正在等待安全隧道建立。请扫描上方的二维码以即时连接。';
+      '替代方法。不使用二维码时，打印机最多可能需要约一分钟才能连接--它正在等待安全隧道建立。请扫描上方的二维码以即时连接。';
 
   @override
   String get pairingCameraPermissionNeeded => '需要摄像头权限';
@@ -690,14 +690,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String pairingQrScanned(String code) {
-    return '二维码已扫描 — 代码 $code';
+    return '二维码已扫描 - 代码 $code';
   }
 
   @override
   String get pairingRescan => '重新扫描';
 
   @override
-  String get pairingAdvancedTitle => '高级 — 打印机在自定义网络上？';
+  String get pairingAdvancedTitle => '高级 - 打印机在自定义网络上？';
 
   @override
   String get pairingAdvancedBody =>
@@ -742,7 +742,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairingErrorNoCode => '请扫描二维码，或输入打印机控制台中的 GATE code。';
 
   @override
-  String get pairingErrorBadAddress => '该打印机地址似乎不正确 — 请尝试例如 192.168.1.50:7125';
+  String get pairingErrorBadAddress => '该打印机地址似乎不正确 - 请尝试例如 192.168.1.50:7125';
 
   @override
   String pairingErrorFailed(String error) {
@@ -750,19 +750,19 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get pairingImportInvalidFile => '备份文件无效 — 请选择 Moongate 配置文件。';
+  String get pairingImportInvalidFile => '备份文件无效 - 请选择 Moongate 配置文件。';
 
   @override
   String get pairingImportNoNewPrinters => '在该文件中未找到新的打印机。';
 
   @override
   String pairingImportRestoredReconnected(int count, int reconnected) {
-    return '已恢复 $count 台打印机 — $reconnected 台已重新连接，正在恢复在线。';
+    return '已恢复 $count 台打印机 - $reconnected 台已重新连接，正在恢复在线。';
   }
 
   @override
   String pairingImportRestoredRepair(int count) {
-    return '已恢复 $count 台打印机 — 请重新配对每台 Pi 以使其上线。';
+    return '已恢复 $count 台打印机 - 请重新配对每台 Pi 以使其上线。';
   }
 
   @override
@@ -832,10 +832,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get customThemePrinting => '正在打印';
 
   @override
-  String get tilePauseFailed => '无法连接打印机 — 暂停失败';
+  String get tilePauseFailed => '无法连接打印机 - 暂停失败';
 
   @override
-  String get tileResumeFailed => '无法连接打印机 — 恢复失败';
+  String get tileResumeFailed => '无法连接打印机 - 恢复失败';
 
   @override
   String get tileStopAgainToCancel => '再次按下停止以取消打印';
@@ -871,7 +871,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tileEmergencyStop => '紧急停止 · 双击';
 
   @override
-  String get tileEmergencyStopFailed => '无法连接打印机 — 紧急停止失败';
+  String get tileEmergencyStopFailed => '无法连接打印机 - 紧急停止失败';
 
   @override
   String get tilePrintComplete => '打印完成';
@@ -937,7 +937,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardBackgroundTitle => '仪表板背景';
 
   @override
-  String get dashboardBackgroundNone => '无 — 主题颜色';
+  String get dashboardBackgroundNone => '无 - 主题颜色';
 
   @override
   String get dashboardBackgroundCustom => '自定义图片';
@@ -1007,7 +1007,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appLockIntro =>
-      '在打开 Moongate 前要求输入 PIN 码 — 也可选择使用指纹或面容。每次全新启动应用时都会显示该锁。';
+      '在打开 Moongate 前要求输入 PIN 码 - 也可选择使用指纹或面容。每次全新启动应用时都会显示该锁。';
 
   @override
   String get appLockSubtitle => '打开应用需要 PIN 码';
@@ -1016,7 +1016,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appLockBiometricTitle => '生物识别解锁';
 
   @override
-  String get appLockBiometricSubtitle => '使用指纹或面容 — PIN 码作为后备方式保留';
+  String get appLockBiometricSubtitle => '使用指纹或面容 - PIN 码作为后备方式保留';
 
   @override
   String get appLockChangePin => '更改 PIN 码';
@@ -1031,7 +1031,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appLockChoosePinTitle => '设置 PIN 码';
 
   @override
-  String get appLockChoosePinSubtitle => '输入 4–6 位数字';
+  String get appLockChoosePinSubtitle => '输入 4-6 位数字';
 
   @override
   String get appLockConfirmPinTitle => '确认 PIN 码';
@@ -1085,7 +1085,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lockResetBody =>
-      '此操作将移除应用锁并清除此设备上已配对的打印机，以便您重新开始。您的打印机不会被删除 — 在每台打印机上运行 MOONGATE_PAIR 即可重新配对。';
+      '此操作将移除应用锁并清除此设备上已配对的打印机，以便您重新开始。您的打印机不会被删除 - 在每台打印机上运行 MOONGATE_PAIR 即可重新配对。';
 
   @override
   String get lockResetConfirm => '重置';
@@ -1133,7 +1133,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cameraNoCamera => '未为此打印机配置摄像头。';
 
   @override
-  String get cameraHintBody => '网络摄像头在此处无法远程加载 — 打开 Moongate 摄像头。';
+  String get cameraHintBody => '网络摄像头在此处无法远程加载 - 打开 Moongate 摄像头。';
 
   @override
   String get cameraHintOpen => '打开';
@@ -1183,7 +1183,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get feedbackCommentLabel => '出了什么问题？';
 
   @override
-  String get feedbackCommentHint => '例如“打印机显示已连接 / 空闲，但实际上已就绪 — 点击磁贴后可正常打开。”';
+  String get feedbackCommentHint => '例如“打印机显示已连接 / 空闲，但实际上已就绪 - 点击磁贴后可正常打开。”';
 
   @override
   String get feedbackContactLabel => '邮箱或联系方式（可选）';
@@ -1198,10 +1198,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get feedbackSend => '发送报告';
 
   @override
-  String get feedbackSuccess => '谢谢 — 您的报告已发送。';
+  String get feedbackSuccess => '谢谢 - 您的报告已发送。';
 
   @override
-  String get feedbackError => '无法发送 — 请检查您的网络连接后重试。';
+  String get feedbackError => '无法发送 - 请检查您的网络连接后重试。';
 
   @override
   String get splashTagline => 'Klipper 远程控制';
@@ -1234,7 +1234,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiGuideLocalTitle => '本地网络';
 
   @override
-  String get uiGuideLocalDesc => '通过您的 Wi-Fi 直接连接 — 最快的路径。';
+  String get uiGuideLocalDesc => '通过您的 Wi-Fi 直接连接 - 最快的路径。';
 
   @override
   String get uiGuideTunnelTitle => '远程（隧道）';
@@ -1270,7 +1270,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiGuideChamberTitle => '腔体';
 
   @override
-  String get uiGuideChamberDesc => '腔体温度 — 仅当您的打印机上报时显示。';
+  String get uiGuideChamberDesc => '腔体温度 - 仅当您的打印机上报时显示。';
 
   @override
   String get uiGuideResumeTitle => '恢复';
@@ -1288,7 +1288,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiGuideStopTitle => '停止';
 
   @override
-  String get uiGuideStopDesc => '取消打印 — 点击两次以确认。';
+  String get uiGuideStopDesc => '取消打印 - 点击两次以确认。';
 
   @override
   String get uiGuideEstopTitle => '急停';
@@ -1318,7 +1318,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiGuideStatusErrorTitle => '错误';
 
   @override
-  String get uiGuideStatusErrorDesc => 'Klipper 报告了一个错误 — 打开打印机查看详情。';
+  String get uiGuideStatusErrorDesc => 'Klipper 报告了一个错误 - 打开打印机查看详情。';
 
   @override
   String get uiGuideStatusStartingTitle => '正在启动';
@@ -1355,7 +1355,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get printNotifPromptBody =>
-      '查看打印机的实时状态——进度、温度，以及打印开始、完成或出错时的提醒。你可以随时在菜单中更改。';
+      '查看打印机的实时状态--进度、温度，以及打印开始、完成或出错时的提醒。你可以随时在菜单中更改。';
 
   @override
   String get printNotifPromptEnable => '开启';

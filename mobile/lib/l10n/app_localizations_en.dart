@@ -55,14 +55,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lightingToggleMacro => 'Toggle macro';
 
   @override
-  String get lightingToggleSection => 'Optional — toggle method';
+  String get lightingToggleSection => 'Optional - toggle method';
 
   @override
   String get lightingStatusSource => 'Light Status Source';
 
   @override
   String get lightingStatusSourceHelp =>
-      'Optional. The Klipper object that reports the light\'s state — e.g. output_pin caselight (not a raw pin like PE3). Leave blank to just track your taps.';
+      'Optional. The Klipper object that reports the light\'s state - e.g. output_pin caselight (not a raw pin like PE3). Leave blank to just track your taps.';
 
   @override
   String get lightingStatusHint => 'Example: output_pin caselight';
@@ -236,7 +236,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tileOpacityDesc =>
-      'How see-through the tiles are (0–100), so a background shows through. The camera feed stays solid.';
+      'How see-through the tiles are (0-100), so a background shows through. The camera feed stays solid.';
 
   @override
   String get dashboardShowWebcams => 'Webcams';
@@ -247,7 +247,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateNotesUnavailable =>
-      'Couldn\'t load what\'s new — check your connection, or view it on GitHub.';
+      'Couldn\'t load what\'s new - check your connection, or view it on GitHub.';
 
   @override
   String get updateViewOnGithub => 'View on GitHub';
@@ -260,7 +260,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cameraConfigDescription =>
-      'Show a camera that isn\'t connected to Klipper — like an old phone used as a webcam. Enter the address shown in Mainsail\'s webcam settings.';
+      'Show a camera that isn\'t connected to Klipper - like an old phone used as a webcam. Enter the address shown in Mainsail\'s webcam settings.';
 
   @override
   String get cameraConfigUrlLabel => 'Camera URL';
@@ -328,7 +328,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardSignInRetrying =>
-      'Reconnecting to the cloud — sign-in is busy, retrying. Your printers will come back automatically.';
+      'Reconnecting to the cloud - sign-in is busy, retrying. Your printers will come back automatically.';
 
   @override
   String get commonRemove => 'Remove';
@@ -416,7 +416,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardCustomiseColoursSubtitle =>
-      'Edit the five theme slots — HEX or palette';
+      'Edit the five theme slots - HEX or palette';
 
   @override
   String get dashboardFontSizeHeading => 'Display size';
@@ -467,7 +467,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cameraFeedsIntro =>
-      'How often each tile refreshes its camera. Moongate uses the Local rate while you\'re on Wi-Fi (even away from home), and the Tunnel rate on mobile data — keeping a fast feed on Wi-Fi and a lighter one on cellular to save data.';
+      'How often each tile refreshes its camera. Moongate uses the Local rate while you\'re on Wi-Fi (even away from home), and the Tunnel rate on mobile data - keeping a fast feed on Wi-Fi and a lighter one on cellular to save data.';
 
   @override
   String get cameraFeedsLocalRate => 'Local feed polling rate';
@@ -501,7 +501,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardAppLock => 'App lock';
 
   @override
-  String get dashboardAppLockOn => 'On — unlock required on launch';
+  String get dashboardAppLockOn => 'On - unlock required on launch';
 
   @override
   String get dashboardAppLockOff => 'Off';
@@ -537,7 +537,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get donationPromptBody =>
-      'Moongate is a free side-project I build in my spare time. If it\'s useful to you, a small tip helps keep it going — no pressure, and I won\'t ask again.';
+      'Moongate is a free side-project I build in my spare time. If it\'s useful to you, a small tip helps keep it going - no pressure, and I won\'t ask again.';
 
   @override
   String get donationPromptLater => 'Maybe later';
@@ -555,30 +555,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardBackupFailed =>
-      'Backup failed — could not save the file.';
+      'Backup failed - could not save the file.';
 
   @override
   String dashboardBackupSuccess(int count) {
-    return 'Backed up $count printer(s). This file can restore them on a new install — keep it private.';
+    return 'Backed up $count printer(s). This file can restore them on a new install - keep it private.';
   }
 
   @override
   String dashboardBackupSuccessListOnly(int count) {
-    return 'Backed up $count printer(s) (list only — couldn’t reach the cloud for a restore code).';
+    return 'Backed up $count printer(s) (list only - couldn’t reach the cloud for a restore code).';
   }
 
   @override
   String get dashboardInvalidBackupFile =>
-      'Invalid backup file — please pick a Moongate config file.';
+      'Invalid backup file - please pick a Moongate config file.';
 
   @override
   String dashboardRestoreReconnected(int added, int count) {
-    return '$added printer(s) restored — $count reconnected and coming back online.';
+    return '$added printer(s) restored - $count reconnected and coming back online.';
   }
 
   @override
   String dashboardRestoreNoneReconnected(int added) {
-    return '$added printer(s) restored, but none reconnected — the backup’s restore code didn’t match any printers (it may be from an older backup, or already used). Re-pair them to bring them online.';
+    return '$added printer(s) restored, but none reconnected - the backup’s restore code didn’t match any printers (it may be from an older backup, or already used). Re-pair them to bring them online.';
   }
 
   @override
@@ -595,7 +595,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String dashboardRestoreReplaceBody(String names) {
-    return 'These printers are on this dashboard but not in the backup: $names. Restoring will remove them so the dashboard matches the backup exactly. They stay paired — you can re-add or restore them later.';
+    return 'These printers are on this dashboard but not in the backup: $names. Restoring will remove them so the dashboard matches the backup exactly. They stay paired - you can re-add or restore them later.';
   }
 
   @override
@@ -624,7 +624,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpPairOnceBody =>
-      'Scan the QR (or enter the GATE code) to add a printer — that link is saved in this app.';
+      'Scan the QR (or enter the GATE code) to add a printer - that link is saved in this app.';
 
   @override
   String get dashboardPairingHelpUpdatesTitle =>
@@ -639,7 +639,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpReinstallBody =>
-      'Back up first (Menu → Back up config), then Restore brings your printers back online — no re-pairing.';
+      'Back up first (Menu → Back up config), then Restore brings your printers back online - no re-pairing.';
 
   @override
   String get dashboardPairingHelpNoBackupTitle => 'No backup?';
@@ -653,7 +653,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String dashboardUpdateAvailable(String version) {
-    return 'Update available — v$version';
+    return 'Update available - v$version';
   }
 
   @override
@@ -674,7 +674,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pairingIntro =>
-      'Run MOONGATE_PAIR in your Klipper console — scan the QR or type the GATE code shown on the console.';
+      'Run MOONGATE_PAIR in your Klipper console - scan the QR or type the GATE code shown on the console.';
 
   @override
   String get pairingNameLabel => 'Printer name';
@@ -686,7 +686,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairingScanButton => 'Scan QR code';
 
   @override
-  String get pairingScanRecommended => 'Recommended — connects instantly';
+  String get pairingScanRecommended => 'Recommended - connects instantly';
 
   @override
   String get pairingOr => 'OR';
@@ -703,7 +703,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pairingGateCodeWarning =>
-      'Alternative method. Without the QR, the printer can take up to about a minute to come online — it\'s waiting for the secure tunnel to connect. Scan the QR code above for an instant connection.';
+      'Alternative method. Without the QR, the printer can take up to about a minute to come online - it\'s waiting for the secure tunnel to connect. Scan the QR code above for an instant connection.';
 
   @override
   String get pairingCameraPermissionNeeded => 'Camera permission needed';
@@ -716,14 +716,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String pairingQrScanned(String code) {
-    return 'QR scanned — code $code';
+    return 'QR scanned - code $code';
   }
 
   @override
   String get pairingRescan => 'Rescan';
 
   @override
-  String get pairingAdvancedTitle => 'Advanced — printer on a custom network?';
+  String get pairingAdvancedTitle => 'Advanced - printer on a custom network?';
 
   @override
   String get pairingAdvancedBody =>
@@ -772,7 +772,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pairingErrorBadAddress =>
-      'That printer address doesn\'t look right — try e.g. 192.168.1.50:7125';
+      'That printer address doesn\'t look right - try e.g. 192.168.1.50:7125';
 
   @override
   String pairingErrorFailed(String error) {
@@ -781,7 +781,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pairingImportInvalidFile =>
-      'Invalid backup file — please pick a Moongate config file.';
+      'Invalid backup file - please pick a Moongate config file.';
 
   @override
   String get pairingImportNoNewPrinters =>
@@ -789,12 +789,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String pairingImportRestoredReconnected(int count, int reconnected) {
-    return '$count printer(s) restored — $reconnected reconnected, coming back online.';
+    return '$count printer(s) restored - $reconnected reconnected, coming back online.';
   }
 
   @override
   String pairingImportRestoredRepair(int count) {
-    return '$count printer(s) restored — re-pair each Pi to bring it online.';
+    return '$count printer(s) restored - re-pair each Pi to bring it online.';
   }
 
   @override
@@ -865,10 +865,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customThemePrinting => 'Printing';
 
   @override
-  String get tilePauseFailed => 'Could not reach printer — pause failed';
+  String get tilePauseFailed => 'Could not reach printer - pause failed';
 
   @override
-  String get tileResumeFailed => 'Could not reach printer — resume failed';
+  String get tileResumeFailed => 'Could not reach printer - resume failed';
 
   @override
   String get tileStopAgainToCancel => 'Press STOP again to cancel the print';
@@ -905,7 +905,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tileEmergencyStopFailed =>
-      'Could not reach printer — emergency stop failed';
+      'Could not reach printer - emergency stop failed';
 
   @override
   String get tilePrintComplete => 'Print complete';
@@ -971,7 +971,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardBackgroundTitle => 'Dashboard background';
 
   @override
-  String get dashboardBackgroundNone => 'None — theme colour';
+  String get dashboardBackgroundNone => 'None - theme colour';
 
   @override
   String get dashboardBackgroundCustom => 'Custom image';
@@ -1046,7 +1046,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLockIntro =>
-      'Require a PIN — and optionally your fingerprint or face — before Moongate will open. The lock always appears when the app is started fresh.';
+      'Require a PIN - and optionally your fingerprint or face - before Moongate will open. The lock always appears when the app is started fresh.';
 
   @override
   String get appLockSubtitle => 'PIN required to open the app';
@@ -1056,7 +1056,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLockBiometricSubtitle =>
-      'Use fingerprint or face — PIN stays as a fallback';
+      'Use fingerprint or face - PIN stays as a fallback';
 
   @override
   String get appLockChangePin => 'Change PIN';
@@ -1071,7 +1071,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appLockChoosePinTitle => 'Choose a PIN';
 
   @override
-  String get appLockChoosePinSubtitle => 'Enter 4–6 digits';
+  String get appLockChoosePinSubtitle => 'Enter 4-6 digits';
 
   @override
   String get appLockConfirmPinTitle => 'Confirm PIN';
@@ -1125,7 +1125,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lockResetBody =>
-      'This removes the app lock and clears the paired printers from this device so you can start over. Your printers are not deleted — re-pair them by running MOONGATE_PAIR on each one.';
+      'This removes the app lock and clears the paired printers from this device so you can start over. Your printers are not deleted - re-pair them by running MOONGATE_PAIR on each one.';
 
   @override
   String get lockResetConfirm => 'Reset';
@@ -1174,7 +1174,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cameraHintBody =>
-      'Webcam won\'t load here remotely — open the Moongate camera.';
+      'Webcam won\'t load here remotely - open the Moongate camera.';
 
   @override
   String get cameraHintOpen => 'Open';
@@ -1226,7 +1226,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feedbackCommentHint =>
-      'e.g. \"Printer shows Connected / idle but it\'s actually ready — opens fine when I tap the tile.\"';
+      'e.g. \"Printer shows Connected / idle but it\'s actually ready - opens fine when I tap the tile.\"';
 
   @override
   String get feedbackContactLabel => 'Email or contact (optional)';
@@ -1241,11 +1241,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedbackSend => 'Send report';
 
   @override
-  String get feedbackSuccess => 'Thanks — your report was sent.';
+  String get feedbackSuccess => 'Thanks - your report was sent.';
 
   @override
   String get feedbackError =>
-      'Couldn\'t send — check your connection and try again.';
+      'Couldn\'t send - check your connection and try again.';
 
   @override
   String get splashTagline => 'Klipper remote control';
@@ -1280,7 +1280,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiGuideLocalDesc =>
-      'Connected directly over your Wi-Fi — the fastest path.';
+      'Connected directly over your Wi-Fi - the fastest path.';
 
   @override
   String get uiGuideTunnelTitle => 'Remote (tunnel)';
@@ -1320,7 +1320,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiGuideChamberDesc =>
-      'Chamber temperature — shown only if your printer reports one.';
+      'Chamber temperature - shown only if your printer reports one.';
 
   @override
   String get uiGuideResumeTitle => 'Resume';
@@ -1338,7 +1338,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiGuideStopTitle => 'Stop';
 
   @override
-  String get uiGuideStopDesc => 'Cancel the print — tap twice to confirm.';
+  String get uiGuideStopDesc => 'Cancel the print - tap twice to confirm.';
 
   @override
   String get uiGuideEstopTitle => 'Emergency stop';
@@ -1372,7 +1372,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiGuideStatusErrorDesc =>
-      'Klipper reported an error — open the printer for details.';
+      'Klipper reported an error - open the printer for details.';
 
   @override
   String get uiGuideStatusStartingTitle => 'Starting up';
@@ -1413,7 +1413,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get printNotifPromptBody =>
-      'See live status for your printers — progress, temperatures, and alerts when a print starts, finishes or errors. You can change this any time in the menu.';
+      'See live status for your printers - progress, temperatures, and alerts when a print starts, finishes or errors. You can change this any time in the menu.';
 
   @override
   String get printNotifPromptEnable => 'Turn on';

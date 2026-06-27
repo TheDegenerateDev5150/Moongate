@@ -25,7 +25,7 @@ import 'supabase_service.dart';
 ///     fresh `{tunnel_url, access_token}`. The cache reuses the token
 ///     until ~30s before its 5-min TTL, then refreshes via Supabase.
 ///   • On 401 from the Pi we invalidate the access entry and retry once
-///     — the token may be expired or revoked.
+///     - the token may be expired or revoked.
 class PrinterStatusService {
   final PrinterConfig config;
 
@@ -34,14 +34,14 @@ class PrinterStatusService {
   bool _disposed = false;
   bool _polling  = false;
 
-  // ── Chamber sensor discovery (kept from v0.2.x — same logic) ─────────────
+  // ── Chamber sensor discovery (kept from v0.2.x - same logic) ─────────────
   String? _chamberKey;
   bool    _chamberDiscovered = false;
 
   // ── File-metadata cache for accurate progress ────────────────────────────
   // The slicer's gcode body byte offsets, cached per filename. They drive the
-  // Mainsail-matching "file position (relative)" progress in _parseStatus —
-  // (file_position − start) / (end − start) — via [computePrintProgress].
+  // Mainsail-matching "file position (relative)" progress in _parseStatus -
+  // (file_position − start) / (end − start) - via [computePrintProgress].
   int?    _gcodeStartByte;
   int?    _gcodeEndByte;
   String? _metadataFilename;
@@ -49,7 +49,7 @@ class PrinterStatusService {
   // ── LAN-first state ──────────────────────────────────────────────────────
   // The printer's last-known LAN URL is fetched from /status (Pi reports
   // local_ip + http_port). When set, EVERY poll tries LAN before the
-  // tunnel — so reconnecting to home WiFi after being on cellular flips
+  // tunnel - so reconnecting to home WiFi after being on cellular flips
   // the tile back to "Local" on the very next poll. The cost is one ~2s
   // LAN timeout per poll when off-LAN; that's the trade we explicitly
   // want per the user's "always check for local first" rule.
@@ -75,19 +75,19 @@ class PrinterStatusService {
   // may not answer on LAN for a few seconds, so we show 'starting_up' for a
   // bounded window after this service's first poll. Once it elapses with the
   // printer still unreachable on every path we report 'offline' instead of
-  // sticking on "Starting up…" forever — the bug this fixes is a just-paired
+  // sticking on "Starting up…" forever - the bug this fixes is a just-paired
   // host that's actually powered off, which never gets a tunnel URL (so
   // tunnelReady stays false indefinitely) and used to sit on 'starting_up'.
   DateTime? _firstPollAt;
   static const Duration _startupGrace = Duration(seconds: 45);
 
   /// Why the most recent /status attempt resolved as it did (ok / http_401 /
-  /// http_404 / timeout / error) — set inside _tryMoongateEndpoint and
+  /// http_404 / timeout / error) - set inside _tryMoongateEndpoint and
   /// captured by the bug-report diagnostics.
   String? _lastEndpointReason;
 
   /// Accumulates THIS poll's diagnostics (both the LAN and the tunnel attempt
-  /// outcomes) so a bug report shows the tunnel result too — not just LAN. The
+  /// outcomes) so a bug report shows the tunnel result too - not just LAN. The
   /// old code only ever recorded the LAN attempt, which is exactly why a tunnel
   /// 500 never surfaced in a report. Reset at the top of every poll.
   Map<String, dynamic> _pollDiag = {};
@@ -98,7 +98,7 @@ class PrinterStatusService {
   }
 
   /// The user's current custom camera URL for this printer, read LIVE from the
-  /// registry each poll — so a change made via the tile gear takes effect on
+  /// registry each poll - so a change made via the tile gear takes effect on
   /// the next poll without recreating the service. Falls back to the snapshot
   /// the service was constructed with.
   String? get _liveCustomCameraUrl {
@@ -122,7 +122,7 @@ class PrinterStatusService {
       }
     }
     // Only read the light's real state when lighting is actually enabled for
-    // this printer — otherwise an orphaned/disabled status object would be
+    // this printer - otherwise an orphaned/disabled status object would be
     // polled needlessly.
     if (!live.lightingEnabled) return null;
     final raw = live.lightStatusObject;
@@ -149,7 +149,7 @@ class PrinterStatusService {
   // is done once per printer (persisted in PrinterConfig) by sniffing the
   // root page HTML for "mainsail" or "fluidd".
   String? _uiType;
-  // Seeded `true` when the config already has a persisted uiType — saves a
+  // Seeded `true` when the config already has a persisted uiType - saves a
   // redundant root-page fetch on every cold launch.
   bool    _uiTypeChecked;
 
@@ -160,7 +160,7 @@ class PrinterStatusService {
       final uri      = Uri.parse('$baseUrl/');
       // Tunnel-side the Mainsail root is gated by the auth proxy, so we send
       // the EdDSA token. On LAN we hit nginx directly, which serves the root
-      // without auth — and sending the Bearer there would be wrong (see
+      // without auth - and sending the Bearer there would be wrong (see
       // _authedGet).
       final response = await _authedGet(
           uri, accessToken,
@@ -182,7 +182,7 @@ class PrinterStatusService {
         }
       }
     } catch (_) {
-      // Detection failed — retry on next successful poll
+      // Detection failed - retry on next successful poll
       _uiTypeChecked = false;
     }
   }
@@ -192,7 +192,7 @@ class PrinterStatusService {
     _timer = Timer.periodic(interval, (_) => _poll());
   }
 
-  /// Trigger an immediate poll outside the timer cadence — e.g. when the app
+  /// Trigger an immediate poll outside the timer cadence - e.g. when the app
   /// returns to the foreground. Aggressive battery optimisation (Samsung
   /// Freecess et al.) can freeze the process and suspend our [Timer], leaving
   /// the tile stuck on a stale 'offline'; polling on resume recovers it at
@@ -229,7 +229,7 @@ class PrinterStatusService {
 
     // 0. v0.5.0: every Nth poll, kick off a non-blocking mDNS browse so
     //    the LanDiscoveryService cache stays fresh against IP changes.
-    //    Fire-and-forget — never gate the poll itself on the browse.
+    //    Fire-and-forget - never gate the poll itself on the browse.
     _pollCount++;
     if (_pollCount % _mDnsBrowseEveryNPolls == 1) {
       LanDiscoveryService.instance.refresh().ignore();
@@ -238,7 +238,7 @@ class PrinterStatusService {
     // 0.5 Liveness gate. Don't spend an Edge call (/printer-access mints the
     //     token) on a printer with no token-free sign of life. We learn
     //     online/offline from the cloud's last_seen over Realtime
-    //     ([PrinterLivenessService] — NOT an Edge Function) and, failing that, a
+    //     ([PrinterLivenessService] - NOT an Edge Function) and, failing that, a
     //     token-free LAN probe (so LAN still works when the heartbeat/cloud is
     //     down). A powered-off printer (stale last_seen, no LAN) thus costs zero
     //     Edge Function calls. Skipped during the startup grace so a fresh pair
@@ -248,10 +248,10 @@ class PrinterStatusService {
     if (!inStartupGrace &&
         PrinterLivenessService.instance.isKnownOffline(config.id)) {
       // Positive evidence the printer is offline (cloud last_seen is stale).
-      // Confirm with a token-free LAN HEAD first — a Pi that's up on the LAN but
+      // Confirm with a token-free LAN HEAD first - a Pi that's up on the LAN but
       // failing its heartbeats (e.g. clock skew) is still reachable and must not
       // be skipped. Only when that ALSO fails do we declare offline without
-      // minting a token. Unknown / fresh last_seen falls through and polls — we
+      // minting a token. Unknown / fresh last_seen falls through and polls - we
       // never gate on missing data, so a slow/failed seed can't show a live
       // printer offline.
       final probeUrl =
@@ -277,7 +277,7 @@ class PrinterStatusService {
       if (!_disposed) _controller.add(PrinterStatus.startingUp);
       return;
     } on PrinterNotFoundException {
-      _log('Printer not found in Supabase — emitting offline');
+      _log('Printer not found in Supabase - emitting offline');
       if (!_disposed) _controller.add(PrinterStatus.offline);
       return;
     } catch (e) {
@@ -286,7 +286,7 @@ class PrinterStatusService {
       return;
     }
 
-    // Whether the cloud knows the tunnel yet — surfaced on the tile as the
+    // Whether the cloud knows the tunnel yet - surfaced on the tile as the
     // background "remote ready / connecting" hint regardless of which path
     // wins this poll.
     final bool tunnelReady = access.tunnelUrl != null;
@@ -304,7 +304,7 @@ class PrinterStatusService {
     //    the persisted lanUrl. When both are set and the discovered one
     //    differs (Pi just moved IPs), we go straight to the new IP
     //    without wasting a poll on the stale persisted one. Crucially this
-    //    runs even when tunnelReady is false — pairing happens on-LAN, so
+    //    runs even when tunnelReady is false - pairing happens on-LAN, so
     //    the tile can go "Local" the instant the owner binds, with the
     //    tunnel still coming up in the background.
     final discoveredLanUrl = LanDiscoveryService.instance.lookup(config.id);
@@ -326,7 +326,7 @@ class PrinterStatusService {
       }
     }
 
-    // 4. Tunnel via Cloudflare — only when we actually have a URL.
+    // 4. Tunnel via Cloudflare - only when we actually have a URL.
     if (access.tunnelUrl != null) {
       final tunnelStatus = await _tryMoongateEndpoint(
           baseUrl: access.tunnelUrl!, access: access, isLan: false, tunnelReady: true);
@@ -340,13 +340,13 @@ class PrinterStatusService {
       }
 
       // 5. A 401 means the token itself was rejected (e.g. invalidated
-      //    server-side) — a fresh one may work, so drop the cache and try ONCE
+      //    server-side) - a fresh one may work, so drop the cache and try ONCE
       //    more before declaring offline. For any other failure (timeout,
       //    offline, 404) a new token can't help: the Pi simply isn't reachable,
       //    so re-minting is pure waste. Re-minting on every poll for an
       //    offline-but-still-paired printer (whose stale tunnel URL keeps this
       //    branch alive) was the dominant source of /printer-access Edge
-      //    Function calls — so we skip it unless the failure was an auth reject.
+      //    Function calls - so we skip it unless the failure was an auth reject.
       if (_lastEndpointReason == 'http_401') {
         PrinterAccessCache.instance.invalidate(config.id);
         try {
@@ -372,11 +372,11 @@ class PrinterStatusService {
 
     // 6. All Moongate /status paths failed. Distinguish for the user:
     //    • Pi reachable (any HTTP answer) but the Moongate/Klipper stack
-    //      isn't responding — e.g. the K3 printer-power toggle is off, so
+    //      isn't responding - e.g. the K3 printer-power toggle is off, so
     //      Moonraker may be up but Klipper isn't ('waiting').
     //    • Nothing answers anywhere, the cloud has no tunnel yet, and we
     //      only started polling moments ago → freshly paired / rebooting,
-    //      so show 'starting_up' — but bounded by a grace window.
+    //      so show 'starting_up' - but bounded by a grace window.
     //    • Otherwise nothing answers on any path → 'offline'.
     //
     // The grace window is the fix: a just-paired host that is genuinely
@@ -399,15 +399,15 @@ class PrinterStatusService {
 
   // ── Reachability probe ───────────────────────────────────────────────────
   // HEADs the LAN URL (if we have one and haven't been failing it) and the
-  // tunnel URL. ANY HTTP response back — auth proxy's 401, nginx's 200/304
-  // for the Mainsail root, even an upstream-down 502 — proves the Pi
+  // tunnel URL. ANY HTTP response back - auth proxy's 401, nginx's 200/304
+  // for the Mainsail root, even an upstream-down 502 - proves the Pi
   // answered. We only get an exception when nothing on that host is
   // listening. Used to differentiate "Klipper not running" from "Pi off"
   // after the moongate /status path has given up.
   Future<bool> _isPiReachable(PrinterAccess access) async {
     // Include the mDNS-discovered URL, not just the persisted one: right after
     // a fresh pair the LAN /status poll may have failed (owner-bind/token not
-    // settled yet) so _currentLanUrl is still null — but the printer is plainly
+    // settled yet) so _currentLanUrl is still null - but the printer is plainly
     // on the network. Probing the discovered URL here keeps the tile on
     // "Starting up…" instead of flipping to a scary "Offline" while it settles.
     final discovered = LanDiscoveryService.instance.lookup(config.id);
@@ -423,7 +423,7 @@ class PrinterStatusService {
         await http.head(Uri.parse(base)).timeout(const Duration(seconds: 4));
         return true;
       } catch (_) {
-        // Refused / timeout / DNS — try next candidate
+        // Refused / timeout / DNS - try next candidate
       }
     }
     return false;
@@ -431,7 +431,7 @@ class PrinterStatusService {
 
   /// Token-free LAN reachability check for the liveness gate: HEAD [lanUrl] and
   /// treat ANY HTTP answer (even a 401 from the auth proxy) as "the Pi is up on
-  /// this network". No access token needed, so it never costs an Edge call — it's
+  /// this network". No access token needed, so it never costs an Edge call - it's
   /// how a printer that's offline-from-the-cloud but actually reachable on the
   /// LAN (e.g. a clock-skewed Pi whose heartbeats 401) still gets polled. When
   /// the phone is remote, the private LAN IP simply fast-fails (no route).
@@ -452,12 +452,12 @@ class PrinterStatusService {
   //
   // On LAN we MUST NOT send that header. The LAN request reaches Moonraker
   // directly (nginx → Moonraker over loopback, no auth proxy in the path),
-  // and Moonraker treats any Authorization: Bearer as one of ITS OWN JWTs —
+  // and Moonraker treats any Authorization: Bearer as one of ITS OWN JWTs -
   // it tries to decode our EdDSA access token, fails, and returns 401
   // "JWT Decode Error". That silently broke the progress bar, chamber temp,
   // and accurate-progress metadata on LAN. LAN is trusted by subnet (and the
   // moongate /status path authenticates via ?mg_token= in the query), so no
-  // Authorization header is needed — or wanted — there.
+  // Authorization header is needed - or wanted - there.
   Future<http.Response> _authedGet(
     Uri uri,
     String accessToken, {
@@ -526,7 +526,7 @@ class PrinterStatusService {
         _chamberDiscovered = true;
       }
     } catch (_) {
-      // Network blip — retry next poll.
+      // Network blip - retry next poll.
     }
   }
 
@@ -683,7 +683,7 @@ class PrinterStatusService {
           if (status['virtual_sdcard'] == null && s['virtual_sdcard'] != null) {
             status['virtual_sdcard'] = s['virtual_sdcard'];
           }
-          // Klipper health — drives the tile's after-E-STOP restart button.
+          // Klipper health - drives the tile's after-E-STOP restart button.
           if (s['webhooks'] != null) status['webhooks'] = s['webhooks'];
         }
       }
@@ -712,7 +712,7 @@ class PrinterStatusService {
 
   /// Interpret a light object's Klipper status into on/off. `output_pin` exposes
   /// a `value` (0..1, on if > 0); LED types (led / neopixel / dotstar) expose
-  /// `color_data` as a list of [r,g,b,w] channels — on if any channel of any
+  /// `color_data` as a list of [r,g,b,w] channels - on if any channel of any
   /// pixel is lit. Null when the shape isn't recognised.
   static bool? _interpretLight(dynamic data) {
     if (data is! Map) return null;
@@ -778,7 +778,7 @@ class PrinterStatusService {
     final double? filePosition =
         (virtualSdcard['file_position'] as num?)?.toDouble();
 
-    // File-relative progress — matches Mainsail's default and the notification
+    // File-relative progress - matches Mainsail's default and the notification
     // (single source of truth in computePrintProgress). The slicer-time
     // estimate that used to lead here read several % ahead of Mainsail.
     final double progress = computePrintProgress(
@@ -789,7 +789,7 @@ class PrinterStatusService {
       sdcardProgress:  sdcardProg,
     );
 
-    // Persist webcam transform info — keeps the tile correct on next launch.
+    // Persist webcam transform info - keeps the tile correct on next launch.
     // Also pick up the Pi's local_ip if it surfaced, so future polls can
     // try LAN first.
     if (moongateResult != null) {
@@ -817,7 +817,7 @@ class PrinterStatusService {
 
       // Record the Pi's plugin version in this poll's diagnostics so a bug
       // report shows which plugin the printer is actually running (absent =
-      // pre-v0.6.4 plugin that doesn't report it yet — itself a useful signal).
+      // pre-v0.6.4 plugin that doesn't report it yet - itself a useful signal).
       final pluginVersion = moongateResult['plugin_version'] as String?;
       if (pluginVersion != null && pluginVersion.isNotEmpty) {
         _recordPollDiag({'plugin_version': pluginVersion});
@@ -827,7 +827,7 @@ class PrinterStatusService {
     // Build the absolute snapshot URL from the path the Pi reported plus
     // the base URL we're currently winning the poll on. Tunnel-side needs
     // the EdDSA token in the query string because Image.network can't set
-    // headers or cookies — the auth proxy accepts mg_token via query as a
+    // headers or cookies - the auth proxy accepts mg_token via query as a
     // documented fallback (see klipper-plugin/moongate_authproxy.py).
     // LAN-side needs no auth because Moonraker / nginx trust the subnet.
     final snapshotPath = moongateResult?['webcam_snapshot_path'] as String?;
@@ -846,7 +846,7 @@ class PrinterStatusService {
     // Precedence: user override (the tile gear) > a camera auto-detected from
     // Mainsail's webcam config (the plugin reports its absolute URL because
     // Moonraker can't snapshot it for us) > the normal Pi snapshot built
-    // above. These are absolute LAN URLs — typically an MJPEG stream from a
+    // above. These are absolute LAN URLs - typically an MJPEG stream from a
     // phone webcam. On LAN we fetch them directly; remote we route through the
     // Pi's /mg-extcam proxy, which only ever forwards to private LAN IPs (see
     // klipper-plugin/moongate_authproxy.py).
@@ -879,7 +879,7 @@ class PrinterStatusService {
 
     // Klipper health from Moonraker's webhooks object: "shutdown" (e.g. after an
     // emergency stop) or "error" means the machine needs a firmware restart to
-    // come back — the tile then shows a restart button instead of the E-STOP
+    // come back - the tile then shows a restart button instead of the E-STOP
     // triangle. (Also corrects the misleading "idle" a shut-down printer showed.)
     final webhooks       = status['webhooks'] as Map<String, dynamic>?;
     final klippyState    = webhooks?['state'] as String?;

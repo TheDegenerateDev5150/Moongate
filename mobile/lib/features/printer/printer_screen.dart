@@ -19,7 +19,7 @@ import 'printer_camera_screen.dart';
 
 /// Full-screen WebView showing the printer's Mainsail/Fluidd interface.
 ///
-/// The [WebViewController] is NOT owned by this screen — it lives in
+/// The [WebViewController] is NOT owned by this screen - it lives in
 /// [PrinterWebViewCache], keyed by printer id, so popping back to the dashboard
 /// leaves the loaded SPA and its Moonraker WebSocket alive and re-opening is
 /// instant (no Mainsail "Initializing…", which is slow over the tunnel).
@@ -62,7 +62,7 @@ class _PrinterScreenState extends State<PrinterScreen>
 
   // Discoverability hint pointing at the camera icon. Shown ONLY when this
   // printer is loaded over the tunnel AND its webcam is an external (absolute
-  // LAN-URL) camera — the one case where the embedded Mainsail webcam panel
+  // LAN-URL) camera - the one case where the embedded Mainsail webcam panel
   // can't load remotely. One-time: dismissing it (or opening the camera) sets
   // a persisted flag so it never shows again. A normal relative-URL webcam is
   // never flagged external, so a standard setup never sees this.
@@ -82,7 +82,7 @@ class _PrinterScreenState extends State<PrinterScreen>
   @override
   void dispose() {
     _retryTimer?.cancel();
-    // The WebViewController is intentionally NOT disposed here — it lives on in
+    // The WebViewController is intentionally NOT disposed here - it lives on in
     // [PrinterWebViewCache] so the next open is instant.
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -101,7 +101,7 @@ class _PrinterScreenState extends State<PrinterScreen>
   Future<void> _start() async {
     final l = AppLocalizations.of(context);
 
-    // Warm? Re-attach to the live controller — instant, no reload, no
+    // Warm? Re-attach to the live controller - instant, no reload, no
     // "Initializing…". Re-point the navigation delegate at this screen, then
     // revalidate in the background (a LAN session is dead if you've left home).
     final warm = PrinterWebViewCache.instance.lookup(widget.printer.id);
@@ -127,7 +127,7 @@ class _PrinterScreenState extends State<PrinterScreen>
       // keeps it refreshed once the session is stored. No-op on v0.3 Pis.
       await PrinterWebViewCache.setMgTokenCookie(access);
 
-      // Prefer the LAN URL when reachable — Mainsail loads dramatically faster
+      // Prefer the LAN URL when reachable - Mainsail loads dramatically faster
       // on direct LAN than through Cloudflare. Try the mDNS-discovered address
       // first (survives DHCP changes), then the persisted one. Pre-flight a
       // quick 2s probe: on cellular the phone has no route to RFC1918 addresses
@@ -145,7 +145,7 @@ class _PrinterScreenState extends State<PrinterScreen>
         _usingLan = false;
       }
 
-      // Neither LAN reachable nor a tunnel URL yet — the printer was just
+      // Neither LAN reachable nor a tunnel URL yet - the printer was just
       // paired / is rebooting and remote isn't up. Show the same "starting up"
       // retry the 503 path uses instead of loading a null URL.
       if (useUrl == null) {
@@ -191,7 +191,7 @@ class _PrinterScreenState extends State<PrinterScreen>
   }
 
   /// Background check after re-attaching to a warm session. A LAN session is
-  /// only valid while you're on that network — if the address no longer answers
+  /// only valid while you're on that network - if the address no longer answers
   /// (you've left home) drop it and reload so the tunnel takes over, rather than
   /// leaving the user on a dead page. Tunnel sessions are trusted here: the
   /// cache's refresh timer drops them on rotation, and a hard failure still
@@ -225,7 +225,7 @@ class _PrinterScreenState extends State<PrinterScreen>
     await prefs.setBool(_cameraHintSeenKey, true);
   }
 
-  /// Open the full-screen native camera view. Also marks the hint as seen — if
+  /// Open the full-screen native camera view. Also marks the hint as seen - if
   /// the user found the camera (via the app-bar icon or the hint), there's no
   /// need to nudge them again.
   void _openCamera() {
@@ -257,7 +257,7 @@ class _PrinterScreenState extends State<PrinterScreen>
     if (result.lanUrl != widget.printer.lanUrl) {
       await PrinterRegistry.instance
           .updateLanUrl(widget.printer.id, result.lanUrl);
-      // The warm session loaded the old address — drop it so a reopen picks up
+      // The warm session loaded the old address - drop it so a reopen picks up
       // the new one (the current view stays until the user reopens / refreshes).
       PrinterWebViewCache.instance.invalidate(widget.printer.id);
       if (mounted) {
@@ -322,7 +322,7 @@ class _PrinterScreenState extends State<PrinterScreen>
 
   /// Fast LAN probe. Returns true iff `${url}/server/info` answers within 2
   /// seconds. We hit Moonraker's own info endpoint rather than `/` because
-  /// nginx serving Mainsail's index always 200s — Moonraker only answers when
+  /// nginx serving Mainsail's index always 200s - Moonraker only answers when
   /// actually reachable, so a 200 here is also a liveness signal for the
   /// printer side. 401/403 still counts as reachable (we got an answer); only
   /// network failures and timeouts fall through to the tunnel.
@@ -386,7 +386,7 @@ class _PrinterScreenState extends State<PrinterScreen>
           // Native Moongate camera view. Unlike the Mainsail webcam panel in
           // this WebView (which hits the camera's absolute LAN URL and so fails
           // for an external phone-cam when remote), this renders through the
-          // resolved snapshot URL — /mg-extcam-proxied over the tunnel.
+          // resolved snapshot URL - /mg-extcam-proxied over the tunnel.
           IconButton(
             icon: const Icon(Icons.videocam_outlined),
             tooltip: l.printerCameraTooltip,
@@ -396,7 +396,7 @@ class _PrinterScreenState extends State<PrinterScreen>
             icon: const Icon(Icons.refresh),
             onPressed: () {
               // Drop the warm session + access token so we reload from scratch
-              // (also re-fetches a fresh tunnel URL — handles cloudflared
+              // (also re-fetches a fresh tunnel URL - handles cloudflared
               // rotation).
               PrinterWebViewCache.instance.invalidate(widget.printer.id);
               PrinterAccessCache.instance.invalidate(widget.printer.id);
@@ -407,7 +407,7 @@ class _PrinterScreenState extends State<PrinterScreen>
       ),
       body: Column(
         children: [
-          // Camera-discoverability hint — a full-width strip directly under the
+          // Camera-discoverability hint - a full-width strip directly under the
           // app bar (Moongate's own chrome), so it never overlaps the embedded
           // Mainsail page or the system nav bar. Gated to tunnel + external
           // camera (see _maybeShowCameraHint). Dismissible, one-time.
@@ -536,7 +536,7 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
   late final TextEditingController _nameController =
       TextEditingController(text: widget.initialName);
   final FocusNode _nameFocus = FocusNode();
-  // Show the stored lanUrl without the scheme — the friendlier host:port
+  // Show the stored lanUrl without the scheme - the friendlier host:port
   // form people actually type.
   late final TextEditingController _addressController = TextEditingController(
     text: (widget.initialLanUrl ?? '').replaceFirst(RegExp(r'^https?://'), ''),

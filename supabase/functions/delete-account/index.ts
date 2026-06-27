@@ -12,7 +12,7 @@
 // So no row tied to the user's identity is left behind.
 //
 // The user's printers (Pis) keep their local pairing state and will simply 404
-// on their next heartbeat (their cloud row is gone), exactly like a reset — the
+// on their next heartbeat (their cloud row is gone), exactly like a reset - the
 // user re-pairs if they want them back. The app signs back in as a fresh
 // anonymous user afterwards.
 //
@@ -21,9 +21,9 @@
 // Response 200: { "ok": true }
 //
 // Errors:
-//   401 — no/invalid JWT
-//   405 — wrong method
-//   500 — deletion failed
+//   401 - no/invalid JWT
+//   405 - wrong method
+//   500 - deletion failed
 
 import { handleCorsPreflight } from "../_shared/cors.ts";
 import {

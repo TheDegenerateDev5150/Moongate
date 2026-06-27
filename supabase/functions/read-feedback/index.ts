@@ -2,8 +2,8 @@
 //
 // Admin/debug-only reader for the feedback table. Returns recent rows ONLY
 // when called with the correct `x-moongate-debug` secret (matched against the
-// MOONGATE_DEBUG_KEY function env var). Everyone else — even with a valid anon
-// JWT — gets 404, so the feedback table stays locked to clients (no direct
+// MOONGATE_DEBUG_KEY function env var). Everyone else - even with a valid anon
+// JWT - gets 404, so the feedback table stays locked to clients (no direct
 // access; this is the one server-side read path besides the dashboard).
 //
 // Rows are read via the service role (RLS bypassed). Rotate/disable by
@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return methodNotAllowed();
 
   // The debug secret is the gate. A missing env var or any mismatch returns
-  // the same 404 as an unknown route — non-enumerating, and fails closed.
+  // the same 404 as an unknown route - non-enumerating, and fails closed.
   const expected = Deno.env.get("MOONGATE_DEBUG_KEY");
   const provided = req.headers.get("x-moongate-debug");
   if (!expected || !provided || provided !== expected) return notFound();

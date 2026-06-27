@@ -1,4 +1,4 @@
-# Moongate — Flutter App
+# Moongate - Flutter App
 
 Android app for remotely controlling a Klipper 3D printer over local WiFi or Cloudflare tunnel.
 
@@ -24,7 +24,7 @@ lib/
 ├── main.dart
 ├── app.dart
 ├── features/
-│   ├── auth/        # Pairing flow — QR scanner, manual code entry
+│   ├── auth/        # Pairing flow - QR scanner, manual code entry
 │   ├── dashboard/   # Dashboard screen and PrinterTile widget
 │   ├── printer/     # Full Mainsail WebView (per-printer screen)
 │   └── settings/    # App settings

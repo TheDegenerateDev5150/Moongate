@@ -18,8 +18,8 @@ class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        // App lock: let Dart toggle FLAG_SECURE so the lock screen — and the
-        // app's contents while it is locked — are excluded from screenshots
+        // App lock: let Dart toggle FLAG_SECURE so the lock screen - and the
+        // app's contents while it is locked - are excluded from screenshots
         // and blanked in the recent-apps thumbnail. Driven by the app-lock
         // gate (set on lock, cleared on unlock).
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SECURE_CHANNEL)

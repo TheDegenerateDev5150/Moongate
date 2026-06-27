@@ -21,7 +21,7 @@ class UpdateInfo {
 /// CI writes APK/latest_version.json on every master build.  This service
 /// fetches that file and compares its build number against the installed one.
 /// Returns [UpdateInfo] when a newer build exists, null otherwise.
-/// All failures (network error, bad JSON, timeout) are silently swallowed —
+/// All failures (network error, bad JSON, timeout) are silently swallowed -
 /// the update check should never interrupt the user if something goes wrong.
 class UpdateService {
   static const _versionJsonUrl =
@@ -30,7 +30,7 @@ class UpdateService {
   Future<UpdateInfo?> checkForUpdate() async {
     // Android only: this self-update path tracks the GitHub APK build. On iOS
     // the App Store handles updates, and the manifest's build number / apk_url
-    // refer to the Android build — surfacing them on an iPhone is meaningless
+    // refer to the Android build - surfacing them on an iPhone is meaningless
     // (you can't install an APK) and pointing users at an off-store download is
     // an App Store review risk. Returning null suppresses the update banner and
     // the in-app updater on iOS; the "What's new" changelog still shows.
@@ -40,8 +40,8 @@ class UpdateService {
       final installedBuild = int.tryParse(info.buildNumber) ?? 0;
 
       // Cache-buster: GitHub's raw CDN caches files for ~5 min by default.
-      // Without this, an unlucky timing window — user opens the app right
-      // before CI publishes a new manifest — leaves them on a stale "no
+      // Without this, an unlucky timing window - user opens the app right
+      // before CI publishes a new manifest - leaves them on a stale "no
       // update" result for several minutes.  Appending a per-request timestamp
       // forces a cold hit.
       final url = Uri.parse(
@@ -67,7 +67,7 @@ class UpdateService {
       }
       return null; // already up to date
     } catch (_) {
-      return null; // silent fail — never bother the user with update check errors
+      return null; // silent fail - never bother the user with update check errors
     }
   }
 }

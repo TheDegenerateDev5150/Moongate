@@ -3,7 +3,7 @@
 # Why this file exists:
 #   mobile_scanner 7.x ships a consumerProguardFiles entry but its rules use
 #   `com.google.mlkit.*` (single dot) which only matches the immediate
-#   `com.google.mlkit` package — NOT the subpackages where the actual ML Kit
+#   `com.google.mlkit` package - NOT the subpackages where the actual ML Kit
 #   barcode scanner classes live (com.google.mlkit.vision.barcode.*, etc.).
 #   On release builds R8 was therefore stripping ML Kit internals and the
 #   scanner crashed at first use with an obfuscated NPE

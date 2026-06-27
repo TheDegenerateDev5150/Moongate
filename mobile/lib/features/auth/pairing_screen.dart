@@ -20,8 +20,8 @@ import '../dashboard/feedback_sheet.dart';
 ///      enrollment-token hash + its Ed25519 public key with Supabase.
 ///   2. Pi displays the GATE code via M118 + a QR containing
 ///      `moongate://pair?v=3&pk=<base64>&et=<raw>`.
-///   3a. User scans the QR — app extracts `pk` and `et`.
-///   3b. OR user types the GATE code shown on the Pi's console — app has
+///   3a. User scans the QR - app extracts `pk` and `et`.
+///   3b. OR user types the GATE code shown on the Pi's console - app has
 ///       only `et`; the server uses its stored pubkey from the
 ///       enrollment row.
 ///   4. App asks for a friendly name and calls Supabase `/printer-claim`
@@ -39,7 +39,7 @@ class _PairingScreenState extends State<PairingScreen> {
   final _nameController      = TextEditingController(text: 'My Printer');
   final _nameFocus           = FocusNode();
 
-  // Optional "Advanced — custom network" address. When non-blank it becomes
+  // Optional "Advanced - custom network" address. When non-blank it becomes
   // the printer's lanUrl, overriding the QR/mDNS-supplied address. The escape
   // hatch for reverse-proxy / Docker setups where auto-discovery can't find
   // the printer (see TROUBLESHOOTING.md → reverse proxy).
@@ -69,11 +69,11 @@ class _PairingScreenState extends State<PairingScreen> {
   String? _scannedPubKey;
   String? _scannedEnrollmentToken;
   // v0.5.1: LAN URL embedded in the QR (`ip`/`port`), if present. Lets a
-  // fresh pair go Local immediately — no mDNS round-trip, no heartbeat wait.
+  // fresh pair go Local immediately - no mDNS round-trip, no heartbeat wait.
   String? _scannedLanUrl;
 
   // Manual-entry path: normalised GATE-XXXX-XXXX token. Pubkey unknown
-  // here — server uses its stored value from enrollment_tokens.
+  // here - server uses its stored value from enrollment_tokens.
   String? _manualEnrollmentToken;
 
   @override
@@ -132,7 +132,7 @@ class _PairingScreenState extends State<PairingScreen> {
   /// One 4-digit GATE-code box. Numpad keyboard, centered large digits,
   /// formatter clamps to digits-only and length 4. `isLast` controls the
   /// keyboard "action" button (next vs done) and whether textInputAction
-  /// surfaces a Submit/Pair signal — done dismisses the keyboard on the
+  /// surfaces a Submit/Pair signal - done dismisses the keyboard on the
   /// final box.
   Widget _gateCodeBox({
     required TextEditingController controller,
@@ -179,7 +179,7 @@ class _PairingScreenState extends State<PairingScreen> {
     }
     if (!status.isGranted) return;
 
-    // Fresh-grant warmup — camera HAL needs ~700ms to register the
+    // Fresh-grant warmup - camera HAL needs ~700ms to register the
     // permission before bind succeeds reliably.
     if (before != PermissionStatus.granted) {
       await Future.delayed(const Duration(milliseconds: 700));
@@ -268,7 +268,7 @@ class _PairingScreenState extends State<PairingScreen> {
     }
     // v0.5.1: optional LAN address embedded by v0.4.5+ Pis. Build the base
     // URL now so the new tile connects Local on its very first poll. Absent
-    // on older Pis — we fall back to mDNS/tunnel exactly as before.
+    // on older Pis - we fall back to mDNS/tunnel exactly as before.
     final ip   = uri.queryParameters['ip'];
     final port = uri.queryParameters['port'];
     String? lanUrl;
@@ -323,7 +323,7 @@ class _PairingScreenState extends State<PairingScreen> {
       // Seed the printer's LAN URL so it lands on the dashboard already
       // showing "Local" (~1 s) instead of "Starting up… waiting for first
       // heartbeat". Best source is the QR itself (v0.4.5+ Pis embed ip/port)
-      // — deterministic, works even before the Pi advertises mDNS. For the
+      // - deterministic, works even before the Pi advertises mDNS. For the
       // manual GATE-code path or older QRs we fall back to a brief mDNS
       // prewarm; if neither resolves, lanUrl stays null and the normal
       // background browse + tunnel path takes over (no regression).
@@ -350,7 +350,7 @@ class _PairingScreenState extends State<PairingScreen> {
   // ── First-launch / reinstall restore ─────────────────────────────────────
 
   /// Pick a backup file and merge its printers in, then head to the
-  /// dashboard. Restored printers come back offline — a reinstall gets a new
+  /// dashboard. Restored printers come back offline - a reinstall gets a new
   /// cloud identity, so the user re-pairs each Pi to bring it online. Shares
   /// PrinterRegistry.importFromBackupFile with the drawer "Restore config".
   Future<void> _importConfig() async {
@@ -416,13 +416,13 @@ class _PairingScreenState extends State<PairingScreen> {
   ///
   /// Pairing happens on the same network as the Pi (you just scanned its QR
   /// or typed its console code), so its `_moongate._tcp` advert is almost
-  /// always resolvable within a second — often already cached from the
+  /// always resolvable within a second - often already cached from the
   /// startup / foreground browse, in which case the first lookup returns
   /// straight away. We kick a fresh browse and poll the resolved map for up
   /// to ~1.2 s, then seed the printer's `lanUrl` so the very first dashboard
   /// poll goes straight to LAN. On timeout (multicast blocked, Pi pre-v0.4.4,
   /// or off-network) we return null and the normal background browse + tunnel
-  /// path takes over — no regression, just the old "Starting up…" window.
+  /// path takes over - no regression, just the old "Starting up…" window.
   Future<String?> _prewarmLanUrl(String printerId) async {
     LanDiscoveryService.instance.refresh().ignore(); // ~5 s browse, async
     for (var i = 0; i < 8; i++) { // 8 × 150 ms ≈ 1.2 s cap
@@ -543,7 +543,7 @@ class _PairingScreenState extends State<PairingScreen> {
                   )),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text('—',
+                    child: Text('-',
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w600,

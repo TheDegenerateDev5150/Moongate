@@ -9,12 +9,12 @@ import '../../services/printer_registry.dart';
 /// (Moonraker's `printer/objects/list`, filtered to `gcode_macro` entries),
 /// lets the user **star** the ones they use most to pin them to the top, and
 /// runs a macro after a confirmation. Opened from the macro button on an
-/// online tile — see `printer_tile.dart`.
+/// online tile - see `printer_tile.dart`.
 ///
 /// Hidden from the list (in [PrintControlService.listMacros]): `_`-prefixed
 /// helper macros (Klipper's private-macro convention, e.g. `_Probe_Variables`)
 /// and Moongate's own plumbing macros (`MOONGATE_PAIR` / `MOONGATE_RESET_OWNER`
-/// — the latter would unpair the printer). Favourites are stored per-printer on
+/// - the latter would unpair the printer). Favourites are stored per-printer on
 /// the config and ride backups.
 Future<void> showMacrosSheet(BuildContext context, PrinterConfig printer) {
   return showModalBottomSheet<void>(
@@ -47,7 +47,7 @@ class _MacrosSheetState extends State<_MacrosSheet> {
   /// local set is the source of truth for this open sheet.
   late final Set<String> _favourites;
 
-  /// Macro currently being sent — gates taps and shows a spinner on its row so
+  /// Macro currently being sent - gates taps and shows a spinner on its row so
   /// a double-tap can't fire it twice.
   String? _running;
 
@@ -63,7 +63,7 @@ class _MacrosSheetState extends State<_MacrosSheet> {
 
   void _toggleFavourite(String macro) {
     setState(() {
-      // Set.remove returns false when the element wasn't present — so a single
+      // Set.remove returns false when the element wasn't present - so a single
       // call both un-stars a favourite and stars a non-favourite.
       if (!_favourites.remove(macro)) _favourites.add(macro);
     });

@@ -15,7 +15,7 @@ import 'supabase_service.dart';
 /// immediately on cold start.
 ///
 /// Cross-tenant isolation is enforced by Row-Level Security at the
-/// database layer — `select my printers` policy filters every query to
+/// database layer - `select my printers` policy filters every query to
 /// `owner_user_id = auth.uid()`. There is no way to see another user's
 /// printers from this code path.
 class PrinterRegistry {
@@ -36,7 +36,7 @@ class PrinterRegistry {
     final prefs = await SharedPreferences.getInstance();
     // Pull the latest from disk before reading. The print-notification
     // background isolate shares this registry but keeps its OWN cached
-    // SharedPreferences snapshot — and as a foreground service it survives UI
+    // SharedPreferences snapshot - and as a foreground service it survives UI
     // restarts, so without a reload it never sees printers the main app
     // added/restored after the isolate started (the notification stuck on
     // "No Printers"). reload() also lets either side pick up removals.
@@ -50,7 +50,7 @@ class PrinterRegistry {
       _printers = PrinterConfig.listFromJson(raw);
       await _pruneOrphanLightStatus();
     } on FormatException catch (e) {
-      // Legacy v0.2.x payload — drop it. The user will re-pair via the
+      // Legacy v0.2.x payload - drop it. The user will re-pair via the
       // new v=3 QR flow.
       _log('Dropping legacy persisted printers (${e.message})');
       _printers = [];
@@ -68,7 +68,7 @@ class PrinterRegistry {
   }
 
   /// One-off cleanup (v0.9.8): an early build auto-filled a light status object
-  /// on printers with no light macros — sometimes even a non-light object like a
+  /// on printers with no light macros - sometimes even a non-light object like a
   /// display neopixel or a motor-power pin. A status object is meaningless
   /// without a control macro, so drop these orphans. Idempotent.
   Future<void> _pruneOrphanLightStatus() async {
@@ -143,7 +143,7 @@ class PrinterRegistry {
   ///
   /// Shared by the dashboard "Restore config" item and the first-launch pairing
   /// screen. A backup carries the printer list only, NOT the Supabase anon
-  /// identity — restored printers stay offline until reclaimed by the restore
+  /// identity - restored printers stay offline until reclaimed by the restore
   /// code or re-paired (a reinstall gets a new cloud identity).
   Future<ImportOutcome?> importFromBackupFile({
     Future<bool> Function(List<PrinterConfig> toRemove)? confirmReplace,
@@ -184,7 +184,7 @@ class PrinterRegistry {
 
     // The backup is authoritative: restoring should reproduce its dashboard
     // exactly (printers, their saved order, each tile's config). Work out which
-    // local printers the backup doesn't contain — a full replace would drop
+    // local printers the backup doesn't contain - a full replace would drop
     // them. Dropping is destructive, so confirm first, and BEFORE redeeming the
     // single-use restore code so a decline costs nothing. With no callback wired
     // (the first-launch import is always onto an empty list, so this can't
@@ -212,7 +212,7 @@ class PrinterRegistry {
         final reclaimed =
             await SupabaseService.instance.redeemRestoreGrant(restoreCode);
         // redeemRestoreGrant returns null on 404 (invalid / expired / already
-        // used) and the re-homed count otherwise — which can legitimately be 0
+        // used) and the re-homed count otherwise - which can legitimately be 0
         // (a valid code that matched no live printers). Only a count > 0 means
         // anything actually came back online.
         reconnectedCount = reclaimed ?? 0;
@@ -247,7 +247,7 @@ class PrinterRegistry {
   }
 
   /// Remove the local cache entry. Note: this does NOT delete the row
-  /// from Supabase — for that, the user should run MOONGATE_RESET_OWNER
+  /// from Supabase - for that, the user should run MOONGATE_RESET_OWNER
   /// on the Pi (it'll be cleaned up by the 6-week inactivity sweep
   /// thereafter, since no heartbeats can succeed once unpaired).
   Future<void> remove(String printerId) async {
@@ -265,7 +265,7 @@ class PrinterRegistry {
 
   /// Persist a user-defined ordering of the printer list (set by drag-to-reorder
   /// on the dashboard when auto-arrange is off). The persisted list order *is*
-  /// the dashboard order, so this just re-sequences and saves — it rides backups
+  /// the dashboard order, so this just re-sequences and saves - it rides backups
   /// for free.
   ///
   /// [orderedIds] is the full set of printer ids in the desired order. Defensive
@@ -293,7 +293,7 @@ class PrinterRegistry {
   }
 
   /// Rename a printer locally. Note: the Supabase row's `name` field is
-  /// left unchanged — the local rename is cosmetic only. Re-pairing would
+  /// left unchanged - the local rename is cosmetic only. Re-pairing would
   /// reset to whatever name was sent during the claim.
   Future<void> renamePrinter(String printerId, String newName) async {
     final trimmed = newName.trim();
@@ -340,7 +340,7 @@ class PrinterRegistry {
     await _save();
   }
 
-  /// Persist the user's favourited macros for a printer — the ones starred in
+  /// Persist the user's favourited macros for a printer - the ones starred in
   /// the macro sheet to pin them to the top of the list. The full set is stored
   /// each time (not a delta), so passing an empty list clears them. Rides
   /// backups for free via [PrinterConfig.favouriteMacros].
@@ -402,7 +402,7 @@ class PrinterRegistry {
   }
 
   /// Persist the detected web UI type ('mainsail' | 'fluidd') so the tile
-  /// can render the right logo on a cold launch — including when the
+  /// can render the right logo on a cold launch - including when the
   /// printer is currently offline (power-off, Pi rebooting, etc.).
   Future<void> updateUiType(String printerId, String uiType) async {
     final idx = _printers.indexWhere((p) => p.id == printerId);
@@ -441,14 +441,14 @@ class PrinterRegistry {
 
   // ── v0.2.x compat stubs (kept so the UI doesn't break) ──────────────────
 
-  /// Always returns true now — in v0.3.0 every printer is reached via the
+  /// Always returns true now - in v0.3.0 every printer is reached via the
   /// Supabase-mediated tunnel.
   bool? livePreferRemote(String printerId) => true;
 
-  /// No-op in v0.3.0 — kept so PrinterStatusService doesn't break.
+  /// No-op in v0.3.0 - kept so PrinterStatusService doesn't break.
   void setLivePreferRemote(String printerId, bool preferRemote) {}
 
-  /// No-op in v0.3.0 — Pi reports its tunnel URL to Supabase, and the
+  /// No-op in v0.3.0 - Pi reports its tunnel URL to Supabase, and the
   /// app fetches the current one on every access call. There's nothing
   /// to persist client-side.
   Future<void> updateRemoteHost(String printerId, String newRemoteHost) async {}
@@ -466,7 +466,7 @@ class ImportOutcome {
 
   /// How many printers the backup's restore code actually re-homed to THIS
   /// identity. 0 if the backup had no code, the code was invalid / expired /
-  /// already-used, or it matched no live printers — in every one of those
+  /// already-used, or it matched no live printers - in every one of those
   /// cases nothing comes back online without a re-pair.
   final int reconnectedCount;
 
@@ -475,7 +475,7 @@ class ImportOutcome {
   /// but it reclaimed nothing".
   final bool hadRestoreCode;
 
-  /// True only when at least one printer was actually re-bound — i.e. printers
+  /// True only when at least one printer was actually re-bound - i.e. printers
   /// will come back online without a re-pair. Previously this was
   /// `reclaimed != null`, which was ALSO true for a valid-but-0-printer redeem,
   /// so the UI falsely claimed "reconnected".

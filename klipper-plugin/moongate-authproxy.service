@@ -1,4 +1,4 @@
-# Moongate v0.4 — auth proxy systemd unit.
+# Moongate v0.4 - auth proxy systemd unit.
 #
 # This file is a reference template. The actual unit is written by
 # install.sh with the correct $USER, $HOME, $MOONRAKER_VENV, and
@@ -55,7 +55,7 @@ Environment=MG_LOG_LEVEL=INFO
 StandardOutput=append:/run/moongate-authproxy.log
 StandardError=append:/run/moongate-authproxy.log
 
-# Hardening — proxy doesn't need any of these.
+# Hardening - proxy doesn't need any of these.
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only

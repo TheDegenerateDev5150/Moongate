@@ -10,7 +10,7 @@
 // Why asymmetric: if the Pi is ever compromised, an attacker holding only
 // the public key cannot mint tokens. Symmetric (HS256 with Supabase's main
 // JWT secret) would let a Pi-side compromise mint JWTs for any Supabase
-// user — too large a blast radius.
+// user - too large a blast radius.
 
 import * as jose from "npm:jose@5";
 

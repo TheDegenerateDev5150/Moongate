@@ -15,7 +15,7 @@
 //                           environment (sandbox for dev/local builds,
 //                           production for TestFlight + App Store) and the two
 //                           are indistinguishable server-side, so sendApns falls
-//                           back to the other host on BadDeviceToken — meaning
+//                           back to the other host on BadDeviceToken - meaning
 //                           one deploy serves dev and shipped builds at once and
 //                           this secret never has to be flipped.
 //
@@ -167,7 +167,7 @@ export async function sendApns(deviceToken: string, alert: ApnsAlert): Promise<A
   const r = await postToHost(primary, deviceToken, topic, jwt, alert);
   if (r.status === 200) return { ok: true, unregistered: false, status: 200 };
 
-  // Wrong environment — the token belongs to the other host. Retry there before
+  // Wrong environment - the token belongs to the other host. Retry there before
   // giving up; only a failure in BOTH environments means it is truly dead.
   if (r.reason === "BadDeviceToken") {
     const r2 = await postToHost(secondary, deviceToken, topic, jwt, alert);

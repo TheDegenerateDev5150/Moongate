@@ -5,7 +5,7 @@ import 'package:moongate/models/notif_fields.dart';
 import 'package:moongate/services/settings_backup.dart';
 
 /// Proves the customizable print-notification content (which fields show + the
-/// order) is carried by the backup/restore feature — exported by
+/// order) is carried by the backup/restore feature - exported by
 /// [SettingsBackup.snapshot] into the file's `settings` map and put back by
 /// [SettingsBackup.apply] on a fresh device. Also guards against a future
 /// change silently dropping these keys from the backup allow-list.
@@ -31,7 +31,7 @@ void main() {
     expect(backup['notif_fields_enabled'], original.enabledPref,
         reason: 'enabled-field set must be written into the backup');
 
-    // 3. Simulate restoring onto a fresh install — nothing set yet.
+    // 3. Simulate restoring onto a fresh install - nothing set yet.
     await prefs.clear();
     expect(prefs.getString('notif_fields_order'), isNull);
 

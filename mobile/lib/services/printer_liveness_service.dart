@@ -10,7 +10,7 @@ import 'supabase_service.dart';
 /// spending an Edge Function call.
 ///
 /// `/printer-access` (which mints the per-call access token) is an Edge Function
-/// and was the dominant Supabase invocation cost — and the app was calling it on
+/// and was the dominant Supabase invocation cost - and the app was calling it on
 /// every poll even for printers that are powered off. Reading `last_seen` over
 /// Supabase **Realtime** (or via a plain RLS-scoped SELECT) is NOT an Edge
 /// Function invocation, so the poll loop can consult this first and skip the
@@ -37,7 +37,7 @@ class PrinterLivenessService {
 
   /// How often to re-read the whole fleet's `last_seen` as a safety net for a
   /// Realtime reconnect gap (Realtime doesn't replay events missed while down).
-  /// One RLS-scoped SELECT for all the user's rows — not an Edge Function.
+  /// One RLS-scoped SELECT for all the user's rows - not an Edge Function.
   static const _reseedEvery = Duration(minutes: 5);
 
   final Map<String, DateTime> _lastSeen = {};
@@ -48,7 +48,7 @@ class PrinterLivenessService {
   void _log(String msg) => dev.log(msg, name: 'MOONGATE/LIVENESS');
 
   /// True only when we have a `last_seen` for [printerId] AND it's older than
-  /// [_onlineWindow] — i.e. positive evidence the printer is offline. Returns
+  /// [_onlineWindow] - i.e. positive evidence the printer is offline. Returns
   /// false when `last_seen` is unknown (not seeded yet / never heartbeated), so
   /// the caller fails OPEN (polls) rather than wrongly showing a live printer
   /// offline just because we haven't learned its state yet.
@@ -62,13 +62,13 @@ class PrinterLivenessService {
   DateTime? lastSeen(String printerId) => _lastSeen[printerId];
 
   /// Seed current state + subscribe to live changes. Idempotent. Safe to call
-  /// before sign-in completes — it registers a one-shot retry for when the
+  /// before sign-in completes - it registers a one-shot retry for when the
   /// anonymous session lands.
   Future<void> start() async {
     if (_started) return;
     final uid = SupabaseService.instance.userId;
     if (uid == null) {
-      // Not signed in yet — retry when the anon session arrives.
+      // Not signed in yet - retry when the anon session arrives.
       SupabaseService.instance.signedIn.addListener(_onSignedIn);
       return;
     }

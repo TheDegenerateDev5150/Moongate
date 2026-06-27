@@ -70,7 +70,7 @@ class _CameraFeedsSheet extends ConsumerWidget {
   }
 }
 
-/// One labelled segmented picker (Raw / 1s / 3s / 5s) — same button style as the
+/// One labelled segmented picker (Raw / 1s / 3s / 5s) - same button style as the
 /// rest of the menu.
 class _RateRow extends StatelessWidget {
   final IconData icon;
@@ -104,7 +104,7 @@ class _RateRow extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: SegmentedButton<DashboardCameraRefresh>(
-            // No selected-checkmark — keeps Raw/1s/3s/5s on one line, matching
+            // No selected-checkmark - keeps Raw/1s/3s/5s on one line, matching
             // the other segmented pickers in the menu.
             showSelectedIcon: false,
             style: SegmentedButton.styleFrom(

@@ -14,7 +14,7 @@ import 'package:bonsoir/bonsoir.dart';
 /// persisted `lanUrl` so an IP change is recovered without needing a
 /// tunnel-side round-trip.
 ///
-/// Stateless across cold launches — the map is in-memory only. On launch
+/// Stateless across cold launches - the map is in-memory only. On launch
 /// the persisted `lanUrl` from `PrinterRegistry` covers us until the first
 /// browse populates the map (~500 ms on a typical home network).
 class LanDiscoveryService {
@@ -22,11 +22,11 @@ class LanDiscoveryService {
   static final LanDiscoveryService instance = LanDiscoveryService._();
 
   /// Avahi advertises `_moongate._tcp` (no leading underscores in the
-  /// `type` field passed to BonsoirDiscovery — bonsoir adds them itself).
+  /// `type` field passed to BonsoirDiscovery - bonsoir adds them itself).
   static const _serviceType = '_moongate._tcp';
 
   /// How long to listen for advertisements per browse cycle. 5 s is
-  /// conservative — most home networks resolve mDNS in <500 ms, but
+  /// conservative - most home networks resolve mDNS in <500 ms, but
   /// the longer window covers stale Avahi caches, congested WiFi, and
   /// the bonsoir-on-Android cold-start delay.
   static const _browseDuration = Duration(seconds: 5);
@@ -35,12 +35,12 @@ class LanDiscoveryService {
   final Map<String, String> _discovered = {};
 
   /// Reentrancy guard for [refresh]. Concurrent calls are no-ops while
-  /// a browse is already in flight — saves spawning duplicate Bonjour
+  /// a browse is already in flight - saves spawning duplicate Bonjour
   /// resolvers on every quick-fire foreground/poll-trigger overlap.
   bool _refreshing = false;
 
   /// Discovered URL for the given printer, or null if mDNS hasn't surfaced
-  /// it in this session. Synchronous — callers can use it without `await`.
+  /// it in this session. Synchronous - callers can use it without `await`.
   String? lookup(String printerId) => _discovered[printerId];
 
   /// Snapshot of everything the current browse has resolved (printer_id →
@@ -48,7 +48,7 @@ class LanDiscoveryService {
   /// report shows whether mDNS surfaced anything at all.
   Map<String, String> get discovered => Map.unmodifiable(_discovered);
 
-  /// Start a 5 s browse cycle. Safe to call concurrently — a second call
+  /// Start a 5 s browse cycle. Safe to call concurrently - a second call
   /// while a browse is already in flight is a no-op.
   Future<void> refresh() async {
     if (_refreshing) return;
@@ -59,7 +59,7 @@ class LanDiscoveryService {
       discovery = BonsoirDiscovery(type: _serviceType);
       await discovery.ready;
 
-      // The stream getter is nullable on bonsoir — guard, but in practice
+      // The stream getter is nullable on bonsoir - guard, but in practice
       // it's non-null after `ready` resolves on Android and iOS.
       subscription = discovery.eventStream?.listen((event) {
         // Don't await here; the bonsoir docs note that long-running event
@@ -76,7 +76,7 @@ class LanDiscoveryService {
       _log('refresh failed: $e');
     } finally {
       // Always tear down, even if start() threw. Swallow stop/cancel errors
-      // — if the discovery never actually started, stop will throw, and
+      // - if the discovery never actually started, stop will throw, and
       // that's fine.
       try {
         await discovery?.stop();
@@ -110,7 +110,7 @@ class LanDiscoveryService {
           _onResolved(service);
         }
         break;
-      // Lost / started / stopped / resolve-failed all no-op per §7.5 —
+      // Lost / started / stopped / resolve-failed all no-op per §7.5 -
       // stale entries get refreshed by the next browse cycle. We don't
       // drop them on a single "lost" event because Avahi sometimes
       // re-announces after a brief network blip.
@@ -129,7 +129,7 @@ class LanDiscoveryService {
     }
     // bonsoir 5.x: ResolvedBonsoirService.host is nullable (the resolver
     // can complete with no IP if it raced a 'lost' event, etc.). Treat
-    // null and empty the same way — skip; the next browse will retry.
+    // null and empty the same way - skip; the next browse will retry.
     final host = service.host;
     final port = service.port;
     if (host == null || host.isEmpty) {
@@ -143,7 +143,7 @@ class LanDiscoveryService {
     }
   }
 
-  /// Forget all discoveries — used on sign-out / user change.
+  /// Forget all discoveries - used on sign-out / user change.
   void clear() {
     _discovered.clear();
   }

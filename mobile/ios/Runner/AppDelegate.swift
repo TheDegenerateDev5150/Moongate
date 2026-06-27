@@ -22,7 +22,7 @@ import UserNotifications
     // permission; on grant we register with Apple and, when the APNs device
     // token arrives, hand it back to Dart over "onToken". We deliberately do
     // NOT become the UNUserNotificationCenter delegate, so we never clash with
-    // the local-notifications plugin — the device-token callback below is a
+    // the local-notifications plugin - the device-token callback below is a
     // UIApplicationDelegate method and fires regardless.
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "MoongatePushChannel") {
       let channel = FlutterMethodChannel(
@@ -54,7 +54,7 @@ import UserNotifications
     }
   }
 
-  // APNs handed us a device token — forward it (hex) to Dart to register.
+  // APNs handed us a device token - forward it (hex) to Dart to register.
   override func application(
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
@@ -65,7 +65,7 @@ import UserNotifications
 
   // Registration failed. Expected on a free Apple account (no aps-environment
   // entitlement until the paid membership is active); we just log and carry on
-  // — no token means no push, but nothing breaks.
+  // - no token means no push, but nothing breaks.
   override func application(
     _ application: UIApplication,
     didFailToRegisterForRemoteNotificationsWithError error: Error

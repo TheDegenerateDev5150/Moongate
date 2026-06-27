@@ -1,6 +1,6 @@
 import java.util.Properties
 
-// (mobile_scanner 7.x pins its own CameraX 1.5.x — no manual force needed.
+// (mobile_scanner 7.x pins its own CameraX 1.5.x - no manual force needed.
 // We previously forced 1.4.0 to dodge a Samsung-specific NPE in mobile_scanner
 // 5.x's CameraX 1.3.3, but the 7.x rewrite + 1.5.x supersedes that fix.)
 

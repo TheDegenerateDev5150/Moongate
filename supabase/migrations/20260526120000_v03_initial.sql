@@ -136,7 +136,7 @@ $$;
 COMMENT ON FUNCTION public.moongate_cleanup_inactive() IS
   'Daily hygiene: prune printers inactive >6w, revoked >1w, expired enrollment tokens >1d.';
 
--- Schedule daily at 03:15 UTC (idempotent — unschedule if exists, then re-schedule)
+-- Schedule daily at 03:15 UTC (idempotent - unschedule if exists, then re-schedule)
 DO $$
 DECLARE
   job_id bigint;
@@ -175,4 +175,4 @@ COMMIT;
 --    SET client_min_messages = NOTICE;
 --    SELECT public.moongate_cleanup_inactive();
 --
--- 5. Verify cross-tenant isolation (requires two anon users — see supabase/README.md §Verifying RLS).
+-- 5. Verify cross-tenant isolation (requires two anon users - see supabase/README.md §Verifying RLS).

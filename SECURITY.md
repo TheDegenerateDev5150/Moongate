@@ -1,6 +1,6 @@
 # Security
 
-> The README has a [TL;DR version](README.md#how-it-works) of the architecture. This is the longer write-up — what we defend, what we don't, and how to verify both. If you find something wrong here please open an issue or contact me directly (see [Reporting a vulnerability](#reporting-a-vulnerability) below).
+> The README has a [TL;DR version](README.md#how-it-works) of the architecture. This is the longer write-up - what we defend, what we don't, and how to verify both. If you find something wrong here please open an issue or contact me directly (see [Reporting a vulnerability](#reporting-a-vulnerability) below).
 
 ---
 
@@ -8,7 +8,7 @@
 
 The v0.2 version of this document documented a known hole in the original Cloudflare-Quick-Tunnel design: the tunnel terminated at nginx on the Pi, which served Mainsail to anyone with the URL. **v0.4 closes that hole.** The Cloudflare tunnel now terminates at an auth proxy on the Pi that rejects any request without a short-lived signed access token; nginx and Moonraker are no longer reachable directly from the internet.
 
-If you're running v0.2.x and want the protection in v0.4: re-install via the v0.4 `install.sh` and re-pair. No data migrates from v0.2 — it's a hard cutover.
+If you're running v0.2.x and want the protection in v0.4: re-install via the v0.4 `install.sh` and re-pair. No data migrates from v0.2 - it's a hard cutover.
 
 ---
 
@@ -18,21 +18,21 @@ What Moongate **claims** to protect (v0.4):
 
 | You | Adversary | Defence |
 |---|---|---|
-| Your printer is paired | A stranger somehow learning the tunnel URL — saw your screen, fished it out of a log, social-engineered a friend | The Pi-side auth proxy gates every internet-facing path behind a short-lived signed access token. The URL alone returns flat `401 Unauthorized` with a constant-length 13-byte body, no `WWW-Authenticate`, no `Server` header, no fingerprint of what's running underneath. **Empirically verified** across a 35-vector attack matrix on a live tunnel — see [Verifying the promise](#verifying-the-promise) below |
-| You scanned the QR code on your PC | A bystander seeing the screen for a few seconds | Pair codes are time-limited, attempt-capped, single-use. The pair page is **LAN-only** — visiting the equivalent URL through the tunnel returns 401 |
+| Your printer is paired | A stranger somehow learning the tunnel URL - saw your screen, fished it out of a log, social-engineered a friend | The Pi-side auth proxy gates every internet-facing path behind a short-lived signed access token. The URL alone returns flat `401 Unauthorized` with a constant-length 13-byte body, no `WWW-Authenticate`, no `Server` header, no fingerprint of what's running underneath. **Empirically verified** across a 35-vector attack matrix on a live tunnel - see [Verifying the promise](#verifying-the-promise) below |
+| You scanned the QR code on your PC | A bystander seeing the screen for a few seconds | Pair codes are time-limited, attempt-capped, single-use. The pair page is **LAN-only** - visiting the equivalent URL through the tunnel returns 401 |
 | You installed the app on your phone | Another app on the same phone trying to read your session | Sensitive material is stored via `flutter_secure_storage` → Android Keystore (hardware-encrypted, sandboxed to the app's UID) |
-| You lost the phone | Whoever finds it tries to control your printer | Un-pair the printer from any other paired device — `Dashboard → Remove printer`. The cloud middleman releases the association and any cached tokens become useless. The lost phone must re-pair from scratch (which requires being on your home WiFi) to recover access |
+| You lost the phone | Whoever finds it tries to control your printer | Un-pair the printer from any other paired device - `Dashboard → Remove printer`. The cloud middleman releases the association and any cached tokens become useless. The lost phone must re-pair from scratch (which requires being on your home WiFi) to recover access |
 | Someone records a request mid-flight | Replays it later | Every request goes over HTTPS (tunnel) or HTTP-on-LAN. Access tokens are short-lived (minutes, not days); the replay window is small, and the same token never works again after refresh |
-| You're at a friend's house showing the app | His WiFi happens to share your home subnet AND an unrelated device sits at your printer's LAN IP | The LAN attempt fails to produce a valid Moongate-shaped response — the tile falls through to the tunnel within ~2 s |
+| You're at a friend's house showing the app | His WiFi happens to share your home subnet AND an unrelated device sits at your printer's LAN IP | The LAN attempt fails to produce a valid Moongate-shaped response - the tile falls through to the tunnel within ~2 s |
 
 What Moongate **does not** claim to protect:
 
 | Situation | Why we can't help |
 |---|---|
-| The Pi itself is compromised (rooted, malicious user has shell) | The device signing key lives on the Pi. If an attacker has root, they can sign requests. We rely on standard POSIX file permissions (mode 0600, owner-only) — sufficient against the standard "other Pi user" / "Moonraker bug grants read access to non-owner files" cases, useless against root. **You must trust your Pi.** |
+| The Pi itself is compromised (rooted, malicious user has shell) | The device signing key lives on the Pi. If an attacker has root, they can sign requests. We rely on standard POSIX file permissions (mode 0600, owner-only) - sufficient against the standard "other Pi user" / "Moonraker bug grants read access to non-owner files" cases, useless against root. **You must trust your Pi.** |
 | Your unlocked phone is in a hostile party's hands | Android Keystore stops other apps from reading the session; it doesn't stop someone using the unlocked app interactively. They have the same access you would |
-| The cloud middleman is compromised | The middleman's compromise is bounded — it can issue tokens but cannot send G-code. An attacker who fully compromises the middleman could issue tokens for any printer paired to it. We rely on the operator's security; the [`docs/v0.3-supabase-design.md`](docs/v0.3-supabase-design.md) design doc covers the specific isolation guarantees and the layered defences (per-tenant database-side isolation, per-Pi key binding, per-tenant token-claim binding) |
-| Cloudflare is compromised or compelled (subpoena, court order) | Cloudflare terminates TLS at their edge. They see request URLs, headers, and bodies in plaintext for the leg between your phone and the edge. Their ToS apply. If this is unacceptable, swap `cloudflared` for any other tunnel that points at the auth proxy's port — Moongate doesn't care which tunnel you use |
+| The cloud middleman is compromised | The middleman's compromise is bounded - it can issue tokens but cannot send G-code. An attacker who fully compromises the middleman could issue tokens for any printer paired to it. We rely on the operator's security; the [`docs/v0.3-supabase-design.md`](docs/v0.3-supabase-design.md) design doc covers the specific isolation guarantees and the layered defences (per-tenant database-side isolation, per-Pi key binding, per-tenant token-claim binding) |
+| Cloudflare is compromised or compelled (subpoena, court order) | Cloudflare terminates TLS at their edge. They see request URLs, headers, and bodies in plaintext for the leg between your phone and the edge. Their ToS apply. If this is unacceptable, swap `cloudflared` for any other tunnel that points at the auth proxy's port - Moongate doesn't care which tunnel you use |
 | HTTP traffic between your phone and the Pi is sniffed on your LAN | Local Moonraker is plain HTTP. This is the standard Klipper setup, not a Moongate choice. The access token is sent in headers; on LAN, anyone with the WiFi password who is actively MITM-ing your TCP can read it. If you need LAN encryption, put nginx + TLS in front of Moonraker (outside Moongate's scope) |
 | You port-forward port 80 / 7125 from your router to the Pi | Don't. The whole point of the tunnel + auth proxy is so you never need to. If you do anyway, the public LAN port bypasses the auth proxy and anyone who finds the IP can hammer Moonraker directly |
 | A malicious developer pushes a backdoored APK | All releases are GitHub Actions builds from `master`. You can read the commits. You can build the APK yourself (see [DEVELOPMENT.md](DEVELOPMENT.md)) |
@@ -72,7 +72,7 @@ The "tunnel URL leak → nothing" promise was empirically tested across a 35-vec
 - **Mainsail static assets:** chunked JS bundle names, manifest, config.json, favicons
 - **Fingerprinting:** poking response headers for `Server`, `X-Powered-By`, version banners
 
-Every single vector returned 401 with the constant 13-byte body. The only headers reaching the client come from Cloudflare itself (`Server: cloudflare`, `CF-Ray: ...`) — those identify Cloudflare's edge, not what's behind it.
+Every single vector returned 401 with the constant 13-byte body. The only headers reaching the client come from Cloudflare itself (`Server: cloudflare`, `CF-Ray: ...`) - those identify Cloudflare's edge, not what's behind it.
 
 To verify on your own Pi: pick any path, hit it with `curl -s -o /dev/null -w "%{http_code} %{size_download}\n" https://<your-tunnel>/whatever`. You should see `401 13`. If you see anything else, please open an issue.
 
@@ -80,18 +80,18 @@ To verify on your own Pi: pick any path, hit it with `curl -s -o /dev/null -w "%
 
 If an attacker somehow obtains a *live, unexpired* token (e.g. they have root on the Pi and read the signing key, or they have control of the cloud middleman):
 
-- Everything Mainsail can do — control the printer in real time, upload G-code, run macros, watch the webcam, trigger emergency stop, etc.
+- Everything Mainsail can do - control the printer in real time, upload G-code, run macros, watch the webcam, trigger emergency stop, etc.
 
 The token IS the perimeter. We protect the token; the token protects the printer.
 
 ### External-camera relay (`/mg-extcam`, v0.9.0+)
 
-Moongate can show a camera that isn't served by Klipper — e.g. an old phone running an IP-webcam app on the LAN. On the home network the app fetches that camera directly. To make it work **remotely**, the auth proxy gained one new route, `/mg-extcam`, which fetches a snapshot/stream from a camera URL the app supplies (`?u=...`) and relays it back.
+Moongate can show a camera that isn't served by Klipper - e.g. an old phone running an IP-webcam app on the LAN. On the home network the app fetches that camera directly. To make it work **remotely**, the auth proxy gained one new route, `/mg-extcam`, which fetches a snapshot/stream from a camera URL the app supplies (`?u=...`) and relays it back.
 
 This is the one place the proxy forwards somewhere other than local nginx / Moonraker, so it's deliberately constrained:
 
-- It's behind the **same token gate** as everything else — an unauthenticated `/mg-extcam` request is just another flat 401.
-- The target is validated before any connection is opened (`_extcam_target_ok` in [`klipper-plugin/moongate_authproxy.py`](klipper-plugin/moongate_authproxy.py)): **plain http to a literal private IPv4 only** (RFC1918). Hostnames (no DNS lookup → no rebinding), loopback (no pivot to Moonraker / the proxy), link-local / cloud-metadata (`169.254/16`), and all public addresses are refused — so the relay can't reach localhost services or act as an open internet proxy.
+- It's behind the **same token gate** as everything else - an unauthenticated `/mg-extcam` request is just another flat 401.
+- The target is validated before any connection is opened (`_extcam_target_ok` in [`klipper-plugin/moongate_authproxy.py`](klipper-plugin/moongate_authproxy.py)): **plain http to a literal private IPv4 only** (RFC1918). Hostnames (no DNS lookup → no rebinding), loopback (no pivot to Moonraker / the proxy), link-local / cloud-metadata (`169.254/16`), and all public addresses are refused - so the relay can't reach localhost services or act as an open internet proxy.
 - Only `image/*` / `multipart/x-mixed-replace` responses are relayed, with a byte cap.
 
 Net effect: a holder of a valid owner token can pull camera frames from a **private LAN camera**, and nothing else.
@@ -102,7 +102,7 @@ Net effect: a holder of a valid owner token can pull camera frames from a **priv
 
 ### LAN-only by design
 
-The pair page is reachable at `http://<pi-ip>/moongate-pair.html` on your home WiFi only. Visiting the equivalent URL through the tunnel returns 401, because the auth proxy gates everything — including the pair page — and the user pairing does not yet have a token.
+The pair page is reachable at `http://<pi-ip>/moongate-pair.html` on your home WiFi only. Visiting the equivalent URL through the tunnel returns 401, because the auth proxy gates everything - including the pair page - and the user pairing does not yet have a token.
 
 This is intentional. Pairing requires being on the same network as the Pi anyway; gating the pair page closes the v0.2.x window where a leaked tunnel URL meant anyone could pair their own device.
 
@@ -153,7 +153,7 @@ Phone ──HTTP/1.1── WiFi router ──HTTP/1.1── Pi:80 (nginx) ──
 ```
 
 - Plain HTTP. Same as Mainsail's own UI when you load it from a browser.
-- The access token is carried in the `Authorization: Bearer` header on every Moongate-mediated call. Moonraker's own endpoints (called as a fallback) ignore the header — they're trusted-clients on LAN by default.
+- The access token is carried in the `Authorization: Bearer` header on every Moongate-mediated call. Moonraker's own endpoints (called as a fallback) ignore the header - they're trusted-clients on LAN by default.
 - Anyone on the same WiFi can already reach Moonraker without Moongate, so we're not creating new exposure.
 - If you want LAN-level encryption: stand up nginx + Let's Encrypt or a self-signed cert, point Moonraker through it, and the Moongate app will hit it the same way (HTTPS LAN URL works the same as HTTP LAN URL).
 
@@ -170,9 +170,9 @@ Phone ──HTTPS/QUIC── Cloudflare edge ──TLS── cloudflared (on Pi)
 ```
 
 - `cloudflared` runs as `moongate-tunnel.service` configured by the installer.
-- The tunnel makes an **outbound** connection from the Pi to Cloudflare's edge — no inbound ports are opened on your router.
+- The tunnel makes an **outbound** connection from the Pi to Cloudflare's edge - no inbound ports are opened on your router.
 - Cloudflare assigns a random subdomain like `racing-partly-mouse-surprised.trycloudflare.com`. The subdomain rotates each time `cloudflared` restarts.
-- The subdomain is not enumerable (random words from a large dictionary), but **it does not need to be a secret** — leaking it gives an attacker only 401s. The access token is the actual auth.
+- The subdomain is not enumerable (random words from a large dictionary), but **it does not need to be a secret** - leaking it gives an attacker only 401s. The access token is the actual auth.
 - TLS is terminated at Cloudflare's edge and re-established for the leg to the Pi. Cloudflare sees plaintext requests in between. **By using a Cloudflare tunnel you are accepting Cloudflare's [terms of service](https://www.cloudflare.com/website-terms/).**
 
 If you don't want Cloudflare in the picture, point the cloudflared step at any other tunneling layer that reaches the auth proxy's port (Tailscale Funnel, frp, ngrok paid, a self-hosted nginx-on-VPS reverse proxy, etc.). The auth proxy doesn't care what's in front of it.
@@ -186,31 +186,31 @@ The Moongate plugin is a Moonraker component, which means it runs in the Moonrak
 Practical implications:
 
 - **Any holder of a valid access token can run `pause`, `resume`, `cancel`, `firmware_restart`, or `emergency_stop`.** Print control is the explicit purpose of the auth-gated `/server/moongate/control` endpoint.
-- **Status polling reads Moonraker objects** that the plugin asks for — `print_stats`, `extruder`, `heater_bed`, `display_status`, `virtual_sdcard`, `webhooks` (Klipper's ready/shutdown state), the discovered chamber sensor. Nothing else.
+- **Status polling reads Moonraker objects** that the plugin asks for - `print_stats`, `extruder`, `heater_bed`, `display_status`, `virtual_sdcard`, `webhooks` (Klipper's ready/shutdown state), the discovered chamber sensor. Nothing else.
 - **The plugin does not run arbitrary G-code on behalf of token holders.** There is no `POST /server/moongate/gcode` endpoint. Print control is restricted to the five whitelisted actions; adding more requires editing [`klipper-plugin/moongate_standalone.py`](klipper-plugin/moongate_standalone.py) and auditing the new behaviour.
 - **The plugin reads its own state from `~/.config/moongate/`** and calls `systemctl` / `journalctl` to discover the current tunnel URL when its own log lookup fails. It does not read `printer.cfg` or any other Klipper internals beyond what Moonraker exposes.
 
-The auth proxy is even more constrained — it doesn't talk to Klipper at all, it just routes HTTP / WebSocket between Cloudflare and nginx. The verifier classes it uses for token checks are imported from the plugin file, not duplicated, so signature semantics stay single-source.
+The auth proxy is even more constrained - it doesn't talk to Klipper at all, it just routes HTTP / WebSocket between Cloudflare and nginx. The verifier classes it uses for token checks are imported from the plugin file, not duplicated, so signature semantics stay single-source.
 
 ---
 
 ## Backup restore & in-app reports (v0.6.3)
 
-**Ownership is cloud-authoritative.** A printer's owner is whoever the cloud says it is. The Pi binds an owner on first contact and, since v0.6.3, **re-binds** when it receives a *validly-signed, printer-scoped* access token bearing a new identity — because the middleman only ever mints such a token to the printer's current owner. This is what lets a restored backup reconnect without re-pairing. It does **not** weaken the tunnel promise: an unsigned / forged / wrong-printer token is still rejected with a flat 401; only a token the cloud already vouched for can move the binding, and access tokens are short-lived.
+**Ownership is cloud-authoritative.** A printer's owner is whoever the cloud says it is. The Pi binds an owner on first contact and, since v0.6.3, **re-binds** when it receives a *validly-signed, printer-scoped* access token bearing a new identity - because the middleman only ever mints such a token to the printer's current owner. This is what lets a restored backup reconnect without re-pairing. It does **not** weaken the tunnel promise: an unsigned / forged / wrong-printer token is still rejected with a flat 401; only a token the cloud already vouched for can move the binding, and access tokens are short-lived.
 
-**Restore codes.** A config backup made by v0.6.3+ carries a single-use *restore code*. Only its SHA-256 is stored server-side (in `restore_grants`, like enrollment tokens); the raw code lives only in the user's backup file, expires in 90 days, and is consumed on first redeem (which re-assigns the original identity's printers to the redeemer). Anyone holding the backup file can therefore reclaim those printers — treat the file as sensitive — but the code is **scoped** (printers only, never a login), **expiring**, and **single-use**.
+**Restore codes.** A config backup made by v0.6.3+ carries a single-use *restore code*. Only its SHA-256 is stored server-side (in `restore_grants`, like enrollment tokens); the raw code lives only in the user's backup file, expires in 90 days, and is consumed on first redeem (which re-assigns the original identity's printers to the redeemer). Anyone holding the backup file can therefore reclaim those printers - treat the file as sensitive - but the code is **scoped** (printers only, never a login), **expiring**, and **single-use**.
 
-**In-app reports.** The `feedback` table is locked down like the rest of the schema — no client read/write. Only the `submit-feedback` Edge Function (service role) writes; only the Supabase dashboard or the secret-gated `read-feedback` function reads (it requires an `x-moongate-debug` header matched against a server-only `MOONGATE_DEBUG_KEY`, so the public anon key can't read it). Reports carry diagnostics — app / device / network / per-printer connection state — but no print content, files, or personal data.
+**In-app reports.** The `feedback` table is locked down like the rest of the schema - no client read/write. Only the `submit-feedback` Edge Function (service role) writes; only the Supabase dashboard or the secret-gated `read-feedback` function reads (it requires an `x-moongate-debug` header matched against a server-only `MOONGATE_DEBUG_KEY`, so the public anon key can't read it). Reports carry diagnostics - app / device / network / per-printer connection state - but no print content, files, or personal data.
 
-**v0.6.4 — the tunnel regression was fail-closed.** A v0.6.3 change altered the token verifier's `verify()` signature but missed the auth proxy's call site, so every tunnel-side request raised instead of validating — remote access returned a flat **500 and was denied**. It failed *closed*: nothing behind the tunnel was exposed, no auth check was bypassed, and LAN access (which never traverses the proxy) was unaffected. v0.6.4 fixed the call site; re-running the Pi installer deploys it. The plugin-version field added for diagnostics in the same release is a build identifier only — it carries no secret.
+**v0.6.4 - the tunnel regression was fail-closed.** A v0.6.3 change altered the token verifier's `verify()` signature but missed the auth proxy's call site, so every tunnel-side request raised instead of validating - remote access returned a flat **500 and was denied**. It failed *closed*: nothing behind the tunnel was exposed, no auth check was bypassed, and LAN access (which never traverses the proxy) was unaffected. v0.6.4 fixed the call site; re-running the Pi installer deploys it. The plugin-version field added for diagnostics in the same release is a build identifier only - it carries no secret.
 
 ---
 
-## Realtime liveness & token TTL (v0.9.15–v0.9.16)
+## Realtime liveness & token TTL (v0.9.15-v0.9.16)
 
-**Realtime is scoped by the existing RLS policy.** v0.9.16 lets the app learn each printer's online/offline state from the cloud over a **Supabase Realtime** subscription on the `printers` table, so it can stop requesting access for a powered-off printer (migration `supabase/migrations/20260619120000_printers_realtime.sql`: `ALTER PUBLICATION supabase_realtime ADD TABLE public.printers`). This **does not widen access**: Realtime delivery for `printers` is gated by the *same* "select own printers" row-level-security policy that already governs every read of that table, so a client only ever receives change events for its own printer rows — exactly the rows it could already `SELECT`. No new policy, no broader grant. The migration also sets **`REPLICA IDENTITY FULL`** on the table so that the owner column is present in the WAL for `UPDATE` events (a heartbeat changes `last_seen` / `tunnel_url`, not `owner_user_id`); without it the policy column would be absent on the change event and Realtime would simply *not deliver* the update — a fail-closed default. The row already contains nothing secret (tunnel URL, last-seen timestamp, owner handle), and the LAN path is untouched: liveness only suppresses remote token requests, it never authenticates anything.
+**Realtime is scoped by the existing RLS policy.** v0.9.16 lets the app learn each printer's online/offline state from the cloud over a **Supabase Realtime** subscription on the `printers` table, so it can stop requesting access for a powered-off printer (migration `supabase/migrations/20260619120000_printers_realtime.sql`: `ALTER PUBLICATION supabase_realtime ADD TABLE public.printers`). This **does not widen access**: Realtime delivery for `printers` is gated by the *same* "select own printers" row-level-security policy that already governs every read of that table, so a client only ever receives change events for its own printer rows - exactly the rows it could already `SELECT`. No new policy, no broader grant. The migration also sets **`REPLICA IDENTITY FULL`** on the table so that the owner column is present in the WAL for `UPDATE` events (a heartbeat changes `last_seen` / `tunnel_url`, not `owner_user_id`); without it the policy column would be absent on the change event and Realtime would simply *not deliver* the update - a fail-closed default. The row already contains nothing secret (tunnel URL, last-seen timestamp, owner handle), and the LAN path is untouched: liveness only suppresses remote token requests, it never authenticates anything.
 
-**Access-token TTL is now 10 minutes** (`ACCESS_TOKEN_TTL_SECONDS` in [`supabase/functions/_shared/accessToken.ts`](supabase/functions/_shared/accessToken.ts)), raised from 5 to cut how often the app calls `/printer-access`. It remains short-lived in the sense the threat model relies on — minutes, not days — so the replay window stays small and a refreshed token still supersedes the old one. The token is still the perimeter; nothing else about its scope or signing changed.
+**Access-token TTL is now 10 minutes** (`ACCESS_TOKEN_TTL_SECONDS` in [`supabase/functions/_shared/accessToken.ts`](supabase/functions/_shared/accessToken.ts)), raised from 5 to cut how often the app calls `/printer-access`. It remains short-lived in the sense the threat model relies on - minutes, not days - so the replay window stays small and a refreshed token still supersedes the old one. The token is still the perimeter; nothing else about its scope or signing changed.
 
 ---
 
@@ -218,9 +218,9 @@ The auth proxy is even more constrained — it doesn't talk to Klipper at all, i
 
 The update banner can now download and install a new version **without leaving the app** (Android only). That adds the `REQUEST_INSTALL_PACKAGES` permission and a `FileProvider`, so it's worth stating what it can and can't do:
 
-- It downloads the APK over **HTTPS from the project's GitHub Releases** — the same artifact you'd get by tapping the download link yourself — into the app's private cache directory, then hands that file to **Android's system package installer** via a `content://` `FileProvider` URI.
+- It downloads the APK over **HTTPS from the project's GitHub Releases** - the same artifact you'd get by tapping the download link yourself - into the app's private cache directory, then hands that file to **Android's system package installer** via a `content://` `FileProvider` URI.
 - The install is **not silent**: Android shows its standard "install this update?" confirmation, and the first time it requires the user to grant "install unknown apps" for Moongate. A sideloaded app cannot install anything without that interaction.
-- **Android enforces signature continuity.** A downloaded APK can only *replace* the installed app if it's signed with the **same release key**. A tampered or differently-signed APK is rejected by the installer — so a compromised download, or a swapped Release asset, can't silently turn Moongate into a malicious build; it simply fails to install.
+- **Android enforces signature continuity.** A downloaded APK can only *replace* the installed app if it's signed with the **same release key**. A tampered or differently-signed APK is rejected by the installer - so a compromised download, or a swapped Release asset, can't silently turn Moongate into a malicious build; it simply fails to install.
 - On any failure (network, or the user declining the permission) it falls back to opening the release in the browser. The updater never installs anything the user couldn't already install by hand from the Releases page.
 
 ---
@@ -229,18 +229,18 @@ The update banner can now download and install a new version **without leaving t
 
 | Question | Where to look |
 |---|---|
-| How is each request authenticated on the Pi side? | [`klipper-plugin/moongate_authproxy.py`](klipper-plugin/moongate_authproxy.py) — `AccessTokenVerifier` is imported from `moongate_standalone.py` and called per request |
-| What endpoints does the plugin expose, and which are gated? | `MoongatePlugin.__init__` in `klipper-plugin/moongate_standalone.py` — grep for `register_endpoint`. Anything under `/server/moongate/*` reaching the plugin already cleared the auth proxy on the tunnel side |
-| What does the proxy return for an unauthenticated request? | [`klipper-plugin/moongate_authproxy.py`](klipper-plugin/moongate_authproxy.py) — search for the constant 401 path |
-| Where are tokens stored on the phone? | [`mobile/lib/services/supabase_service.dart`](mobile/lib/services/supabase_service.dart) — the app's session uses `flutter_secure_storage` underneath, backed by Android Keystore |
-| What about per-printer access tokens? | [`mobile/lib/services/printer_access_cache.dart`](mobile/lib/services/printer_access_cache.dart) — short-lived (10 min TTL), in-memory only, refreshed via the middleman |
-| Is the Realtime `printers` subscription scoped? | [`supabase/migrations/20260619120000_printers_realtime.sql`](supabase/migrations/20260619120000_printers_realtime.sql) — only adds the table to the publication + `REPLICA IDENTITY FULL`; the existing "select own printers" RLS policy gates delivery. App side: [`mobile/lib/services/printer_liveness_service.dart`](mobile/lib/services/printer_liveness_service.dart) |
-| Where does the Cloudflare tunnel get installed from? | [`klipper-plugin/install.sh`](klipper-plugin/install.sh) — downloads `cloudflared` from the official Cloudflare GitHub release |
+| How is each request authenticated on the Pi side? | [`klipper-plugin/moongate_authproxy.py`](klipper-plugin/moongate_authproxy.py) - `AccessTokenVerifier` is imported from `moongate_standalone.py` and called per request |
+| What endpoints does the plugin expose, and which are gated? | `MoongatePlugin.__init__` in `klipper-plugin/moongate_standalone.py` - grep for `register_endpoint`. Anything under `/server/moongate/*` reaching the plugin already cleared the auth proxy on the tunnel side |
+| What does the proxy return for an unauthenticated request? | [`klipper-plugin/moongate_authproxy.py`](klipper-plugin/moongate_authproxy.py) - search for the constant 401 path |
+| Where are tokens stored on the phone? | [`mobile/lib/services/supabase_service.dart`](mobile/lib/services/supabase_service.dart) - the app's session uses `flutter_secure_storage` underneath, backed by Android Keystore |
+| What about per-printer access tokens? | [`mobile/lib/services/printer_access_cache.dart`](mobile/lib/services/printer_access_cache.dart) - short-lived (10 min TTL), in-memory only, refreshed via the middleman |
+| Is the Realtime `printers` subscription scoped? | [`supabase/migrations/20260619120000_printers_realtime.sql`](supabase/migrations/20260619120000_printers_realtime.sql) - only adds the table to the publication + `REPLICA IDENTITY FULL`; the existing "select own printers" RLS policy gates delivery. App side: [`mobile/lib/services/printer_liveness_service.dart`](mobile/lib/services/printer_liveness_service.dart) |
+| Where does the Cloudflare tunnel get installed from? | [`klipper-plugin/install.sh`](klipper-plugin/install.sh) - downloads `cloudflared` from the official Cloudflare GitHub release |
 | What ProGuard rules are active in release? | [`mobile/android/app/proguard-rules.pro`](mobile/android/app/proguard-rules.pro) |
-| How does CI sign the APK? | [`.github/workflows/build-android.yml`](.github/workflows/build-android.yml) step "Set up release signing" — decodes a base64 keystore from GitHub Secrets |
-| What's the deep design rationale for the cloud middleman? | [`docs/v0.3-supabase-design.md`](docs/v0.3-supabase-design.md) and [`docs/v0.4-secure-remote-access-design.md`](docs/v0.4-secure-remote-access-design.md) — threat model, key isolation guarantees, alternatives discussion (why not WireGuard / Tailscale / ZeroTier / mesh VPN) |
+| How does CI sign the APK? | [`.github/workflows/build-android.yml`](.github/workflows/build-android.yml) step "Set up release signing" - decodes a base64 keystore from GitHub Secrets |
+| What's the deep design rationale for the cloud middleman? | [`docs/v0.3-supabase-design.md`](docs/v0.3-supabase-design.md) and [`docs/v0.4-secure-remote-access-design.md`](docs/v0.4-secure-remote-access-design.md) - threat model, key isolation guarantees, alternatives discussion (why not WireGuard / Tailscale / ZeroTier / mesh VPN) |
 
-If any of those don't match the code at HEAD, this document is wrong — please open an issue.
+If any of those don't match the code at HEAD, this document is wrong - please open an issue.
 
 ---
 
@@ -248,7 +248,7 @@ If any of those don't match the code at HEAD, this document is wrong — please 
 
 These are real options that came up during v0.4 design and were rejected, in case you're wondering why we didn't.
 
-- **WireGuard on Android.** Requires the user to grant the OS-level `VpnService` permission, which Google Play increasingly disfavours for non-VPN-product apps. No native NAT-traversal mechanism — needs a relay anyway for ~85% of home networks. Closed off at the design stage; see the alternatives appendix in [`docs/v0.4-secure-remote-access-design.md`](docs/v0.4-secure-remote-access-design.md).
+- **WireGuard on Android.** Requires the user to grant the OS-level `VpnService` permission, which Google Play increasingly disfavours for non-VPN-product apps. No native NAT-traversal mechanism - needs a relay anyway for ~85% of home networks. Closed off at the design stage; see the alternatives appendix in [`docs/v0.4-secure-remote-access-design.md`](docs/v0.4-secure-remote-access-design.md).
 - **Tailscale / Headscale / ZeroTier / NetBird.** Either paid above 3 nodes, requires accounts, or requires self-hosting infrastructure that defeats "no VPN setup". Documented in the same appendix.
 - **Browser-side Mainsail login via `force_logins` in Moonraker.** Was the v0.2.x recommended mitigation; the auth-proxy approach in v0.4 is strictly stronger (no Mainsail HTML ever leaves the Pi for unauthenticated requests) and doesn't require the user to type a Moonraker password into Mainsail every time the cookie expires.
 
@@ -268,6 +268,6 @@ Reports should include:
 3. The simplest steps to reproduce it
 4. The impact you believe it has
 
-Reasonable-disclosure window: I'll aim to acknowledge within 7 days and ship a fix within 30 days when feasible. Coordinated disclosure timing is welcome — if you're a researcher with a publication plan, say so in the initial report.
+Reasonable-disclosure window: I'll aim to acknowledge within 7 days and ship a fix within 30 days when feasible. Coordinated disclosure timing is welcome - if you're a researcher with a publication plan, say so in the initial report.
 
 There is no bug bounty. There is gratitude.

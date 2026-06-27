@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# Moongate — post-update hook
+# Moongate - post-update hook
 #
 # Called automatically by Moonraker's update manager after every git pull.
 # Ensures the plugin symlink is in place and refreshes the QR pair page.
-# Does NOT re-install cloudflared or the systemd service — those only run
+# Does NOT re-install cloudflared or the systemd service - those only run
 # once during the initial install.sh.
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
@@ -40,6 +40,6 @@ for webroot in "$HOME/mainsail" "$HOME/printer_data/www" "$HOME/fluidd"; do
         DEPLOYED=1
     fi
 done
-[[ $DEPLOYED -eq 0 ]] && warn "No web-root found — pair page not deployed"
+[[ $DEPLOYED -eq 0 ]] && warn "No web-root found - pair page not deployed"
 
 ok "Update complete."

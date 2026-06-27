@@ -13,7 +13,7 @@ import 'supabase_service.dart';
 /// so the cloud can deliver "print finished / failed" alerts while the app is
 /// closed.
 ///
-/// iOS only for now — Android keeps its existing foreground-service
+/// iOS only for now - Android keeps its existing foreground-service
 /// notifications, so this is a no-op there. Everything degrades quietly: with
 /// no paid Apple account the native registration fails (no aps-environment
 /// entitlement), so we simply never receive a token and nothing is sent.

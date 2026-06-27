@@ -1,4 +1,4 @@
--- Moongate v0.3.0 — RPC helper functions for Edge Functions
+-- Moongate v0.3.0 - RPC helper functions for Edge Functions
 --
 -- All Edge Function DB access goes through these SECURITY DEFINER functions.
 -- This keeps bytea encoding inside SQL (where decode/encode handle base64)
@@ -46,9 +46,9 @@ COMMENT ON FUNCTION public.upsert_enrollment_token IS
 --    printer row owned by the calling user.
 --
 --    Returns (printer_id, status) where status is one of:
---      'ok'              — new printer created, printer_id returned
---      'not_found'       — token invalid for any reason (do not differentiate)
---      'already_paired'  — this Pi pubkey is already paired to someone
+--      'ok'              - new printer created, printer_id returned
+--      'not_found'       - token invalid for any reason (do not differentiate)
+--      'already_paired'  - this Pi pubkey is already paired to someone
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.claim_printer(
@@ -108,7 +108,7 @@ COMMENT ON FUNCTION public.claim_printer IS
 -- 3. get_printer_access
 --    App calls /printer-access → this. Returns the printer's encrypted tunnel
 --    URL bytes (base64) ONLY if the caller owns the printer and it's not
---    revoked. Returns no rows otherwise — the Edge Function treats no-rows
+--    revoked. Returns no rows otherwise - the Edge Function treats no-rows
 --    as 404 to avoid distinguishing "doesn't exist" from "not yours".
 -- ============================================================================
 
@@ -149,7 +149,7 @@ COMMENT ON FUNCTION public.get_printer_access IS
 --    actually updated (so the Edge Function can mint a fresh access token
 --    is unnecessary here, but the printer_id is useful for logging).
 --
---    Lookup is by pi_public_key (the Pi's identity), not printer_id — the Pi
+--    Lookup is by pi_public_key (the Pi's identity), not printer_id - the Pi
 --    doesn't need to know the printer_id, only its own keypair.
 -- ============================================================================
 
@@ -191,7 +191,7 @@ REVOKE EXECUTE ON FUNCTION public.get_printer_access(uuid, uuid)                
 REVOKE EXECUTE ON FUNCTION public.record_heartbeat(text, text, text)                  FROM PUBLIC;
 
 -- Service role retains EXECUTE via default; Edge Functions use service role.
--- We deliberately do NOT grant to authenticated/anon — only Edge Functions
+-- We deliberately do NOT grant to authenticated/anon - only Edge Functions
 -- should call these.
 
 COMMIT;

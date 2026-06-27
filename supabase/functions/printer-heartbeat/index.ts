@@ -22,10 +22,10 @@
 // Response 204 on success.
 //
 // Errors:
-//   400 — malformed body
-//   401 — signature invalid OR timestamp out of window
-//   404 — no printer with this pi_public_key (Pi should treat as unpaired)
-//   500 — internal
+//   400 - malformed body
+//   401 - signature invalid OR timestamp out of window
+//   404 - no printer with this pi_public_key (Pi should treat as unpaired)
+//   500 - internal
 
 import { handleCorsPreflight } from "../_shared/cors.ts";
 import {
