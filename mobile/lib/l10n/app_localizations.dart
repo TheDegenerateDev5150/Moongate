@@ -1172,6 +1172,24 @@ abstract class AppLocalizations {
   /// **'id {id}…'**
   String dashboardPrinterIdShort(String id);
 
+  /// Pairing-help item title: the Pi plugin must be installed before pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'First: install the Pi plugin'**
+  String get dashboardPairingHelpPluginTitle;
+
+  /// Pairing-help item body telling first-time users to install the Pi plugin via the quick-start guide.
+  ///
+  /// In en, this message translates to:
+  /// **'Moongate needs its plugin running on your Klipper printer before you can pair. If you haven\'t installed it yet, open the quick-start guide.'**
+  String get dashboardPairingHelpPluginBody;
+
+  /// Button label that opens the GitHub quick-start guide.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the setup guide'**
+  String get dashboardPairingHelpPluginAction;
+
   /// Pairing-help item title: pairing only needs to happen once.
   ///
   /// In en, this message translates to:

@@ -588,6 +588,16 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get dashboardPairingHelpPluginTitle => '第一步：安装 Pi 插件';
+
+  @override
+  String get dashboardPairingHelpPluginBody =>
+      '配对之前，Moongate 需要在你的 Klipper 打印机上运行其插件。如果尚未安装，请打开快速入门指南。';
+
+  @override
+  String get dashboardPairingHelpPluginAction => '打开设置指南';
+
+  @override
   String get dashboardPairingHelpPairOnceTitle => '只需配对一次';
 
   @override
