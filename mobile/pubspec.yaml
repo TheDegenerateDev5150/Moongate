@@ -54,7 +54,7 @@ dependencies:
   shared_preferences: ^2.2.0
 
   # App version info (reads version from the installed package manifest)
-  package_info_plus: ^8.0.0
+  package_info_plus: ^9.0.1
 
   # Device model + Android version for the in-app bug-report diagnostics.
   # This project's bugs skew heavily Samsung / One UI, so the exact model is
@@ -86,7 +86,7 @@ dependencies:
   # Custom dashboard background: copy the user-picked image into the app's
   # documents directory so it persists across launches (file_picker only hands
   # back a cache path the OS may evict). Path lookup only, no permissions.
-  path_provider: ^2.1.0
+  path_provider: ^2.1.6
 
   # App lock: biometric (fingerprint/face) prompt. MainActivity already
   # extends FlutterFragmentActivity, which local_auth requires on Android,
