@@ -1,5 +1,14 @@
 [
   {
+    "version": "v0.9.35",
+    "bullets": [
+      "The display-size slider in the menu (renamed from \"Font size\") now scales the dashboard icons as well as the text, so the whole dashboard grows and shrinks together. The emergency-stop button resizes with it and is a little smaller by default.",
+      "At larger display sizes, each printer's hotend, bed and chamber temperatures now stack into two rows (icons above the values) so they no longer run off the edge of a narrow tile.",
+      "New first-run reminder at the top of \"How pairing works\": it points out that the Moongate plugin must be installed on your printer's Pi first, with a one-tap link to the setup guide. It keeps the usual \"don't show again\".",
+      "Plus a round of text and styling tidy-ups across the app."
+    ]
+  },
+  {
     "version": "v0.9.34",
     "bullets": [
       "Power all machines now works with printers powered by a Klipper macro (the Advanced Power Switch), not only smart-plug power devices. It also reads how each printer is set up and shows the right buttons, so a machine can be off only, on only, or both.",
