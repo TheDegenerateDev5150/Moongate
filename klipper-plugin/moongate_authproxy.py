@@ -1,5 +1,5 @@
 """
-Moongate v0.4 — auth proxy.
+Moongate v0.4 - auth proxy.
 
 Sits in front of Moonraker (127.0.0.1:7125) and Mainsail/Fluidd nginx
 (127.0.0.1:80). After v0.4 install, `cloudflared` targets this proxy
@@ -7,8 +7,8 @@ instead of Moonraker directly.
 
 Every HTTP request and WebSocket upgrade reaching this proxy must carry a
 valid EdDSA access token (issued by the Moongate Supabase backend for the
-printer's verified owner). Without a token — or with a bad/expired one,
-or with a token for a different owner — the response is always a constant
+printer's verified owner). Without a token - or with a bad/expired one,
+or with a token for a different owner - the response is always a constant
 401 with no body content that could leak printer state, Moonraker version,
 or Mainsail presence.
 
@@ -24,14 +24,14 @@ Environment variables (all optional):
     MG_MOONRAKER         default http://127.0.0.1:7125
     MG_MAINSAIL          default http://127.0.0.1:80
     MG_PLUGIN_DIR        default /home/pi/moongate/klipper-plugin
-                         (where moongate_standalone.py lives — added to sys.path)
+                         (where moongate_standalone.py lives - added to sys.path)
     MG_JWKS_TTL_SECONDS  default 3600
     MG_LOG_LEVEL         default INFO
 
 Run standalone:
     python3 moongate_authproxy.py
 
-Or as a systemd service — see moongate-authproxy.service.
+Or as a systemd service - see moongate-authproxy.service.
 """
 
 from __future__ import annotations
@@ -85,21 +85,21 @@ MOONRAKER_PATH_PREFIXES: Tuple[str, ...] = (
 )
 
 # v0.9.0: external-camera relay. A request to this exact path forwards a
-# snapshot / MJPEG-stream GET to a caller-supplied LAN camera URL (?u=...) —
+# snapshot / MJPEG-stream GET to a caller-supplied LAN camera URL (?u=...) -
 # e.g. an old phone running an IP-webcam app that Klipper can't see. Owner-
 # token gated like every other path; the target is SSRF-checked (literal
 # private IPv4 only) by _extcam_target_ok before any connection is opened.
 EXTCAM_PATH = "/mg-extcam"
 EXTCAM_MAX_BYTES = 16 * 1024 * 1024
 
-# RFC 7230 hop-by-hop headers — never forwarded.
+# RFC 7230 hop-by-hop headers - never forwarded.
 HOP_BY_HOP_HEADERS = frozenset({
     "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
     "te", "trailers", "transfer-encoding", "upgrade",
 })
 
 # Constant 401 body. No version, no path echo, no detail. The only signal
-# is "this URL exists and refuses you" — same for every reason it refuses.
+# is "this URL exists and refuses you" - same for every reason it refuses.
 UNAUTHORIZED_BODY = "unauthorized\n"
 
 logger = logging.getLogger("moongate.authproxy")
@@ -122,7 +122,7 @@ class OwnerWatcher:
             mtime = self.path.stat().st_mtime
         except FileNotFoundError:
             if self._owner is not None:
-                logger.info("owner.json deleted — proxy now in unpaired mode")
+                logger.info("owner.json deleted - proxy now in unpaired mode")
                 self._owner = None
                 self._mtime = 0.0
             return None
@@ -193,13 +193,13 @@ async def _authorize(request: web.Request) -> Optional[web.Response]:
     # (network I/O) on cache miss. Run in the default thread pool so the
     # aiohttp event loop is never blocked.
     #
-    # No owner ("sub") pin here — mirrors the in-Moonraker plugin's
+    # No owner ("sub") pin here - mirrors the in-Moonraker plugin's
     # _authenticate since the v0.6.3 ownership-transfer fix (a validly-
     # signed, printer-scoped token is honored whatever owner it names; the
     # cloud only ever mints one to the printer's current owner, so a new sub
     # is a legitimate cloud ownership transfer e.g. a backup restore).
     # NOTE: that fix dropped verify()'s expected_owner parameter but missed
-    # THIS call site — passing a third arg raised TypeError on every tunnel
+    # THIS call site - passing a third arg raised TypeError on every tunnel
     # request → HTTP 500 (LAN was unaffected, it doesn't go through here).
     claims = await asyncio.to_thread(
         verifier.verify, token, expected_pid,
@@ -233,7 +233,7 @@ def _forward_request_headers(request: web.Request) -> dict[str, str]:
     real internet client IP causes Moonraker to reject the request (it's
     not in 10.0.0.0/8, 127.0.0.0/8, etc.). Dropping the header lets
     Moonraker see the request as coming from the auth proxy on 127.0.0.1,
-    which is in the default trusted_clients range — so Moonraker trusts
+    which is in the default trusted_clients range - so Moonraker trusts
     us. The actual access decision is made at our proxy *before* the
     request ever reaches Moonraker (EdDSA gate); Moonraker's own auth is
     a no-op when fronted by us.
@@ -333,7 +333,7 @@ def _extcam_target_ok(raw: str) -> Optional[str]:
     fetch it. Returns the URL to forward to, or None if it fails the SSRF
     allow-list.
 
-    Only plain http to a LITERAL private IPv4 is allowed — that's a camera on
+    Only plain http to a LITERAL private IPv4 is allowed - that's a camera on
     the local network (a phone webcam, an IP cam). Everything that could turn
     this relay into a weapon is refused:
       • non-http schemes (file://, gopher://, …)
@@ -413,7 +413,7 @@ async def _proxy_extcam(request: web.Request) -> web.StreamResponse:
     except asyncio.CancelledError:
         raise
     except (ConnectionResetError, ConnectionAbortedError):
-        # App got its frame and closed the connection — normal.
+        # App got its frame and closed the connection - normal.
         return web.Response(status=499, text="")
     except Exception as exc:
         logger.warning("extcam %s failed: %s", target, exc)
@@ -435,7 +435,7 @@ async def _relay_one_direction(src, dst, label: str) -> None:
     """Read from `src` and write to `dst` with a queue between them.
 
     The naive `async for msg in src: await dst.send(msg)` shape blocks
-    the source-side read loop whenever the destination is slow — and on
+    the source-side read loop whenever the destination is slow - and on
     cellular through the tunnel, `dst.send` can take 4-6 s. aiohttp's
     autoping (which is what carries Moonraker's keepalive pings through
     this layer, since heartbeat=None is set on both legs by design)
@@ -446,7 +446,7 @@ async def _relay_one_direction(src, dst, label: str) -> None:
     on cellular.
 
     Splitting reads from writes via a small asyncio.Queue keeps the
-    reader loop tight — autoping fires on its own schedule regardless
+    reader loop tight - autoping fires on its own schedule regardless
     of how slow the destination is. The queue's maxsize provides
     backpressure if dst is consistently slow: once 32 frames pile up,
     queue.put blocks the reader too, but only after several seconds
@@ -495,7 +495,7 @@ async def _relay_one_direction(src, dst, label: str) -> None:
     reader_task = asyncio.create_task(reader())
     writer_task = asyncio.create_task(writer())
     try:
-        # Whichever side finishes first wins — the other gets cancelled
+        # Whichever side finishes first wins - the other gets cancelled
         # so a half-closed leg can't keep the other end alive.
         await asyncio.wait(
             {reader_task, writer_task},
@@ -527,7 +527,7 @@ async def _proxy_websocket(
     #     load (the proxy also handles 4 s status polling + asset
     #     forwarding) was queueing behind data frames. Moonraker's
     #     "Pong Time Elapsed: 6.03 s" log entries showed the pong RTT
-    #     drifting up to 6 s on a localhost socket — well past its own
+    #     drifting up to 6 s on a localhost socket - well past its own
     #     timeout. Moonraker then closed the WS (code 1000), Mainsail
     #     showed "Connection failed" and reconnected.
     #   - With heartbeat disabled here, Moonraker's own pings flow
@@ -549,13 +549,13 @@ async def _proxy_websocket(
     #
     # Origin MUST be stripped: Moonraker enforces cors_domains on WS
     # upgrades. The browser's Origin is the tunnel hostname (e.g.
-    # `https://abc.trycloudflare.com`), which is not — and cannot
-    # practically be — in the user's cors_domains list (tunnel URL
+    # `https://abc.trycloudflare.com`), which is not - and cannot
+    # practically be - in the user's cors_domains list (tunnel URL
     # rotates on every Pi reboot). Without an Origin header Moonraker
     # treats the upgrade as a non-browser request and accepts it
     # because the connection is from a trusted_clients address
     # (127.0.0.1, since the proxy fronts everything). Same effect as
-    # before this commit when we passed no headers at all — but we
+    # before this commit when we passed no headers at all - but we
     # keep User-Agent etc. for log visibility.
     #
     # Sec-WebSocket-* are dropped because aiohttp's ws_connect generates
@@ -614,7 +614,7 @@ async def handle(request: web.Request) -> web.StreamResponse:
 async def _on_startup(app: web.Application) -> None:
     # auto_decompress=False is critical for transparent proxying. The
     # default decompresses gzipped upstream responses server-side, but we
-    # forward Content-Encoding: gzip unchanged — so the client would try
+    # forward Content-Encoding: gzip unchanged - so the client would try
     # to gunzip already-decompressed bytes and fail. Disabling means the
     # raw compressed bytes are relayed end-to-end, with Content-Encoding
     # and Content-Length intact and matching each other.

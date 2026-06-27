@@ -1,13 +1,13 @@
-# Moongate — Architecture
+# Moongate - Architecture
 
 ## Overview
 
 Moongate has two components:
 
-1. **Moongate Plugin** — a Python Moonraker component that runs on the Raspberry Pi alongside Klipper
-2. **Moongate App** — a Flutter mobile app (Android)
+1. **Moongate Plugin** - a Python Moonraker component that runs on the Raspberry Pi alongside Klipper
+2. **Moongate App** - a Flutter mobile app (Android)
 
-Communication happens over your local WiFi when you're home, and automatically over a Cloudflare Quick Tunnel when you're away — no VPN, no port forwarding, no static IP required.
+Communication happens over your local WiFi when you're home, and automatically over a Cloudflare Quick Tunnel when you're away - no VPN, no port forwarding, no static IP required.
 
 ---
 
@@ -44,19 +44,19 @@ Communication happens over your local WiFi when you're home, and automatically o
 │  ┌──────────────────────┐  ┌───────────────────────────────┐   │
 │  │  PrinterStatusService│  │  PrintControlService          │   │
 │  │  Polls /status every │  │  POST /control?action=...     │   │
-│  │  4 s — local first,  │  │  local first, tunnel fallback │   │
+│  │  4 s - local first,  │  │  local first, tunnel fallback │   │
 │  │  tunnel fallback     │  │                               │   │
 │  └──────────────────────┘  └───────────────────────────────┘   │
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
-│  │  Dashboard — one tile per printer                         │  │
+│  │  Dashboard - one tile per printer                         │  │
 │  │  • webcam snapshot (1 s refresh, gapless)                 │  │
 │  │  • progress bar, pause/resume/stop, firmware restart      │  │
 │  │  • green bar = local, orange bar = tunnel                 │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
-│  │  Printer screen — full Mainsail/Fluidd WebView            │  │
+│  │  Printer screen - full Mainsail/Fluidd WebView            │  │
 │  │  Local URL tried first; auto-switches to tunnel after 3 s │  │
 │  └───────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
@@ -100,7 +100,7 @@ User            Klipper Console       Moongate Plugin       Moongate App
 
 The app tries the **local IP first** on every poll.  If that fails (e.g. you're not on home WiFi) it automatically falls back to the **Cloudflare tunnel URL** stored at pairing time.  The status service detects when the Pi rotates the tunnel URL (each `cloudflared` restart generates a new hostname) and persists the fresh URL immediately.
 
-Each printer tile on the dashboard is fully independent — it probes its own local IP and tunnel separately from every other tile.
+Each printer tile on the dashboard is fully independent - it probes its own local IP and tunnel separately from every other tile.
 
 When the Moongate plugin is not installed on a printer, the status and control services fall back to the native Moonraker REST API (`/printer/objects/query`, `/printer/print/pause`, etc.) so the tile still shows real status and controls still work.
 

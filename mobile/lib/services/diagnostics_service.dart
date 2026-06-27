@@ -8,7 +8,7 @@ import 'lan_discovery_service.dart';
 import 'printer_status_registry.dart';
 import 'supabase_service.dart';
 
-/// Assembles as much debug context as we can for a bug report — built to make
+/// Assembles as much debug context as we can for a bug report - built to make
 /// LAN / pairing failures self-explanatory so we can fix users' issues without
 /// a back-and-forth. Every source is best-effort: anything that throws is
 /// simply omitted, so collect() never fails the report.
@@ -34,21 +34,21 @@ class DiagnosticsService {
       out['device'] = await _device();
     } catch (_) {}
 
-    // The phone's own private IPs/subnets — no permission needed, and the
+    // The phone's own private IPs/subnets - no permission needed, and the
     // single most useful LAN signal: are we even on a private network, and
     // which subnet (vs the printer's address)?
     try {
       out['network'] = await _network();
     } catch (_) {}
 
-    // Cloud identity — correlate with the printers table. A signed-out state
+    // Cloud identity - correlate with the printers table. A signed-out state
     // (or all printers offline) is the orphaned-anon-UID signature.
     out['cloud'] = {
       'user_id': SupabaseService.instance.userId,
       'signed_in': SupabaseService.instance.ready,
     };
 
-    // Everything the mDNS browse currently sees — catches "found nothing"
+    // Everything the mDNS browse currently sees - catches "found nothing"
     // (flaky multicast) vs "found it but couldn't connect".
     out['mdns_discovered'] = LanDiscoveryService.instance.discovered;
 
@@ -94,7 +94,7 @@ class DiagnosticsService {
     }
     return {
       'interfaces': ifaces,
-      // Crude "are we on WiFi/LAN?" hint — any RFC1918 address present.
+      // Crude "are we on WiFi/LAN?" hint - any RFC1918 address present.
       'on_private_network': ifaces.any((s) =>
           s.contains(' 192.168.') || s.contains(' 10.') || s.contains(' 172.')),
     };

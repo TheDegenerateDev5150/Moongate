@@ -3,7 +3,7 @@
 // Called by the Pi when MOONGATE_PAIR is run. Pre-registers a hash of the
 // enrollment token (the Pi keeps the raw token secret, only shares it via QR).
 //
-// No JWT required — the Pi has no user identity yet.
+// No JWT required - the Pi has no user identity yet.
 // Per-IP rate limiting handled by Supabase platform; further app-level
 // limits can be added if abuse is observed.
 //
@@ -17,8 +17,8 @@
 //   { "expires_at": "<ISO8601>" }
 //
 // Errors:
-//   400 — malformed body
-//   500 — internal
+//   400 - malformed body
+//   500 - internal
 
 import { handleCorsPreflight } from "../_shared/cors.ts";
 import { jsonResponse, badRequest, methodNotAllowed, internalError } from "../_shared/responses.ts";

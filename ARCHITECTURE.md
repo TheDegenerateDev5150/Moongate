@@ -26,7 +26,7 @@ Moongate is three layers that talk to each other over HTTP. The diagram in the [
                                              └──────────────────────────────┘
 ```
 
-There is no Moongate-operated print server. The cloud middleman is intentionally minimal — it knows enough to tell the app where the printer is right now and to issue a signed access token, and nothing about your prints, your G-code, your camera, or what's on the bed.
+There is no Moongate-operated print server. The cloud middleman is intentionally minimal - it knows enough to tell the app where the printer is right now and to issue a signed access token, and nothing about your prints, your G-code, your camera, or what's on the bed.
 
 ---
 
@@ -35,11 +35,11 @@ There is no Moongate-operated print server. The cloud middleman is intentionally
 ### Process tree
 
 ```
-MoongateApp                    (lib/app.dart — root widget, lifecycle observer)
-├─ ProviderContainer           (Riverpod — global app state)
+MoongateApp                    (lib/app.dart - root widget, lifecycle observer)
+├─ ProviderContainer           (Riverpod - global app state)
 │   ├─ themeModeProvider       (AppThemeMode: system/dark/light/custom)
 │   ├─ customThemeProvider     (5 user-picked colours; persisted as JSON)
-│   ├─ fontScaleProvider       (0.8 – 1.4)
+│   ├─ fontScaleProvider       (0.8 - 1.4)
 │   ├─ gridColumnsProvider     (1 / 2 / 3)
 │   ├─ allowRotationProvider   (bool; pins SystemChrome orientations)
 │   ├─ updateProvider          (one-shot GitHub release check)
@@ -60,14 +60,14 @@ MoongateApp                    (lib/app.dart — root widget, lifecycle observer
 |---|---|---|---|
 | Printer list | `PrinterRegistry` (singleton) | Yes | `SharedPreferences` key `moongate_printers` (JSON) |
 | Anonymous identity | Cloud middleman + app | Yes | Identity handle stored at the cloud side; the app holds a session for it |
-| Detected web UI type | `PrinterConfig.uiType` | Yes | Persisted with the rest of the printer config — so the right logo renders on cold launch even when the printer is offline |
+| Detected web UI type | `PrinterConfig.uiType` | Yes | Persisted with the rest of the printer config - so the right logo renders on cold launch even when the printer is offline |
 | Cached LAN URL | `PrinterConfig.lanUrl` | Yes | Learned from the first successful status response; used for LAN-first routing |
 | Webcam transforms (flip / rotate / fps) | `PrinterConfig.webcam*` | Yes | Server-driven from the plugin; persisted so the first frame after cold launch already renders correctly |
 | Theme mode | `themeModeProvider` | Yes | `SharedPreferences` key `theme_mode` |
 | Custom theme | `customThemeProvider` | Yes | `SharedPreferences` key `custom_theme` (JSON of 5 HEX strings) |
 | Font scale / grid cols / rotation | `settings_provider.dart` | Yes | One `SharedPreferences` key each |
 | Current access token + tunnel URL | `PrinterAccessCache` | **No** (in-memory only) | Refreshed from the middleman every few minutes |
-| Live `PrinterStatus` per tile | `PrinterStatusService.stream` | **No** | StreamController — last emission only |
+| Live `PrinterStatus` per tile | `PrinterStatusService.stream` | **No** | StreamController - last emission only |
 
 ### The service layer
 
@@ -77,13 +77,13 @@ The `services/` directory has zero UI. Each file is a focused capability:
 |---|---|
 | `supabase_service.dart` | Talks to the cloud middleman. Anonymous sign-in, fetch the current access record for a printer, release a printer on un-pair, list-my-printers refresh |
 | `printer_access_cache.dart` | In-memory cache of `{tunnel_url, access_token}` per printer. Reuses a token until ~30 s before its expiry, then refreshes via the middleman. Used by every outbound call to the Pi |
-| `printer_status_service.dart` | The heart of the app. One instance per printer tile. Polls every 4 s. LAN-first when a cached LAN URL is known; falls back to the tunnel within a couple of seconds. Distinguishes Pi-up-but-printer-idle from totally-offline. Sniffs the printer's web UI (Mainsail / Fluidd) on first successful poll and persists it. Also reads a printer's configured light object — when lighting is enabled — so the dashboard bulb shows the light's real on/off state. Reads Moonraker's `webhooks.state` too, so the tile can tell a **shut-down** Klipper (e.g. after an emergency stop) from merely idle and offer a restart instead of the E-STOP triangle |
+| `printer_status_service.dart` | The heart of the app. One instance per printer tile. Polls every 4 s. LAN-first when a cached LAN URL is known; falls back to the tunnel within a couple of seconds. Distinguishes Pi-up-but-printer-idle from totally-offline. Sniffs the printer's web UI (Mainsail / Fluidd) on first successful poll and persists it. Also reads a printer's configured light object - when lighting is enabled - so the dashboard bulb shows the light's real on/off state. Reads Moonraker's `webhooks.state` too, so the tile can tell a **shut-down** Klipper (e.g. after an emergency stop) from merely idle and offer a restart instead of the E-STOP triangle |
 | `print_control_service.dart` | Sends `pause` / `resume` / `cancel` / `firmware_restart` / `emergency_stop`, lists and runs Klipper macros (the macro sheet and the lighting on/off/toggle), and starts a stored G-code. Same per-call token retrieval, same LAN-first routing |
 | `printer_webview_cache.dart` | Keeps each printer's Mainsail/Fluidd `WebViewController` warm across visits to the dashboard, so re-opening a printer is instant (no reload). **Pre-warms every printer's page in the background at app startup, so even the *first* open is instant** (v0.9.15). Owns the per-session token-cookie refresh and evicts least-recently-used sessions under OS memory pressure |
-| `printer_liveness_service.dart` | Tracks each printer's online/offline state from the cloud — subscribing to `last_seen` changes over **Supabase Realtime** plus a periodic RLS-scoped read as a fallback — so the dashboard and the notification service can mark a powered-off printer offline and **skip requesting access for it entirely** rather than polling it every cycle. Realtime delivery is scoped by the same "select own printers" RLS policy, so it widens nothing (v0.9.16) |
+| `printer_liveness_service.dart` | Tracks each printer's online/offline state from the cloud - subscribing to `last_seen` changes over **Supabase Realtime** plus a periodic RLS-scoped read as a fallback - so the dashboard and the notification service can mark a powered-off printer offline and **skip requesting access for it entirely** rather than polling it every cycle. Realtime delivery is scoped by the same "select own printers" RLS policy, so it widens nothing (v0.9.16) |
 | `printer_registry.dart` | Persistent printer list. `addClaimed` after a successful pair, `remove` plus middleman-release on un-pair, helpers to update individual fields like LAN URL, webcam transforms, and the detected UI type from a successful poll |
 | `update_service.dart` | One-shot GitHub `latest_version.json` fetch on app launch |
-| `print_progress.dart` | Pure helper that computes print progress as a 0–1 fraction matching Mainsail's default *file position (relative)* mode — the printed byte position mapped onto the slicer's gcode body. Shared by the status service and the notification so the tile, the notification, and Mainsail all show the same number (v0.9.17) |
+| `print_progress.dart` | Pure helper that computes print progress as a 0-1 fraction matching Mainsail's default *file position (relative)* mode - the printed byte position mapped onto the slicer's gcode body. Shared by the status service and the notification so the tile, the notification, and Mainsail all show the same number (v0.9.17) |
 | `ota_installer.dart` | In-app updater (Android): streams the new release APK to the cache dir with progress, then launches the system package installer through a `FileProvider` + a native `MethodChannel`. Browser fallback on failure (v0.9.17) |
 
 ### Android native side
@@ -101,7 +101,7 @@ mobile/android/app/src/main/
 └── app/proguard-rules.pro           # R8 keep-rules for ML Kit + mobile_scanner + CameraX
 ```
 
-`MainActivity` extends `FlutterFragmentActivity` (not the default `FlutterActivity`) because CameraX requires the activity to be a `LifecycleOwner`. Switching this fixed an earlier camera-binding crash on first launch. It also hosts two small `MethodChannel`s: `com.moongate.app/secure` (toggles `FLAG_SECURE` for the app-lock screen) and `com.moongate.app/install` (v0.9.17 — launches the system package installer on the APK the in-app updater downloaded, shared as a `content://` URI via the `FileProvider`).
+`MainActivity` extends `FlutterFragmentActivity` (not the default `FlutterActivity`) because CameraX requires the activity to be a `LifecycleOwner`. Switching this fixed an earlier camera-binding crash on first launch. It also hosts two small `MethodChannel`s: `com.moongate.app/secure` (toggles `FLAG_SECURE` for the app-lock screen) and `com.moongate.app/install` (v0.9.17 - launches the system package installer on the APK the in-app updater downloaded, shared as a `content://` URI via the `FileProvider`).
 
 ---
 
@@ -118,7 +118,7 @@ systemd
 ├─ moongate-authproxy.service ─────┤  klipper-plugin/moongate_authproxy.py
 │   (aiohttp HTTP+WS proxy)        │
 │                                  │
-└─ moongate-tunnel.service ────────┘  cloudflared — Cloudflare Quick Tunnel
+└─ moongate-tunnel.service ────────┘  cloudflared - Cloudflare Quick Tunnel
 ```
 
 ### The Moongate plugin (Moonraker component)
@@ -128,7 +128,7 @@ systemd
 Responsibilities:
 - **Pairing.** Generates the QR + `GATE-XXXX-XXXX` code, registers the printer with the cloud middleman on first successful pair.
 - **Heartbeat.** Periodically tells the middleman the current Cloudflare tunnel URL (it rotates on each Pi reboot).
-- **Status.** Aggregates Klipper / Moonraker objects into a single `/server/moongate/status` response — `print_stats`, temperatures, the discovered chamber sensor, webcam transforms, and the current tunnel URL.
+- **Status.** Aggregates Klipper / Moonraker objects into a single `/server/moongate/status` response - `print_stats`, temperatures, the discovered chamber sensor, webcam transforms, and the current tunnel URL.
 - **Control.** A small whitelist of safe actions: `pause`, `resume`, `cancel`, `firmware_restart`, `emergency_stop`. There is no arbitrary G-code endpoint.
 - **Owner state.** Knows the user this Pi is paired to, persisted at `~/.config/moongate/owner.json`. The `MOONGATE_RESET_OWNER` macro wipes it.
 
@@ -137,16 +137,16 @@ Responsibilities:
 [`klipper-plugin/moongate_authproxy.py`](klipper-plugin/moongate_authproxy.py) is a small aiohttp HTTP + WebSocket proxy. It sits in front of *everything* the Cloudflare tunnel can reach.
 
 - The cloudflared service points at the auth proxy, not at nginx directly.
-- Every request must carry a valid short-lived access token (via `Authorization: Bearer`, an `mg_token` cookie, or an `mg_token` query parameter — in that priority order).
+- Every request must carry a valid short-lived access token (via `Authorization: Bearer`, an `mg_token` cookie, or an `mg_token` query parameter - in that priority order).
 - Without a valid token: a flat `401 Unauthorized`, constant 13-byte body, no `WWW-Authenticate` challenge, no `Server` header, no fingerprint of what's behind it.
 - With a valid token: the request is forwarded to nginx (which then routes Mainsail / Moonraker / the webcam stream / the Moongate plugin endpoints exactly as it would on the LAN side).
-- One exception to "forward to nginx" (v0.9.0+): a request to **`/mg-extcam?u=...`** relays a snapshot/stream from an **external LAN camera** (e.g. a phone webcam Klipper can't see) so it works remotely. The target is SSRF-validated to a literal **private IPv4** only — loopback, link-local/metadata, public addresses, and hostnames are all refused (`_extcam_target_ok`). See [SECURITY.md](SECURITY.md) for the full ruleset.
+- One exception to "forward to nginx" (v0.9.0+): a request to **`/mg-extcam?u=...`** relays a snapshot/stream from an **external LAN camera** (e.g. a phone webcam Klipper can't see) so it works remotely. The target is SSRF-validated to a literal **private IPv4** only - loopback, link-local/metadata, public addresses, and hostnames are all refused (`_extcam_target_ok`). See [SECURITY.md](SECURITY.md) for the full ruleset.
 
-LAN traffic doesn't go through the proxy — nginx still listens on the LAN interface, so phones on the home network reach Moonraker the way they always have.
+LAN traffic doesn't go through the proxy - nginx still listens on the LAN interface, so phones on the home network reach Moonraker the way they always have.
 
 ### The tunnel
 
-`cloudflared` Quick Tunnel runs as `moongate-tunnel.service`. It makes an outbound connection to the Cloudflare edge — no inbound ports opened on your router. The URL rotates each time the Pi reboots; the Moongate plugin heartbeats the current one to the cloud middleman so the app always knows where to reach the Pi.
+`cloudflared` Quick Tunnel runs as `moongate-tunnel.service`. It makes an outbound connection to the Cloudflare edge - no inbound ports opened on your router. The URL rotates each time the Pi reboots; the Moongate plugin heartbeats the current one to the cloud middleman so the app always knows where to reach the Pi.
 
 ### Where state lives on the Pi
 
@@ -180,11 +180,11 @@ What the middleman intentionally does **not** see:
 - Anything from your webcam (snapshots go phone → Pi directly)
 - Anything you'd consider personal (no email, no name, no contact info)
 
-**v0.6.3 additions.** The middleman gained two small jobs. **(a) Backup restore** — a one-time, hashed *restore code* (table `restore_grants`; functions `create-restore-grant` / `redeem-restore-grant`) lets a reinstalled app reclaim its printers by re-assigning their ownership to the new identity, so a restored backup reconnects without re-pairing. **(b) Bug reports** — a locked-down `feedback` table (function `submit-feedback`) collects in-app reports with diagnostics, readable only via the dashboard or the secret-gated `read-feedback` function. Ownership is now **cloud-authoritative**: the Pi follows the cloud's owner — it re-binds when a validly-signed token presents a new identity — rather than pinning the first one, which is what makes restore reconnect (see [SECURITY.md](SECURITY.md)). App-side, `diagnostics_service.dart` + `printer_status_registry.dart` assemble the report payload (app / device / network / per-printer status incl. the last LAN-poll outcome).
+**v0.6.3 additions.** The middleman gained two small jobs. **(a) Backup restore** - a one-time, hashed *restore code* (table `restore_grants`; functions `create-restore-grant` / `redeem-restore-grant`) lets a reinstalled app reclaim its printers by re-assigning their ownership to the new identity, so a restored backup reconnects without re-pairing. **(b) Bug reports** - a locked-down `feedback` table (function `submit-feedback`) collects in-app reports with diagnostics, readable only via the dashboard or the secret-gated `read-feedback` function. Ownership is now **cloud-authoritative**: the Pi follows the cloud's owner - it re-binds when a validly-signed token presents a new identity - rather than pinning the first one, which is what makes restore reconnect (see [SECURITY.md](SECURITY.md)). App-side, `diagnostics_service.dart` + `printer_status_registry.dart` assemble the report payload (app / device / network / per-printer status incl. the last LAN-poll outcome).
 
-**v0.6.4–v0.6.5.** v0.6.4 enriched those bug reports — they now also carry the **Pi's plugin version** (the plugin self-reports `MOONGATE_PLUGIN_VERSION` in its `/status` reply) and the **remote (tunnel) connection result** next to the LAN outcome, the two biggest triage blind spots — and fixed a v0.6.3 auth-proxy regression that had been failing every tunnel request closed (see [SECURITY.md](SECURITY.md)). v0.6.5 is app-only: a first-run **"How pairing works"** explainer, with no backend or cloud surface.
+**v0.6.4-v0.6.5.** v0.6.4 enriched those bug reports - they now also carry the **Pi's plugin version** (the plugin self-reports `MOONGATE_PLUGIN_VERSION` in its `/status` reply) and the **remote (tunnel) connection result** next to the LAN outcome, the two biggest triage blind spots - and fixed a v0.6.3 auth-proxy regression that had been failing every tunnel request closed (see [SECURITY.md](SECURITY.md)). v0.6.5 is app-only: a first-run **"How pairing works"** explainer, with no backend or cloud surface.
 
-The deep design — schemas, token mechanics, key rotation, the specific cross-tenant isolation guarantees — lives in [`docs/v0.3-supabase-design.md`](docs/v0.3-supabase-design.md) and [`docs/v0.4-secure-remote-access-design.md`](docs/v0.4-secure-remote-access-design.md) alongside the alternative-architectures discussion that explains why we landed here.
+The deep design - schemas, token mechanics, key rotation, the specific cross-tenant isolation guarantees - lives in [`docs/v0.3-supabase-design.md`](docs/v0.3-supabase-design.md) and [`docs/v0.4-secure-remote-access-design.md`](docs/v0.4-secure-remote-access-design.md) alongside the alternative-architectures discussion that explains why we landed here.
 
 ---
 
@@ -207,7 +207,7 @@ push to master
 
 The `[skip ci]` suffix prevents the commit-back from re-triggering CI. The in-app update banner ([`UpdateService`](mobile/lib/services/update_service.dart)) polls `latest_version.json` on launch and shows the banner if the remote `build_number` exceeds the installed one.
 
-CI only fires on `master`. Feature branches (like `v0.4-secure-remote`) don't build APKs automatically — that's intentional, so unreleased branches stay out of the in-app updater.
+CI only fires on `master`. Feature branches (like `v0.4-secure-remote`) don't build APKs automatically - that's intentional, so unreleased branches stay out of the in-app updater.
 
 ---
 
@@ -216,7 +216,7 @@ CI only fires on `master`. Feature branches (like `v0.4-secure-remote`) don't bu
 ### Pairing (QR path)
 
 1. User runs `MOONGATE_PAIR` in Klipper console → registered as a Moonraker remote method → plugin generates a `GATE-XXXX-XXXX` code and stashes a pending pair record.
-2. Plugin pushes a clickable LAN pair URL to the console via `M118`. The QR page is **LAN-only by design** — the Cloudflare tunnel side returns 401 for everyone, including the pair page, because the user pairing doesn't have a token yet.
+2. Plugin pushes a clickable LAN pair URL to the console via `M118`. The QR page is **LAN-only by design** - the Cloudflare tunnel side returns 401 for everyone, including the pair page, because the user pairing doesn't have a token yet.
 3. User opens `http://<pi-ip>/moongate-pair.html` on a PC / tablet / second phone on the same WiFi. The page fetches the current pending pair info from the Moongate plugin and renders the QR.
 4. User opens the Moongate app on their phone → tap **+** → **Scan QR** → camera reads the payload.
 5. App registers itself with the cloud middleman (anonymous sign-in if it's the first launch), then submits a claim for this printer using the code from the QR.
@@ -224,7 +224,7 @@ CI only fires on `master`. Feature branches (like `v0.4-secure-remote`) don't bu
 
 ### Pairing (manual code path)
 
-If the phone's camera doesn't work (permission denied, hardware fault, can't focus on the QR), the `GATE-XXXX-XXXX` code shown in the Klipper console can be typed into the app's pair screen instead of scanning — two 4-digit boxes with a numpad. The rest of the flow is the same: code in (no `pi_public_key` sent — the server uses the one already on the enrollment row), claim out, owner.json written, tile spins up.
+If the phone's camera doesn't work (permission denied, hardware fault, can't focus on the QR), the `GATE-XXXX-XXXX` code shown in the Klipper console can be typed into the app's pair screen instead of scanning - two 4-digit boxes with a numpad. The rest of the flow is the same: code in (no `pi_public_key` sent - the server uses the one already on the enrollment row), claim out, owner.json written, tile spins up.
 
 ### Status poll (every 4 s per tile)
 
@@ -232,7 +232,7 @@ If the phone's camera doesn't work (permission denied, hardware fault, can't foc
 2. If the printer has a known LAN URL (learned from a previous poll), try it first with the access token in the `Authorization: Bearer` header. 2 s fast-fail timeout.
 3. If LAN fails (off-WiFi, slow LAN, etc.), try the tunnel URL with an 8 s timeout. The auth proxy verifies the token and forwards to Moonraker.
 4. If both fail, drop the token cache (in case the middleman revoked it) and retry once with a fresh token.
-5. If even that fails, do a quick HEAD probe to LAN + tunnel. ANY reply (auth proxy 401, nginx 200, upstream 502) proves the Pi is reachable on the network → emit a `PrinterStatus.waiting` ("Connected — Printer idle"). Only when nothing on either path answers does the tile go fully offline.
+5. If even that fails, do a quick HEAD probe to LAN + tunnel. ANY reply (auth proxy 401, nginx 200, upstream 502) proves the Pi is reachable on the network → emit a `PrinterStatus.waiting` ("Connected - Printer idle"). Only when nothing on either path answers does the tile go fully offline.
 6. The tile widget rebuilds with the new temps, progress, webcam tick.
 
 ### Print control
@@ -258,27 +258,27 @@ If the phone's camera doesn't work (permission denied, hardware fault, can't foc
 
 Every poll tries LAN before the tunnel when a cached LAN URL is known. There used to be a "3 LAN failures → skip LAN for 5 minutes" backoff in v0.3, but it had a frustrating bug: once you went on cellular at any point, returning to home WiFi did not flip back to "Local" until the 5-min timer expired. The user-perceptible "stuck on Tunnel at home" was worse than the off-LAN polling overhead. v0.4.0 removed the skip.
 
-The off-LAN cost is an extra ~2 s per poll cycle (LAN timeout fires before the tunnel attempt). Polls stretch from 4 s to ~6–10 s when away from home. That's the trade we explicitly accepted in exchange for predictable LAN-first behaviour.
+The off-LAN cost is an extra ~2 s per poll cycle (LAN timeout fires before the tunnel attempt). Polls stretch from 4 s to ~6-10 s when away from home. That's the trade we explicitly accepted in exchange for predictable LAN-first behaviour.
 
 ### Connectivity-aware camera feed rate
 
-The dashboard keeps two webcam refresh rates — a faster "Local" rate and a throttled "Tunnel" rate (v0.9.14). As of v0.9.15 the tile picks between them by the **phone's network type** rather than by which URL the status poll happened to win on: an `onMobileDataProvider` (backed by `connectivity_plus`) drives the choice, so the faster Local rate applies on **any Wi-Fi** — including when you're away and reaching the printer over the tunnel — and the throttled Tunnel rate applies only on **mobile data**, where cellular data actually costs something. Reaching a printer on the LAN is always Wi-Fi, so home behaviour is unchanged.
+The dashboard keeps two webcam refresh rates - a faster "Local" rate and a throttled "Tunnel" rate (v0.9.14). As of v0.9.15 the tile picks between them by the **phone's network type** rather than by which URL the status poll happened to win on: an `onMobileDataProvider` (backed by `connectivity_plus`) drives the choice, so the faster Local rate applies on **any Wi-Fi** - including when you're away and reaching the printer over the tunnel - and the throttled Tunnel rate applies only on **mobile data**, where cellular data actually costs something. Reaching a printer on the LAN is always Wi-Fi, so home behaviour is unchanged.
 
 ### Print progress matches Mainsail (file-relative, single source)
 
-Progress used to be computed two different ways — the dashboard tile preferred elapsed-time ÷ the slicer's time estimate, while the notification used the raw file fraction — so the tile, the notification, and Mainsail could all disagree (the tile typically ran a few percent ahead, because slicer time estimates are routinely off). As of v0.9.17 a single helper, [`print_progress.dart`](mobile/lib/services/print_progress.dart), is the only place progress is derived, for **both** the tile and the notification. It matches Mainsail's default **"file position (relative)"** calculation — `(file_position − gcode_start_byte) / (gcode_end_byte − gcode_start_byte)`, the printed byte position mapped onto the slicer's gcode body (the start/end offsets come from the file metadata the status service already fetches) — and falls back to `display_status.progress`, then the raw `virtual_sdcard.progress`, until those offsets are known. The slicer time estimate still drives the notification's finish-time ETA, just not the progress bar.
+Progress used to be computed two different ways - the dashboard tile preferred elapsed-time ÷ the slicer's time estimate, while the notification used the raw file fraction - so the tile, the notification, and Mainsail could all disagree (the tile typically ran a few percent ahead, because slicer time estimates are routinely off). As of v0.9.17 a single helper, [`print_progress.dart`](mobile/lib/services/print_progress.dart), is the only place progress is derived, for **both** the tile and the notification. It matches Mainsail's default **"file position (relative)"** calculation - `(file_position − gcode_start_byte) / (gcode_end_byte − gcode_start_byte)`, the printed byte position mapped onto the slicer's gcode body (the start/end offsets come from the file metadata the status service already fetches) - and falls back to `display_status.progress`, then the raw `virtual_sdcard.progress`, until those offsets are known. The slicer time estimate still drives the notification's finish-time ETA, just not the progress bar.
 
 ### Liveness-gated polling for offline printers
 
-Status polling a powered-off printer is wasted work: every cycle mints an access token from the middleman (an Edge Function call) only for the request to fail. As of v0.9.16 a `PrinterLivenessService` learns each printer's online/offline state from the cloud's `last_seen` (the Pi heartbeats it) over a **Supabase Realtime** subscription, with a periodic RLS-scoped `SELECT` as a fallback when the socket is down. While a printer reads as offline, both the dashboard and the background notification service **stop requesting access for it**, so an offline Pi costs zero Edge Function invocations and far less mobile data / battery. Reading `last_seen` over Realtime (or a plain RLS-scoped read) is **not** a billed Edge Function call, unlike `/printer-access`. Online printers behave exactly as before, and LAN polling still works even if the cloud is unreachable — liveness only *suppresses* remote token requests, it never gates the LAN path.
+Status polling a powered-off printer is wasted work: every cycle mints an access token from the middleman (an Edge Function call) only for the request to fail. As of v0.9.16 a `PrinterLivenessService` learns each printer's online/offline state from the cloud's `last_seen` (the Pi heartbeats it) over a **Supabase Realtime** subscription, with a periodic RLS-scoped `SELECT` as a fallback when the socket is down. While a printer reads as offline, both the dashboard and the background notification service **stop requesting access for it**, so an offline Pi costs zero Edge Function invocations and far less mobile data / battery. Reading `last_seen` over Realtime (or a plain RLS-scoped read) is **not** a billed Edge Function call, unlike `/printer-access`. Online printers behave exactly as before, and LAN polling still works even if the cloud is unreachable - liveness only *suppresses* remote token requests, it never gates the LAN path.
 
 ### Persistent UI type detection
 
-When the dashboard tile can't render a webcam (camera off, printer powered off, etc.) it shows the printer's web-UI logo as a placeholder — Mainsail or Fluidd. Detection is a one-time HTML sniff of the root page. In v0.4 the result is persisted on `PrinterConfig`, so a fresh cold launch shows the correct logo immediately, even when the printer is currently offline. Before v0.4, detection had to re-run on every cold launch and the logo only appeared after the first successful poll.
+When the dashboard tile can't render a webcam (camera off, printer powered off, etc.) it shows the printer's web-UI logo as a placeholder - Mainsail or Fluidd. Detection is a one-time HTML sniff of the root page. In v0.4 the result is persisted on `PrinterConfig`, so a fresh cold launch shows the correct logo immediately, even when the printer is currently offline. Before v0.4, detection had to re-run on every cold launch and the logo only appeared after the first successful poll.
 
 ### Pi-up-but-printer-idle as its own state
 
-When the Pi is reachable but the moongate `/status` path keeps failing (e.g. on a Creality K3 where the printer-power toggle inside Mainsail is off, so Klipper isn't running), the tile emits `PrinterStatus.waiting` rather than `PrinterStatus.offline`. The tile shows the logo + "Connected — Printer idle" with no spinner, instead of looking dead. Distinguished by a HEAD reachability probe — any HTTP reply at all (auth proxy 401, nginx 200, upstream 502) proves the Pi is up.
+When the Pi is reachable but the moongate `/status` path keeps failing (e.g. on a Creality K3 where the printer-power toggle inside Mainsail is off, so Klipper isn't running), the tile emits `PrinterStatus.waiting` rather than `PrinterStatus.offline`. The tile shows the logo + "Connected - Printer idle" with no spinner, instead of looking dead. Distinguished by a HEAD reachability probe - any HTTP reply at all (auth proxy 401, nginx 200, upstream 502) proves the Pi is up.
 
 ### Per-tile, not per-app, status polling
 
@@ -287,23 +287,23 @@ Each `PrinterTile` owns its own `PrinterStatusService`. They poll independently.
 - A timing-out printer doesn't slow the dashboard refresh of nearby ones
 - One offline printer doesn't poison the connection state of the others
 
-It costs N parallel HTTP loops where N is the number of printers, but that's fine — typical N is 1–3, and the polls are 4 seconds apart.
+It costs N parallel HTTP loops where N is the number of printers, but that's fine - typical N is 1-3, and the polls are 4 seconds apart.
 
 ### Plugin is a single file, no external Python deps
 
 The Moongate plugin runs inside Moonraker's process and has access to anything Moonraker depends on. Staying within that surface (stdlib + Moonraker's existing deps) reduces installation to "copy one file and restart Moonraker". No virtualenvs, no `pip install`, no breakage when Moonraker updates.
 
-The auth proxy is the one exception — it pulls in `aiohttp` (`pip install` inside Moonraker's venv) because there's no Moonraker-native way to intercept everything *before* Moonraker. The verifier classes (token-signature checks, owner state) are imported from the plugin file rather than duplicated, so signature semantics stay single-source.
+The auth proxy is the one exception - it pulls in `aiohttp` (`pip install` inside Moonraker's venv) because there's no Moonraker-native way to intercept everything *before* Moonraker. The verifier classes (token-signature checks, owner state) are imported from the plugin file rather than duplicated, so signature semantics stay single-source.
 
 ### Cloud middleman, not a Moongate-operated print server
 
-The middleman is intentionally minimal — anonymous identity, per-request token issuance, lookup. It never sees your G-code, your prints, your webcam, your bed. All print-side data flows phone ↔ Pi directly. This is both a privacy decision and a scope decision: a print server is a much larger thing to operate than a lookup table.
+The middleman is intentionally minimal - anonymous identity, per-request token issuance, lookup. It never sees your G-code, your prints, your webcam, your bed. All print-side data flows phone ↔ Pi directly. This is both a privacy decision and a scope decision: a print server is a much larger thing to operate than a lookup table.
 
 ---
 
 ## Where to next
 
-- [SECURITY.md](SECURITY.md) — threat model, what the tunnel exposes and what it doesn't, how to audit
-- [DEVELOPMENT.md](DEVELOPMENT.md) — practical setup, running, building, debugging
-- [docs/setup-guide.md](docs/setup-guide.md) — end-user perspective
-- [`docs/v0.3-supabase-design.md`](docs/v0.3-supabase-design.md) and [`docs/v0.4-secure-remote-access-design.md`](docs/v0.4-secure-remote-access-design.md) — the deep design rationale, alternatives discussion, and the specific guarantees the cloud middleman + auth proxy make
+- [SECURITY.md](SECURITY.md) - threat model, what the tunnel exposes and what it doesn't, how to audit
+- [DEVELOPMENT.md](DEVELOPMENT.md) - practical setup, running, building, debugging
+- [docs/setup-guide.md](docs/setup-guide.md) - end-user perspective
+- [`docs/v0.3-supabase-design.md`](docs/v0.3-supabase-design.md) and [`docs/v0.4-secure-remote-access-design.md`](docs/v0.4-secure-remote-access-design.md) - the deep design rationale, alternatives discussion, and the specific guarantees the cloud middleman + auth proxy make

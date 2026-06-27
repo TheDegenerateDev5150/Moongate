@@ -10,7 +10,7 @@ import '../../providers/settings_provider.dart';
 import '../../services/printer_registry.dart';
 import '../../services/printer_webview_cache.dart';
 
-/// Moongate brand red — the launcher-icon / moon-gate colour (#FF3B30). On the
+/// Moongate brand red - the launcher-icon / moon-gate colour (#FF3B30). On the
 /// boot splash the Dark theme uses this instead of the purple seed, so the
 /// loading screen matches the red app icon.
 const kMoongateRed = Color(0xFFFF3B30);
@@ -28,8 +28,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final Animation<double> _fade;
   late final Animation<double> _scale;
   // A second, continuously-looping controller drives the "alive" loading
-  // effect — a breathing glow on the logo and a travelling pulse through the
-  // dots — so the splash doesn't sit perfectly still while it loads.
+  // effect - a breathing glow on the logo and a travelling pulse through the
+  // dots - so the splash doesn't sit perfectly still while it loads.
   late final AnimationController _pulse;
 
   @override
@@ -146,7 +146,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                 ),
                 const SizedBox(height: 22),
-                // Three dots with a travelling pulse — a quiet "loading" cue.
+                // Three dots with a travelling pulse - a quiet "loading" cue.
                 AnimatedBuilder(
                   animation: _pulse,
                   builder: (context, _) => Row(

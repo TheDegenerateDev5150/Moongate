@@ -1,4 +1,4 @@
--- Moongate — device push-notification tokens.
+-- Moongate - device push-notification tokens.
 --
 -- Backs background push notifications (iPhone first; the column is platform-
 -- tagged so Android can join later without a schema change). Each phone that
@@ -11,7 +11,7 @@
 --   • Clients NEVER write directly. The register-push-token Edge Function
 --     (service role) upserts rows; ALL privileges are revoked from
 --     anon/authenticated and no client RLS policy is defined.
---   • user_id is the anonymous owner. ON DELETE CASCADE — a token is useless
+--   • user_id is the anonymous owner. ON DELETE CASCADE - a token is useless
 --     once its anon identity is cleaned up by the orphan sweep, so it goes
 --     with it (unlike feedback, whose text we deliberately keep).
 --   • token is UNIQUE: a given device token maps to exactly one row, so a

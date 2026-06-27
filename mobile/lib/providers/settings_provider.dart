@@ -14,7 +14,7 @@ import '../models/notif_fields.dart';
 /// Moongate's theme selector.
 ///
 /// `dark`/`light` map 1:1 onto Flutter's [ThemeMode].
-/// `custom` is our own value — when selected, [app.dart] builds the
+/// `custom` is our own value - when selected, [app.dart] builds the
 /// MaterialApp theme from user-picked colours stored in
 /// [customThemeProvider] instead of the seeded purple defaults.
 enum AppThemeMode { dark, light, custom }
@@ -74,7 +74,7 @@ final fontScaleProvider = NotifierProvider<FontScaleNotifier, double>(
 );
 
 // ---------------------------------------------------------------------------
-// Grid columns  (1 | 2 | 3 — portrait preference; landscape auto-bumps +1)
+// Grid columns  (1 | 2 | 3 - portrait preference; landscape auto-bumps +1)
 // ---------------------------------------------------------------------------
 
 class GridColumnsNotifier extends Notifier<int> {
@@ -147,7 +147,7 @@ final allowRotationProvider = NotifierProvider<AllowRotationNotifier, bool>(
 // ---------------------------------------------------------------------------
 
 /// Whether the dashboard re-sorts tiles by live status (Error → Printing →
-/// Ready → Idle → Offline) on every status change. ON by default — the
+/// Ready → Idle → Offline) on every status change. ON by default - the
 /// historic behaviour, which floats active prints to the top.
 ///
 /// Turning it OFF freezes the tiles in the user's own order and unlocks
@@ -183,7 +183,7 @@ final autoArrangeProvider =
 /// How often each dashboard tile re-fetches its webcam snapshot.
 ///
 /// The dashboard previously pulled snapshots at each printer's Crowsnest
-/// "target FPS" (up to ~15 FPS) continuously, for EVERY tile at once — a
+/// "target FPS" (up to ~15 FPS) continuously, for EVERY tile at once - a
 /// large, constant data drain, especially over the Cloudflare tunnel. (This
 /// was the cause of the "Moongate is spiking network traffic" reports.) This
 /// global setting caps the dashboard to a sensible inter-frame interval.
@@ -196,7 +196,7 @@ final autoArrangeProvider =
 enum DashboardCameraRefresh { raw, oneSecond, threeSeconds, fiveSeconds }
 
 extension DashboardCameraRefreshX on DashboardCameraRefresh {
-  /// Fixed inter-frame interval in milliseconds, or null for [raw] — in which
+  /// Fixed inter-frame interval in milliseconds, or null for [raw] - in which
   /// case the tile falls back to the printer's own target FPS (self-throttled
   /// by the sequential fetch loop to whatever the camera can actually deliver).
   int? get intervalMs => switch (this) {
@@ -218,7 +218,7 @@ extension DashboardCameraRefreshX on DashboardCameraRefresh {
 /// Legacy single-rate key (pre-v0.9.14). A user who set it keeps that value:
 /// both the local and tunnel rates fall back to it when their own key is unset,
 /// so updating preserves the old behaviour. Fresh installs use the per-path
-/// defaults below (local 1 s; tunnel 3 s — throttled to save mobile data).
+/// defaults below (local 1 s; tunnel 3 s - throttled to save mobile data).
 const _legacyCameraRefreshKey = 'dashboard_camera_refresh';
 
 /// Shared load/set for the two dashboard camera-refresh settings. A tile reads
@@ -270,7 +270,7 @@ final localCameraRefreshProvider =
   LocalCameraRefreshNotifier.new,
 );
 
-/// Tile webcam refresh rate while the phone is on mobile data (default 3 s —
+/// Tile webcam refresh rate while the phone is on mobile data (default 3 s -
 /// slower to save cellular data; adjustable in the Dashboard Camera Feeds
 /// sheet).
 final tunnelCameraRefreshProvider =
@@ -282,7 +282,7 @@ final tunnelCameraRefreshProvider =
 // Network type  (is the phone on metered mobile data?)
 // ---------------------------------------------------------------------------
 
-/// Whether the phone is currently on **mobile data only** — cellular, with no
+/// Whether the phone is currently on **mobile data only** - cellular, with no
 /// Wi-Fi or wired connection. Drives which dashboard camera-feed rate applies:
 /// on Wi-Fi (even when a printer is reached remotely over the tunnel) the
 /// faster local rate is used; only on metered mobile data does the throttled
@@ -296,7 +296,7 @@ class OnMobileDataNotifier extends Notifier<bool> {
     final conn = Connectivity();
     _sub = conn.onConnectivityChanged.listen(_apply);
     ref.onDispose(() => _sub?.cancel());
-    // The stream only fires on change — seed with the current state.
+    // The stream only fires on change - seed with the current state.
     conn.checkConnectivity().then(_apply);
     return false; // assume unmetered until the first reading lands
   }
@@ -348,7 +348,7 @@ final showCameraConfigIconsProvider =
 // ---------------------------------------------------------------------------
 
 /// Whether the dashboard shows a global power button in the top bar, beside the
-/// menu. OFF by default — only useful when machines expose Moonraker `[power …]`
+/// menu. OFF by default - only useful when machines expose Moonraker `[power …]`
 /// devices (smart plugs / relays). When on, the button opens a sheet that
 /// switches every reachable machine's power devices on, or off behind a
 /// slide-to-confirm; printing machines are left on. Travels in backups.
@@ -383,7 +383,7 @@ final globalPowerButtonProvider =
 /// Turning it on (from the first-run prompt or the menu) requests the Android 13+
 /// POST_NOTIFICATIONS permission and starts the foreground service that polls
 /// /status to post the persistent progress notification + state-change alerts.
-/// This is just the persisted on/off preference — see `PrintNotificationService`
+/// This is just the persisted on/off preference - see `PrintNotificationService`
 /// for the runtime service.
 class PrintNotificationsEnabledNotifier extends Notifier<bool> {
   static const _key = 'print_notifications_enabled';
@@ -408,7 +408,7 @@ final printNotificationsEnabledProvider =
   PrintNotificationsEnabledNotifier.new,
 );
 
-/// When on, the persistent status notification shows only online printers —
+/// When on, the persistent status notification shows only online printers -
 /// offline / shut-down machines are hidden from the roster. Off by default.
 /// Travels in backups. The background isolate reads the same pref directly
 /// (kNotifOnlineOnlyKey), so the switch and the service stay in step.
@@ -437,7 +437,7 @@ final notifOnlineOnlyProvider =
 
 /// Whether the app requires authentication before the dashboard is reachable.
 /// Off by default; enabling it (from the App-lock settings screen) also sets a
-/// PIN — see [PinService]. The runtime locked/unlocked state lives in
+/// PIN - see [PinService]. The runtime locked/unlocked state lives in
 /// `lockStateProvider`; this is just the persisted on/off preference.
 class AppLockEnabledNotifier extends Notifier<bool> {
   static const _key = 'app_lock_enabled';
@@ -548,14 +548,14 @@ final autoLockTimeoutProvider =
 
 /// The user's chosen UI language, stored as a bare language code (e.g. 'de').
 ///
-/// `null` means "follow the device's system language" — [app.dart] passes a
+/// `null` means "follow the device's system language" - [app.dart] passes a
 /// null `locale` to MaterialApp, so Flutter resolves the system locale against
 /// `AppLocalizations.supportedLocales` and falls back to English when the
 /// device language isn't one we ship.
 ///
 /// Whether the user has actually been shown the first-run language prompt is
 /// tracked separately by the `language_selected` flag in the dashboard
-/// onboarding flow — independent of which locale ends up active.
+/// onboarding flow - independent of which locale ends up active.
 class LocaleNotifier extends Notifier<String?> {
   static const _key = 'app_locale';
 
@@ -590,7 +590,7 @@ final localeProvider =
 
 /// How often the opt-in print-notification foreground service polls each
 /// printer's /status. The chosen value is the actual poll rate (no idle
-/// backoff) — faster reacts quicker but uses a little more data/battery.
+/// backoff) - faster reacts quicker but uses a little more data/battery.
 /// Default 30s. Changing it restarts the service (see
 /// `PrintNotificationService.reschedule`).
 enum NotifPollInterval { s5, s10, s15, s30, m1 }
@@ -604,7 +604,7 @@ extension NotifPollIntervalX on NotifPollInterval {
         NotifPollInterval.m1  => 60000,
       };
 
-  /// Short segmented-picker label (universal — not localised).
+  /// Short segmented-picker label (universal - not localised).
   String get label => switch (this) {
         NotifPollInterval.s5  => '5s',
         NotifPollInterval.s10 => '10s',

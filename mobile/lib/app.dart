@@ -104,7 +104,7 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
       ref.invalidate(updateProvider);
       // v0.5.0: kick off an mDNS browse so the LanDiscoveryService cache
       // is current the moment the user is looking at the dashboard.
-      // Fire-and-forget — the browse completes in ~5 s in the background
+      // Fire-and-forget - the browse completes in ~5 s in the background
       // and the status service will pick up any new entries on its next
       // poll cycle. See docs/v0.5-lan-discovery-design.md §7.4.
       LanDiscoveryService.instance.refresh().ignore();
@@ -119,7 +119,7 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
     final localeCode = ref.watch(localeProvider);
 
     // When the user has picked Custom, force both light and dark slots to the
-    // same custom theme — the user is taking over colour decisions so the
+    // same custom theme - the user is taking over colour decisions so the
     // system's dark-mode toggle should not flip anything on us.
     final isCustom  = appMode == AppThemeMode.custom;
     final lightTheme = isCustom ? _buildCustomTheme(custom) : _buildSeededTheme(Brightness.light);

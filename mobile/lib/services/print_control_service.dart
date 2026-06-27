@@ -34,7 +34,7 @@ class PrintControlService {
 
     // v0.5.0: pick the freshest available LAN URL.
     //   1. A discovered URL from mDNS (= what the Pi is *currently*
-    //      advertising on the LAN — survives DHCP IP changes).
+    //      advertising on the LAN - survives DHCP IP changes).
     //   2. The registry-live lanUrl (what the status service most
     //      recently learned from a successful /status response). This
     //      read closes the v0.4.x bug where the control service captured
@@ -68,7 +68,7 @@ class PrintControlService {
       return true;
     }
 
-    // 401 / network blip — drop the cache and retry tunnel once with a
+    // 401 / network blip - drop the cache and retry tunnel once with a
     // fresh token. LAN already tried.
     PrinterAccessCache.instance.invalidate(config.id);
     try {
@@ -106,11 +106,11 @@ class PrintControlService {
   // mirroring how PrinterStatusService already pulls /printer/objects/query
   // and /server/files/metadata: on LAN no auth header (Moonraker trusts the
   // subnet), on the tunnel a Bearer token (the auth proxy gates it). So the
-  // feature needs no plugin update — it rides the same transparent proxy.
+  // feature needs no plugin update - it rides the same transparent proxy.
 
   /// List the G-code files stored on the printer (Moonraker `gcodes` root),
   /// newest first, together with the connection (LAN or tunnel) that answered
-  /// — so [fetchThumbnail] can reuse that exact path instead of re-probing LAN
+  /// - so [fetchThumbnail] can reuse that exact path instead of re-probing LAN
   /// on every row (the per-row LAN timeout is what stalled thumbnails on the
   /// tunnel). Returns null when every path failed; the file list may be empty
   /// when the printer simply has no files yet.
@@ -155,7 +155,7 @@ class PrintControlService {
             .post(uri,
                 headers: isLan ? null : {'Authorization': 'Bearer $token'})
             .timeout(Duration(seconds: isLan ? 4 : 12));
-        // null (not false) on a non-200 so the next path is still tried — a LAN
+        // null (not false) on a non-200 so the next path is still tried - a LAN
         // Moonraker that rejects an untrusted POST falls back to the tunnel.
         return resp.statusCode == 200 ? true : null;
       } catch (_) {
@@ -170,14 +170,14 @@ class PrintControlService {
   // Same transparent-proxy story as the G-code calls above: `printer/objects/
   // list` and `printer/gcode/script` are core Moonraker endpoints, so on LAN
   // they go header-less and on the tunnel they carry the Bearer token the auth
-  // proxy gates — no plugin update needed. `objects/query` is already used by
+  // proxy gates - no plugin update needed. `objects/query` is already used by
   // PrinterStatusService over the tunnel, and `gcode/script` is just an action
   // POST like `print/start`, so both are known to pass the proxy.
 
-  /// List the Klipper macros defined on the printer — the `[gcode_macro …]`
+  /// List the Klipper macros defined on the printer - the `[gcode_macro …]`
   /// sections, read from Moonraker's `printer/objects/list` and filtered to the
   /// `gcode_macro ` objects. Hidden: `_`-prefixed helpers (Klipper's private-
-  /// macro convention) and Moongate's own plumbing macros (`MOONGATE_*` — one
+  /// macro convention) and Moongate's own plumbing macros (`MOONGATE_*` - one
   /// of which unpairs the printer). Returns the bare macro names, alphabetised
   /// (case-insensitively); null when every path failed, an empty list when the
   /// printer simply defines no user macros.
@@ -275,7 +275,7 @@ class PrintControlService {
   //
   // `SET_HEATER_TEMPERATURE HEATER=<name> TARGET=<°C>` is a core Klipper gcode,
   // so it rides the same transparent `printer/gcode/script` proxy as [runMacro]
-  // — no plugin update. The one wrinkle is the heater's object NAME: it's almost
+  // - no plugin update. The one wrinkle is the heater's object NAME: it's almost
   // always `extruder` / `heater_bed`, but a custom config can call them
   // something else (e.g. `[heater_generic hotend]`). So we ask the printer for
   // its `available_heaters` and map by convention, falling back to the Klipper
@@ -367,7 +367,7 @@ class PrintControlService {
   /// After a print ends, `print_stats.state` stays at `complete` (or
   /// `cancelled`) until something clears it, so the tile keeps showing
   /// "Done"/"Cancelled". `SDCARD_RESET_FILE` unloads the virtual-sdcard file and
-  /// calls `print_stats.reset()`, which returns the state to `standby` — the
+  /// calls `print_stats.reset()`, which returns the state to `standby` - the
   /// same gcode Mainsail/Fluidd fire from their post-print "clear" action (it
   /// resets the stats even when no file is loaded, and Klipper only refuses it
   /// when run *from* the SD file mid-print, which never applies here). Rides the
@@ -394,9 +394,9 @@ class PrintControlService {
 
   // ── Power devices: list + switch a Moonraker [power …] device ──────────────
   //
-  // Moonraker's device_power component manages [power …] sections (any type —
+  // Moonraker's device_power component manages [power …] sections (any type -
   // shelly / gpio / tplink / tasmota …) and stays up while the printer itself
-  // is powered off, so these work even when Klipper is down — the "switch the
+  // is powered off, so these work even when Klipper is down - the "switch the
   // printer on from its tile" case. Core Moonraker endpoints → same transparent
   // proxy as the macro/file calls, no plugin update.
 
@@ -448,7 +448,7 @@ class PrintControlService {
   }
 
   /// Fetch a slicer-embedded thumbnail for [file] over the already-resolved
-  /// [base]/[isLan] connection from [listGcodes] — no per-row LAN re-probe,
+  /// [base]/[isLan] connection from [listGcodes] - no per-row LAN re-probe,
   /// which is what stalled thumbnails on the tunnel. Reads the file's metadata
   /// for a suitable thumbnail, then pulls it from the gcodes store. Returns the
   /// image bytes, an empty list when the file has no embedded thumbnail, or
@@ -510,8 +510,8 @@ class PrintControlService {
   }
 
   /// Resolve the freshest LAN base then the tunnel, running [call] against each
-  /// until one returns non-null. Mirrors [sendAction]'s path order — including
-  /// the one-shot token refresh + tunnel retry — so a fresh-paired (tunnel-
+  /// until one returns non-null. Mirrors [sendAction]'s path order - including
+  /// the one-shot token refresh + tunnel retry - so a fresh-paired (tunnel-
   /// less) printer still works on LAN and a stale token self-heals.
   Future<T?> _viaLanThenTunnel<T>(
       Future<T?> Function(String base, String token, bool isLan) call) async {
@@ -539,7 +539,7 @@ class PrintControlService {
       if (r != null) return r;
     }
 
-    // 401 / network blip — drop the cache, refresh the token, retry tunnel once.
+    // 401 / network blip - drop the cache, refresh the token, retry tunnel once.
     PrinterAccessCache.instance.invalidate(config.id);
     try {
       access = await PrinterAccessCache.instance.get(config.id);
@@ -610,7 +610,7 @@ class GcodeFile {
       : null;
 }
 
-/// A Moonraker power device — a `[power …]` section — from
+/// A Moonraker power device - a `[power …]` section - from
 /// `/machine/device_power/devices`. Type-agnostic: shelly, gpio, tplink,
 /// tasmota, etc. all surface here the same way.
 class PowerDevice {

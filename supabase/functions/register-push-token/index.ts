@@ -4,7 +4,7 @@
 // send-push function can later deliver "print finished / failed" alerts to it.
 // Verifies the caller's Supabase JWT (anonymous is fine), validates the
 // payload, and upserts one row into public.device_push_tokens via the service
-// role — clients have no direct access to that table (see migration
+// role - clients have no direct access to that table (see migration
 // 20260626120000_device_push_tokens).
 //
 // Upsert key is the token itself: re-registering the same device updates its
@@ -24,9 +24,9 @@
 // Response 200: { "ok": true }
 //
 // Errors:
-//   400 — malformed body / missing token / bad platform
-//   401 — no/invalid JWT
-//   500 — internal
+//   400 - malformed body / missing token / bad platform
+//   401 - no/invalid JWT
+//   500 - internal
 
 import { handleCorsPreflight } from "../_shared/cors.ts";
 import {

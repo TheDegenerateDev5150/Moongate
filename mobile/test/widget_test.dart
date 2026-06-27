@@ -7,6 +7,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // Placeholder — real tests to be added.
+  // Placeholder - real tests to be added.
   test('placeholder', () => expect(true, isTrue));
 }

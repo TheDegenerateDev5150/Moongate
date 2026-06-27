@@ -1,4 +1,4 @@
-# Local development notes & IDE state — not for the public repo
+# Local development notes & IDE state - not for the public repo
 CLAUDE.md
 .claude/
 logcat*.txt
@@ -21,11 +21,11 @@ mobile/ios/Pods/
 mobile/ios/Runner.xcworkspace/xcuserdata/
 *.g.dart
 
-# Android signing — NEVER commit keystores
+# Android signing - NEVER commit keystores
 *.jks
 *.keystore
 
-# iOS signing — NEVER commit provisioning profiles or certs
+# iOS signing - NEVER commit provisioning profiles or certs
 *.mobileprovision
 *.p12
 *.cer
@@ -39,7 +39,7 @@ __pycache__/
 dist/
 *.egg
 
-# Secrets & tokens — NEVER commit these
+# Secrets & tokens - NEVER commit these
 *.env
 .env.*
 secrets.json

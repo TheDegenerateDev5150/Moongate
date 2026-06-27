@@ -20,7 +20,7 @@ const int _maxMinutes = 600;
 
 /// Bottom sheet to preheat a printer's hotend / bed and optionally arm a
 /// heat-soak timer. Opened by a long-press on a tile's temperature row (online +
-/// idle only — see `printer_tile.dart`). Sends `SET_HEATER_TEMPERATURE` to the
+/// idle only - see `printer_tile.dart`). Sends `SET_HEATER_TEMPERATURE` to the
 /// printer's Moonraker console over the same LAN→tunnel proxy as the macro
 /// runner, so it needs no plugin change. Heater object names are auto-detected
 /// (`available_heaters`) so it works whether the config calls them
@@ -28,7 +28,7 @@ const int _maxMinutes = 600;
 ///
 /// The heat-soak alert piggybacks the opt-in print-notification service (its
 /// background isolate watches the armed deadline), so the sheet warns when that
-/// service is off — otherwise the timer would never fire.
+/// service is off - otherwise the timer would never fire.
 Future<void> showPreheatSheet(
   BuildContext context,
   PrinterConfig printer, {
@@ -113,7 +113,7 @@ class _PreheatSheetState extends ConsumerState<_PreheatSheet> {
   Future<void> _enableNotifications() async {
     final granted =
         await PrintNotificationService.instance.requestPermission();
-    if (!granted) return; // user denied at the OS prompt — the warning stays
+    if (!granted) return; // user denied at the OS prompt - the warning stays
     await ref.read(printNotificationsEnabledProvider.notifier).set(true);
     await PrintNotificationService.instance.sync(true);
   }
@@ -145,8 +145,8 @@ class _PreheatSheetState extends ConsumerState<_PreheatSheet> {
       return;
     }
 
-    // Arm (or clear) the soak timer. Armed even when notifications are off — the
-    // in-sheet warning already flagged that — so it still fires if the user
+    // Arm (or clear) the soak timer. Armed even when notifications are off - the
+    // in-sheet warning already flagged that - so it still fires if the user
     // enables them within the grace window.
     if (minutes > 0) {
       final at =

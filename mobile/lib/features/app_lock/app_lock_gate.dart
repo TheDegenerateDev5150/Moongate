@@ -6,7 +6,7 @@ import '../../providers/app_lock_provider.dart';
 import 'lock_screen.dart';
 
 /// Wraps the whole app (mounted in [app.dart]'s `MaterialApp.router` builder).
-/// While locked it paints an opaque [LockScreen] over everything — above the
+/// While locked it paints an opaque [LockScreen] over everything - above the
 /// router's Navigator, so no route can render without it and the underlying
 /// navigation state is preserved for when the user unlocks. Also drives
 /// FLAG_SECURE so the lock (and the app's contents while locked) are kept out

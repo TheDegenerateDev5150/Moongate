@@ -1,9 +1,9 @@
-# Moongate — Supabase Backend Setup & Verification
+# Moongate - Supabase Backend Setup & Verification
 
-This directory contains everything needed to set up and verify Moongate's Supabase backend — the schema, Row-Level Security, cron cleanup, and the Edge Functions that mediate between the app, the Pi, and Postgres. It originated with the v0.3.0 cloud-pairing rewrite and is kept current (e.g. the `feedback` and `restore_grants` tables were added in v0.6.x).
+This directory contains everything needed to set up and verify Moongate's Supabase backend - the schema, Row-Level Security, cron cleanup, and the Edge Functions that mediate between the app, the Pi, and Postgres. It originated with the v0.3.0 cloud-pairing rewrite and is kept current (e.g. the `feedback` and `restore_grants` tables were added in v0.6.x).
 Design rationale: see [`docs/v0.3-supabase-design.md`](../docs/v0.3-supabase-design.md).
 
-> **The backend is live and the repo is public — by design.** The rule that keeps that safe: the **server-side secrets never leave Supabase.** `MOONGATE_TUNNEL_URL_KEY`, `MOONGATE_JWT_SIGNING_KEY`, `MOONGATE_DEBUG_KEY`, and the `service_role` key live only in the Edge Functions environment — never in the APK, never in git. Only the **anon** key is public, and it's gated by the Row-Level Security verified in §3.
+> **The backend is live and the repo is public - by design.** The rule that keeps that safe: the **server-side secrets never leave Supabase.** `MOONGATE_TUNNEL_URL_KEY`, `MOONGATE_JWT_SIGNING_KEY`, `MOONGATE_DEBUG_KEY`, and the `service_role` key live only in the Edge Functions environment - never in the APK, never in git. Only the **anon** key is public, and it's gated by the Row-Level Security verified in §3.
 
 ---
 
@@ -31,9 +31,9 @@ You said you have a Supabase account linked via GitHub. Open
 
 Once it's ready, copy these from `Project Settings → API`:
 
-- **Project URL** — e.g. `https://abc123xyz.supabase.co`
-- **`anon` public key** — safe to embed in the Flutter APK
-- **`service_role` key** — **never** put in the APK; Edge Functions only
+- **Project URL** - e.g. `https://abc123xyz.supabase.co`
+- **`anon` public key** - safe to embed in the Flutter APK
+- **`service_role` key** - **never** put in the APK; Edge Functions only
 
 You'll also need the **project ref** (the `abc123xyz` part from the URL) for
 the CLI flow below.
@@ -42,9 +42,9 @@ the CLI flow below.
 
 ## 2. Apply the migration
 
-You have two options. Pick one — they do the same thing.
+You have two options. Pick one - they do the same thing.
 
-### Option A — Supabase CLI (recommended if you'll iterate)
+### Option A - Supabase CLI (recommended if you'll iterate)
 
 ```powershell
 # install once (if you don't have it)
@@ -57,9 +57,9 @@ supabase db push
 ```
 
 `supabase db push` reads `supabase/migrations/` and applies anything new.
-Re-running is safe — the migration is idempotent.
+Re-running is safe - the migration is idempotent.
 
-### Option B — Paste into the SQL Editor (zero setup)
+### Option B - Paste into the SQL Editor (zero setup)
 
 1. Open your project's **SQL Editor** in the Supabase dashboard
 2. Open `supabase/migrations/20260526120000_v03_initial.sql` in any editor
@@ -94,7 +94,7 @@ FROM pg_class
 WHERE relname IN ('printers', 'enrollment_tokens', 'feedback', 'restore_grants');
 ```
 
-All four rows should show `relrowsecurity = t`. (`feedback` and `restore_grants` were added in v0.6.x and are locked down the same way — RLS on, all client privileges revoked, writes only via Edge Functions.)
+All four rows should show `relrowsecurity = t`. (`feedback` and `restore_grants` were added in v0.6.x and are locked down the same way - RLS on, all client privileges revoked, writes only via Edge Functions.)
 
 ### 3.3 Cron job scheduled
 
@@ -154,7 +154,7 @@ Save.
 
 ## 5. Verifying RLS isolates users (cross-tenant test)
 
-This is the most important verification — it proves the architectural
+This is the most important verification - it proves the architectural
 guarantee that Bob can never see Alice's printers.
 
 Run this in the SQL Editor (it uses the service role under the hood, so we
@@ -178,7 +178,7 @@ WHERE polrelid = 'public.printers'::regclass;
 Expect one row: `select own printers`, `SELECT`,
 `((owner_user_id = auth.uid()) AND (revoked_at IS NULL))`.
 
-**Full cross-tenant test happens in Phase 2 with curl** — once `/claim` is
+**Full cross-tenant test happens in Phase 2 with curl** - once `/claim` is
 deployed, we'll register two printers under two different anon users and
 confirm each session only sees its own.
 
@@ -187,13 +187,13 @@ confirm each session only sees its own.
 ## 6. What to do when this all passes
 
 Update `docs/v0.3-supabase-design.md` §14 with any decisions you made along
-the way (project ref, key creation date, etc. — though **not the key value**).
+the way (project ref, key creation date, etc. - though **not the key value**).
 
 Then it's time for Phase 2: Edge Functions (next section).
 
 ---
 
-## Phase 2 — Edge Functions
+## Phase 2 - Edge Functions
 
 This phase deploys the five Edge Functions that mediate everything between
 the app, the Pi, and Postgres.
@@ -208,7 +208,7 @@ the app, the Pi, and Postgres.
 
 Source lives at `supabase/functions/`. Shared helpers in `_shared/`.
 
-### Phase 2.1 — Apply the RPC helpers migration
+### Phase 2.1 - Apply the RPC helpers migration
 
 A second migration adds Postgres RPC functions that the Edge Functions call.
 This keeps `bytea` encoding inside SQL and concentrates business logic
@@ -229,7 +229,7 @@ ORDER BY proname;
 ```
 Expect four rows.
 
-### Phase 2.2 — Generate the JWT signing key
+### Phase 2.2 - Generate the JWT signing key
 
 The Edge Functions sign short-lived access tokens with **EdDSA (Ed25519)**.
 The private key lives only in Supabase secrets. The public key is exposed
@@ -249,7 +249,7 @@ secret.** Save it in your password manager.
 > simply requests a new token, so user-visible impact is small, but don't
 > rotate casually.
 
-### Phase 2.3 — Set the signing key as a secret
+### Phase 2.3 - Set the signing key as a secret
 
 Supabase dashboard → **Edge Functions** → **Manage secrets** → add:
 
@@ -262,9 +262,9 @@ Click **Save**. You now have two Edge Function secrets:
 - `MOONGATE_JWT_SIGNING_KEY` (just added)
 
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are
-auto-populated by Supabase — you do NOT add those.
+auto-populated by Supabase - you do NOT add those.
 
-### Phase 2.4 — Log in to the Supabase CLI
+### Phase 2.4 - Log in to the Supabase CLI
 
 ```powershell
 supabase login
@@ -273,7 +273,7 @@ supabase login
 A browser window opens. Sign in to Supabase. The CLI stores a token at
 `~/.supabase/access-token` (or similar) for subsequent commands.
 
-### Phase 2.5 — Get your project ref
+### Phase 2.5 - Get your project ref
 
 Open your project in the dashboard. The URL looks like:
 
@@ -281,7 +281,7 @@ Open your project in the dashboard. The URL looks like:
 
 The `abcxyz123` part is your **project ref**. Tell Claude what it is.
 
-### Phase 2.6 — Deploy (handled by Claude)
+### Phase 2.6 - Deploy (handled by Claude)
 
 With the CLI logged in and the project ref known, Claude runs:
 
@@ -298,7 +298,7 @@ endpoints that handle their own auth (Pi-signed payloads or public JWKS).
 `printer-claim` and `printer-access` keep the gateway check on for
 defence-in-depth even though they also re-verify the JWT internally.
 
-### Phase 2.7 — Smoke tests (curl)
+### Phase 2.7 - Smoke tests (curl)
 
 After deploy, we run a few curl tests from Claude's side to confirm each
 function responds correctly. The full sequence (Claude will execute):
@@ -349,7 +349,7 @@ SQL Editor as the project owner.
 
 **`ERROR: column "tunnel_url_enc" violates not-null constraint`**
 → You're applying an older revision of the migration. Pull the latest
-file and re-apply — the current schema makes those columns nullable.
+file and re-apply - the current schema makes those columns nullable.
 
 **Cron job didn't run overnight**
 → Check `SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 5;`

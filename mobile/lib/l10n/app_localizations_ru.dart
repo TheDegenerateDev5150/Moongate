@@ -54,7 +54,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lightingToggleMacro => 'Макрос-переключатель';
 
   @override
-  String get lightingToggleSection => 'Необязательно — режим переключения';
+  String get lightingToggleSection => 'Необязательно - режим переключения';
 
   @override
   String get lightingStatusSource => 'Источник состояния света';
@@ -236,7 +236,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tileOpacityDesc =>
-      'Насколько прозрачны плитки (0–100), чтобы просвечивал фон. Изображение с камеры остаётся непрозрачным.';
+      'Насколько прозрачны плитки (0-100), чтобы просвечивал фон. Изображение с камеры остаётся непрозрачным.';
 
   @override
   String get dashboardShowWebcams => 'Веб-камеры';
@@ -247,7 +247,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get updateNotesUnavailable =>
-      'Не удалось загрузить список изменений — проверьте подключение или посмотрите на GitHub.';
+      'Не удалось загрузить список изменений - проверьте подключение или посмотрите на GitHub.';
 
   @override
   String get updateViewOnGithub => 'Посмотреть на GitHub';
@@ -260,7 +260,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cameraConfigDescription =>
-      'Показать камеру, не подключённую к Klipper, — например, старый телефон в роли веб-камеры. Введите адрес, указанный в настройках веб-камеры Mainsail.';
+      'Показать камеру, не подключённую к Klipper, - например, старый телефон в роли веб-камеры. Введите адрес, указанный в настройках веб-камеры Mainsail.';
 
   @override
   String get cameraConfigUrlLabel => 'URL камеры';
@@ -328,7 +328,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dashboardSignInRetrying =>
-      'Повторное подключение к облаку — вход занят, повтор. Принтеры вернутся автоматически.';
+      'Повторное подключение к облаку - вход занят, повтор. Принтеры вернутся автоматически.';
 
   @override
   String get commonRemove => 'Удалить';
@@ -418,7 +418,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dashboardCustomiseColoursSubtitle =>
-      'Измените пять цветов темы — HEX или палитра';
+      'Измените пять цветов темы - HEX или палитра';
 
   @override
   String get dashboardFontSizeHeading => 'Размер интерфейса';
@@ -471,7 +471,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cameraFeedsIntro =>
-      'Как часто каждая плитка обновляет изображение с камеры. Moongate использует локальную частоту, пока вы в Wi-Fi (даже вне дома), и тоннельную частоту при мобильном интернете — чтобы поток оставался быстрым по Wi-Fi и был экономнее по мобильным данным.';
+      'Как часто каждая плитка обновляет изображение с камеры. Moongate использует локальную частоту, пока вы в Wi-Fi (даже вне дома), и тоннельную частоту при мобильном интернете - чтобы поток оставался быстрым по Wi-Fi и был экономнее по мобильным данным.';
 
   @override
   String get cameraFeedsLocalRate => 'Частота локального потока';
@@ -506,7 +506,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dashboardAppLock => 'Блокировка приложения';
 
   @override
-  String get dashboardAppLockOn => 'Вкл. — разблокировка нужна при запуске';
+  String get dashboardAppLockOn => 'Вкл. - разблокировка нужна при запуске';
 
   @override
   String get dashboardAppLockOff => 'Выкл.';
@@ -543,7 +543,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get donationPromptBody =>
-      'Moongate — это бесплатный личный проект, который я делаю в свободное время. Если он вам полезен, небольшой донат помогает развивать его — без всякого давления, и я спрошу только один раз.';
+      'Moongate - это бесплатный личный проект, который я делаю в свободное время. Если он вам полезен, небольшой донат помогает развивать его - без всякого давления, и я спрошу только один раз.';
 
   @override
   String get donationPromptLater => 'Может позже';
@@ -562,30 +562,30 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dashboardBackupFailed =>
-      'Не удалось создать резервную копию — файл не сохранён.';
+      'Не удалось создать резервную копию - файл не сохранён.';
 
   @override
   String dashboardBackupSuccess(int count) {
-    return 'Создана резервная копия принтеров: $count. Этим файлом можно восстановить их после переустановки — храните его в тайне.';
+    return 'Создана резервная копия принтеров: $count. Этим файлом можно восстановить их после переустановки - храните его в тайне.';
   }
 
   @override
   String dashboardBackupSuccessListOnly(int count) {
-    return 'Создана резервная копия принтеров: $count (только список — не удалось получить код восстановления из облака).';
+    return 'Создана резервная копия принтеров: $count (только список - не удалось получить код восстановления из облака).';
   }
 
   @override
   String get dashboardInvalidBackupFile =>
-      'Неверный файл резервной копии — выберите файл конфигурации Moongate.';
+      'Неверный файл резервной копии - выберите файл конфигурации Moongate.';
 
   @override
   String dashboardRestoreReconnected(int added, int count) {
-    return 'Восстановлено принтеров: $added — $count переподключились и снова выходят на связь.';
+    return 'Восстановлено принтеров: $added - $count переподключились и снова выходят на связь.';
   }
 
   @override
   String dashboardRestoreNoneReconnected(int added) {
-    return 'Восстановлено принтеров: $added, но ни один не переподключился — код восстановления из резервной копии не подошёл ни к одному принтеру (возможно, он из более старой копии или уже использован). Выполните повторное сопряжение, чтобы вернуть их в сеть.';
+    return 'Восстановлено принтеров: $added, но ни один не переподключился - код восстановления из резервной копии не подошёл ни к одному принтеру (возможно, он из более старой копии или уже использован). Выполните повторное сопряжение, чтобы вернуть их в сеть.';
   }
 
   @override
@@ -602,7 +602,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String dashboardRestoreReplaceBody(String names) {
-    return 'Эти принтеры есть на этой панели, но отсутствуют в резервной копии: $names. При восстановлении они будут удалены, чтобы панель точно соответствовала копии. Они останутся привязанными — вы сможете добавить или восстановить их позже.';
+    return 'Эти принтеры есть на этой панели, но отсутствуют в резервной копии: $names. При восстановлении они будут удалены, чтобы панель точно соответствовала копии. Они останутся привязанными - вы сможете добавить или восстановить их позже.';
   }
 
   @override
@@ -628,11 +628,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dashboardPairingHelpPluginAction => 'Открыть руководство';
 
   @override
-  String get dashboardPairingHelpPairOnceTitle => 'Сопряжение — один раз';
+  String get dashboardPairingHelpPairOnceTitle => 'Сопряжение - один раз';
 
   @override
   String get dashboardPairingHelpPairOnceBody =>
-      'Отсканируйте QR (или введите GATE code), чтобы добавить принтер — эта связь сохраняется в приложении.';
+      'Отсканируйте QR (или введите GATE code), чтобы добавить принтер - эта связь сохраняется в приложении.';
 
   @override
   String get dashboardPairingHelpUpdatesTitle =>
@@ -648,7 +648,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpReinstallBody =>
-      'Сначала создайте резервную копию (Меню → Резервная копия), затем «Восстановить» вернёт принтеры в сеть — без повторного сопряжения.';
+      'Сначала создайте резервную копию (Меню → Резервная копия), затем «Восстановить» вернёт принтеры в сеть - без повторного сопряжения.';
 
   @override
   String get dashboardPairingHelpNoBackupTitle => 'Нет резервной копии?';
@@ -662,7 +662,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String dashboardUpdateAvailable(String version) {
-    return 'Доступно обновление — v$version';
+    return 'Доступно обновление - v$version';
   }
 
   @override
@@ -683,7 +683,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pairingIntro =>
-      'Выполните MOONGATE_PAIR в консоли Klipper — отсканируйте QR или введите GATE code, показанный в консоли.';
+      'Выполните MOONGATE_PAIR в консоли Klipper - отсканируйте QR или введите GATE code, показанный в консоли.';
 
   @override
   String get pairingNameLabel => 'Название принтера';
@@ -695,7 +695,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pairingScanButton => 'Сканировать QR-код';
 
   @override
-  String get pairingScanRecommended => 'Рекомендуется — подключается мгновенно';
+  String get pairingScanRecommended => 'Рекомендуется - подключается мгновенно';
 
   @override
   String get pairingOr => 'ИЛИ';
@@ -712,7 +712,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pairingGateCodeWarning =>
-      'Альтернативный способ. Без QR принтер может подключаться примерно до минуты — он ожидает установления защищённого туннеля. Для мгновенного подключения отсканируйте QR-код выше.';
+      'Альтернативный способ. Без QR принтер может подключаться примерно до минуты - он ожидает установления защищённого туннеля. Для мгновенного подключения отсканируйте QR-код выше.';
 
   @override
   String get pairingCameraPermissionNeeded => 'Требуется доступ к камере';
@@ -725,14 +725,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String pairingQrScanned(String code) {
-    return 'QR отсканирован — код $code';
+    return 'QR отсканирован - код $code';
   }
 
   @override
   String get pairingRescan => 'Сканировать снова';
 
   @override
-  String get pairingAdvancedTitle => 'Дополнительно — принтер в особой сети?';
+  String get pairingAdvancedTitle => 'Дополнительно - принтер в особой сети?';
 
   @override
   String get pairingAdvancedBody =>
@@ -781,7 +781,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pairingErrorBadAddress =>
-      'Этот адрес принтера выглядит неверно — попробуйте, например, 192.168.1.50:7125';
+      'Этот адрес принтера выглядит неверно - попробуйте, например, 192.168.1.50:7125';
 
   @override
   String pairingErrorFailed(String error) {
@@ -790,7 +790,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pairingImportInvalidFile =>
-      'Неверный файл резервной копии — выберите файл конфигурации Moongate.';
+      'Неверный файл резервной копии - выберите файл конфигурации Moongate.';
 
   @override
   String get pairingImportNoNewPrinters =>
@@ -798,12 +798,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String pairingImportRestoredReconnected(int count, int reconnected) {
-    return 'Восстановлено принтеров: $count — $reconnected переподключились и выходят на связь.';
+    return 'Восстановлено принтеров: $count - $reconnected переподключились и выходят на связь.';
   }
 
   @override
   String pairingImportRestoredRepair(int count) {
-    return 'Восстановлено принтеров: $count — выполните повторное сопряжение каждого Pi, чтобы вернуть его в сеть.';
+    return 'Восстановлено принтеров: $count - выполните повторное сопряжение каждого Pi, чтобы вернуть его в сеть.';
   }
 
   @override
@@ -877,11 +877,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tilePauseFailed =>
-      'Не удалось связаться с принтером — пауза не выполнена';
+      'Не удалось связаться с принтером - пауза не выполнена';
 
   @override
   String get tileResumeFailed =>
-      'Не удалось связаться с принтером — возобновление не выполнено';
+      'Не удалось связаться с принтером - возобновление не выполнено';
 
   @override
   String get tileStopAgainToCancel =>
@@ -919,7 +919,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tileEmergencyStopFailed =>
-      'Не удалось связаться с принтером — аварийная остановка не выполнена';
+      'Не удалось связаться с принтером - аварийная остановка не выполнена';
 
   @override
   String get tilePrintComplete => 'Печать завершена';
@@ -985,7 +985,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dashboardBackgroundTitle => 'Фон панели';
 
   @override
-  String get dashboardBackgroundNone => 'Нет — цвет темы';
+  String get dashboardBackgroundNone => 'Нет - цвет темы';
 
   @override
   String get dashboardBackgroundCustom => 'Своё изображение';
@@ -1061,7 +1061,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appLockIntro =>
-      'Требовать PIN-код — и при желании отпечаток пальца или лицо — перед открытием Moongate. Блокировка всегда появляется при новом запуске приложения.';
+      'Требовать PIN-код - и при желании отпечаток пальца или лицо - перед открытием Moongate. Блокировка всегда появляется при новом запуске приложения.';
 
   @override
   String get appLockSubtitle => 'PIN-код нужен для открытия приложения';
@@ -1071,7 +1071,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appLockBiometricSubtitle =>
-      'Используйте отпечаток или лицо — PIN-код остаётся запасным';
+      'Используйте отпечаток или лицо - PIN-код остаётся запасным';
 
   @override
   String get appLockChangePin => 'Изменить PIN-код';
@@ -1086,7 +1086,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appLockChoosePinTitle => 'Задайте PIN-код';
 
   @override
-  String get appLockChoosePinSubtitle => 'Введите 4–6 цифр';
+  String get appLockChoosePinSubtitle => 'Введите 4-6 цифр';
 
   @override
   String get appLockConfirmPinTitle => 'Подтвердите PIN-код';
@@ -1140,7 +1140,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get lockResetBody =>
-      'Это снимет блокировку приложения и удалит сопряжённые принтеры с этого устройства, чтобы начать заново. Ваши принтеры не удаляются — выполните их повторное сопряжение, запустив MOONGATE_PAIR на каждом.';
+      'Это снимет блокировку приложения и удалит сопряжённые принтеры с этого устройства, чтобы начать заново. Ваши принтеры не удаляются - выполните их повторное сопряжение, запустив MOONGATE_PAIR на каждом.';
 
   @override
   String get lockResetConfirm => 'Сбросить';
@@ -1189,7 +1189,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cameraHintBody =>
-      'Веб-камера не загружается здесь удалённо — откройте камеру Moongate.';
+      'Веб-камера не загружается здесь удалённо - откройте камеру Moongate.';
 
   @override
   String get cameraHintOpen => 'Открыть';
@@ -1241,7 +1241,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get feedbackCommentHint =>
-      'например, «Принтер показывает Подключено / ожидание, но на самом деле он готов — открывается нормально при нажатии на плитку.»';
+      'например, «Принтер показывает Подключено / ожидание, но на самом деле он готов - открывается нормально при нажатии на плитку.»';
 
   @override
   String get feedbackContactLabel => 'Email или контакт (необязательно)';
@@ -1256,11 +1256,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get feedbackSend => 'Отправить отчёт';
 
   @override
-  String get feedbackSuccess => 'Спасибо — ваш отчёт отправлен.';
+  String get feedbackSuccess => 'Спасибо - ваш отчёт отправлен.';
 
   @override
   String get feedbackError =>
-      'Не удалось отправить — проверьте подключение и попробуйте снова.';
+      'Не удалось отправить - проверьте подключение и попробуйте снова.';
 
   @override
   String get splashTagline => 'Удалённое управление Klipper';
@@ -1295,7 +1295,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get uiGuideLocalDesc =>
-      'Подключено напрямую через вашу Wi-Fi — самый быстрый путь.';
+      'Подключено напрямую через вашу Wi-Fi - самый быстрый путь.';
 
   @override
   String get uiGuideTunnelTitle => 'Удалённо (туннель)';
@@ -1335,7 +1335,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get uiGuideChamberDesc =>
-      'Температура камеры — показывается, только если ваш принтер её сообщает.';
+      'Температура камеры - показывается, только если ваш принтер её сообщает.';
 
   @override
   String get uiGuideResumeTitle => 'Возобновить';
@@ -1354,7 +1354,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get uiGuideStopDesc =>
-      'Отменить печать — нажмите дважды для подтверждения.';
+      'Отменить печать - нажмите дважды для подтверждения.';
 
   @override
   String get uiGuideEstopTitle => 'Аварийная остановка';
@@ -1388,7 +1388,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get uiGuideStatusErrorDesc =>
-      'Klipper сообщил об ошибке — откройте принтер для подробностей.';
+      'Klipper сообщил об ошибке - откройте принтер для подробностей.';
 
   @override
   String get uiGuideStatusStartingTitle => 'Запуск';
@@ -1429,7 +1429,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get printNotifPromptBody =>
-      'Смотрите статус принтеров в реальном времени — прогресс, температуры и оповещения о начале, завершении или ошибке печати. Это можно изменить в любой момент в меню.';
+      'Смотрите статус принтеров в реальном времени - прогресс, температуры и оповещения о начале, завершении или ошибке печати. Это можно изменить в любой момент в меню.';
 
   @override
   String get printNotifPromptEnable => 'Включить';

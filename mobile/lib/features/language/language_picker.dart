@@ -8,7 +8,7 @@ import '../../providers/settings_provider.dart';
 ///
 /// [code] is the language code stored in [localeProvider] (a `null` code means
 /// "follow the device's system language"). [nativeName] is shown in the
-/// language's own script and is intentionally the SAME in every locale — a
+/// language's own script and is intentionally the SAME in every locale - a
 /// French speaker scanning the list looks for "Français", not "French".
 class LanguageOption {
   final String code;
@@ -44,8 +44,8 @@ String? nativeLanguageName(String? code) {
 /// On [firstRun] the barrier is non-dismissible so the user makes an explicit
 /// choice via the Continue button (the caller persists the "seen" flag after
 /// this future completes). Opened from the menu it's a normal dismissible
-/// dialog. Selecting a language applies it live, so the dialog itself — and the
-/// app behind it — switch language immediately as a confirmation.
+/// dialog. Selecting a language applies it live, so the dialog itself - and the
+/// app behind it - switch language immediately as a confirmation.
 Future<void> showLanguagePicker(BuildContext context, {bool firstRun = false}) {
   return showDialog<void>(
     context: context,

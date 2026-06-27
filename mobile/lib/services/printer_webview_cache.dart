@@ -26,7 +26,7 @@ class LiveWebSession {
   /// session is in the cache.
   final WebViewController controller;
 
-  /// The origin the controller actually loaded (LAN or tunnel) — used for the
+  /// The origin the controller actually loaded (LAN or tunnel) - used for the
   /// reopen liveness probe.
   String baseUrl;
 
@@ -34,11 +34,11 @@ class LiveWebSession {
   /// you leave home, so the screen revalidates these on reopen / resume.
   bool usingLan;
 
-  /// Full tunnel URL, or null on a LAN-only session — drives the "use tunnel"
+  /// Full tunnel URL, or null on a LAN-only session - drives the "use tunnel"
   /// retry and lets the refresh timer notice a rotated tunnel.
   String? tunnelUrl;
 
-  /// Last time a screen attached to this session — the LRU key for
+  /// Last time a screen attached to this session - the LRU key for
   /// memory-pressure eviction.
   DateTime lastUsed = DateTime.now();
 
@@ -56,7 +56,7 @@ class LiveWebSession {
 }
 
 /// Keeps every visited printer's Mainsail/Fluidd WebView warm so re-opening a
-/// printer is instant instead of replaying Mainsail's "Initializing…" load —
+/// printer is instant instead of replaying Mainsail's "Initializing…" load -
 /// the slow, every-single-time experience over the tunnel. The controller (and
 /// its loaded page + live Moonraker WebSocket) lives here, not in the screen
 /// State, so popping back to the dashboard no longer tears it down.
@@ -95,7 +95,7 @@ class PrinterWebViewCache with WidgetsBindingObserver {
     _log('stored $printerId (${_sessions.length} warm)');
   }
 
-  /// Drop one printer's warm session — call on refresh, address edit, removal,
+  /// Drop one printer's warm session - call on refresh, address edit, removal,
   /// or a detected tunnel rotation, so the next open reloads from scratch.
   void invalidate(String printerId) {
     final s = _sessions.remove(printerId);
@@ -116,7 +116,7 @@ class PrinterWebViewCache with WidgetsBindingObserver {
   /// Pre-warm every configured printer's Mainsail/Fluidd page in the background
   /// at startup, so the FIRST open of a printer is instant instead of replaying
   /// Mainsail's "Initializing…". Mirrors the screen's cold-load path (LAN-first,
-  /// tunnel fallback) but headless — no widget is mounted; the page loads, its
+  /// tunnel fallback) but headless - no widget is mounted; the page loads, its
   /// Moonraker WebSocket connects, and the controller is stored warm. A printer
   /// already warm is skipped; one that's offline / not yet reachable is skipped
   /// silently (the screen cold-loads it on open, exactly as before). Each warms
@@ -134,7 +134,7 @@ class PrinterWebViewCache with WidgetsBindingObserver {
       await setMgTokenCookie(access);
 
       // Prefer LAN when reachable (Mainsail loads far faster direct), else the
-      // tunnel — the same resolution the printer screen uses on a cold open.
+      // tunnel - the same resolution the printer screen uses on a cold open.
       final lanUrl =
           LanDiscoveryService.instance.lookup(printer.id) ?? printer.lanUrl;
       String? useUrl;
@@ -145,18 +145,18 @@ class PrinterWebViewCache with WidgetsBindingObserver {
       } else if (access.tunnelUrl != null) {
         useUrl = access.tunnelUrl;
       }
-      if (useUrl == null) return; // not reachable yet — the screen cold-loads it
+      if (useUrl == null) return; // not reachable yet - the screen cold-loads it
 
       // A real visit may have warmed (or be warming) this printer while we
-      // awaited the access fetch / probe — don't clobber the live session.
+      // awaited the access fetch / probe - don't clobber the live session.
       if (_sessions.containsKey(printer.id)) return;
 
-      // Load headless, but only KEEP the session if the page actually finishes —
+      // Load headless, but only KEEP the session if the page actually finishes -
       // so we never hand the screen a blank/failed page (an offline printer would
       // otherwise lose its "starting up, retry" overlay to a dead page). This
       // also makes prewarm self-validating: if a headless WebView can't load on
       // this device, the wait times out, nothing is stored, and opening falls
-      // back to the normal cold load — no regression.
+      // back to the normal cold load - no regression.
       final controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted);
       final loaded = Completer<bool>();
@@ -173,7 +173,7 @@ class PrinterWebViewCache with WidgetsBindingObserver {
       await controller.loadRequest(Uri.parse('$useUrl/'));
       final ok = await loaded.future
           .timeout(const Duration(seconds: 15), onTimeout: () => false);
-      if (!ok) return; // blank / failed / too slow — the screen cold-loads on open
+      if (!ok) return; // blank / failed / too slow - the screen cold-loads on open
 
       // A real visit may have warmed this printer while the page loaded.
       if (_sessions.containsKey(printer.id)) return;
@@ -188,13 +188,13 @@ class PrinterWebViewCache with WidgetsBindingObserver {
       );
       _log('prewarmed ${printer.id} (${usingLan ? 'LAN' : 'tunnel'})');
     } catch (_) {
-      // Offline / not paired / blip — skip; the screen cold-loads on open.
+      // Offline / not paired / blip - skip; the screen cold-loads on open.
     }
   }
 
   // Token TTL is 5 min; refresh the cookie at 4 so a backgrounded session never
   // sends an expired token. Lives here (not in the screen) so it keeps running
-  // while the printer screen is closed — without it a warm tunnel session would
+  // while the printer screen is closed - without it a warm tunnel session would
   // silently 401 after five minutes. Also notices a rotated tunnel URL and
   // drops the now-unroutable session.
   void _scheduleCookieRefresh(String printerId, LiveWebSession session) {
@@ -211,7 +211,7 @@ class PrinterWebViewCache with WidgetsBindingObserver {
           invalidate(printerId);
         }
       } catch (_) {
-        // A single missed refresh isn't fatal — the live cookie is good for a
+        // A single missed refresh isn't fatal - the live cookie is good for a
         // few more minutes and the screen's Retry covers a hard failure.
       }
     });
@@ -222,7 +222,7 @@ class PrinterWebViewCache with WidgetsBindingObserver {
     if (_sessions.length <= 1) return;
     final keep = _sessions.keys.last; // most-recently-used = likely on-screen
     final drop = _sessions.keys.where((k) => k != keep).toList();
-    _log('memory pressure — evicting ${drop.length}, keeping $keep');
+    _log('memory pressure - evicting ${drop.length}, keeping $keep');
     for (final id in drop) {
       _sessions.remove(id)?.dispose();
     }

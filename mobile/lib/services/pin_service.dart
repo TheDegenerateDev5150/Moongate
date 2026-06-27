@@ -7,11 +7,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Stores and verifies the optional app-lock PIN.
 ///
-/// Security model: a 4–6 digit PIN has a tiny keyspace, so the real defenses
+/// Security model: a 4-6 digit PIN has a tiny keyspace, so the real defenses
 /// are (1) [FlutterSecureStorage], which is Android Keystore-backed and keeps
 /// the hash encrypted at rest, and (2) the escalating attempt lockout below.
 /// The salted SHA-256 hash is defense-in-depth should the encrypted blob ever
-/// be extracted — we never store the PIN in the clear.
+/// be extracted - we never store the PIN in the clear.
 const _storage = FlutterSecureStorage();
 
 class PinService {
@@ -94,7 +94,7 @@ class PinService {
     }
   }
 
-  /// Attempts 1–4 are free; escalate from the 5th consecutive failure.
+  /// Attempts 1-4 are free; escalate from the 5th consecutive failure.
   int _lockoutSecondsFor(int fails) => switch (fails) {
         < 5 => 0,
         5 => 30,

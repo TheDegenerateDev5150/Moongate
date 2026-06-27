@@ -8,7 +8,7 @@
 #
 # For routine VERSION updates we deliberately stay quiet:
 #   * each ecosystem is collapsed into a SINGLE grouped PR, and
-#   * MAJOR bumps are ignored — they tend to carry breaking changes and need a
+#   * MAJOR bumps are ignored - they tend to carry breaking changes and need a
 #     human to test/migrate, so we bump those by hand when we choose to.
 # Net effect: at most one low-risk (minor/patch) PR per ecosystem per week,
 # plus security PRs whenever they're actually needed.
@@ -46,7 +46,7 @@ updates:
 
   # ── GitHub Actions used by CI ──────────────────────────────────────────────
   # Actions tag by major (v4/v5/v6...), so ignoring majors effectively pins
-  # them — that's fine, they're bumped by hand when wanted, and security still
+  # them - that's fine, they're bumped by hand when wanted, and security still
   # overrides. Grouped so any minor/patch lands in one PR.
   - package-ecosystem: "github-actions"
     directory: "/"

@@ -1,10 +1,10 @@
--- Moongate v0.4.2 — Optional pi_public_key in claim_printer for manual
+-- Moongate v0.4.2 - Optional pi_public_key in claim_printer for manual
 -- code entry as a camera-failure fallback.
 --
 -- v0.3 removed manual pair-code entry from the app on the basis that the
 -- QR carried everything (version, pubkey, token) in one scan. The Pi
 -- still emits the same human-typeable code via M118 ("MOONGATE CODE:
--- GATE-XXXX-XXXX") — the original intent was that it could be typed if
+-- GATE-XXXX-XXXX") - the original intent was that it could be typed if
 -- the camera was unavailable. This migration makes that path possible
 -- again by allowing the claim to proceed without a pubkey in the
 -- request.
@@ -14,7 +14,7 @@
 --     server-bound to a pi_public_key in enrollment_tokens at
 --     enroll-prepare time).
 --   • The pubkey from the QR was a defense-in-depth match against the
---     server's stored pubkey — not a separate auth factor. An attacker
+--     server's stored pubkey - not a separate auth factor. An attacker
 --     who has the token already knows everything they'd need; an
 --     attacker who lacks the token can't supply a valid pubkey either
 --     (claim still fails on the token lookup).
@@ -60,7 +60,7 @@ BEGIN
 
   -- Defense-in-depth check: when the caller supplied a pubkey (QR-scan
   -- path), it must match what the Pi pre-registered. Manual code entry
-  -- passes NULL and skips this check — the server-side enrollment row
+  -- passes NULL and skips this check - the server-side enrollment row
   -- IS the source of truth for which Pi this token belongs to.
   IF p_pi_public_key IS NOT NULL
      AND v_token.pi_public_key <> p_pi_public_key
@@ -102,6 +102,6 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.claim_printer IS
-  'Called by Edge Function printer-claim. Atomic claim with idempotent re-pair for same owner; constant-time error path for unauthorized callers. p_pi_public_key is OPTIONAL — when NULL, the server-side enrollment_tokens.pi_public_key is used as the authoritative key (supports manual code entry as a camera-failure fallback).';
+  'Called by Edge Function printer-claim. Atomic claim with idempotent re-pair for same owner; constant-time error path for unauthorized callers. p_pi_public_key is OPTIONAL - when NULL, the server-side enrollment_tokens.pi_public_key is used as the authoritative key (supports manual code entry as a camera-failure fallback).';
 
 COMMIT;

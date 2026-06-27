@@ -9,7 +9,7 @@ import '../../services/printer_registry.dart';
 /// Klipper macro rather than a Moonraker `[power …]` device: switch it on and
 /// pick EITHER an On + Off macro pair OR a single Toggle macro. When enabled,
 /// the tile's power button drives the printer through those macros instead of a
-/// power device. Stateless by design — there's no reliable power-state to read
+/// power device. Stateless by design - there's no reliable power-state to read
 /// (powering off takes Klipper down), so the button asks On or Off explicitly.
 /// Macros are read live from each printer (`printer/objects/list`); an offline
 /// printer falls back to typing names by hand. The button lives in
@@ -85,7 +85,7 @@ class _PowerPrinterCardState extends State<_PowerPrinterCard> {
     _future = PrintControlService(widget.printer).listMacros();
   }
 
-  /// A usable control path exists — any one of: an off macro (the common case,
+  /// A usable control path exists - any one of: an off macro (the common case,
   /// a Klipper power-off macro), an on macro, or a toggle. A full on+off pair is
   /// fine too. Off-only / on-only are allowed; you don't need both.
   bool get _canEnable =>
@@ -228,7 +228,7 @@ class _PowerPrinterCardState extends State<_PowerPrinterCard> {
 /// A labelled, tappable field showing the selected macro (or "Not set").
 /// Tapping opens a picker with the live [options] plus manual entry; a trailing
 /// clear button appears once a value is set. (Mirrors the Lighting screen's
-/// field — kept local so the two setup screens stay independent.)
+/// field - kept local so the two setup screens stay independent.)
 class _TargetField extends StatelessWidget {
   final String label;
   final String? value;

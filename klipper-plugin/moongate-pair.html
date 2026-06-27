@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Moongate — Pair your phone</title>
+  <title>Moongate - Pair your phone</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -115,7 +115,7 @@ async function load() {
     const data = json.result ?? json;
     qr_url     = data.qr_url;
     tunnel_url = data.tunnel_url;
-    if (!qr_url) throw new Error('No qr_url returned — run MOONGATE_PAIR first');
+    if (!qr_url) throw new Error('No qr_url returned - run MOONGATE_PAIR first');
   } catch (e) {
     wrap.innerHTML = '';
     msg.innerHTML  = `<p class="error">${e.message}</p>
@@ -152,7 +152,7 @@ async function load() {
     msg.innerHTML = '<p class="error">QR library could not load (no internet?).</p>';
   }
 
-  // 4. Fallback — show the raw URL and a link to an online QR generator
+  // 4. Fallback - show the raw URL and a link to an online QR generator
   const encoded = encodeURIComponent(qr_url);
   msg.innerHTML += `
     <p style="margin-top:12px;font-size:0.85rem;color:#aaa">

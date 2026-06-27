@@ -1,11 +1,11 @@
--- Moongate v0.3.1 — Closes the un-pair / re-pair loop.
+-- Moongate v0.3.1 - Closes the un-pair / re-pair loop.
 --
 -- v0.3.0 left two gaps:
 --   1. The app's "Remove printer" action and the Pi's MOONGATE_RESET_OWNER
 --      both cleared *local* state but never deleted the Supabase row. The
 --      stale row then blocked the user from re-pairing the same Pi.
 --   2. claim_printer rejected ANY pre-existing row for the pubkey, even
---      when the would-be claimer was the original owner — so the same
+--      when the would-be claimer was the original owner - so the same
 --      anon user couldn't re-claim their own Pi without manual SQL.
 --
 -- This migration:
@@ -24,9 +24,9 @@ BEGIN;
 --    a new enrollment without UNIQUE-violation churn.
 --
 --    Returns (status) where status is one of:
---      'ok'        — row deleted (or didn't exist; idempotent)
---      'not_found' — row exists but not owned by p_user_id
---                    (returned as 404 by the Edge Function — same shape as
+--      'ok'        - row deleted (or didn't exist; idempotent)
+--      'not_found' - row exists but not owned by p_user_id
+--                    (returned as 404 by the Edge Function - same shape as
 --                    "doesn't exist" to avoid enumeration leaks)
 -- ============================================================================
 
@@ -70,7 +70,7 @@ COMMENT ON FUNCTION public.release_printer IS
 REVOKE EXECUTE ON FUNCTION public.release_printer(uuid, uuid) FROM PUBLIC;
 
 -- ============================================================================
--- 2. claim_printer (replacement) — idempotent for same owner
+-- 2. claim_printer (replacement) - idempotent for same owner
 --    If the pubkey already has a non-revoked row AND the caller owns it,
 --    return that row's id as 'ok' and mark the enrollment token used.
 --    Otherwise, the existing 'already_paired' path still applies.

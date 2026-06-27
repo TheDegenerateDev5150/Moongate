@@ -57,7 +57,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _reordering = false;
 
   // Always-visible scrollbar for the drawer body so small-screen users can see
-  // there's more below the fold (user-reported — not obvious it scrolled).
+  // there's more below the fold (user-reported - not obvious it scrolled).
   final ScrollController _drawerScroll = ScrollController();
 
   @override
@@ -79,7 +79,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void _load() {
     final list = PrinterRegistry.instance.printers;
     if (mounted) setState(() => _printers = list);
-    // Keep the print-notification isolate's printer list in step — it reads a
+    // Keep the print-notification isolate's printer list in step - it reads a
     // separate cached snapshot, so poke it whenever the set may have changed
     // (pair / remove / restore). No-op when notifications are off.
     PrintNotificationService.instance.refreshNow().ignore();
@@ -122,7 +122,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   /// Persist a drag-to-reorder from the dashboard grid (manual mode only).
   /// reorderable_grid_view reports the *final* index directly, so this is a
-  /// plain removeAt/insert — no ReorderableListView-style `-1` fix-up. The new
+  /// plain removeAt/insert - no ReorderableListView-style `-1` fix-up. The new
   /// order is written through the registry (the dashboard's order of record;
   /// rides backups).
   void _onReorder(int oldIndex, int newIndex) {
@@ -206,14 +206,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
-    // Check for update — runs once per session, silently ignored on failure.
+    // Check for update - runs once per session, silently ignored on failure.
     final updateAsync = ref.watch(updateProvider);
     final update = _updateDismissed ? null : updateAsync.valueOrNull;
 
     final gridColumns = ref.watch(gridColumnsProvider);
     final autoArrange = ref.watch(autoArrangeProvider);
     final globalPowerButton = ref.watch(globalPowerButtonProvider);
-    // The custom dashboard background is part of the Custom theme — render it
+    // The custom dashboard background is part of the Custom theme - render it
     // only while that theme is active (it's configured on the Custom theme
     // screen, which is only reachable when Custom is selected, so this also
     // keeps the clear-× always in reach).
@@ -240,7 +240,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           onAddPrinter: () => context.push('/pair').then((_) => _load()));
     } else if (autoArrange) {
       // Re-sort tiles by live status (active prints float up) whenever a
-      // printer's state changes — printerStatusRank, shared with the
+      // printer's state changes - printerStatusRank, shared with the
       // notification. Tiles are keyed by id so a reorder moves a tile (and
       // its poller) rather than rebuilding it.
       body = StreamBuilder<void>(
@@ -255,7 +255,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     } else {
       // Manual order: tiles stay where the user put them; entering reorder mode
       // turns the grid into a draggable grid of the actual tiles. Deliberately
-      // NOT wrapped in the status StreamBuilder — re-sorting is exactly what the
+      // NOT wrapped in the status StreamBuilder - re-sorting is exactly what the
       // user turned off here, and a rebuild mid-drag would fight the gesture.
       // Each tile still refreshes its own content through its status stream.
       body = Column(
@@ -345,7 +345,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // in manual mode when there's more than one tile to move.
                     // "Done" settles the arrangement and clears the drag hint;
                     // "Reorder" re-enters it. The order itself is already saved
-                    // on every drop — this button is purely the editing UI.
+                    // on every drop - this button is purely the editing UI.
                     if (!autoArrange && _printers.length > 1)
                       FloatingActionButton(
                         heroTag: 'reorderFab',
@@ -520,7 +520,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         if (v == null) return;
                         ref.read(themeModeProvider.notifier).set(v);
                         // Selecting "Custom" should jump straight into the
-                        // colour editor — saves the user a second tap and
+                        // colour editor - saves the user a second tap and
                         // makes the option discoverable in one click.
                         if (v == AppThemeMode.custom) {
                           Navigator.pop(context);
@@ -547,7 +547,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ],
                       ),
                     ),
-                    // Always offer a way back into the editor — handy when
+                    // Always offer a way back into the editor - handy when
                     // Custom is already selected and the user just wants to
                     // tweak a colour without re-tapping the radio.
                     if (themeMode == AppThemeMode.custom)
@@ -596,7 +596,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     const Divider(),
 
                     // ── Lighting ──────────────────────────────────────────────
-                    // Pulled up here (right under Font size) for quick reach —
+                    // Pulled up here (right under Font size) for quick reach -
                     // it was previously buried near the bottom of the About list.
                     ListTile(
                       leading: const Icon(Icons.lightbulb_outline),
@@ -633,7 +633,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 4),
                       child: SegmentedButton<int>(
-                        // No selected-checkmark — it pushes the label onto a
+                        // No selected-checkmark - it pushes the label onto a
                         // second line in these narrow segments. Selection is
                         // shown by the highlighted background instead. Icons
                         // dropped too for a clean, single-line look.
@@ -673,7 +673,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       onChanged: _setAutoArrange,
                     ),
                     // Global power button: adds a power-all control to the top
-                    // bar. Off by default — only useful with Moonraker [power]
+                    // bar. Off by default - only useful with Moonraker [power]
                     // devices (smart plugs / relays).
                     SwitchListTile(
                       dense: true,
@@ -689,7 +689,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     // ── Camera feeds ──────────────────────────────────────────
                     // Per-path tile webcam refresh rates. Opens a sheet with two
-                    // Raw/1s/3s/5s pickers — each tile uses the local rate on the
+                    // Raw/1s/3s/5s pickers - each tile uses the local rate on the
                     // LAN and the tunnel rate when remote, so the remote feed can
                     // be throttled to save data.
                     ListTile(
@@ -706,7 +706,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // Per-printer webcam visibility. Opens a sheet listing every
                     // printer with a switch; turning one off collapses its tile
                     // to the compact (no-camera) layout, which the masonry packs
-                    // in — and it stops that tile fetching snapshots (data saver).
+                    // in - and it stops that tile fetching snapshots (data saver).
                     ListTile(
                       dense: true,
                       leading: const Icon(Icons.videocam_outlined),
@@ -732,7 +732,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     // Print notifications run on an Android foreground service;
                     // iOS has no equivalent yet, so the whole section (and its
-                    // leading divider) is Android-only — don't offer a feature
+                    // leading divider) is Android-only - don't offer a feature
                     // that does nothing on iOS. See docs/ios-port-plan.md.
                     if (Platform.isAndroid) const Divider(),
 
@@ -748,7 +748,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         value: printNotifications,
                         onChanged: _togglePrintNotifications,
                       ),
-                    // Poll cadence — only relevant while notifications are on.
+                    // Poll cadence - only relevant while notifications are on.
                     if (Platform.isAndroid && printNotifications) ...[
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
@@ -930,7 +930,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
 
-            // ── Bottom bar — only the build number stays pinned ───────────────
+            // ── Bottom bar - only the build number stays pinned ───────────────
             const Divider(),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
@@ -957,7 +957,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// Saves the printer list to a JSON file chosen via the Android Storage
   /// Access Framework, so the user can keep it somewhere safe before a
   /// destructive reinstall and load it back afterwards. NB: this carries the
-  /// printer list only — NOT the Supabase anonymous identity (that lives in
+  /// printer list only - NOT the Supabase anonymous identity (that lives in
   /// flutter_secure_storage and is wiped on uninstall), so a restored config
   /// still needs a re-pair per printer to bind the new anon UID.
   Future<void> _exportConfig() async {
@@ -965,7 +965,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final messenger = ScaffoldMessenger.of(context);
     // Mint a single-use restore code so this backup can bring the printers
     // back ONLINE after a reinstall (re-binds them to the new identity), not
-    // just restore the list. Best-effort — a list-only backup if it fails.
+    // just restore the list. Best-effort - a list-only backup if it fails.
     final restoreCode = await SupabaseService.instance.createRestoreGrant();
     final settings = await SettingsBackup.snapshot();
     if (!mounted) return;
@@ -980,7 +980,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       // On Android, passing `bytes` makes saveFile write the file through the
       // SAF "create document" dialog and return its path (null if cancelled).
       // Without `bytes`, saveFile only returns a path and leaves the write to
-      // us — which scoped storage won't allow.
+      // us - which scoped storage won't allow.
       savedPath = await FilePicker.platform.saveFile(
         dialogTitle: l.dashboardSaveBackupDialogTitle,
         fileName: 'moongate-printers.json',
@@ -1039,7 +1039,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (!mounted) return;
     final String msg;
     if (outcome.added == 0) {
-      // Nothing new added — a re-apply onto an existing dashboard (reordered /
+      // Nothing new added - a re-apply onto an existing dashboard (reordered /
       // config-updated / tiles removed). The count-based messages would read
       // "0 printers restored", so use a generic confirmation instead.
       msg = l.dashboardRestoreApplied;
@@ -1086,7 +1086,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   /// Re-read the settings providers from prefs after a restore wrote new
   /// values, so theme / colours / columns / language / etc. update without a
-  /// restart. Mirrors the startup loads in main.dart — minus the device-bound
+  /// restart. Mirrors the startup loads in main.dart - minus the device-bound
   /// app-lock, which a backup never carries.
   Future<void> _reloadSettingsAfterRestore() async {
     await ref.read(themeModeProvider.notifier).load();
@@ -1158,7 +1158,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void _showChangelog(BuildContext context) =>
       _showChangelogSheet(context, future: ChangelogService.loadBundled());
 
-  /// The "what's new in this update" overlay — entries from the user's installed
+  /// The "what's new in this update" overlay - entries from the user's installed
   /// build up to the latest, fetched from master (the installed app can't carry
   /// notes for a version newer than itself).
   void _showUpdateNotes(BuildContext context, UpdateInfo update) =>
@@ -1168,7 +1168,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         update: update,
       );
 
-  /// Shared changelog dialog. With [update] set it's the update overlay — it
+  /// Shared changelog dialog. With [update] set it's the update overlay - it
   /// gains Update + View-on-GitHub actions and a fallback message when the
   /// remote fetch returns nothing.
   void _showChangelogSheet(
@@ -1195,7 +1195,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               }
               final entries = snap.data ?? const <ChangelogEntry>[];
               if (entries.isEmpty) {
-                // Only the update overlay reaches here (remote fetch failed) —
+                // Only the update overlay reaches here (remote fetch failed) -
                 // the bundled list is never empty.
                 return Text(l.updateNotesUnavailable,
                     style: Theme.of(ctx).textTheme.bodySmall);
@@ -1284,7 +1284,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// A one-time, low-pressure nudge to support the project, shown on a cold
   /// start. Gated on having at least one printer so it never interrupts a brand
   /// new user mid-pairing (the donation ask lands once they're actually set up,
-  /// not before they've seen the app work). Shown exactly once — the
+  /// not before they've seen the app work). Shown exactly once - the
   /// [_donationPromptedKey] flag is a first-run flag, so it's excluded from
   /// backups and can't carry over to a fresh install.
   Future<void> _maybeShowDonationPrompt() async {
@@ -1302,7 +1302,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         mode: LaunchMode.externalApplication);
   }
 
-  /// Offer print notifications once — but only after the user actually has a
+  /// Offer print notifications once - but only after the user actually has a
   /// printer (an empty dashboard has nothing to notify about, and a fresh
   /// install pairs first). Tapping "Turn on" requests the OS permission and
   /// enables the service.
@@ -1326,7 +1326,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   /// On cold launch, show the "how pairing works" explainer unless the user
   /// ticked "Don't show this again". Pressing OK without ticking shows it again
-  /// next launch — by design, so the workflow lands for users who skim it.
+  /// next launch - by design, so the workflow lands for users who skim it.
   Future<void> _maybeShowPairingHelp() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_pairingHelpDismissedKey) ?? false) return;
@@ -1492,7 +1492,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
 // ── Update banner ─────────────────────────────────────────────────────────────
 
-/// Shown above the dashboard while the app has no cloud session yet — usually
+/// Shown above the dashboard while the app has no cloud session yet - usually
 /// the anonymous sign-in being rate-limited after several reinstalls in a row.
 /// SupabaseService retries on its own, so this is purely informational and
 /// disappears once a session lands and the tiles reconnect.
@@ -1765,13 +1765,13 @@ class _PrinterGrid extends StatelessWidget {
             bounded: bounded,
           );
 
-      // Manual-order mode: drag the actual tiles around the grid — the original
+      // Manual-order mode: drag the actual tiles around the grid - the original
       // workflow. reorderable_grid_view needs uniform cells, so while arranging
       // every tile takes one fixed-height cell (the webcam square plus a fixed
       // status band, sized from the real tile width so it matches the display
       // tiles closely) and the bounded tile lets a busy full tile give a little
       // height back. A compact (webcam-hidden) tile just sits with space beneath
-      // it — alignment isn't the point here; the masonry packing returns the
+      // it - alignment isn't the point here; the masonry packing returns the
       // moment you tap Done.
       if (onReorder != null) {
         const tileTextBand = 104.0;
@@ -1794,7 +1794,7 @@ class _PrinterGrid extends StatelessWidget {
       }
 
       // Display mode: masonry so full (webcam) tiles and compact (band-only)
-      // tiles each take their natural height and pack the columns tightly —
+      // tiles each take their natural height and pack the columns tightly -
       // roughly two compact tiles fit in the height of one full tile.
       return MasonryGridView.count(
         padding: padding,

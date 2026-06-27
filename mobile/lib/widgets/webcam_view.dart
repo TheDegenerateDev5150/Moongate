@@ -14,23 +14,23 @@ import '../providers/settings_provider.dart';
 // Self-paced snapshot-fetch loop, shared between the dashboard tile preview and
 // the full-screen printer camera view. We pull each snapshot ourselves with
 // `http.get` and only schedule the next fetch *after* the current one resolves
-// — successful, errored, or timed out. The effective frame rate self-adapts to
+// - successful, errored, or timed out. The effective frame rate self-adapts to
 // whatever the webcam server can actually deliver: fast Crowsnest setups still
-// hit the configured 15–30 FPS, slow uv4l-mjpeg and cellular-tunnel paths drop
+// hit the configured 15-30 FPS, slow uv4l-mjpeg and cellular-tunnel paths drop
 // to whatever they can sustain, but they never sit on the placeholder forever.
 //
 // Crucially, the snapshot URL is whatever PrinterStatusService resolved for the
-// path it's currently winning on — LAN-direct at home, or the Pi's /mg-extcam
-// proxy when remote — so an external phone-cam keeps working over the tunnel.
+// path it's currently winning on - LAN-direct at home, or the Pi's /mg-extcam
+// proxy when remote - so an external phone-cam keeps working over the tunnel.
 //
 // Used by both the dashboard tile preview (BoxFit.cover, optionally throttled
 // by the dashboard refresh setting) and the full-screen printer camera view
-// (BoxFit.contain, target-FPS) — one renderer, no drift between the two.
+// (BoxFit.contain, target-FPS) - one renderer, no drift between the two.
 
 class WebcamView extends ConsumerStatefulWidget {
   /// Absolute, ready-to-fetch snapshot URL (already includes mg_token for
   /// tunnel mode). Built by PrinterStatusService each poll. Null while no
-  /// webcam is configured or the printer hasn't been reached yet — build()
+  /// webcam is configured or the printer hasn't been reached yet - build()
   /// then falls back to the UI-type logo placeholder.
   final String? webcamSnapshotUrl;
   final bool webcamFlipH;
@@ -40,10 +40,10 @@ class WebcamView extends ConsumerStatefulWidget {
   /// the actual rate is bounded below by whatever the server can sustain.
   final int webcamTargetFps;
   /// True when the snapshot URL is an external camera (custom or auto-detected)
-  /// — the fetch loop then pulls a single frame from a (possibly MJPEG-stream)
+  /// - the fetch loop then pulls a single frame from a (possibly MJPEG-stream)
   /// source instead of doing a plain snapshot GET.
   final bool webcamIsExternal;
-  /// 'mainsail' | 'fluidd' | null — shown as a logo while there's no frame yet.
+  /// 'mainsail' | 'fluidd' | null - shown as a logo while there's no frame yet.
   final String? uiType;
 
   /// How a frame fills its box. The dashboard tile crops to fill
@@ -79,10 +79,10 @@ class _WebcamViewState extends ConsumerState<WebcamView>
   /// Bytes of the most recent successful snapshot. Null until the first fetch
   /// lands; build() shows the UI-type logo placeholder in that window. After
   /// the first frame, `Image.memory(gaplessPlayback: true)` keeps the last
-  /// decoded frame on screen across re-fetches — no flicker between updates.
+  /// decoded frame on screen across re-fetches - no flicker between updates.
   Uint8List? _currentBytes;
 
-  /// True while the app is backgrounded — the fetch loop idles instead of
+  /// True while the app is backgrounded - the fetch loop idles instead of
   /// pulling frames over the network. Resumes on foreground.
   bool _appPaused = false;
 
@@ -109,7 +109,7 @@ class _WebcamViewState extends ConsumerState<WebcamView>
   /// upstream naturally throttles the effective frame rate.
   Future<void> _loop() async {
     while (mounted) {
-      // Idle while backgrounded — no fetch, so an on-demand camera (go2rtc)
+      // Idle while backgrounded - no fetch, so an on-demand camera (go2rtc)
       // drops its stream and the sensor idles. (A printer whose webcam is hidden
       // renders no WebcamView at all, so there's nothing to throttle here.)
       if (_appPaused) {
@@ -151,14 +151,14 @@ class _WebcamViewState extends ConsumerState<WebcamView>
   Future<void> _fetchOnce() async {
     final url = widget.webcamSnapshotUrl;
     if (url == null || url.isEmpty) return;
-    // External cameras usually expose an MJPEG stream, not a snapshot — a plain
+    // External cameras usually expose an MJPEG stream, not a snapshot - a plain
     // GET on `.../video` would never return. Pull a single frame instead.
     if (widget.webcamIsExternal) {
       await _fetchFrameFromStream(url);
       return;
     }
     try {
-      // Generous 8 s timeout — uv4l-mjpeg has been observed to take 3 s+ per
+      // Generous 8 s timeout - uv4l-mjpeg has been observed to take 3 s+ per
       // snapshot on first wake. Better to block the loop briefly and get a
       // frame than spin-fail and never display anything.
       final resp =
@@ -168,12 +168,12 @@ class _WebcamViewState extends ConsumerState<WebcamView>
         setState(() => _currentBytes = resp.bodyBytes);
       }
     } catch (_) {
-      // Network blip / 401 / timeout / parse error — previous frame stays.
+      // Network blip / 401 / timeout / parse error - previous frame stays.
     }
   }
 
   /// Pull ONE frame from an external camera URL. Handles both a plain snapshot
-  /// (Content-Type image/*) and an MJPEG stream (multipart/x-mixed-replace) —
+  /// (Content-Type image/*) and an MJPEG stream (multipart/x-mixed-replace) -
   /// for a stream we read until the first complete JPEG, then close the
   /// connection. Used for custom / auto-detected external cameras (LAN-direct,
   /// or the Pi's /mg-extcam proxy when remote).
@@ -194,7 +194,7 @@ class _WebcamViewState extends ConsumerState<WebcamView>
           final frame = _extractJpeg(buffer.toBytes());
           if (frame != null) {
             if (mounted) setState(() => _currentBytes = frame);
-            return; // got a frame — finally closes the still-open stream
+            return; // got a frame - finally closes the still-open stream
           }
         }
         if (buffer.length > maxBytes) break;
@@ -208,7 +208,7 @@ class _WebcamViewState extends ConsumerState<WebcamView>
         }
       }
     } catch (_) {
-      // Blip / timeout — keep the last frame on screen.
+      // Blip / timeout - keep the last frame on screen.
     } finally {
       client.close(); // aborts an MJPEG stream still in flight
     }

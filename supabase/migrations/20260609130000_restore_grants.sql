@@ -1,8 +1,8 @@
--- Moongate v0.6.x — Backup restore grants.
+-- Moongate v0.6.x - Backup restore grants.
 --
 -- Powers "restore brings machines back online without re-pairing". A printer's
 -- ownership is bound to the app's anonymous Supabase identity, which is wiped
--- on uninstall, so a printer-list backup alone can't revive a pairing — the
+-- on uninstall, so a printer-list backup alone can't revive a pairing - the
 -- reinstalled app is a different cloud user. A restore grant is a single-use,
 -- expiring secret the owner mints at backup time (create-restore-grant) and
 -- redeems after reinstall (redeem-restore-grant) to re-assign their existing
@@ -43,7 +43,7 @@ ALTER TABLE public.restore_grants ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.restore_grants FROM anon, authenticated;
 
 -- ============================================================================
--- 3. RPCs  (SECURITY DEFINER — called by Edge Functions via the service role)
+-- 3. RPCs  (SECURITY DEFINER - called by Edge Functions via the service role)
 -- ============================================================================
 
 -- Mint a grant for p_user_id. The Edge Function generated the secret and

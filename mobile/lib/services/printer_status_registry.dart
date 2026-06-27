@@ -6,8 +6,8 @@ import '../models/printer_config.dart';
 ///
 /// Each [PrinterTile] pushes its latest [PrinterStatus] here on every poll;
 /// the bug-report sheet reads it so a report captures what the dashboard was
-/// actually showing — connection path, tunnelReady, the last Klipper/synthetic
-/// state — which is the single most useful signal for triaging a "it says X
+/// actually showing - connection path, tunnelReady, the last Klipper/synthetic
+/// state - which is the single most useful signal for triaging a "it says X
 /// but really Y" report (cf. the Voron "Connected / idle" case).
 ///
 /// Best-effort only: not persisted, cleared on app restart, and a stale entry
@@ -20,7 +20,7 @@ class PrinterStatusRegistry {
   final Map<String, PrinterStatus> _latest = {};
 
   // Fires when a printer's Klipper/synthetic STATE changes (not on every poll),
-  // so the dashboard can re-sort tiles by status without polling itself — see
+  // so the dashboard can re-sort tiles by status without polling itself - see
   // printerStatusRank. Broadcast + best-effort; recomputing the order is cheap.
   final StreamController<void> _changes = StreamController<void>.broadcast();
   Stream<void> get changes => _changes.stream;

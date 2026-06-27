@@ -16,15 +16,15 @@ class ChangelogEntry {
       );
 }
 
-/// Loads the user-facing changelog from a single source — `assets/changelog.json`
+/// Loads the user-facing changelog from a single source - `assets/changelog.json`
 /// (newest first).
 ///
 /// Two callers:
-///   • [loadBundled] — the copy compiled into THIS build, for the offline
+///   • [loadBundled] - the copy compiled into THIS build, for the offline
 ///     "What's new" dialog.
-///   • [entriesSinceInstalled] — fetched fresh from `master`, so the update
+///   • [entriesSinceInstalled] - fetched fresh from `master`, so the update
 ///     banner can show every version BETWEEN the installed build and the latest.
-///     The installed APK can't carry notes for a version newer than itself —
+///     The installed APK can't carry notes for a version newer than itself -
 ///     which is exactly why this has to fetch.
 class ChangelogService {
   static const _bundledAsset = 'assets/changelog.json';
@@ -37,7 +37,7 @@ class ChangelogService {
   }
 
   /// Changelog entries strictly NEWER than the installed version, fetched from
-  /// `master` — for the "what's new in this update" overlay. Returns an empty
+  /// `master` - for the "what's new in this update" overlay. Returns an empty
   /// list on any failure (no network, bad JSON, timeout) so the caller can fall
   /// back gracefully.
   static Future<List<ChangelogEntry>> entriesSinceInstalled() async {

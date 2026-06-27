@@ -7,7 +7,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/moongate/master/klipper-plugin/uninstall.sh -o /tmp/u.sh && bash /tmp/u.sh
 #
 # Removes the plugin, tunnel service, repo clone, and all config data.
-# By default ALSO removes cloudflared (binary + cached state) — unless it looks
+# By default ALSO removes cloudflared (binary + cached state) - unless it looks
 # like another service uses it (a named-tunnel config or a standalone
 # cloudflared systemd unit), in which case it's left alone. Keep it regardless
 # with MOONGATE_KEEP_CLOUDFLARED=1.
@@ -33,7 +33,7 @@ echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "This will remove:"
 echo "  • moongate-tunnel systemd service (cloudflared tunnel)"
-echo "  • cloudflared itself — binary + cache (unless another service uses it)"
+echo "  • cloudflared itself - binary + cache (unless another service uses it)"
 echo "  • moongate-authproxy systemd service (v0.4 auth proxy)"
 echo "  • moongate-timesync service/timer (HTTPS clock sync, if installed)"
 echo "  • Moongate Moonraker plugin"
@@ -45,11 +45,11 @@ echo "  • moongate-pair.html from Mainsail"
 echo "  • Avahi mDNS service file + sudoers entry (v0.4.4)"
 echo ""
 echo "And RESTORE (from ~/.config/moongate/v0.4-backup/ if present):"
-echo "  • moonraker.conf — back to pre-v0.4 (Moonraker bound to 0.0.0.0)"
+echo "  • moonraker.conf - back to pre-v0.4 (Moonraker bound to 0.0.0.0)"
 echo ""
 # Honor explicit non-interactive confirmation (env var or flag) before the
 # TTY check. Required for `curl ... | bash` because bash's stdin is the
-# script content — `read` can't reach the user's keyboard, so an interactive
+# script content - `read` can't reach the user's keyboard, so an interactive
 # prompt would silently abort.
 if [[ "${MOONGATE_YES:-}" == "1" ]] || [[ "${1:-}" == "-y" ]] || [[ "${1:-}" == "--yes" ]]; then
     confirm=y
@@ -87,7 +87,7 @@ if [[ -f /etc/systemd/system/moongate-tunnel.service ]]; then
     success "moongate-tunnel service removed"
 fi
 
-# Kill any lingering cloudflared process — guarantees a fresh tunnel URL on
+# Kill any lingering cloudflared process - guarantees a fresh tunnel URL on
 # the next install. systemctl stop reaps the managed PID, but a manually-
 # started cloudflared (or one orphaned from a half-finished prior install)
 # would survive otherwise and hold the existing URL.
@@ -145,7 +145,7 @@ V04_BACKUP_DIR="$HOME/.config/moongate/v0.4-backup"
 if [[ -d "$V04_BACKUP_DIR" ]]; then
     info "Restoring v0.4 backups..."
 
-    # Moonraker config — restore from the pristine pre-v0.4 snapshot.
+    # Moonraker config - restore from the pristine pre-v0.4 snapshot.
     if [[ -f "$V04_BACKUP_DIR/moonraker.conf.orig" && -f "$MOONRAKER_CONF" ]]; then
         cp "$V04_BACKUP_DIR/moonraker.conf.orig" "$MOONRAKER_CONF"
         success "moonraker.conf restored"
@@ -153,11 +153,11 @@ if [[ -d "$V04_BACKUP_DIR" ]]; then
 
     # nginx-*.orig backups may exist from an earlier draft of v0.4 that
     # patched nginx too. We don't restore them (the corresponding install
-    # path was removed before ship), but we don't delete them either —
+    # path was removed before ship), but we don't delete them either -
     # if a user has them, the corresponding nginx vhost was already
     # restored manually or never modified.
 else
-    info "No v0.4 backup dir found — skipping restore (Pi was never v0.4 or already cleaned)."
+    info "No v0.4 backup dir found - skipping restore (Pi was never v0.4 or already cleaned)."
 fi
 
 # ── 1d. Remove Avahi mDNS advertisement + sudoers entry (v0.4.4) ─────────────
@@ -165,7 +165,7 @@ fi
 # clean up here defensively in case (a) the plugin was uninstalled without
 # running MOONGATE_RESET_OWNER first, (b) sudo failed during plugin
 # shutdown, or (c) the file was left over from a manual edit. avahi-daemon
-# itself is left alone — other services on the system use it.
+# itself is left alone - other services on the system use it.
 info "Removing Avahi mDNS advertisement..."
 if [[ -f /etc/avahi/services/moongate.service ]]; then
     sudo rm -f /etc/avahi/services/moongate.service
@@ -176,14 +176,14 @@ if [[ -f /etc/sudoers.d/moongate-avahi ]]; then
     success "Avahi sudoers entry removed"
 fi
 
-# ── 1e. Remove cloudflared — binary + cached state (default) ─────────────────
+# ── 1e. Remove cloudflared - binary + cached state (default) ─────────────────
 # Moongate installs cloudflared for its Quick Tunnel, so by default we remove
 # it here too. BUT a named-tunnel config or a standalone cloudflared service
-# means something else relies on it — pulling the binary would break that, so
+# means something else relies on it - pulling the binary would break that, so
 # we detect those cases and leave it in place (with a warning). Force-keep it
 # regardless with MOONGATE_KEEP_CLOUDFLARED=1.
 if [[ "${MOONGATE_KEEP_CLOUDFLARED:-}" == "1" ]]; then
-    info "MOONGATE_KEEP_CLOUDFLARED=1 — leaving cloudflared in place."
+    info "MOONGATE_KEEP_CLOUDFLARED=1 - leaving cloudflared in place."
 else
     OTHER_CF_USE=0
     # A standalone cloudflared systemd unit (`cloudflared service install`).
@@ -192,7 +192,7 @@ else
     if systemctl list-unit-files 2>/dev/null | grep -qi cloudflared; then
         OTHER_CF_USE=1
     fi
-    # Named-tunnel config / login cert / credentials — a persistent tunnel the
+    # Named-tunnel config / login cert / credentials - a persistent tunnel the
     # user set up themselves. Quick Tunnels (what Moongate uses) create none of
     # these, so if they exist it's not ours to remove.
     if [[ -f /etc/cloudflared/config.yml ]] \
@@ -204,7 +204,7 @@ else
 
     if [[ "$OTHER_CF_USE" == "1" ]]; then
         warn "cloudflared looks used by something else (a named tunnel or its"
-        warn "own service) — leaving it installed. Remove by hand if you're"
+        warn "own service) - leaving it installed. Remove by hand if you're"
         warn "sure: sudo apt remove cloudflared"
     else
         info "Removing cloudflared (binary + cache)..."
@@ -304,7 +304,7 @@ if [[ -n "$PRINTER_CFG" ]]; then
         success "Removed moongate.cfg"
     fi
 else
-    warn "printer.cfg not found — skipping macro removal"
+    warn "printer.cfg not found - skipping macro removal"
 fi
 
 # ── 7. Remove pair page from web roots ───────────────────────────────────────

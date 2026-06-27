@@ -6,11 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// isolate) arms a deadline; the opt-in print-notification background isolate
 /// reads it on each poll tick and fires a one-shot "Heat-soak complete" alert
 /// once it passes, then clears it. Piggybacking that service is why a soak alert
-/// only fires while print notifications are on — the preheat sheet warns up
+/// only fires while print notifications are on - the preheat sheet warns up
 /// front when they're off.
 ///
 /// Stored as a JSON `{printerId: epochMs}` map under one key. Deliberately NOT
-/// part of the settings backup — a soak timer is a live, here-and-now thing, not
+/// part of the settings backup - a soak timer is a live, here-and-now thing, not
 /// a preference to carry across installs. SharedPreferences caches per-isolate,
 /// so every method reload()s first to see the other isolate's writes.
 class HeatsoakTimers {
@@ -27,7 +27,7 @@ class HeatsoakTimers {
     await prefs.setString(prefsKey, jsonEncode(map));
   }
 
-  /// Cancel any soak timer for [printerId] — also how the isolate clears one
+  /// Cancel any soak timer for [printerId] - also how the isolate clears one
   /// after it fires. No-op when none is armed.
   static Future<void> cancel(String printerId) async {
     final prefs = await SharedPreferences.getInstance();

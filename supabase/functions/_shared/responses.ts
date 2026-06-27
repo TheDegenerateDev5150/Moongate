@@ -3,7 +3,7 @@
 // 404 / 401 use identical shapes regardless of underlying cause to avoid
 // enumeration leaks. Do NOT add detail strings to error responses that
 // would let a caller distinguish "doesn't exist" from "not yours" from
-// "expired" — that's the whole point.
+// "expired" - that's the whole point.
 
 import { corsHeaders } from "./cors.ts";
 

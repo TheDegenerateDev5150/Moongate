@@ -10,7 +10,7 @@ import '../../providers/dashboard_background_provider.dart';
 
 /// Full-screen colour editor for the Custom theme.
 ///
-/// Five slots cover every meaningful surface in the app — see
+/// Five slots cover every meaningful surface in the app - see
 /// [CustomTheme] for the full breakdown.  Each row is a tappable swatch
 /// that opens a modal bottom sheet containing:
 ///
@@ -18,7 +18,7 @@ import '../../providers/dashboard_background_provider.dart';
 ///   • a HEX input field (case-insensitive, optional leading `#`)
 ///   • a grid of 24 hand-picked preset colours
 ///
-/// Changes apply instantly via Riverpod — no save button, no preview-vs-
+/// Changes apply instantly via Riverpod - no save button, no preview-vs-
 /// apply mode.  A "Reset to defaults" action in the app bar reverts all
 /// five slots to the seeded-purple-dark palette.
 class CustomThemeScreen extends ConsumerWidget {
@@ -127,12 +127,12 @@ class CustomThemeScreen extends ConsumerWidget {
 
           const Divider(height: 1),
 
-          // Dashboard background image — part of the Custom theme. Picks an
+          // Dashboard background image - part of the Custom theme. Picks an
           // image to sit behind the tiles (centred, scaled-down, over the theme
           // colour); the × clears it. Shown only here, i.e. while Custom is on.
           const _BackgroundRow(),
 
-          // Tile opacity (0–100): how see-through the printer tiles' background
+          // Tile opacity (0-100): how see-through the printer tiles' background
           // is, so a custom background shows through; the camera feed stays
           // solid. Only takes visible effect with a background set.
           const _TileOpacityField(),
@@ -619,9 +619,9 @@ class _BackgroundRow extends ConsumerWidget {
   }
 }
 
-// ─── Tile opacity field (0–100) ───────────────────────────────────────────────
+// ─── Tile opacity field (0-100) ───────────────────────────────────────────────
 //
-// Type 0–100 to set how see-through the printer tiles' background is, so a
+// Type 0-100 to set how see-through the printer tiles' background is, so a
 // custom dashboard background shows through; the camera feed stays solid.
 // Applied (on the Custom theme) by printer_tile via CustomTheme.tileOpacity.
 
@@ -644,7 +644,7 @@ class _TileOpacityFieldState extends ConsumerState<_TileOpacityField> {
 
   void _apply(String raw) {
     final n = int.tryParse(raw.trim());
-    if (n == null) return; // mid-edit / empty — don't clobber
+    if (n == null) return; // mid-edit / empty - don't clobber
     ref
         .read(customThemeProvider.notifier)
         .setTileOpacity(n.clamp(0, 100) / 100);

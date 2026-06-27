@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 
-/// The PayPal "tip jar" link. Single source of truth — also used by the
+/// The PayPal "tip jar" link. Single source of truth - also used by the
 /// drawer's "Buy me a coffee" item.
 const String kDonationUrl =
     'https://www.paypal.com/donate/?hosted_button_id=WCWAZKQ7WKQB4';

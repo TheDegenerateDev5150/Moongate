@@ -11,8 +11,8 @@ import '../../services/supabase_service.dart';
 /// Collects a free-text comment (+ optional contact and which-printer) and
 /// attaches a comprehensive diagnostics snapshot (see [DiagnosticsService])
 /// before posting to the submit-feedback Edge Function. [pairingContext] is
-/// supplied when launched from the pairing screen, so a user who can't pair —
-/// and never reaches the dashboard — can still send a report carrying the live
+/// supplied when launched from the pairing screen, so a user who can't pair -
+/// and never reaches the dashboard - can still send a report carrying the live
 /// discovery + attempt state.
 Future<void> showFeedbackSheet(
   BuildContext context,
@@ -50,7 +50,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
   @override
   void initState() {
     super.initState();
-    // Pre-select when there's exactly one printer — saves a tap.
+    // Pre-select when there's exactly one printer - saves a tap.
     if (widget.printers.length == 1) {
       _printerName = widget.printers.single.name;
     }
@@ -76,7 +76,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
         printers: widget.printers,
         pairingContext: widget.pairingContext,
       );
-    } catch (_) {/* best-effort — send the comment regardless */}
+    } catch (_) {/* best-effort - send the comment regardless */}
 
     // Lift version + platform into the dedicated columns (easy dashboard
     // filtering); the full picture lives in `diagnostics`.
@@ -87,7 +87,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
     final dev = diagnostics['device'];
     if (dev is Map) {
       platform = dev['platform'] == 'android'
-          ? '${dev['os']} — ${dev['manufacturer']} ${dev['model']}'
+          ? '${dev['os']} - ${dev['manufacturer']} ${dev['model']}'
           : dev['os']?.toString();
     }
 
@@ -159,7 +159,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Which printer — only when there's a choice to make.
+              // Which printer - only when there's a choice to make.
               if (widget.printers.isNotEmpty) ...[
                 DropdownButtonFormField<String?>(
                   initialValue: _printerName,

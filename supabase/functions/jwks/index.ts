@@ -3,7 +3,7 @@
 // Public JWKS endpoint for the access-token signing key. The Pi fetches this
 // (and caches it) to verify access tokens that the app presents.
 //
-// No auth required — this is intentionally public, like every JWKS endpoint.
+// No auth required - this is intentionally public, like every JWKS endpoint.
 //
 // Response 200:
 //   {

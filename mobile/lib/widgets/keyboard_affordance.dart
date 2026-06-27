@@ -6,7 +6,7 @@ import '../l10n/app_localizations.dart';
 /// Force the soft keyboard (IME) to (re)appear for [node].
 ///
 /// Some Android keyboards don't re-open when the user taps a text field that
-/// *already* holds focus — e.g. after dismissing the IME with the system Back
+/// *already* holds focus - e.g. after dismissing the IME with the system Back
 /// or ▼ key. That left people stuck, unable to get back into a field to fix a
 /// typo (user-reported on the add-printer screen). Wiring this into a field's
 /// `onTap` makes the natural "tap the field again" gesture work everywhere;
@@ -22,7 +22,7 @@ void showKeyboardFor(FocusNode node) {
 }
 
 /// A subtle keyboard glyph for a text field's `suffixIcon`. Tapping it always
-/// brings the IME back for [node] — the guaranteed escape hatch on devices
+/// brings the IME back for [node] - the guaranteed escape hatch on devices
 /// that won't re-show the keyboard when you tap an already-focused field.
 class ShowKeyboardButton extends StatelessWidget {
   const ShowKeyboardButton(this.node, {super.key});

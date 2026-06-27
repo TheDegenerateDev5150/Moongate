@@ -6,7 +6,7 @@ import '../../l10n/app_localizations.dart';
 /// the lock screen and the set / confirm / verify flows (see [showPinSheet]).
 ///
 /// [onSubmit] is called with the entered PIN when it reaches [expectedLength]
-/// (auto-submit), or — when [expectedLength] is null — when the user taps
+/// (auto-submit), or - when [expectedLength] is null - when the user taps
 /// Continue (enabled between [minLength] and [maxLength]). It returns an error
 /// message to display (the buffer clears, the view stays open) or null on
 /// success.

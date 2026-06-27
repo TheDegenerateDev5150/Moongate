@@ -6,7 +6,7 @@
 Moongate ("the app", "we", "us") is a free, open-source app for monitoring and
 controlling your own Klipper/Moonraker 3D printers from your phone. This policy
 explains exactly what data the app handles, why, where it goes, and your
-choices. It is written to be accurate to what the app actually does — nothing
+choices. It is written to be accurate to what the app actually does - nothing
 more is collected than is described here.
 
 **Data controller:** Moongate
@@ -54,10 +54,10 @@ This is the minimum needed to reconnect you to your own printers from anywhere.
 The app has an optional "Report a problem" feature. **Nothing is sent unless you
 tap to submit a report.** If you do, the report includes:
 - the **comment** you write, and any **contact detail you choose to add** (for
-  example an email, so we can reply — this is optional and entirely up to you);
+  example an email, so we can reply - this is optional and entirely up to you);
 - your **device model and operating-system version**, and the **app version**;
 - your phone's **local (private) network addresses** and whether you appear to
-  be on a private network — used to diagnose connection problems;
+  be on a private network - used to diagnose connection problems;
 - your **printer names and their local addresses**, the results of local
   printer discovery, and connection status;
 - your **anonymous identifier** (to correlate the report with your printer
@@ -74,8 +74,8 @@ fails. The token is a delivery address for your device; it is not your identity.
 
 ### 1.5 Automatically logged technical data
 Like most internet services, our backend providers (Supabase and Cloudflare)
-automatically record standard technical request logs — including your device's
-**IP address** — for security, abuse prevention, and operational reliability.
+automatically record standard technical request logs - including your device's
+**IP address** - for security, abuse prevention, and operational reliability.
 These logs are short-lived and are not used to build a profile of you or to
 track you across other services.
 
@@ -104,14 +104,14 @@ Moongate is a "middleman" for remote access, not a data warehouse:
 We rely on a small number of service providers. We do not sell data to anyone,
 and none of these are advertising or data-broker services:
 
-- **Supabase** — our backend: anonymous sign-in, the database of your printers,
+- **Supabase** - our backend: anonymous sign-in, the database of your printers,
   bug reports, and push tokens, and the server functions that broker access.
-- **Cloudflare** — provides the secure tunnel that carries traffic between your
+- **Cloudflare** - provides the secure tunnel that carries traffic between your
   phone and your printer for remote access.
-- **Apple Push Notification service** — delivers print notifications to your
+- **Apple Push Notification service** - delivers print notifications to your
   iPhone (only if you enable notifications). The notification content is limited
   to your printer's name and print status.
-- **GitHub** — on **Android only**, the app fetches a small file to check
+- **GitHub** - on **Android only**, the app fetches a small file to check
   whether a newer version is available; this reveals your device's IP address to
   GitHub as part of an ordinary web request. (On iOS, updates come from the App
   Store and this check is not performed.)
@@ -123,11 +123,11 @@ safeguards.
 
 ## 4. Permissions we request and why
 
-- **Camera** — to scan the pairing QR code. Nothing else.
-- **Local network** (iOS) — to discover and connect directly to printers on your
+- **Camera** - to scan the pairing QR code. Nothing else.
+- **Local network** (iOS) - to discover and connect directly to printers on your
   Wi-Fi.
-- **Notifications** (iOS) — only if you opt in to print notifications.
-- **Face ID / Touch ID / biometrics** — only if you turn on the optional app
+- **Notifications** (iOS) - only if you opt in to print notifications.
+- **Face ID / Touch ID / biometrics** - only if you turn on the optional app
   lock; authentication is performed by your operating system.
 
 ## 5. How long we keep data
@@ -147,7 +147,7 @@ safeguards.
 
 Because we don't collect your name or email, most data is tied only to an
 anonymous identifier. You can:
-- **Delete everything** with **"Delete my data"** in the app's menu — this
+- **Delete everything** with **"Delete my data"** in the app's menu - this
   immediately erases your anonymous account and removes your printers,
   notification tokens, and related records from our servers.
 - **Stop remote data** by removing individual printers; uninstalling the app

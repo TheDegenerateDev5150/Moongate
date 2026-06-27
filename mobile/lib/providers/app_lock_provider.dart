@@ -7,7 +7,7 @@ import 'settings_provider.dart';
 enum LockStatus { locked, unlocked }
 
 /// Runtime locked/unlocked state behind the app-lock overlay. Distinct from the
-/// persisted [appLockEnabledProvider] preference — this is the live gate that
+/// persisted [appLockEnabledProvider] preference - this is the live gate that
 /// [app.dart]'s `_AppLockGate` watches.
 class AppLockController extends Notifier<LockStatus> {
   DateTime? _backgroundedAt;
@@ -15,7 +15,7 @@ class AppLockController extends Notifier<LockStatus> {
   @override
   LockStatus build() {
     // A one-time read (not a watch): toggling the preference mid-session must
-    // not lock/unlock the running app — enabling takes effect on next launch.
+    // not lock/unlock the running app - enabling takes effect on next launch.
     if (!ref.read(appLockEnabledProvider)) return LockStatus.unlocked;
     // Optimistically lock on cold launch, then verify a PIN actually exists and
     // fail OPEN if it doesn't, so a desynced preference can't trap the user.
@@ -57,7 +57,7 @@ class AppLockController extends Notifier<LockStatus> {
     state = LockStatus.unlocked;
   }
 
-  /// Plain unlock with no PIN/biometric check — used only by the "Forgot PIN?"
+  /// Plain unlock with no PIN/biometric check - used only by the "Forgot PIN?"
   /// reset, which has already wiped the PIN and local data.
   void unlock() => state = LockStatus.unlocked;
 

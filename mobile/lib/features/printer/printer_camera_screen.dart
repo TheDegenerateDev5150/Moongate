@@ -9,7 +9,7 @@ import '../../services/printer_status_service.dart';
 import '../../widgets/webcam_view.dart';
 
 /// Opens the Moongate-native camera view for one printer as a full-screen
-/// **overlay** — a faded dialog over the current screen (no app-bar chrome), the
+/// **overlay** - a faded dialog over the current screen (no app-bar chrome), the
 /// feed centred, with pinch-to-zoom / pan and a floating back arrow. While it's
 /// open the app is allowed to rotate into landscape for widescreen viewing even
 /// when it's otherwise portrait-locked; the user's [allowRotationProvider]
@@ -21,7 +21,7 @@ import '../../widgets/webcam_view.dart';
 /// absolute LAN address like `http://192.168.0.107:8080/video`, which a phone on
 /// mobile data simply can't reach. This view sidesteps that by rendering through
 /// the SAME resolved snapshot URL the dashboard tile uses: LAN-direct at home, or
-/// routed through the Pi's owner-token-gated `/mg-extcam` proxy when remote — so
+/// routed through the Pi's owner-token-gated `/mg-extcam` proxy when remote - so
 /// the external camera keeps working away from home.
 void showPrinterCameraOverlay(BuildContext context, PrinterConfig printer) {
   showGeneralDialog(
@@ -64,11 +64,11 @@ class _PrinterCameraOverlayState extends ConsumerState<_PrinterCameraOverlay> {
   void initState() {
     super.initState();
     // Allow landscape for widescreen viewing while the camera is open, even if
-    // the app is otherwise portrait-locked — restored to the user's setting in
+    // the app is otherwise portrait-locked - restored to the user's setting in
     // dispose().
     SystemChrome.setPreferredOrientations(_allOrientations);
     // Run our own status poll so the snapshot URL (and its short-lived
-    // mg_token) stays fresh while this view is open — the same service the
+    // mg_token) stays fresh while this view is open - the same service the
     // dashboard tile uses, so all the LAN-vs-tunnel / external-camera URL
     // resolution is reused, not reimplemented.
     _service = PrinterStatusService(widget.printer);
@@ -104,7 +104,7 @@ class _PrinterCameraOverlayState extends ConsumerState<_PrinterCameraOverlay> {
     Widget body;
     if (hasCam) {
       // Pinch-to-zoom / pan over a centred, letterboxed live frame. In
-      // landscape the contained frame fills the wider screen — widescreen view.
+      // landscape the contained frame fills the wider screen - widescreen view.
       body = InteractiveViewer(
         minScale: 1,
         maxScale: 5,

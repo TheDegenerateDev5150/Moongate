@@ -1,4 +1,4 @@
--- Moongate v0.4.2 — Pi-signed force-release path.
+-- Moongate v0.4.2 - Pi-signed force-release path.
 --
 -- Closes the v0.3.1 gap that MOONGATE_RESET_OWNER could only ever clean
 -- *local* state. When a user wipes the app (loses their anon UID), the
@@ -8,7 +8,7 @@
 --
 -- With this migration the Pi itself can release the cloud row by signing
 -- a request with its existing Ed25519 device key. The signature proves
--- physical access to the Pi — strong enough authority to force-delete
+-- physical access to the Pi - strong enough authority to force-delete
 -- the row regardless of who owns it. The Edge Function performs the
 -- verification before calling this RPC.
 

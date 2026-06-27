@@ -90,13 +90,13 @@ class _LightingPrinterCardState extends State<_LightingPrinterCard> {
   void initState() {
     super.initState();
     // The macro pickers read the live macro list; the status source is typed by
-    // hand (with the example hint) — no auto-fill, which previously grabbed the
+    // hand (with the example hint) - no auto-fill, which previously grabbed the
     // wrong single object (a display neopixel, a motor-power pin) on printers
     // the user never set up for lighting.
     _future = PrintControlService(widget.printer).listLightingTargets();
   }
 
-  /// A usable control path exists — an on+off pair, or a toggle macro.
+  /// A usable control path exists - an on+off pair, or a toggle macro.
   bool get _canEnable {
     final hasPair = (_onMacro?.isNotEmpty ?? false) &&
         (_offMacro?.isNotEmpty ?? false);
@@ -104,7 +104,7 @@ class _LightingPrinterCardState extends State<_LightingPrinterCard> {
   }
 
   void _persist() {
-    // Never store "enabled" without a usable control path — otherwise the tile
+    // Never store "enabled" without a usable control path - otherwise the tile
     // would show a bulb that does nothing.
     if (!_canEnable) _enabled = false;
     PrinterRegistry.instance.updateLightingConfig(

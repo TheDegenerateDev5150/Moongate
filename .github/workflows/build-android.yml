@@ -51,7 +51,7 @@ jobs:
               > mobile/android/key.properties
             echo "Release signing configured."
           else
-            echo "RELEASE_KEYSTORE secret not set — falling back to debug signing."
+            echo "RELEASE_KEYSTORE secret not set - falling back to debug signing."
           fi
 
       - name: Build release APK
@@ -60,7 +60,7 @@ jobs:
 
       - name: Stage APK + read version
         # The signed APK is published ONLY as a GitHub Release asset (next step)
-        # — it is no longer committed to the repo. Stage it under its versioned
+        # - it is no longer committed to the repo. Stage it under its versioned
         # name so the release-upload and artifact steps can find it.
         id: meta
         run: |
@@ -74,7 +74,7 @@ jobs:
       - name: Publish APK as a GitHub Release asset
         # Why a Release asset, not a committed file: the signed APK is ~73 MB,
         # which tripped GitHub's 50 MB push warning on EVERY push and bloated
-        # the git history. Release assets carry none of that cost. Idempotent —
+        # the git history. Release assets carry none of that cost. Idempotent -
         # re-running on the same version replaces the asset instead of erroring.
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:
@@ -85,7 +85,7 @@ jobs:
           ASSET="Moongate-v${VERSION}.apk"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists — replacing asset"
+            echo "Release $TAG already exists - replacing asset"
             gh release upload "$TAG" "$ASSET" --clobber
           else
             echo "Creating Release $TAG"
@@ -93,7 +93,7 @@ jobs:
               --title "Moongate v${VERSION}" \
               --notes "See the [changelog](https://github.com/${GITHUB_REPOSITORY}/blob/master/CHANGELOG.md) for what's in this release.
 
-          **APK is signed with the project release key — installs cleanly over any previous CI build.**" \
+          **APK is signed with the project release key - installs cleanly over any previous CI build.**" \
               --latest
           fi
 
@@ -122,7 +122,7 @@ jobs:
           REMOTE_BUILD=${REMOTE_BUILD:-0}
           echo "Remote manifest build: $REMOTE_BUILD  |  Our build: $BUILD"
           if [ "$BUILD" -lt "$REMOTE_BUILD" ]; then
-            echo "Remote already has a newer build ($REMOTE_BUILD > $BUILD) — skipping manifest update."
+            echo "Remote already has a newer build ($REMOTE_BUILD > $BUILD) - skipping manifest update."
             exit 0
           fi
 
@@ -155,7 +155,7 @@ jobs:
           OLD_TAGS=$(gh release list --limit 100 --json tagName,createdAt \
             --jq 'sort_by(.createdAt) | reverse | .[3:] | .[].tagName')
           if [ -z "$OLD_TAGS" ]; then
-            echo "Nothing to prune — 3 or fewer releases exist."
+            echo "Nothing to prune - 3 or fewer releases exist."
           else
             echo "$OLD_TAGS" | while read -r tag; do
               if [ -n "$tag" ]; then

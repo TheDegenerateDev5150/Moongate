@@ -7,7 +7,7 @@ import '../../providers/settings_provider.dart';
 import '../../services/print_notification_service.dart';
 
 /// Lets the user choose which details appear on each print's notification card
-/// — and drag them into the order they want on the phone. Reached from the
+/// - and drag them into the order they want on the phone. Reached from the
 /// dashboard drawer (under "Print notifications") at /settings/notifications.
 /// The printer name is fixed and so isn't listed here.
 class NotificationContentScreen extends ConsumerWidget {
@@ -34,7 +34,7 @@ class NotificationContentScreen extends ConsumerWidget {
                   ?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
-          // Live preview of the resulting notification line — updates as fields
+          // Live preview of the resulting notification line - updates as fields
           // are toggled / reordered, using representative sample values.
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -94,7 +94,7 @@ class _PreviewCard extends StatelessWidget {
     // printer's real name.
     final name = '(${l.printerNameLabel})';
     final line =
-        shown.isEmpty ? '🖨️ $name' : '🖨️ $name — ${shown.join(' · ')}';
+        shown.isEmpty ? '🖨️ $name' : '🖨️ $name - ${shown.join(' · ')}';
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(

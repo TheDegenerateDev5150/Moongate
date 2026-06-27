@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// State is the absolute path to a copy of the user's chosen image, kept in the
 /// app's documents directory so it survives launches (file_picker only hands
 /// back a cache path the OS may evict), or null when none is set. The dashboard
-/// layers this image — centred and scaled-down — over the active theme's
+/// layers this image - centred and scaled-down - over the active theme's
 /// background colour, so a transparent PNG (a logo) or a wrong-aspect image
 /// still shows the theme colour around and behind it.
 ///
@@ -39,7 +39,7 @@ class DashboardBackgroundNotifier extends Notifier<String?> {
   /// Copy [bytes] into app storage under a unique filename, replacing any
   /// previous background, and persist the new path. [extension] is the source
   /// file's extension (e.g. 'png', 'jpg'), kept only to make the saved file
-  /// recognisable — decoding is by content, not name.
+  /// recognisable - decoding is by content, not name.
   Future<void> setFromBytes(Uint8List bytes, {String extension = 'img'}) async {
     final dir = await getApplicationDocumentsDirectory();
     final ext = extension.replaceAll('.', '').toLowerCase();
@@ -66,7 +66,7 @@ class DashboardBackgroundNotifier extends Notifier<String?> {
       final f = File(path);
       if (f.existsSync()) await f.delete();
     } catch (_) {
-      // Best-effort cleanup — a leftover image file is harmless.
+      // Best-effort cleanup - a leftover image file is harmless.
     }
   }
 }

@@ -2,7 +2,7 @@ name: Changelog guard
 
 # A version bump cuts a release and fires the in-app update banner, so every PR
 # that bumps mobile/pubspec.yaml's `version:` MUST carry its changelog in the
-# SAME PR — both the in-app source (mobile/assets/changelog.json, which feeds the
+# SAME PR - both the in-app source (mobile/assets/changelog.json, which feeds the
 # "What's new" dialog and the update overlay) and the public CHANGELOG.md. This
 # check fails the PR otherwise. PRs that don't bump the version (docs, plugin-
 # only, CI, etc.) are exempt and pass straight through.
@@ -30,7 +30,7 @@ jobs:
           # so a PR that's merely behind master isn't blamed for master's bumps.
           version_diff=$(git diff "${BASE_SHA}...${HEAD_SHA}" -- mobile/pubspec.yaml || true)
           if ! echo "$version_diff" | grep -qE '^\+version:'; then
-            echo "No app version bump in this PR — changelog not required. ✓"
+            echo "No app version bump in this PR - changelog not required. ✓"
             exit 0
           fi
 

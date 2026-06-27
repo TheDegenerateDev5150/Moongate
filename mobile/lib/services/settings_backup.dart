@@ -8,18 +8,18 @@ enum _Kind { string, boolean, integer, real }
 ///
 /// Only the explicit allow-list below travels in a backup. Deliberately
 /// excluded:
-///   • the app lock (`app_lock_*`) and its PIN — the PIN lives in
+///   • the app lock (`app_lock_*`) and its PIN - the PIN lives in
 ///     Keystore-backed secure storage and is device-bound; exporting "lock on"
 ///     without a PIN would lock the user out on another device, and writing the
 ///     PIN hash into a file would defeat its at-rest encryption.
 ///   • first-run onboarding flags (`language_selected`, `notifications_prompted`,
-///     `pairing_help_dismissed`, `donation_prompted`) — transient UI state, not
+///     `pairing_help_dismissed`, `donation_prompted`) - transient UI state, not
 ///     preferences (so the donation nudge can still appear once on a fresh
 ///     install even after restoring a backup).
 /// The printer list is carried separately, by the backup envelope itself.
 ///
 /// The allow-list also gates [apply], so a hand-edited backup can only ever set
-/// these known keys — never an arbitrary or sensitive preference.
+/// these known keys - never an arbitrary or sensitive preference.
 class SettingsBackup {
   SettingsBackup._();
 
@@ -60,7 +60,7 @@ class SettingsBackup {
   }
 
   /// Write a backup's `settings` map back into SharedPreferences. Unknown keys
-  /// and type mismatches are ignored. Does NOT reload the Riverpod providers —
+  /// and type mismatches are ignored. Does NOT reload the Riverpod providers -
   /// the caller does that so the change shows live (see the dashboard restore).
   static Future<void> apply(Map<String, dynamic> settings) async {
     final prefs = await SharedPreferences.getInstance();

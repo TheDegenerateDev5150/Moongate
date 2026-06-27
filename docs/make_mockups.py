@@ -20,7 +20,7 @@ os.makedirs(OUT, exist_ok=True)
 
 BEZEL = (18, 18, 20, 255)      # near-black frame
 RIM   = (70, 70, 78, 255)      # subtle outer rim so the phone reads on dark bg
-ACCENT = (108, 99, 255)        # Moongate purple (#6C63FF) — unused stage tint hook
+ACCENT = (108, 99, 255)        # Moongate purple (#6C63FF) - unused stage tint hook
 
 BACKDROP = (245, 245, 247, 255)  # Apple-style light grey (#F5F5F7); None = transparent
 STAGE_RADIUS = 0.045             # rounded-corner fraction of min dim; 0 = square corners
@@ -128,7 +128,7 @@ def build_hero():
 
 def build_row():
     # The README screenshot gallery. gcode-viewer.png also appears (fanned,
-    # partly obscured) in the hero — it's featured again here standalone so the
+    # partly obscured) in the hero - it's featured again here standalone so the
     # print-from-stored-gcodes flow gets a clear, unobstructed showcase.
     for name in ["pairing.png", "drawer.png", "icon-guide.png", "custom-theme.png",
                  "gcode-viewer.png"]:
