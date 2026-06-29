@@ -413,6 +413,53 @@ class PrinterStatus {
   bool get isPrinting => state == 'printing' || state == 'paused';
   bool get isIdle => state == 'standby';
 
+  /// Returns a copy with selected fields replaced. Used by the live tutorial to
+  /// briefly doctor a tile's state for the demo (force tunnel mode, inject a
+  /// chamber reading) and then restore the real one.
+  PrinterStatus copyWith({
+    String? state,
+    double? progress,
+    double? hotendTemp,
+    double? hotendTarget,
+    double? bedTemp,
+    double? bedTarget,
+    double? chamberTemp,
+    double? chamberTarget,
+    String? filename,
+    PrinterConnection? connection,
+    bool? tunnelReady,
+    String? webcamSnapshotUrl,
+    bool? webcamFlipH,
+    bool? webcamFlipV,
+    int? webcamRotation,
+    int? webcamTargetFps,
+    bool? webcamIsExternal,
+    bool? lightOn,
+    bool? klippyShutdown,
+  }) {
+    return PrinterStatus(
+      state:            state ?? this.state,
+      progress:         progress ?? this.progress,
+      hotendTemp:       hotendTemp ?? this.hotendTemp,
+      hotendTarget:     hotendTarget ?? this.hotendTarget,
+      bedTemp:          bedTemp ?? this.bedTemp,
+      bedTarget:        bedTarget ?? this.bedTarget,
+      chamberTemp:      chamberTemp ?? this.chamberTemp,
+      chamberTarget:    chamberTarget ?? this.chamberTarget,
+      filename:         filename ?? this.filename,
+      connection:       connection ?? this.connection,
+      tunnelReady:      tunnelReady ?? this.tunnelReady,
+      webcamSnapshotUrl: webcamSnapshotUrl ?? this.webcamSnapshotUrl,
+      webcamFlipH:      webcamFlipH ?? this.webcamFlipH,
+      webcamFlipV:      webcamFlipV ?? this.webcamFlipV,
+      webcamRotation:   webcamRotation ?? this.webcamRotation,
+      webcamTargetFps:  webcamTargetFps ?? this.webcamTargetFps,
+      webcamIsExternal: webcamIsExternal ?? this.webcamIsExternal,
+      lightOn:          lightOn ?? this.lightOn,
+      klippyShutdown:   klippyShutdown ?? this.klippyShutdown,
+    );
+  }
+
   static const offline = PrinterStatus(
     state: 'offline',
     progress: 0,

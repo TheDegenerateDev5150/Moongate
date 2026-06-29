@@ -16,11 +16,12 @@ import '../../services/printer_status_service.dart';
 import '../../widgets/webcam_view.dart';
 import '../printer/printer_camera_screen.dart';
 import '../tutorial/tutorial_anchors.dart';
+import '../tutorial/tutorial_controller.dart';
 import 'gcode_files_overlay.dart';
 import 'macros_overlay.dart';
 import 'preheat_overlay.dart';
 
-class PrinterTile extends StatefulWidget {
+class PrinterTile extends ConsumerStatefulWidget {
   final PrinterConfig printer;
   final VoidCallback onTap;
 
@@ -52,16 +53,22 @@ class PrinterTile extends StatefulWidget {
   });
 
   @override
-  State<PrinterTile> createState() => _PrinterTileState();
+  ConsumerState<PrinterTile> createState() => _PrinterTileState();
 }
 
-class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
+class _PrinterTileState extends ConsumerState<PrinterTile>
+    with WidgetsBindingObserver {
   late final PrinterStatusService _statusService;
   late final PrintControlService _controlService;
   late PrinterStatus _status;
 
   bool _stopConfirmPending = false;
   Timer? _stopConfirmTimer;
+
+  /// Live tutorial: while a demo step is showing doctored state on this (the
+  /// first) tile, [_realBehindDemo] holds the genuine latest status so it can be
+  /// restored the moment the demo ends. Null when no demo override is active.
+  PrinterStatus? _realBehindDemo;
 
   /// Web UI type - 'mainsail', 'fluidd', or null. Seeded from the persisted
   /// config (so a cold launch shows the logo immediately even if the
@@ -100,6 +107,12 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
       // this tile is no longer mounted - it's the most useful triage signal.
       PrinterStatusRegistry.instance.update(widget.printer.id, s);
       if (!mounted) return;
+      // While the tutorial is showing a demo override on this tile, keep the
+      // real status fresh behind the scenes but don't disturb what's on screen.
+      if (_realBehindDemo != null) {
+        _realBehindDemo = s;
+        return;
+      }
       final wasActive = _status.state == 'printing' || _status.state == 'paused';
       final isActive  = s.state == 'printing' || s.state == 'paused';
       // Print ended naturally while stop-confirm timer was still running -
@@ -117,6 +130,55 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
     });
     _statusService.start();
   }
+
+  // ── Live tutorial demo state ───────────────────────────────────────────────
+  // The first dashboard tile reacts to the tutorial's current step by showing a
+  // clean, idle, locally-connected version of itself (so the tour reads well
+  // even if the real printer is offline or mid-print), with the step's twist
+  // applied (tunnel mode, or a faked chamber reading). Restored on the way out.
+  static const _tileDemoSteps = {
+    'localBar', 'tunnelBar', 'hotend', 'bed', 'chamber', 'webcam',
+  };
+
+  void _applyDemoForStep(TutorialState s) {
+    final id = s.active ? s.current?.id : null;
+    if (id != null && _tileDemoSteps.contains(id)) {
+      _realBehindDemo ??= _status; // remember the real status once
+      setState(() => _status = _demoStatusFor(id));
+    } else if (_realBehindDemo != null) {
+      setState(() {
+        _status = _realBehindDemo!;
+        _realBehindDemo = null;
+      });
+    }
+  }
+
+  PrinterStatus _demoStatusFor(String id) {
+    final real = _realBehindDemo ?? _status;
+    // A tidy, idle, local baseline so every tile step reads correctly.
+    final base = real.copyWith(
+      state:       'standby',
+      connection:  PrinterConnection.local,
+      tunnelReady: true,
+      hotendTemp:  real.hotendTemp > 0 ? real.hotendTemp : 24,
+      bedTemp:     real.bedTemp > 0 ? real.bedTemp : 24,
+      klippyShutdown: false,
+    );
+    switch (id) {
+      case 'tunnelBar':
+        return base.copyWith(connection: PrinterConnection.remote);
+      case 'chamber':
+        return base.chamberTemp > 0 ? base : base.copyWith(chamberTemp: 28);
+      default:
+        return base;
+    }
+  }
+
+  /// Wrap [child] with a tutorial spotlight anchor, but only on the tile the
+  /// tour targets (a GlobalKey must be mounted exactly once). Other tiles and
+  /// the off-tour case pass the child straight through.
+  Widget _anchor(GlobalKey key, Widget child) =>
+      widget.anchorForTutorial ? KeyedSubtree(key: key, child: child) : child;
 
   @override
   void dispose() {
@@ -268,6 +330,14 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
 
+    // The first tile drives the live tutorial's faked state: react to each step.
+    if (widget.anchorForTutorial) {
+      ref.listen<TutorialState>(
+        tutorialControllerProvider,
+        (_, next) => _applyDemoForStep(next),
+      );
+    }
+
     // Colours used for the connection indicator throughout the tile.
     final connColor = switch (_status.connection) {
       PrinterConnection.local   => Colors.green,
@@ -330,7 +400,9 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
             // reorder mode the tile sits in a fixed-height cell instead, so
             // _webcamCell wraps it in a loose Flexible (bounded) to let a busy
             // tile give height back rather than overflow.
-            _webcamCell(AspectRatio(
+            _anchor(
+                TutorialAnchors.instance.webcam,
+                _webcamCell(AspectRatio(
               aspectRatio: 1.0,
               child: Stack(
                 fit: StackFit.expand,
@@ -421,7 +493,7 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                   ),
                 ],
               ),
-            )),
+            ))),
 
             // ── Progress + buttons in ONE row ────────────────────────────
             // Hide action row when there's nothing to act on: offline,
@@ -514,26 +586,35 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                _TempChip(
-                                  icon: Icons.whatshot,
-                                  color: Colors.deepOrange,
-                                  temp: _status.hotendTemp,
-                                  target: _status.hotendTarget,
+                                _anchor(
+                                  TutorialAnchors.instance.tempHotend,
+                                  _TempChip(
+                                    icon: Icons.whatshot,
+                                    color: Colors.deepOrange,
+                                    temp: _status.hotendTemp,
+                                    target: _status.hotendTarget,
+                                  ),
                                 ),
                                 const SizedBox(width: 8),
-                                _TempChip(
-                                  icon: Icons.bed,
-                                  color: Colors.blue,
-                                  temp: _status.bedTemp,
-                                  target: _status.bedTarget,
+                                _anchor(
+                                  TutorialAnchors.instance.tempBed,
+                                  _TempChip(
+                                    icon: Icons.bed,
+                                    color: Colors.blue,
+                                    temp: _status.bedTemp,
+                                    target: _status.bedTarget,
+                                  ),
                                 ),
                                 if (_status.chamberTemp > 0) ...[
                                   const SizedBox(width: 8),
-                                  _TempChip(
-                                    icon: Icons.sensor_window,
-                                    color: Colors.teal,
-                                    temp: _status.chamberTemp,
-                                    target: _status.chamberTarget,
+                                  _anchor(
+                                    TutorialAnchors.instance.tempChamber,
+                                    _TempChip(
+                                      icon: Icons.sensor_window,
+                                      color: Colors.teal,
+                                      temp: _status.chamberTemp,
+                                      target: _status.chamberTarget,
+                                    ),
                                   ),
                                 ],
                               ],

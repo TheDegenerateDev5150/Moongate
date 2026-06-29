@@ -48,10 +48,20 @@ class TutorialController extends Notifier<TutorialState> {
   @override
   TutorialState build() => const TutorialState();
 
-  /// The ordered steps for a run. Slice 1: just the local-mode bar.
-  List<TutorialStep> _buildSteps() => [
-        TutorialStep(id: 'localBar', anchor: TutorialAnchors.instance.connectionBar),
-      ];
+  /// The ordered steps for a run. Grows per slice. Slice 2: the full tile tour
+  /// (local bar -> tunnel bar -> hotend -> bed -> chamber -> webcam). The first
+  /// dashboard tile fakes the matching state for each step and restores after.
+  List<TutorialStep> _buildSteps() {
+    final a = TutorialAnchors.instance;
+    return [
+      TutorialStep(id: 'localBar', anchor: a.connectionBar),
+      TutorialStep(id: 'tunnelBar', anchor: a.connectionBar),
+      TutorialStep(id: 'hotend', anchor: a.tempHotend),
+      TutorialStep(id: 'bed', anchor: a.tempBed),
+      TutorialStep(id: 'chamber', anchor: a.tempChamber),
+      TutorialStep(id: 'webcam', anchor: a.webcam),
+    ];
+  }
 
   void start() {
     state = TutorialState(active: true, index: 0, steps: _buildSteps());

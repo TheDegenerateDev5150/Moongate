@@ -3157,6 +3157,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The colour bar shows how Moongate is reaching this printer. Green with a Wi-Fi icon means you are on the same network, a fast, direct local connection.'**
   String get tutorialLocalBar;
+
+  /// Tutorial step explaining the orange tunnel-mode connection bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange with a cloud icon means you are away from home, connected securely over the internet through your printer\'s tunnel. Moongate switches between the two automatically.'**
+  String get tutorialTunnelBar;
+
+  /// Tutorial step pointing at the hotend temperature chip.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your hotend, the nozzle temperature.'**
+  String get tutorialHotend;
+
+  /// Tutorial step pointing at the bed temperature chip.
+  ///
+  /// In en, this message translates to:
+  /// **'And this is the heated bed.'**
+  String get tutorialBed;
+
+  /// Tutorial step pointing at the chamber temperature chip.
+  ///
+  /// In en, this message translates to:
+  /// **'If your printer has a chamber sensor, its temperature shows here too.'**
+  String get tutorialChamber;
+
+  /// Tutorial step pointing at the tile webcam square.
+  ///
+  /// In en, this message translates to:
+  /// **'Tapping the camera view opens the full printer interface, the live Klipper screen.'**
+  String get tutorialWebcam;
 }
 
 class _AppLocalizationsDelegate

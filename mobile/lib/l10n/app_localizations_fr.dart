@@ -1726,4 +1726,22 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tutorialLocalBar =>
       'The colour bar shows how Moongate is reaching this printer. Green with a Wi-Fi icon means you are on the same network, a fast, direct local connection.';
+
+  @override
+  String get tutorialTunnelBar =>
+      'Orange with a cloud icon means you are away from home, connected securely over the internet through your printer\'s tunnel. Moongate switches between the two automatically.';
+
+  @override
+  String get tutorialHotend => 'This is your hotend, the nozzle temperature.';
+
+  @override
+  String get tutorialBed => 'And this is the heated bed.';
+
+  @override
+  String get tutorialChamber =>
+      'If your printer has a chamber sensor, its temperature shows here too.';
+
+  @override
+  String get tutorialWebcam =>
+      'Tapping the camera view opens the full printer interface, the live Klipper screen.';
 }

@@ -15,4 +15,12 @@ class TutorialAnchors {
 
   /// The thin connection-state colour bar at the top of the first tile.
   final GlobalKey connectionBar = GlobalKey(debugLabel: 'tut_connectionBar');
+
+  /// The hotend / bed / chamber temperature chips on the first tile.
+  final GlobalKey tempHotend = GlobalKey(debugLabel: 'tut_tempHotend');
+  final GlobalKey tempBed = GlobalKey(debugLabel: 'tut_tempBed');
+  final GlobalKey tempChamber = GlobalKey(debugLabel: 'tut_tempChamber');
+
+  /// The webcam square on the first tile.
+  final GlobalKey webcam = GlobalKey(debugLabel: 'tut_webcam');
 }

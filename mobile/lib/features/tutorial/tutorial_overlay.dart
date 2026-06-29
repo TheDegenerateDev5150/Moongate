@@ -159,6 +159,16 @@ String _copyFor(AppLocalizations l, String? id) {
   switch (id) {
     case 'localBar':
       return l.tutorialLocalBar;
+    case 'tunnelBar':
+      return l.tutorialTunnelBar;
+    case 'hotend':
+      return l.tutorialHotend;
+    case 'bed':
+      return l.tutorialBed;
+    case 'chamber':
+      return l.tutorialChamber;
+    case 'webcam':
+      return l.tutorialWebcam;
     default:
       return '';
   }
@@ -225,8 +235,12 @@ class _CalloutCard extends StatelessWidget {
                     ],
                   ),
                 const Spacer(),
-                TextButton(onPressed: onSkip, child: Text(skipLabel)),
-                const SizedBox(width: 4),
+                // Skip is the exit hatch for the whole tour; on the last step
+                // it would just duplicate Done, so it's hidden there.
+                if (!isLast) ...[
+                  TextButton(onPressed: onSkip, child: Text(skipLabel)),
+                  const SizedBox(width: 4),
+                ],
                 FilledButton(onPressed: onNext, child: Text(nextLabel)),
               ],
             ),

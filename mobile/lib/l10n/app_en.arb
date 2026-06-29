@@ -1035,5 +1035,15 @@
   "tutorialSkip": "Skip",
   "@tutorialSkip": {"description": "Button that ends the tutorial early."},
   "tutorialLocalBar": "The colour bar shows how Moongate is reaching this printer. Green with a Wi-Fi icon means you are on the same network, a fast, direct local connection.",
-  "@tutorialLocalBar": {"description": "Tutorial step explaining the green local-mode connection bar on a printer tile."}
+  "@tutorialLocalBar": {"description": "Tutorial step explaining the green local-mode connection bar on a printer tile."},
+  "tutorialTunnelBar": "Orange with a cloud icon means you are away from home, connected securely over the internet through your printer's tunnel. Moongate switches between the two automatically.",
+  "@tutorialTunnelBar": {"description": "Tutorial step explaining the orange tunnel-mode connection bar."},
+  "tutorialHotend": "This is your hotend, the nozzle temperature.",
+  "@tutorialHotend": {"description": "Tutorial step pointing at the hotend temperature chip."},
+  "tutorialBed": "And this is the heated bed.",
+  "@tutorialBed": {"description": "Tutorial step pointing at the bed temperature chip."},
+  "tutorialChamber": "If your printer has a chamber sensor, its temperature shows here too.",
+  "@tutorialChamber": {"description": "Tutorial step pointing at the chamber temperature chip."},
+  "tutorialWebcam": "Tapping the camera view opens the full printer interface, the live Klipper screen.",
+  "@tutorialWebcam": {"description": "Tutorial step pointing at the tile webcam square."}
 }
