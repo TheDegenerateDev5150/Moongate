@@ -1734,9 +1734,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tutorialPreheatPress =>
-      'Press and hold a printer\'s name or its temperatures to preheat it.';
+      'Press and hold a printer\'s name or its temperatures to display the preheat panel.';
 
   @override
   String get tutorialPreheatSheet =>
-      'This panel appears. Set a hotend and bed target, and an optional heat-soak time so the printer holds temperature before it starts printing.';
+      'Here you can set hotend and bed targets and an optional heat-soak time.';
 }

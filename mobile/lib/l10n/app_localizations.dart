@@ -3191,13 +3191,13 @@ abstract class AppLocalizations {
   /// Tutorial step that highlights the long-press area used to open preheat.
   ///
   /// In en, this message translates to:
-  /// **'Press and hold a printer\'s name or its temperatures to preheat it.'**
+  /// **'Press and hold a printer\'s name or its temperatures to display the preheat panel.'**
   String get tutorialPreheatPress;
 
   /// Tutorial step shown while the preheat sheet is open, explaining the hotend / bed / heat-soak fields.
   ///
   /// In en, this message translates to:
-  /// **'This panel appears. Set a hotend and bed target, and an optional heat-soak time so the printer holds temperature before it starts printing.'**
+  /// **'Here you can set hotend and bed targets and an optional heat-soak time.'**
   String get tutorialPreheatSheet;
 }
 
