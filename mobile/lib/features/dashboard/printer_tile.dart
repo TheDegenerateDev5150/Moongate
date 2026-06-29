@@ -576,31 +576,38 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                           ),
                           if (_status.connection != PrinterConnection.offline) ...[
                             const SizedBox(width: 4),
-                            Icon(
-                              _status.connection == PrinterConnection.local
-                                  ? Icons.wifi_rounded
-                                  : Icons.cloud_outlined,
-                              size: 11,
-                              color: connColor,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              _status.connection == PrinterConnection.local
-                                  ? l.tileLocal
-                                  : l.tileTunnel,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: connColor,
-                                fontWeight: FontWeight.w600,
+                            // The Local/Tunnel label + its icon, grouped so the
+                            // tutorial can spotlight it (it flips to Tunnel + a
+                            // cloud icon when the demo fakes tunnel mode).
+                            _anchor(
+                              TutorialAnchors.instance.connectionLabel,
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _status.connection == PrinterConnection.local
+                                        ? Icons.wifi_rounded
+                                        : Icons.cloud_outlined,
+                                    size: 11,
+                                    color: connColor,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    _status.connection == PrinterConnection.local
+                                        ? l.tileLocal
+                                        : l.tileTunnel,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: connColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  // v0.5.0: when on LAN, a small tunnel-status pip
+                                  // (connecting vs ready) next to the Local badge.
+                                  if (_status.connection == PrinterConnection.local)
+                                    _TunnelStatusDot(ready: _status.tunnelReady),
+                                ],
                               ),
                             ),
-                            // v0.5.0: when connected over LAN, show the remote
-                            // (tunnel) status as a small background hint - a
-                            // spinner-ish "connecting" pip while the Pi's tunnel
-                            // is still coming up after a fresh pair / reboot, and
-                            // a green check once the cloud knows the tunnel URL.
-                            // On the tunnel path itself the badge already says so.
-                            if (_status.connection == PrinterConnection.local)
-                              _TunnelStatusDot(ready: _status.tunnelReady),
                           ],
                         ],
                       ),

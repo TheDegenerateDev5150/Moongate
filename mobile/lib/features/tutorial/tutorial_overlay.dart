@@ -18,47 +18,59 @@ class TutorialOverlay extends ConsumerStatefulWidget {
 
 class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
   final GlobalKey _stackKey = GlobalKey();
-  Rect? _holeRect;
+  List<Rect> _holeRects = const [];
   int _resolvedForIndex = -1;
 
-  /// Resolve the anchor's rectangle in the overlay's own coordinate space, after
-  /// layout. Retries on the next frame until the target widget is mounted (it
-  /// may belong to a screen we just navigated to), then stores the rect.
+  /// Resolve every anchor's rectangle in the overlay's own coordinate space,
+  /// after layout. Retries on the next frame until the targets are mounted (they
+  /// may belong to a screen we just navigated to), then stores the rects.
   void _resolveRect(TutorialState s) {
     final step = s.current;
-    final anchorCtx = step?.anchor?.currentContext;
     final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
 
     if (step == null) {
-      if (_holeRect != null) setState(() => _holeRect = null);
+      if (_holeRects.isNotEmpty) setState(() => _holeRects = const []);
       return;
     }
-    if (step.anchor == null) {
+    if (step.anchors.isEmpty) {
       // Centred message step: no spotlight.
-      if (_holeRect != null || _resolvedForIndex != s.index) {
+      if (_holeRects.isNotEmpty || _resolvedForIndex != s.index) {
         setState(() {
-          _holeRect = null;
+          _holeRects = const [];
           _resolvedForIndex = s.index;
         });
       }
       return;
     }
-    final anchorBox = anchorCtx?.findRenderObject() as RenderBox?;
-    if (anchorBox == null || stackBox == null || !anchorBox.hasSize) {
-      // Not laid out yet; try again next frame.
+    final boxes = [
+      for (final k in step.anchors)
+        k.currentContext?.findRenderObject() as RenderBox?,
+    ];
+    if (stackBox == null || boxes.any((b) => b == null || !b.hasSize)) {
+      // Not all laid out yet; try again next frame.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _resolveRect(ref.read(tutorialControllerProvider));
       });
       return;
     }
-    final topLeft = stackBox.globalToLocal(anchorBox.localToGlobal(Offset.zero));
-    final rect = topLeft & anchorBox.size;
-    if (rect != _holeRect || _resolvedForIndex != s.index) {
+    final rects = [
+      for (final b in boxes)
+        stackBox.globalToLocal(b!.localToGlobal(Offset.zero)) & b.size,
+    ];
+    if (!_sameRects(rects, _holeRects) || _resolvedForIndex != s.index) {
       setState(() {
-        _holeRect = rect;
+        _holeRects = rects;
         _resolvedForIndex = s.index;
       });
     }
+  }
+
+  bool _sameRects(List<Rect> a, List<Rect> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   @override
@@ -80,7 +92,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
           Positioned.fill(
             child: _TutorialScrim(
               state: state,
-              hole: _holeRect,
+              holes: _holeRects,
               onNext: () => ref.read(tutorialControllerProvider.notifier).next(),
               onSkip: () => ref.read(tutorialControllerProvider.notifier).finish(),
             ),
@@ -92,13 +104,13 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
 
 class _TutorialScrim extends StatelessWidget {
   final TutorialState state;
-  final Rect? hole;
+  final List<Rect> holes;
   final VoidCallback onNext;
   final VoidCallback onSkip;
 
   const _TutorialScrim({
     required this.state,
-    required this.hole,
+    required this.holes,
     required this.onNext,
     required this.onSkip,
   });
@@ -112,13 +124,19 @@ class _TutorialScrim extends StatelessWidget {
     final step = state.current;
     final dim = step?.dimScreen ?? true;
 
+    // The combined area of everything we're spotlighting, used to place the card
+    // opposite it.
+    final union = holes.isEmpty
+        ? null
+        : holes.reduce((a, b) => a.expandToInclude(b));
+
     // Put the card opposite the spotlight: at the bottom when the target sits in
     // the top 60% of the screen, otherwise at the top. Avoids covering the very
     // thing we are pointing at. A step can force the card to the top (e.g. when
     // a bottom sheet is on screen).
     final cardAtBottom = (step?.forceCardTop ?? false)
         ? false
-        : (hole == null ? true : hole!.center.dy < size.height * 0.6);
+        : (union == null ? true : union.center.dy < size.height * 0.6);
     final text = _copyFor(l, state.current?.id);
 
     return Material(
@@ -132,7 +150,7 @@ class _TutorialScrim extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               onTap: () {}, // swallow taps on the dimmed area
               child: CustomPaint(
-                painter: _SpotlightPainter(hole: hole, dim: dim),
+                painter: _SpotlightPainter(holes: holes, dim: dim),
               ),
             ),
           ),
@@ -261,9 +279,9 @@ class _CalloutCard extends StatelessWidget {
 
 /// Paints the dimming scrim everywhere except a rounded hole over [hole].
 class _SpotlightPainter extends CustomPainter {
-  final Rect? hole;
+  final List<Rect> holes;
   final bool dim;
-  _SpotlightPainter({required this.hole, this.dim = true});
+  _SpotlightPainter({required this.holes, this.dim = true});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -272,32 +290,47 @@ class _SpotlightPainter extends CustomPainter {
     // can't be dismissed out from under the tour.
     if (!dim) return;
     final scrim = Paint()..color = Colors.black.withValues(alpha: 0.72);
-    if (hole == null) {
+    if (holes.isEmpty) {
       canvas.drawRect(Offset.zero & size, scrim);
       return;
     }
-    // Pad the target so even a thin (3px) bar gets a visible highlight.
-    final cut = RRect.fromRectAndRadius(
-      hole!.inflate(8),
-      const Radius.circular(10),
-    );
-    final full = Path()..addRect(Offset.zero & size);
-    final cutPath = Path()..addRRect(cut);
+    // Pad each target so even a thin (3px) bar gets a visible highlight.
+    final cuts = [
+      for (final h in holes)
+        RRect.fromRectAndRadius(h.inflate(8), const Radius.circular(10)),
+    ];
+    var holesPath = Path();
+    for (final c in cuts) {
+      holesPath = Path.combine(PathOperation.union, holesPath, Path()..addRRect(c));
+    }
     canvas.drawPath(
-      Path.combine(PathOperation.difference, full, cutPath),
+      Path.combine(
+        PathOperation.difference,
+        Path()..addRect(Offset.zero & size),
+        holesPath,
+      ),
       scrim,
     );
-    // A soft ring around the hole.
-    canvas.drawRRect(
-      cut,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = Colors.white.withValues(alpha: 0.7),
-    );
+    // A soft ring around each hole.
+    final ring = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = Colors.white.withValues(alpha: 0.7);
+    for (final c in cuts) {
+      canvas.drawRRect(c, ring);
+    }
   }
 
   @override
   bool shouldRepaint(covariant _SpotlightPainter old) =>
-      old.hole != hole || old.dim != dim;
+      old.dim != dim ||
+      old.holes.length != holes.length ||
+      !_listEq(old.holes, holes);
+
+  static bool _listEq(List<Rect> a, List<Rect> b) {
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
 }

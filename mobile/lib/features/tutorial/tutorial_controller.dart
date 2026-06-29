@@ -10,7 +10,11 @@ import 'tutorial_anchors.dart';
 /// kept as a plain string so the controller stays free of l10n imports.
 class TutorialStep {
   final String id;
-  final GlobalKey? anchor;
+
+  /// Elements to spotlight this step. Most steps have one; some highlight a few
+  /// at once (e.g. the connection bar and its Local/Tunnel label together).
+  /// Empty = a message with no spotlight.
+  final List<GlobalKey> anchors;
 
   /// Whether to dim the screen behind the spotlight. Turned off for steps that
   /// open their own modal (e.g. the preheat sheet) which already dims the rest.
@@ -22,7 +26,7 @@ class TutorialStep {
 
   const TutorialStep({
     required this.id,
-    this.anchor,
+    this.anchors = const [],
     this.dimScreen = true,
     this.forceCardTop = false,
   });
@@ -68,12 +72,12 @@ class TutorialController extends Notifier<TutorialState> {
   List<TutorialStep> _buildSteps() {
     final a = TutorialAnchors.instance;
     return [
-      TutorialStep(id: 'localBar', anchor: a.connectionBar),
-      TutorialStep(id: 'tunnelBar', anchor: a.connectionBar),
-      TutorialStep(id: 'hotend', anchor: a.tempHotend),
-      TutorialStep(id: 'bed', anchor: a.tempBed),
-      TutorialStep(id: 'chamber', anchor: a.tempChamber),
-      TutorialStep(id: 'webcam', anchor: a.webcam),
+      TutorialStep(id: 'localBar', anchors: [a.connectionBar, a.connectionLabel]),
+      TutorialStep(id: 'tunnelBar', anchors: [a.connectionBar, a.connectionLabel]),
+      TutorialStep(id: 'hotend', anchors: [a.tempHotend]),
+      TutorialStep(id: 'bed', anchors: [a.tempBed]),
+      TutorialStep(id: 'chamber', anchors: [a.tempChamber]),
+      TutorialStep(id: 'webcam', anchors: [a.webcam]),
       // Opens the real preheat sheet; the sheet dims the rest itself, so we
       // don't add our own scrim and we float the card above the sheet.
       const TutorialStep(id: 'preheat', dimScreen: false, forceCardTop: true),

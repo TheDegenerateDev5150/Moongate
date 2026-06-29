@@ -16,6 +16,9 @@ class TutorialAnchors {
   /// The thin connection-state colour bar at the top of the first tile.
   final GlobalKey connectionBar = GlobalKey(debugLabel: 'tut_connectionBar');
 
+  /// The Local/Tunnel text label + its wifi/cloud icon in the tile's name row.
+  final GlobalKey connectionLabel = GlobalKey(debugLabel: 'tut_connectionLabel');
+
   /// The hotend / bed / chamber temperature chips on the first tile.
   final GlobalKey tempHotend = GlobalKey(debugLabel: 'tut_tempHotend');
   final GlobalKey tempBed = GlobalKey(debugLabel: 'tut_tempBed');
