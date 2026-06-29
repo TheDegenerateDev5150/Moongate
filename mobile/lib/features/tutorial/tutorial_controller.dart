@@ -78,9 +78,11 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'bed', anchors: [a.tempBed]),
       TutorialStep(id: 'chamber', anchors: [a.tempChamber]),
       TutorialStep(id: 'webcam', anchors: [a.webcam]),
-      // Opens the real preheat sheet; the sheet dims the rest itself, so we
-      // don't add our own scrim and we float the card above the sheet.
-      const TutorialStep(id: 'preheat', dimScreen: false, forceCardTop: true),
+      // Preheat: first spotlight the long-press area (name + temps), then open
+      // the real sheet. The sheet dims the rest itself, so that step adds no
+      // scrim and floats the card above the sheet.
+      TutorialStep(id: 'preheatPress', anchors: [a.preheatArea]),
+      const TutorialStep(id: 'preheatSheet', dimScreen: false, forceCardTop: true),
     ];
   }
 

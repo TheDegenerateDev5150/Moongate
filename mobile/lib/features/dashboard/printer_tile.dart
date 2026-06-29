@@ -141,7 +141,8 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
   // even if the real printer is offline or mid-print), with the step's twist
   // applied (tunnel mode, or a faked chamber reading). Restored on the way out.
   static const _tileDemoSteps = {
-    'localBar', 'tunnelBar', 'hotend', 'bed', 'chamber', 'webcam', 'preheat',
+    'localBar', 'tunnelBar', 'hotend', 'bed', 'chamber', 'webcam',
+    'preheatPress', 'preheatSheet',
   };
 
   void _applyDemoForStep(TutorialState s) {
@@ -155,9 +156,9 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
         _realBehindDemo = null;
       });
     }
-    // The preheat step shows the real preheat sheet; open on entry, close on the
-    // way out (next step, or the tour ending / being skipped).
-    if (id == 'preheat') {
+    // The second preheat step shows the real preheat sheet; open on entry, close
+    // on the way out (next step, or the tour ending / being skipped).
+    if (id == 'preheatSheet') {
       _openPreheatDemo();
     } else {
       _closePreheatDemo();
@@ -560,7 +561,9 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                   // bed / chamber readouts to open the preheat / heat-soak sheet
                   // (online + idle only). The E-STOP / restart button at the end
                   // swallows its own long-press, so it stays out of the gesture.
-                  _preheatable(Column(
+                  _anchor(
+                    TutorialAnchors.instance.preheatArea,
+                    _preheatable(Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -670,7 +673,7 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                         ),
                       ],
                     ],
-                  )),
+                  ))),
                   if (_status.filename != null && _status.isPrinting)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),

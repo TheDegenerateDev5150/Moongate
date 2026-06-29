@@ -26,4 +26,7 @@ class TutorialAnchors {
 
   /// The webcam square on the first tile.
   final GlobalKey webcam = GlobalKey(debugLabel: 'tut_webcam');
+
+  /// The name + temperatures block, the long-press target that opens preheat.
+  final GlobalKey preheatArea = GlobalKey(debugLabel: 'tut_preheatArea');
 }

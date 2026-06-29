@@ -193,8 +193,10 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialChamber;
     case 'webcam':
       return l.tutorialWebcam;
-    case 'preheat':
-      return l.tutorialPreheat;
+    case 'preheatPress':
+      return l.tutorialPreheatPress;
+    case 'preheatSheet':
+      return l.tutorialPreheatSheet;
     default:
       return '';
   }
