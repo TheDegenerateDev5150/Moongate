@@ -3187,6 +3187,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tapping the camera view opens the full printer interface, the live Klipper screen.'**
   String get tutorialWebcam;
+
+  /// Tutorial step shown while the preheat sheet is open, explaining the long-press gesture and the hotend / bed / heat-soak fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Press and hold a printer\'s name or its temperatures to open this preheat panel. Set a hotend and bed target, and an optional heat-soak time so the printer holds temperature before it starts printing.'**
+  String get tutorialPreheat;
 }
 
 class _AppLocalizationsDelegate

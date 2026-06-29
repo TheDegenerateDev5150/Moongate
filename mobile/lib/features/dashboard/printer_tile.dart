@@ -70,6 +70,10 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
   /// restored the moment the demo ends. Null when no demo override is active.
   PrinterStatus? _realBehindDemo;
 
+  /// True while the tutorial's preheat step has the preheat sheet open, so it
+  /// can be closed again when the step moves on.
+  bool _preheatDemoOpen = false;
+
   /// Web UI type - 'mainsail', 'fluidd', or null. Seeded from the persisted
   /// config (so a cold launch shows the logo immediately even if the
   /// printer is currently offline) and updated whenever the status service
@@ -137,7 +141,7 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
   // even if the real printer is offline or mid-print), with the step's twist
   // applied (tunnel mode, or a faked chamber reading). Restored on the way out.
   static const _tileDemoSteps = {
-    'localBar', 'tunnelBar', 'hotend', 'bed', 'chamber', 'webcam',
+    'localBar', 'tunnelBar', 'hotend', 'bed', 'chamber', 'webcam', 'preheat',
   };
 
   void _applyDemoForStep(TutorialState s) {
@@ -151,6 +155,30 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
         _realBehindDemo = null;
       });
     }
+    // The preheat step shows the real preheat sheet; open on entry, close on the
+    // way out (next step, or the tour ending / being skipped).
+    if (id == 'preheat') {
+      _openPreheatDemo();
+    } else {
+      _closePreheatDemo();
+    }
+  }
+
+  void _openPreheatDemo() {
+    if (_preheatDemoOpen) return;
+    _preheatDemoOpen = true;
+    showPreheatSheet(
+      context,
+      widget.printer,
+      hotendTarget: _status.hotendTarget,
+      bedTarget: _status.bedTarget,
+    ).whenComplete(() => _preheatDemoOpen = false);
+  }
+
+  void _closePreheatDemo() {
+    if (!_preheatDemoOpen) return;
+    _preheatDemoOpen = false;
+    Navigator.of(context).maybePop();
   }
 
   PrinterStatus _demoStatusFor(String id) {

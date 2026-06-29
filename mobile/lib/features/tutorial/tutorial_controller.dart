@@ -11,7 +11,21 @@ import 'tutorial_anchors.dart';
 class TutorialStep {
   final String id;
   final GlobalKey? anchor;
-  const TutorialStep({required this.id, this.anchor});
+
+  /// Whether to dim the screen behind the spotlight. Turned off for steps that
+  /// open their own modal (e.g. the preheat sheet) which already dims the rest.
+  final bool dimScreen;
+
+  /// Force the callout card to the top of the screen. Used when a bottom sheet
+  /// is on screen so the card sits above it rather than under it.
+  final bool forceCardTop;
+
+  const TutorialStep({
+    required this.id,
+    this.anchor,
+    this.dimScreen = true,
+    this.forceCardTop = false,
+  });
 }
 
 /// Immutable run state of the tutorial: whether it is active, which step we are
@@ -60,6 +74,9 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'bed', anchor: a.tempBed),
       TutorialStep(id: 'chamber', anchor: a.tempChamber),
       TutorialStep(id: 'webcam', anchor: a.webcam),
+      // Opens the real preheat sheet; the sheet dims the rest itself, so we
+      // don't add our own scrim and we float the card above the sheet.
+      const TutorialStep(id: 'preheat', dimScreen: false, forceCardTop: true),
     ];
   }
 

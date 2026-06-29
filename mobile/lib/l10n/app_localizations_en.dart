@@ -1709,4 +1709,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tutorialWebcam =>
       'Tapping the camera view opens the full printer interface, the live Klipper screen.';
+
+  @override
+  String get tutorialPreheat =>
+      'Press and hold a printer\'s name or its temperatures to open this preheat panel. Set a hotend and bed target, and an optional heat-soak time so the printer holds temperature before it starts printing.';
 }

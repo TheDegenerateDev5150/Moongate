@@ -109,10 +109,16 @@ class _TutorialScrim extends StatelessWidget {
     final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
 
+    final step = state.current;
+    final dim = step?.dimScreen ?? true;
+
     // Put the card opposite the spotlight: at the bottom when the target sits in
     // the top 60% of the screen, otherwise at the top. Avoids covering the very
-    // thing we are pointing at.
-    final cardAtBottom = hole == null ? true : hole!.center.dy < size.height * 0.6;
+    // thing we are pointing at. A step can force the card to the top (e.g. when
+    // a bottom sheet is on screen).
+    final cardAtBottom = (step?.forceCardTop ?? false)
+        ? false
+        : (hole == null ? true : hole!.center.dy < size.height * 0.6);
     final text = _copyFor(l, state.current?.id);
 
     return Material(
@@ -126,7 +132,7 @@ class _TutorialScrim extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               onTap: () {}, // swallow taps on the dimmed area
               child: CustomPaint(
-                painter: _SpotlightPainter(hole: hole),
+                painter: _SpotlightPainter(hole: hole, dim: dim),
               ),
             ),
           ),
@@ -169,6 +175,8 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialChamber;
     case 'webcam':
       return l.tutorialWebcam;
+    case 'preheat':
+      return l.tutorialPreheat;
     default:
       return '';
   }
@@ -254,10 +262,15 @@ class _CalloutCard extends StatelessWidget {
 /// Paints the dimming scrim everywhere except a rounded hole over [hole].
 class _SpotlightPainter extends CustomPainter {
   final Rect? hole;
-  _SpotlightPainter({required this.hole});
+  final bool dim;
+  _SpotlightPainter({required this.hole, this.dim = true});
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Steps that open their own modal (preheat sheet) ask us not to dim - the
+    // sheet's own barrier handles that. The tap-absorber stays so the sheet
+    // can't be dismissed out from under the tour.
+    if (!dim) return;
     final scrim = Paint()..color = Colors.black.withValues(alpha: 0.72);
     if (hole == null) {
       canvas.drawRect(Offset.zero & size, scrim);
@@ -285,5 +298,6 @@ class _SpotlightPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SpotlightPainter old) => old.hole != hole;
+  bool shouldRepaint(covariant _SpotlightPainter old) =>
+      old.hole != hole || old.dim != dim;
 }
