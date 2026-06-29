@@ -233,9 +233,11 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
        _status.state == 'complete' ||
        _status.state == 'cancelled');
 
-  /// Wrap the temperature chips so a long-press opens the preheat sheet - but
-  /// only when [_canPreheat]; otherwise the chips render plainly and a press does
-  /// nothing (a normal tap still opens the printer page via the tile's InkWell).
+  /// Wrap the name + temperature block so a long-press anywhere on it opens the
+  /// preheat sheet - but only when [_canPreheat]; otherwise it renders plainly
+  /// and a press does nothing (a normal tap still opens the printer page via the
+  /// tile's InkWell). The big target replaces the old chips-only one, which got
+  /// fiddly once the display-size slider stacks each chip into a narrow column.
   Widget _preheatable(Widget chips) {
     if (!_canPreheat) return chips;
     return GestureDetector(
@@ -439,98 +441,106 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Printer name + connection label on the same row
-                  Row(
+                  // The whole name + temperature block is one big long-press
+                  // target: press and hold anywhere on the name or the hotend /
+                  // bed / chamber readouts to open the preheat / heat-soak sheet
+                  // (online + idle only). The E-STOP / restart button at the end
+                  // swallows its own long-press, so it stays out of the gesture.
+                  _preheatable(Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: Text(
-                          widget.printer.name,
-                          style: theme.textTheme.titleSmall,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (_status.connection != PrinterConnection.offline) ...[
-                        const SizedBox(width: 4),
-                        Icon(
-                          _status.connection == PrinterConnection.local
-                              ? Icons.wifi_rounded
-                              : Icons.cloud_outlined,
-                          size: 11,
-                          color: connColor,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          _status.connection == PrinterConnection.local
-                              ? l.tileLocal
-                              : l.tileTunnel,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: connColor,
-                            fontWeight: FontWeight.w600,
+                      // Printer name + connection label on the same row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.printer.name,
+                              style: theme.textTheme.titleSmall,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
+                          if (_status.connection != PrinterConnection.offline) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              _status.connection == PrinterConnection.local
+                                  ? Icons.wifi_rounded
+                                  : Icons.cloud_outlined,
+                              size: 11,
+                              color: connColor,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              _status.connection == PrinterConnection.local
+                                  ? l.tileLocal
+                                  : l.tileTunnel,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: connColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            // v0.5.0: when connected over LAN, show the remote
+                            // (tunnel) status as a small background hint - a
+                            // spinner-ish "connecting" pip while the Pi's tunnel
+                            // is still coming up after a fresh pair / reboot, and
+                            // a green check once the cloud knows the tunnel URL.
+                            // On the tunnel path itself the badge already says so.
+                            if (_status.connection == PrinterConnection.local)
+                              _TunnelStatusDot(ready: _status.tunnelReady),
+                          ],
+                        ],
+                      ),
+                      // Live temperatures - shown only when there's a real
+                      // reading. Offline / waiting / connecting tiles collapse to
+                      // just the name (no meaningless 0°/0° row), like the K3.
+                      if (!noLiveReading) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _TempChip(
+                                  icon: Icons.whatshot,
+                                  color: Colors.deepOrange,
+                                  temp: _status.hotendTemp,
+                                  target: _status.hotendTarget,
+                                ),
+                                const SizedBox(width: 8),
+                                _TempChip(
+                                  icon: Icons.bed,
+                                  color: Colors.blue,
+                                  temp: _status.bedTemp,
+                                  target: _status.bedTarget,
+                                ),
+                                if (_status.chamberTemp > 0) ...[
+                                  const SizedBox(width: 8),
+                                  _TempChip(
+                                    icon: Icons.sensor_window,
+                                    color: Colors.teal,
+                                    temp: _status.chamberTemp,
+                                    target: _status.chamberTarget,
+                                  ),
+                                ],
+                              ],
+                            ),
+                            // E-STOP at the right end of the temperature line.
+                            const Spacer(),
+                            if (_status.klippyShutdown)
+                              _RestartButton(
+                                tooltip: l.tileFirmwareRestart,
+                                onTap: _handleFirmwareRestart,
+                              )
+                            else
+                              _EstopButton(
+                                tooltip: l.tileEmergencyStop,
+                                onFire: _handleEmergencyStop,
+                              ),
+                          ],
                         ),
-                        // v0.5.0: when connected over LAN, show the remote
-                        // (tunnel) status as a small background hint - a
-                        // spinner-ish "connecting" pip while the Pi's tunnel
-                        // is still coming up after a fresh pair / reboot, and
-                        // a green check once the cloud knows the tunnel URL.
-                        // On the tunnel path itself the badge already says so.
-                        if (_status.connection == PrinterConnection.local)
-                          _TunnelStatusDot(ready: _status.tunnelReady),
                       ],
                     ],
-                  ),
-                  // Live temperatures - shown only when there's a real reading.
-                  // Offline / waiting / connecting tiles collapse to just the
-                  // name (no meaningless 0°/0° row), matching the K3 tile.
-                  if (!noLiveReading) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        // Long-press the temps to open the preheat / heat-soak
-                        // sheet (online + idle only); the E-STOP at the row's
-                        // end is deliberately left outside the gesture.
-                        _preheatable(Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _TempChip(
-                              icon: Icons.whatshot,
-                              color: Colors.deepOrange,
-                              temp: _status.hotendTemp,
-                              target: _status.hotendTarget,
-                            ),
-                            const SizedBox(width: 8),
-                            _TempChip(
-                              icon: Icons.bed,
-                              color: Colors.blue,
-                              temp: _status.bedTemp,
-                              target: _status.bedTarget,
-                            ),
-                            if (_status.chamberTemp > 0) ...[
-                              const SizedBox(width: 8),
-                              _TempChip(
-                                icon: Icons.sensor_window,
-                                color: Colors.teal,
-                                temp: _status.chamberTemp,
-                                target: _status.chamberTarget,
-                              ),
-                            ],
-                          ],
-                        )),
-                        // E-STOP at the right end of the temperature line.
-                        const Spacer(),
-                        if (_status.klippyShutdown)
-                          _RestartButton(
-                            tooltip: l.tileFirmwareRestart,
-                            onTap: _handleFirmwareRestart,
-                          )
-                        else
-                          _EstopButton(
-                            tooltip: l.tileEmergencyStop,
-                            onFire: _handleEmergencyStop,
-                          ),
-                      ],
-                    ),
-                  ],
+                  )),
                   if (_status.filename != null && _status.isPrinting)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
@@ -588,105 +598,115 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Name + connection label - same as the full tile: wifi/cloud
-                  // icon + Local/Tunnel label + the remote-tunnel status dot. A
-                  // power button leads the row (compact tiles have no webcam to
-                  // host it); it self-hides when the printer has no power control.
-                  Row(
+                  // The name + temperature block is one big long-press target
+                  // (same as the full tile): press and hold anywhere on the name
+                  // or the hotend / bed / chamber readouts to open the preheat /
+                  // heat-soak sheet (online + idle only). The power button and the
+                  // E-STOP / restart button each swallow their own long-press, so
+                  // they stay out of the gesture.
+                  _preheatable(Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _PowerButton(
-                        printer: widget.printer,
-                        status: _status,
-                        onSurface: true,
-                      ),
-                      Expanded(
-                        child: Text(
-                          widget.printer.name,
-                          style: theme.textTheme.titleSmall,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (_status.connection != PrinterConnection.offline) ...[
-                        const SizedBox(width: 4),
-                        Icon(
-                          _status.connection == PrinterConnection.local
-                              ? Icons.wifi_rounded
-                              : Icons.cloud_outlined,
-                          size: 11,
-                          color: connColor,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          _status.connection == PrinterConnection.local
-                              ? l.tileLocal
-                              : l.tileTunnel,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: connColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (_status.connection == PrinterConnection.local)
-                          _TunnelStatusDot(ready: _status.tunnelReady),
-                      ],
-                    ],
-                  ),
-                  // Print progress - kept so a compact tile still shows it.
-                  if (printing)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: _CompactProgress(status: _status),
-                    ),
-                  // Live temperatures + E-STOP on the SAME row (same as the full
-                  // tile) - shown whenever there's a live reading, including
-                  // mid-print, so the E-STOP stays reachable while online.
-                  if (!noLiveReading)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 5),
-                      child: Row(
+                      // Name + connection label - same as the full tile: wifi/cloud
+                      // icon + Local/Tunnel label + the remote-tunnel status dot. A
+                      // power button leads the row (compact tiles have no webcam to
+                      // host it); it self-hides when the printer has no power control.
+                      Row(
                         children: [
-                          // Long-press the temps to open the preheat / heat-soak
-                          // sheet (online + idle only).
-                          _preheatable(Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _TempChip(
-                                icon: Icons.whatshot,
-                                color: Colors.deepOrange,
-                                temp: _status.hotendTemp,
-                                target: _status.hotendTarget,
-                              ),
-                              const SizedBox(width: 8),
-                              _TempChip(
-                                icon: Icons.bed,
-                                color: Colors.blue,
-                                temp: _status.bedTemp,
-                                target: _status.bedTarget,
-                              ),
-                              if (_status.chamberTemp > 0) ...[
-                                const SizedBox(width: 8),
-                                _TempChip(
-                                  icon: Icons.sensor_window,
-                                  color: Colors.teal,
-                                  temp: _status.chamberTemp,
-                                  target: _status.chamberTarget,
-                                ),
-                              ],
-                            ],
-                          )),
-                          const Spacer(),
-                          if (_status.klippyShutdown)
-                            _RestartButton(
-                              tooltip: l.tileFirmwareRestart,
-                              onTap: _handleFirmwareRestart,
-                            )
-                          else
-                            _EstopButton(
-                              tooltip: l.tileEmergencyStop,
-                              onFire: _handleEmergencyStop,
+                          _PowerButton(
+                            printer: widget.printer,
+                            status: _status,
+                            onSurface: true,
+                          ),
+                          Expanded(
+                            child: Text(
+                              widget.printer.name,
+                              style: theme.textTheme.titleSmall,
+                              overflow: TextOverflow.ellipsis,
                             ),
+                          ),
+                          if (_status.connection != PrinterConnection.offline) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              _status.connection == PrinterConnection.local
+                                  ? Icons.wifi_rounded
+                                  : Icons.cloud_outlined,
+                              size: 11,
+                              color: connColor,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              _status.connection == PrinterConnection.local
+                                  ? l.tileLocal
+                                  : l.tileTunnel,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: connColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (_status.connection == PrinterConnection.local)
+                              _TunnelStatusDot(ready: _status.tunnelReady),
+                          ],
                         ],
                       ),
-                    ),
+                      // Print progress - kept so a compact tile still shows it.
+                      if (printing)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: _CompactProgress(status: _status),
+                        ),
+                      // Live temperatures + E-STOP on the SAME row (same as the
+                      // full tile) - shown whenever there's a live reading,
+                      // including mid-print, so the E-STOP stays reachable.
+                      if (!noLiveReading)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 5),
+                          child: Row(
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _TempChip(
+                                    icon: Icons.whatshot,
+                                    color: Colors.deepOrange,
+                                    temp: _status.hotendTemp,
+                                    target: _status.hotendTarget,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _TempChip(
+                                    icon: Icons.bed,
+                                    color: Colors.blue,
+                                    temp: _status.bedTemp,
+                                    target: _status.bedTarget,
+                                  ),
+                                  if (_status.chamberTemp > 0) ...[
+                                    const SizedBox(width: 8),
+                                    _TempChip(
+                                      icon: Icons.sensor_window,
+                                      color: Colors.teal,
+                                      temp: _status.chamberTemp,
+                                      target: _status.chamberTarget,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const Spacer(),
+                              if (_status.klippyShutdown)
+                                _RestartButton(
+                                  tooltip: l.tileFirmwareRestart,
+                                  onTap: _handleFirmwareRestart,
+                                )
+                              else
+                                _EstopButton(
+                                  tooltip: l.tileEmergencyStop,
+                                  onFire: _handleEmergencyStop,
+                                ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  )),
                   // Connection-state label when there's nothing live to show.
                   if (noLiveReading)
                     Padding(
@@ -1031,6 +1051,7 @@ class _EstopButton extends ConsumerWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {}, // swallow single taps - must not fire or navigate
+        onLongPress: () {}, // swallow long-press too - stays out of the preheat gesture
         onDoubleTap: onFire,
         child: Container(
           width: ring,
@@ -1064,6 +1085,7 @@ class _RestartButton extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
+        onLongPress: () {}, // swallow long-press - stays out of the preheat gesture
         child: Container(
           width: MediaQuery.textScalerOf(context).scale(24),
           height: MediaQuery.textScalerOf(context).scale(24),
@@ -1904,6 +1926,7 @@ class _PowerButtonState extends State<_PowerButton> {
           padding: const EdgeInsets.only(right: 6),
           child: InkWell(
             onTap: onTap,
+            onLongPress: () {}, // swallow long-press - stays out of the preheat gesture
             borderRadius: BorderRadius.circular(8),
             child:
                 Padding(padding: const EdgeInsets.all(2), child: iconOrSpinner),
@@ -1919,6 +1942,7 @@ class _PowerButtonState extends State<_PowerButton> {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
+          onLongPress: () {}, // swallow long-press - stays out of the preheat gesture
           child:
               Padding(padding: const EdgeInsets.all(5), child: iconOrSpinner),
         ),
