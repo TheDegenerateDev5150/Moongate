@@ -1014,5 +1014,26 @@
   "heatsoakDoneTitle": "Heat-soak complete",
   "@heatsoakDoneTitle": {"description": "Title of the notification fired when a heat-soak timer finishes."},
   "heatsoakDoneBody": "{printer} is up to temperature",
-  "@heatsoakDoneBody": {"description": "Body of the heat-soak-complete notification. {printer} is the printer name.", "placeholders": {"printer": {"type": "String"}}}
+  "@heatsoakDoneBody": {"description": "Body of the heat-soak-complete notification. {printer} is the printer name.", "placeholders": {"printer": {"type": "String"}}},
+
+  "tutorialOfferTitle": "Take a quick tour?",
+  "@tutorialOfferTitle": {"description": "Title of the first-run popup offering the in-app tutorial."},
+  "tutorialOfferBody": "Would you like a quick walkthrough of how Moongate works?",
+  "@tutorialOfferBody": {"description": "Body of the first-run tutorial offer popup."},
+  "tutorialOfferDontRemind": "Don't remind me again",
+  "@tutorialOfferDontRemind": {"description": "Checkbox on the tutorial offer popup that suppresses future offers."},
+  "tutorialOfferNo": "No thanks",
+  "@tutorialOfferNo": {"description": "Button that declines the tutorial offer."},
+  "tutorialOfferStart": "Start tutorial",
+  "@tutorialOfferStart": {"description": "Button that starts the walkthrough from the offer popup."},
+  "tutorialMenuTitle": "App tutorial",
+  "@tutorialMenuTitle": {"description": "Drawer menu entry that launches the walkthrough on demand."},
+  "tutorialNext": "Next",
+  "@tutorialNext": {"description": "Button that advances to the next tutorial step."},
+  "tutorialDone": "Done",
+  "@tutorialDone": {"description": "Button that finishes the tutorial on the last step."},
+  "tutorialSkip": "Skip",
+  "@tutorialSkip": {"description": "Button that ends the tutorial early."},
+  "tutorialLocalBar": "The colour bar shows how Moongate is reaching this printer. Green with a Wi-Fi icon means you are on the same network, a fast, direct local connection.",
+  "@tutorialLocalBar": {"description": "Tutorial step explaining the green local-mode connection bar on a printer tile."}
 }

@@ -1687,4 +1687,36 @@ class AppLocalizationsIt extends AppLocalizations {
   String heatsoakDoneBody(String printer) {
     return '$printer è in temperatura';
   }
+
+  @override
+  String get tutorialOfferTitle => 'Take a quick tour?';
+
+  @override
+  String get tutorialOfferBody =>
+      'Would you like a quick walkthrough of how Moongate works?';
+
+  @override
+  String get tutorialOfferDontRemind => 'Don\'t remind me again';
+
+  @override
+  String get tutorialOfferNo => 'No thanks';
+
+  @override
+  String get tutorialOfferStart => 'Start tutorial';
+
+  @override
+  String get tutorialMenuTitle => 'App tutorial';
+
+  @override
+  String get tutorialNext => 'Next';
+
+  @override
+  String get tutorialDone => 'Done';
+
+  @override
+  String get tutorialSkip => 'Skip';
+
+  @override
+  String get tutorialLocalBar =>
+      'The colour bar shows how Moongate is reaching this printer. Green with a Wi-Fi icon means you are on the same network, a fast, direct local connection.';
 }

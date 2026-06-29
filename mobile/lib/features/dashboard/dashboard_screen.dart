@@ -33,6 +33,8 @@ import '../donation/donation_prompt.dart';
 import '../info/ui_guide.dart';
 import '../language/language_picker.dart';
 import '../notifications/notifications_prompt.dart';
+import '../tutorial/tutorial_controller.dart';
+import '../tutorial/tutorial_offer.dart';
 import 'feedback_sheet.dart';
 import 'printer_tile.dart';
 import 'camera_feeds_overlay.dart';
@@ -930,8 +932,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
 
-            // ── Bottom bar - only the build number stays pinned ───────────────
-            const Divider(),
+            // ── Bottom: tutorial + build number stay pinned ───────────────────
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.school_outlined),
+              title: Text(l.tutorialMenuTitle),
+              onTap: () {
+                Navigator.pop(context);
+                _startTutorial();
+              },
+            ),
+            const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
               child: ref.watch(appVersionProvider).when(
@@ -1264,6 +1275,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   static const _languageSelectedKey = 'language_selected';
   static const _notifPromptedKey = 'notifications_prompted';
   static const _donationPromptedKey = 'donation_prompted';
+  static const _tutorialOfferedKey = 'tutorial_offered';
 
   /// First cold start: prompt for a language once, then run the pairing
   /// explainer. The language prompt is gated by [_languageSelectedKey] so it
@@ -1279,6 +1291,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await _maybeShowPairingHelp();
     await _maybeOfferNotifications();
     await _maybeShowDonationPrompt();
+    await _maybeOfferTutorial();
+  }
+
+  /// Offer the live walkthrough once, after the user has a printer to look at.
+  /// Mirrors the other first-run prompts: gated on having ≥1 printer and shown
+  /// once (the flag is set when the user starts it or ticks "don't remind me").
+  /// Dismissing without choosing leaves the flag clear, so it offers again.
+  Future<void> _maybeOfferTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_tutorialOfferedKey) ?? false) return;
+    if (PrinterRegistry.instance.printers.isEmpty) return;
+    if (!mounted) return;
+    final result = await showTutorialOffer(context);
+    if (result == null) return;
+    if (result.start || result.dontRemind) {
+      await prefs.setBool(_tutorialOfferedKey, true);
+    }
+    if (result.start) _startTutorial();
+  }
+
+  /// Launch the walkthrough now (from the offer popup or the drawer entry).
+  void _startTutorial() {
+    ref.read(tutorialControllerProvider.notifier).start();
   }
 
   /// A one-time, low-pressure nudge to support the project, shown on a cold
@@ -1763,6 +1798,8 @@ class _PrinterGrid extends StatelessWidget {
             onTap: () => onTap(printers[i]),
             tileOpacity: tileOpacity,
             bounded: bounded,
+            // The first tile carries the live-tutorial spotlight anchors.
+            anchorForTutorial: i == 0,
           );
 
       // Manual-order mode: drag the actual tiles around the grid - the original

@@ -3097,6 +3097,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{printer} is up to temperature'**
   String heatsoakDoneBody(String printer);
+
+  /// Title of the first-run popup offering the in-app tutorial.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a quick tour?'**
+  String get tutorialOfferTitle;
+
+  /// Body of the first-run tutorial offer popup.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like a quick walkthrough of how Moongate works?'**
+  String get tutorialOfferBody;
+
+  /// Checkbox on the tutorial offer popup that suppresses future offers.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t remind me again'**
+  String get tutorialOfferDontRemind;
+
+  /// Button that declines the tutorial offer.
+  ///
+  /// In en, this message translates to:
+  /// **'No thanks'**
+  String get tutorialOfferNo;
+
+  /// Button that starts the walkthrough from the offer popup.
+  ///
+  /// In en, this message translates to:
+  /// **'Start tutorial'**
+  String get tutorialOfferStart;
+
+  /// Drawer menu entry that launches the walkthrough on demand.
+  ///
+  /// In en, this message translates to:
+  /// **'App tutorial'**
+  String get tutorialMenuTitle;
+
+  /// Button that advances to the next tutorial step.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tutorialNext;
+
+  /// Button that finishes the tutorial on the last step.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get tutorialDone;
+
+  /// Button that ends the tutorial early.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get tutorialSkip;
+
+  /// Tutorial step explaining the green local-mode connection bar on a printer tile.
+  ///
+  /// In en, this message translates to:
+  /// **'The colour bar shows how Moongate is reaching this printer. Green with a Wi-Fi icon means you are on the same network, a fast, direct local connection.'**
+  String get tutorialLocalBar;
 }
 
 class _AppLocalizationsDelegate

@@ -15,6 +15,7 @@ import '../../services/printer_status_registry.dart';
 import '../../services/printer_status_service.dart';
 import '../../widgets/webcam_view.dart';
 import '../printer/printer_camera_screen.dart';
+import '../tutorial/tutorial_anchors.dart';
 import 'gcode_files_overlay.dart';
 import 'macros_overlay.dart';
 import 'preheat_overlay.dart';
@@ -35,12 +36,19 @@ class PrinterTile extends StatefulWidget {
   /// can give height back rather than overflow on a busy tile. See _webcamCell.
   final bool bounded;
 
+  /// True only for the one tile the live tutorial spotlights (the first tile on
+  /// the dashboard). When set, the tile attaches the shared [TutorialAnchors]
+  /// keys to its parts so the tutorial overlay can locate them. Off for every
+  /// other tile (a GlobalKey must be mounted only once).
+  final bool anchorForTutorial;
+
   const PrinterTile({
     super.key,
     required this.printer,
     required this.onTap,
     this.tileOpacity = 1.0,
     this.bounded = false,
+    this.anchorForTutorial = false,
   });
 
   @override
@@ -302,7 +310,13 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           children: [
             // ── Connection accent bar (clipped to card corners at top) ────
-            Container(height: 3, color: connColor),
+            Container(
+              key: widget.anchorForTutorial
+                  ? TutorialAnchors.instance.connectionBar
+                  : null,
+              height: 3,
+              color: connColor,
+            ),
 
             // ── Webcam ───────────────────────────────────────────────────
             // A fixed 1:1 square so the feed always reads cleanly, independent
@@ -589,7 +603,13 @@ class _PrinterTileState extends State<PrinterTile> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Connection accent bar (matches the full tile).
-            Container(height: 3, color: connColor),
+            Container(
+              key: widget.anchorForTutorial
+                  ? TutorialAnchors.instance.connectionBar
+                  : null,
+              height: 3,
+              color: connColor,
+            ),
             Padding(
               // Right inset matches the full tile (10) so the connection icons
               // and the E-STOP line up with a full tile stacked above/below.
