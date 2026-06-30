@@ -416,6 +416,21 @@ class AppLocalizationsPl extends AppLocalizations {
   String get dashboardThemeCustom => 'Niestandardowy';
 
   @override
+  String get dashboardFontHeading => 'Czcionka';
+
+  @override
+  String get fontStandard => 'Domyślna';
+
+  @override
+  String get fontRounded => 'Zaokrąglona';
+
+  @override
+  String get fontSerif => 'Szeryfowa';
+
+  @override
+  String get fontReadable => 'Wysoka czytelność';
+
+  @override
   String get dashboardCustomiseColours => 'Dostosuj kolory';
 
   @override

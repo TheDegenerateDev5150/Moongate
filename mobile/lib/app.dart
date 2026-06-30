@@ -119,6 +119,7 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
     final fontScale  = ref.watch(fontScaleProvider);
     final custom     = ref.watch(customThemeProvider);
     final localeCode = ref.watch(localeProvider);
+    final fontFamily = ref.watch(appFontProvider).family;
 
     final isCustom = appMode == AppThemeMode.custom;
     final isSystem = appMode == AppThemeMode.system;
@@ -135,13 +136,13 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
         if (isCustom) {
           // The user is taking over colour decisions, so pin both slots to the
           // same custom theme - the system dark-mode toggle shouldn't flip it.
-          lightTheme = darkTheme = _buildCustomTheme(custom);
+          lightTheme = darkTheme = _buildCustomTheme(custom, fontFamily);
         } else if (isSystem && hasDynamic) {
-          lightTheme = _buildDynamicTheme(lightDynamic);
-          darkTheme  = _buildDynamicTheme(darkDynamic);
+          lightTheme = _buildDynamicTheme(lightDynamic, fontFamily);
+          darkTheme  = _buildDynamicTheme(darkDynamic, fontFamily);
         } else {
-          lightTheme = _buildSeededTheme(Brightness.light);
-          darkTheme  = _buildSeededTheme(Brightness.dark);
+          lightTheme = _buildSeededTheme(Brightness.light, fontFamily);
+          darkTheme  = _buildSeededTheme(Brightness.dark, fontFamily);
         }
 
         return MaterialApp.router(
@@ -197,10 +198,11 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
       };
 
   /// The original purple-seeded Material 3 theme.  Used for light / dark.
-  ThemeData _buildSeededTheme(Brightness brightness) {
+  ThemeData _buildSeededTheme(Brightness brightness, String? fontFamily) {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      fontFamily: fontFamily,
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF6C63FF),
         brightness: brightness,
@@ -212,10 +214,11 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
   /// Android 12+ "Material You" palette handed to us by DynamicColorBuilder.
   /// Each scheme already carries its own brightness, so the light and dark
   /// slots are built from the two schemes the builder provides.
-  ThemeData _buildDynamicTheme(ColorScheme scheme) {
+  ThemeData _buildDynamicTheme(ColorScheme scheme, String? fontFamily) {
     return ThemeData(
       useMaterial3: true,
       brightness: scheme.brightness,
+      fontFamily: fontFamily,
       colorScheme: scheme,
     );
   }
@@ -224,7 +227,7 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
   /// [ColorScheme.fromSeed] with the accent as the seed so all the Material 3
   /// derivative slots (primary container, tertiary, etc.) stay harmonious,
   /// then overrides the slots the user explicitly picked.
-  ThemeData _buildCustomTheme(CustomTheme c) {
+  ThemeData _buildCustomTheme(CustomTheme c, String? fontFamily) {
     final isLightBg = c.background.computeLuminance() > 0.5;
     final brightness = isLightBg ? Brightness.light : Brightness.dark;
 
@@ -258,6 +261,7 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      fontFamily: fontFamily,
       colorScheme: scheme,
       scaffoldBackgroundColor: c.background,
       cardColor: c.surface,

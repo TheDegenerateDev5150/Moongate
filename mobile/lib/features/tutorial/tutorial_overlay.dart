@@ -154,6 +154,12 @@ class _TutorialScrim extends StatelessWidget {
         ? null
         : holes.reduce((a, b) => a.expandToInclude(b));
 
+    // Some steps spotlight several adjacent elements (the hotend / bed / chamber
+    // chips) and read better as one box around the whole group than a separate
+    // ring per chip. Collapse to the bounding box when the step asks for it.
+    final paintHoles =
+        (step?.unifyAnchors ?? false) && union != null ? [union] : holes;
+
     // Put the card opposite the spotlight: at the bottom when the target sits in
     // the top 60% of the screen, otherwise at the top. Avoids covering the very
     // thing we are pointing at. A step can force the card to the top (e.g. when
@@ -180,7 +186,7 @@ class _TutorialScrim extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               onTap: () {}, // swallow taps on the dimmed area
               child: CustomPaint(
-                painter: _SpotlightPainter(holes: holes, dim: dim),
+                painter: _SpotlightPainter(holes: paintHoles, dim: dim),
               ),
             ),
           ),

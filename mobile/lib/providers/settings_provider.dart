@@ -70,6 +70,51 @@ final dynamicColorSupportedProvider = FutureProvider<bool>((ref) async {
 });
 
 // ---------------------------------------------------------------------------
+// App font  (the bundled typeface used across the app)
+// ---------------------------------------------------------------------------
+
+/// The user's chosen app typeface. The phone's own system font can't be read by
+/// the app (Flutter renders text with its own engine, not Android's), so we
+/// offer a small set of bundled fonts instead. `standard` keeps the platform
+/// default; the others map to families declared in pubspec.yaml.
+enum AppFont { standard, rounded, serif, readable }
+
+extension AppFontX on AppFont {
+  /// The bundled font family to apply, or null for the platform default.
+  String? get family => switch (this) {
+        AppFont.standard => null,
+        AppFont.rounded  => 'Nunito',
+        AppFont.serif    => 'Lora',
+        AppFont.readable => 'AtkinsonHyperlegible',
+      };
+}
+
+class AppFontNotifier extends Notifier<AppFont> {
+  static const _key = 'app_font';
+
+  @override
+  AppFont build() => AppFont.standard;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_key);
+    state = AppFont.values.firstWhere(
+      (e) => e.name == raw,
+      orElse: () => AppFont.standard,
+    );
+  }
+
+  Future<void> set(AppFont font) async {
+    state = font;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, font.name);
+  }
+}
+
+final appFontProvider =
+    NotifierProvider<AppFontNotifier, AppFont>(AppFontNotifier.new);
+
+// ---------------------------------------------------------------------------
 // Font scale
 // ---------------------------------------------------------------------------
 

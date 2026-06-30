@@ -25,6 +25,7 @@ class SettingsBackup {
 
   static const Map<String, _Kind> _keys = {
     'theme_mode':                  _Kind.string,
+    'app_font':                    _Kind.string,
     'custom_theme':                _Kind.string,
     'font_scale':                  _Kind.real,
     'grid_columns':                _Kind.integer,

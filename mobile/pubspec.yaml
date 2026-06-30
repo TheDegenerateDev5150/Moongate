@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.9.37+108
+version: 0.9.38+109
 publish_to: none
 
 environment:
@@ -145,6 +145,25 @@ flutter:
   assets:
     - assets/icons/
     - assets/changelog.json
+
+  # Bundled, open-licensed (SIL OFL) fonts for the in-app Font picker. A Flutter
+  # app can't read the user's selected system font, so we ship a small set: a
+  # rounded sans (Nunito), a serif (Lora), and a high-readability face (Atkinson
+  # Hyperlegible). "Default" uses no override. Nunito/Lora are variable fonts
+  # (one file covers all weights); Atkinson is static, so we ship Regular + Bold.
+  # Licenses live in assets/fonts/OFL-*.txt.
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito-variable.ttf
+    - family: Lora
+      fonts:
+        - asset: assets/fonts/Lora-variable.ttf
+    - family: AtkinsonHyperlegible
+      fonts:
+        - asset: assets/fonts/AtkinsonHyperlegible-Regular.ttf
+        - asset: assets/fonts/AtkinsonHyperlegible-Bold.ttf
+          weight: 700
 
 # Launcher icon generation (see tool/make_icon.py for the source artwork).
 # Adaptive icon = solid near-black background + the red moon-gate foreground;

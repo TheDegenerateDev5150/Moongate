@@ -412,6 +412,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardThemeCustom => 'Custom';
 
   @override
+  String get dashboardFontHeading => 'Font';
+
+  @override
+  String get fontStandard => 'Default';
+
+  @override
+  String get fontRounded => 'Rounded';
+
+  @override
+  String get fontSerif => 'Serif';
+
+  @override
+  String get fontReadable => 'High-readability';
+
+  @override
   String get dashboardCustomiseColours => 'Customise colours';
 
   @override
