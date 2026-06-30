@@ -1683,119 +1683,119 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get tutorialOfferTitle => 'Take a quick tour?';
+  String get tutorialOfferTitle => 'Kurze Tour gefällig?';
 
   @override
   String get tutorialOfferBody =>
-      'Would you like a quick walkthrough of how Moongate works?';
+      'Möchtest du eine kurze Einführung, wie Moongate funktioniert?';
 
   @override
-  String get tutorialOfferDontRemind => 'Don\'t remind me again';
+  String get tutorialOfferDontRemind => 'Nicht mehr erinnern';
 
   @override
-  String get tutorialOfferNo => 'No thanks';
+  String get tutorialOfferNo => 'Nein danke';
 
   @override
-  String get tutorialOfferStart => 'Start tutorial';
+  String get tutorialOfferStart => 'Tutorial starten';
 
   @override
-  String get tutorialMenuTitle => 'App tutorial';
+  String get tutorialMenuTitle => 'App-Tutorial';
 
   @override
-  String get tutorialNext => 'Next';
+  String get tutorialNext => 'Weiter';
 
   @override
-  String get tutorialDone => 'Done';
+  String get tutorialDone => 'Fertig';
 
   @override
-  String get tutorialSkip => 'Skip';
+  String get tutorialSkip => 'Überspringen';
 
   @override
-  String get tutorialBack => 'Back';
+  String get tutorialBack => 'Zurück';
 
   @override
   String get tutorialLocalBar =>
-      'The colour bar shows how Moongate is reaching this printer. Green with a Wi-Fi icon means you are on the same network, a fast, direct local connection.';
+      'Der Farbbalken zeigt, wie Moongate diesen Drucker erreicht. Grün mit einem Wi-Fi-Symbol bedeutet, dass du im selben Netzwerk bist - eine schnelle, direkte lokale Verbindung.';
 
   @override
   String get tutorialTunnelBar =>
-      'Orange with a cloud icon means you are away from home, connected securely over the internet through your printer\'s tunnel. Moongate switches between the two automatically.';
+      'Orange mit einem Wolkensymbol bedeutet, dass du unterwegs bist und sicher über das Internet durch den Tunnel deines Druckers verbunden bist. Moongate wechselt automatisch zwischen beiden.';
 
   @override
   String get tutorialRemoteBuilding =>
-      'When you first pair a printer, remote access isn\'t instant. This little cloud marker means the secure tunnel is still building in the background. Once it turns into a green cloud tick, you can reach this printer from anywhere.';
+      'Wenn du einen Drucker zum ersten Mal koppelst, ist der Fernzugriff nicht sofort verfügbar. Diese kleine Wolkenmarkierung bedeutet, dass der sichere Tunnel im Hintergrund noch aufgebaut wird. Sobald daraus ein grünes Wolken-Häkchen wird, erreichst du diesen Drucker von überall.';
 
   @override
-  String get tutorialHotend => 'This is your hotend, the nozzle temperature.';
+  String get tutorialHotend => 'Das ist dein Hotend, die Düsentemperatur.';
 
   @override
-  String get tutorialBed => 'And this is the heated bed.';
+  String get tutorialBed => 'Und das ist das beheizte Bett.';
 
   @override
   String get tutorialChamber =>
-      'If your printer has a chamber sensor, its temperature shows here too.';
+      'Wenn dein Drucker einen Kammersensor hat, wird dessen Temperatur hier ebenfalls angezeigt.';
 
   @override
   String get tutorialEstop =>
-      'This is the emergency stop. It needs a double tap to fire, so it can\'t be triggered by accident, and it halts the printer immediately.';
+      'Das ist der Notstopp. Er muss doppelt getippt werden, damit er nicht versehentlich ausgelöst wird, und er hält den Drucker sofort an.';
 
   @override
   String get tutorialWebcam =>
-      'Tapping the camera view opens the full printer interface, the live Klipper screen.';
+      'Ein Tippen auf die Kameraansicht öffnet die vollständige Druckeroberfläche, den Live-Klipper-Bildschirm.';
 
   @override
   String get tutorialPreheatPress =>
-      'Press and hold a printer\'s name or its temperatures to display the preheat panel.';
+      'Halte den Namen eines Druckers oder seine Temperaturen gedrückt, um das Vorheiz-Panel anzuzeigen.';
 
   @override
   String get tutorialPreheatSheet =>
-      'Here you can set hotend and bed targets and an optional heat-soak time.';
+      'Hier kannst du Zieltemperaturen für Hotend und Bett sowie optional eine Heat-Soak-Zeit festlegen.';
 
   @override
   String get tutorialAddPrinter =>
-      'Tap the plus button any time to add another printer and pair it.';
+      'Tippe jederzeit auf die Plus-Schaltfläche, um einen weiteren Drucker hinzuzufügen und zu koppeln.';
 
   @override
   String get tutorialMenuIcon =>
-      'This is the menu. You can open it any time from here.';
+      'Das ist das Menü. Du kannst es von hier aus jederzeit öffnen.';
 
   @override
   String get tutorialMenuPrinters =>
-      'Add another printer, or remove one you no longer use.';
+      'Füge einen weiteren Drucker hinzu oder entferne einen, den du nicht mehr nutzt.';
 
   @override
   String get tutorialMenuBackup =>
-      'Back up your setup to a file, or restore it on another device.';
+      'Sichere deine Einrichtung in einer Datei oder stelle sie auf einem anderen Gerät wieder her.';
 
   @override
   String get tutorialMenuTheme =>
-      'Choose a light, dark, or fully custom colour theme.';
+      'Wähle ein helles, dunkles oder vollständig eigenes Farbdesign.';
 
   @override
   String get tutorialMenuDisplaySize =>
-      'Drag this to make everything bigger or smaller to suit your eyes.';
+      'Ziehe hier, um alles größer oder kleiner zu machen, passend für deine Augen.';
 
   @override
   String get tutorialMenuColumns =>
-      'Lay your printers out in one, two, or three columns.';
+      'Ordne deine Drucker in einer, zwei oder drei Spalten an.';
 
   @override
   String get tutorialMenuCameras =>
-      'Set how often the webcam feeds refresh, and turn each printer\'s camera on or off.';
+      'Lege fest, wie oft die Webcam-Feeds aktualisiert werden, und schalte die Kamera jedes Druckers ein oder aus.';
 
   @override
   String get tutorialMenuAbout =>
-      'What\'s new, how pairing works, an icon guide, and where to report a problem all live here.';
+      'Neuigkeiten, wie das Koppeln funktioniert, eine Symbolübersicht und wo du ein Problem melden kannst, findest du alles hier.';
 
   @override
   String get tutorialMenuSupport =>
-      'Buying me a coffee helps keep Moongate free for everyone and open source.';
+      'Mir einen Kaffee zu spendieren hilft, Moongate für alle kostenlos und quelloffen zu halten.';
 
   @override
   String get tutorialMenuSettings =>
-      'Settings has two options inside: clear all your printers, or delete all your data and start completely fresh.';
+      'In den Einstellungen gibt es zwei Optionen: alle Drucker löschen oder alle deine Daten löschen und ganz neu beginnen.';
 
   @override
   String get tutorialMenuLanguage =>
-      'And you can switch the app\'s language here - Moongate speaks eight. That\'s the tour, enjoy!';
+      'Und hier kannst du die Sprache der App ändern - Moongate spricht acht. Das war die Tour, viel Spaß!';
 }

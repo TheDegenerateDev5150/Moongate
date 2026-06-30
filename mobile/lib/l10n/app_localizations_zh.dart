@@ -1599,119 +1599,102 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get tutorialOfferTitle => 'Take a quick tour?';
+  String get tutorialOfferTitle => '来个快速导览？';
 
   @override
-  String get tutorialOfferBody =>
-      'Would you like a quick walkthrough of how Moongate works?';
+  String get tutorialOfferBody => '想快速了解一下 Moongate 的使用方法吗？';
 
   @override
-  String get tutorialOfferDontRemind => 'Don\'t remind me again';
+  String get tutorialOfferDontRemind => '不再提醒我';
 
   @override
-  String get tutorialOfferNo => 'No thanks';
+  String get tutorialOfferNo => '不用了，谢谢';
 
   @override
-  String get tutorialOfferStart => 'Start tutorial';
+  String get tutorialOfferStart => '开始教程';
 
   @override
-  String get tutorialMenuTitle => 'App tutorial';
+  String get tutorialMenuTitle => '应用教程';
 
   @override
-  String get tutorialNext => 'Next';
+  String get tutorialNext => '下一步';
 
   @override
-  String get tutorialDone => 'Done';
+  String get tutorialDone => '完成';
 
   @override
-  String get tutorialSkip => 'Skip';
+  String get tutorialSkip => '跳过';
 
   @override
-  String get tutorialBack => 'Back';
+  String get tutorialBack => '上一步';
 
   @override
   String get tutorialLocalBar =>
-      'The colour bar shows how Moongate is reaching this printer. Green with a Wi-Fi icon means you are on the same network, a fast, direct local connection.';
+      '颜色条显示 Moongate 是如何连接这台打印机的。绿色加 Wi-Fi 图标表示你在同一网络中，这是一种快速的直连本地连接。';
 
   @override
   String get tutorialTunnelBar =>
-      'Orange with a cloud icon means you are away from home, connected securely over the internet through your printer\'s tunnel. Moongate switches between the two automatically.';
+      '橙色加云朵图标表示你不在家中，正通过打印机的隧道经由互联网安全连接。Moongate 会自动在两者之间切换。';
 
   @override
   String get tutorialRemoteBuilding =>
-      'When you first pair a printer, remote access isn\'t instant. This little cloud marker means the secure tunnel is still building in the background. Once it turns into a green cloud tick, you can reach this printer from anywhere.';
+      '首次配对打印机时，远程访问不会立即可用。这个小云朵标记表示安全隧道仍在后台建立。一旦它变成绿色云朵对勾，你就能从任何地方连接这台打印机了。';
 
   @override
-  String get tutorialHotend => 'This is your hotend, the nozzle temperature.';
+  String get tutorialHotend => '这是你的热端，即喷嘴温度。';
 
   @override
-  String get tutorialBed => 'And this is the heated bed.';
+  String get tutorialBed => '这是热床。';
 
   @override
-  String get tutorialChamber =>
-      'If your printer has a chamber sensor, its temperature shows here too.';
+  String get tutorialChamber => '如果你的打印机有腔体传感器，其温度也会显示在这里。';
 
   @override
-  String get tutorialEstop =>
-      'This is the emergency stop. It needs a double tap to fire, so it can\'t be triggered by accident, and it halts the printer immediately.';
+  String get tutorialEstop => '这是紧急停止。它需要双击才会触发，以免误触，触发后会立即停止打印机。';
 
   @override
-  String get tutorialWebcam =>
-      'Tapping the camera view opens the full printer interface, the live Klipper screen.';
+  String get tutorialWebcam => '点击摄像头画面会打开完整的打印机界面，即实时的 Klipper 屏幕。';
 
   @override
-  String get tutorialPreheatPress =>
-      'Press and hold a printer\'s name or its temperatures to display the preheat panel.';
+  String get tutorialPreheatPress => '按住打印机的名称或温度即可显示预热面板。';
 
   @override
-  String get tutorialPreheatSheet =>
-      'Here you can set hotend and bed targets and an optional heat-soak time.';
+  String get tutorialPreheatSheet => '在这里你可以设置热端和热床的目标温度，以及可选的热浸时间。';
 
   @override
-  String get tutorialAddPrinter =>
-      'Tap the plus button any time to add another printer and pair it.';
+  String get tutorialAddPrinter => '随时点击加号按钮即可添加并配对另一台打印机。';
 
   @override
-  String get tutorialMenuIcon =>
-      'This is the menu. You can open it any time from here.';
+  String get tutorialMenuIcon => '这是菜单。你可以随时从这里打开它。';
 
   @override
-  String get tutorialMenuPrinters =>
-      'Add another printer, or remove one you no longer use.';
+  String get tutorialMenuPrinters => '添加另一台打印机，或移除你不再使用的打印机。';
 
   @override
-  String get tutorialMenuBackup =>
-      'Back up your setup to a file, or restore it on another device.';
+  String get tutorialMenuBackup => '将你的配置备份到文件，或在另一台设备上恢复。';
 
   @override
-  String get tutorialMenuTheme =>
-      'Choose a light, dark, or fully custom colour theme.';
+  String get tutorialMenuTheme => '选择浅色、深色或完全自定义的配色主题。';
 
   @override
-  String get tutorialMenuDisplaySize =>
-      'Drag this to make everything bigger or smaller to suit your eyes.';
+  String get tutorialMenuDisplaySize => '拖动这里可让一切变大或变小，以适应你的视觉。';
 
   @override
-  String get tutorialMenuColumns =>
-      'Lay your printers out in one, two, or three columns.';
+  String get tutorialMenuColumns => '将你的打印机排列成一列、两列或三列。';
 
   @override
-  String get tutorialMenuCameras =>
-      'Set how often the webcam feeds refresh, and turn each printer\'s camera on or off.';
+  String get tutorialMenuCameras => '设置摄像头画面的刷新频率，并开启或关闭每台打印机的摄像头。';
 
   @override
-  String get tutorialMenuAbout =>
-      'What\'s new, how pairing works, an icon guide, and where to report a problem all live here.';
+  String get tutorialMenuAbout => '更新内容、配对原理、图标指南，以及在哪里反馈问题，都在这里。';
 
   @override
-  String get tutorialMenuSupport =>
-      'Buying me a coffee helps keep Moongate free for everyone and open source.';
+  String get tutorialMenuSupport => '请我喝杯咖啡，有助于让 Moongate 对所有人保持免费和开源。';
 
   @override
-  String get tutorialMenuSettings =>
-      'Settings has two options inside: clear all your printers, or delete all your data and start completely fresh.';
+  String get tutorialMenuSettings => '设置中有两个选项：清除所有打印机，或删除所有数据并完全重新开始。';
 
   @override
   String get tutorialMenuLanguage =>
-      'And you can switch the app\'s language here - Moongate speaks eight. That\'s the tour, enjoy!';
+      '你还可以在这里切换应用的语言，Moongate 支持八种语言。导览到此结束，祝你使用愉快！';
 }
