@@ -78,19 +78,27 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
   Widget build(BuildContext context) {
     final state = ref.watch(tutorialControllerProvider);
 
-    // Re-resolve the spotlight whenever the active step changes.
+    final isDrawerStep = state.current?.requiresDrawer ?? false;
+
+    // On a new step, drop the previous spotlight straight away so it never
+    // flashes at a stale position while things move.
     if (state.active && _resolvedForIndex != state.index) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _resolveRect(ref.read(tutorialControllerProvider));
-      });
+      _holeRects = const [];
+      // Static targets (tiles, the menu button) resolve next frame. Drawer
+      // entries wait for the open + scroll to settle (below) so the spotlight
+      // appears AFTER the scroll, not before.
+      if (!isDrawerStep) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _resolveRect(ref.read(tutorialControllerProvider));
+        });
+      }
     }
-    // A second pass after a beat catches targets that animate into place (the
-    // drawer sliding open, a bottom sheet rising) so the hole lands settled.
+    // Delayed pass(es) for targets that animate into place: a drawer entry
+    // sliding/scrolling in, a bottom sheet rising.
     if (state.active && _settleScheduledForIndex != state.index) {
       _settleScheduledForIndex = state.index;
-      // Two passes: ~360ms catches the drawer/sheet open; ~760ms catches a
-      // follow-on scroll that brings a drawer entry into view.
-      for (final ms in const [360, 760]) {
+      final delays = isDrawerStep ? const [820] : const [360, 760];
+      for (final ms in delays) {
         Future.delayed(Duration(milliseconds: ms), () {
           if (mounted) _resolveRect(ref.read(tutorialControllerProvider));
         });
