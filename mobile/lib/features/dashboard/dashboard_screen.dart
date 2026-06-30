@@ -1350,7 +1350,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       // after the previous menu step's scroll finishes).
       final key = (step?.anchors.isNotEmpty ?? false) ? step!.anchors.first : null;
       if (key != null) {
-        Future.delayed(const Duration(milliseconds: 320), () {
+        Future.delayed(const Duration(milliseconds: 180), () {
           if (!mounted) return;
           final ctx = key.currentContext;
           if (ctx == null || !ctx.mounted) return;

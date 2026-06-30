@@ -97,7 +97,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
     // sliding/scrolling in, a bottom sheet rising.
     if (state.active && _settleScheduledForIndex != state.index) {
       _settleScheduledForIndex = state.index;
-      final delays = isDrawerStep ? const [820] : const [360, 760];
+      final delays = isDrawerStep ? const [640] : const [360, 760];
       for (final ms in delays) {
         Future.delayed(Duration(milliseconds: ms), () {
           if (mounted) _resolveRect(ref.read(tutorialControllerProvider));
@@ -163,6 +163,12 @@ class _TutorialScrim extends StatelessWidget {
         : (union == null ? true : union.center.dy < size.height * 0.6);
     final text = _copyFor(l, state.current?.id);
 
+    // Hold the card back until the spotlight has resolved, so it appears once in
+    // its final position rather than flashing at the bottom then jumping to the
+    // top as the target scrolls into view. Steps with no spotlight (e.g. the
+    // preheat sheet) have nothing to wait for, so they show it straight away.
+    final showCard = (step?.anchors.isEmpty ?? true) || holes.isNotEmpty;
+
     return Material(
       type: MaterialType.transparency,
       child: Stack(
@@ -178,8 +184,9 @@ class _TutorialScrim extends StatelessWidget {
               ),
             ),
           ),
-          // Callout card.
-          Positioned(
+          // Callout card, held back until the spotlight is ready.
+          if (showCard)
+            Positioned(
             left: 16,
             right: 16,
             top: cardAtBottom ? null : padding.top + 16,
