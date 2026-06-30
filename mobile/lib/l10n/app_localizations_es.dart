@@ -1745,6 +1745,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Si tu impresora tiene un sensor de cámara interna, su temperatura también aparece aquí.';
 
   @override
+  String get tutorialTemps =>
+      'Estas son las temperaturas en directo: el hotend (la boquilla), la cama caliente y, si tu impresora tiene un sensor de cámara interna, la cámara.';
+
+  @override
   String get tutorialEstop =>
       'Esta es la parada de emergencia. Necesita un doble toque para activarse, así que no puede dispararse por accidente, y detiene la impresora de inmediato.';
 

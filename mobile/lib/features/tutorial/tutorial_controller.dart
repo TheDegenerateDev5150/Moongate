@@ -80,9 +80,9 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'localBar', anchors: [a.connectionBar, a.connectionLabel]),
       TutorialStep(id: 'tunnelBar', anchors: [a.connectionBar, a.connectionLabel]),
       TutorialStep(id: 'remoteBuilding', anchors: [a.tunnelDot]),
-      TutorialStep(id: 'hotend', anchors: [a.tempHotend]),
-      TutorialStep(id: 'bed', anchors: [a.tempBed]),
-      TutorialStep(id: 'chamber', anchors: [a.tempChamber]),
+      // Hotend, bed and chamber temperatures are spotlighted together in one
+      // step rather than three near-identical popups.
+      TutorialStep(id: 'temps', anchors: [a.tempHotend, a.tempBed, a.tempChamber]),
       TutorialStep(id: 'estop', anchors: [a.estop]),
       TutorialStep(id: 'webcam', anchors: [a.webcam]),
       // Preheat: first spotlight the long-press area (name + temps), then open

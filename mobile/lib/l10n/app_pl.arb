@@ -526,6 +526,7 @@
   "tutorialHotend": "To Twoja głowica - temperatura dyszy.",
   "tutorialBed": "A to podgrzewany stół.",
   "tutorialChamber": "Jeśli Twoja drukarka ma czujnik komory, jej temperatura również pojawia się tutaj.",
+  "tutorialTemps": "To temperatury na żywo: głowica (dysza), podgrzewany stół oraz - jeśli Twoja drukarka ma czujnik komory - komora.",
   "tutorialEstop": "To zatrzymanie awaryjne. Wymaga dwukrotnego dotknięcia, aby zadziałało, więc nie da się go uruchomić przypadkowo, i natychmiast zatrzymuje drukarkę.",
   "tutorialWebcam": "Dotknięcie podglądu kamery otwiera pełny interfejs drukarki - ekran Klipper na żywo.",
   "tutorialPreheatPress": "Naciśnij i przytrzymaj nazwę drukarki lub jej temperatury, aby wyświetlić panel nagrzewania.",

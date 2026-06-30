@@ -1743,6 +1743,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Se la tua stampante ha un sensore della camera, qui appare anche la sua temperatura.';
 
   @override
+  String get tutorialTemps =>
+      'Queste sono le temperature in tempo reale: l\'hotend (l\'ugello), il piano riscaldato e, se la tua stampante ha un sensore della camera, la camera.';
+
+  @override
   String get tutorialEstop =>
       'Questo è l\'arresto di emergenza. Richiede un doppio tocco per attivarsi, così non può essere azionato per sbaglio, e ferma immediatamente la stampante.';
 

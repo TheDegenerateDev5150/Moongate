@@ -1714,6 +1714,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'If your printer has a chamber sensor, its temperature shows here too.';
 
   @override
+  String get tutorialTemps =>
+      'These are the live temperatures: the hotend (nozzle), the heated bed, and - if your printer has a chamber sensor - the chamber.';
+
+  @override
   String get tutorialEstop =>
       'This is the emergency stop. It needs a double tap to fire, so it can\'t be triggered by accident, and it halts the printer immediately.';
 

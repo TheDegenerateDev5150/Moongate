@@ -526,6 +526,7 @@
   "tutorialHotend": "Voici votre hotend, la température de la buse.",
   "tutorialBed": "Et voici le plateau chauffant.",
   "tutorialChamber": "Si votre imprimante possède un capteur de caisson, sa température s'affiche aussi ici.",
+  "tutorialTemps": "Voici les températures en direct : le hotend (la buse), le plateau chauffant et, si votre imprimante possède un capteur de caisson, le caisson.",
   "tutorialEstop": "Voici l'arrêt d'urgence. Il faut un double appui pour le déclencher, afin d'éviter tout déclenchement accidentel, et il arrête l'imprimante immédiatement.",
   "tutorialWebcam": "Toucher la vue caméra ouvre l'interface complète de l'imprimante, l'écran Klipper en direct.",
   "tutorialPreheatPress": "Maintenez le nom d'une imprimante ou ses températures pour afficher le panneau de préchauffage.",

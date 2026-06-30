@@ -1731,6 +1731,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Jeśli Twoja drukarka ma czujnik komory, jej temperatura również pojawia się tutaj.';
 
   @override
+  String get tutorialTemps =>
+      'To temperatury na żywo: głowica (dysza), podgrzewany stół oraz - jeśli Twoja drukarka ma czujnik komory - komora.';
+
+  @override
   String get tutorialEstop =>
       'To zatrzymanie awaryjne. Wymaga dwukrotnego dotknięcia, aby zadziałało, więc nie da się go uruchomić przypadkowo, i natychmiast zatrzymuje drukarkę.';
 

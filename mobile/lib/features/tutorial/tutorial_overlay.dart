@@ -221,12 +221,8 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialTunnelBar;
     case 'remoteBuilding':
       return l.tutorialRemoteBuilding;
-    case 'hotend':
-      return l.tutorialHotend;
-    case 'bed':
-      return l.tutorialBed;
-    case 'chamber':
-      return l.tutorialChamber;
+    case 'temps':
+      return l.tutorialTemps;
     case 'estop':
       return l.tutorialEstop;
     case 'webcam':

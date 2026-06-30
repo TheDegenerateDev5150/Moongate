@@ -526,6 +526,7 @@
   "tutorialHotend": "Este es tu hotend, la temperatura de la boquilla.",
   "tutorialBed": "Y esta es la cama caliente.",
   "tutorialChamber": "Si tu impresora tiene un sensor de cámara interna, su temperatura también aparece aquí.",
+  "tutorialTemps": "Estas son las temperaturas en directo: el hotend (la boquilla), la cama caliente y, si tu impresora tiene un sensor de cámara interna, la cámara.",
   "tutorialEstop": "Esta es la parada de emergencia. Necesita un doble toque para activarse, así que no puede dispararse por accidente, y detiene la impresora de inmediato.",
   "tutorialWebcam": "Al tocar la vista de la cámara se abre la interfaz completa de la impresora, la pantalla en vivo de Klipper.",
   "tutorialPreheatPress": "Mantén pulsado el nombre de una impresora o sus temperaturas para mostrar el panel de precalentamiento.",

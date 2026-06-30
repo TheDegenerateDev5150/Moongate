@@ -1736,6 +1736,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wenn dein Drucker einen Kammersensor hat, wird dessen Temperatur hier ebenfalls angezeigt.';
 
   @override
+  String get tutorialTemps =>
+      'Das sind die Live-Temperaturen: das Hotend (Düse), das beheizte Bett und - falls dein Drucker einen Kammersensor hat - die Kammer.';
+
+  @override
   String get tutorialEstop =>
       'Das ist der Notstopp. Er muss doppelt getippt werden, damit er nicht versehentlich ausgelöst wird, und er hält den Drucker sofort an.';
 

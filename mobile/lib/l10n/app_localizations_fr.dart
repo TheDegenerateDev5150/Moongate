@@ -1749,6 +1749,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Si votre imprimante possède un capteur de caisson, sa température s\'affiche aussi ici.';
 
   @override
+  String get tutorialTemps =>
+      'Voici les températures en direct : le hotend (la buse), le plateau chauffant et, si votre imprimante possède un capteur de caisson, le caisson.';
+
+  @override
   String get tutorialEstop =>
       'Voici l\'arrêt d\'urgence. Il faut un double appui pour le déclencher, afin d\'éviter tout déclenchement accidentel, et il arrête l\'imprimante immédiatement.';
 

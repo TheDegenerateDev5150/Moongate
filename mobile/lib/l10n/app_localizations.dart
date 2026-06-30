@@ -3194,6 +3194,12 @@ abstract class AppLocalizations {
   /// **'If your printer has a chamber sensor, its temperature shows here too.'**
   String get tutorialChamber;
 
+  /// Tutorial step spotlighting the hotend, bed and chamber temperature chips together in one popup.
+  ///
+  /// In en, this message translates to:
+  /// **'These are the live temperatures: the hotend (nozzle), the heated bed, and - if your printer has a chamber sensor - the chamber.'**
+  String get tutorialTemps;
+
   /// Tutorial step pointing at the E-STOP button and explaining the double-tap-to-fire safety.
   ///
   /// In en, this message translates to:
