@@ -20,6 +20,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
   final GlobalKey _stackKey = GlobalKey();
   List<Rect> _holeRects = const [];
   int _resolvedForIndex = -1;
+  int _settleScheduledForIndex = -1;
 
   /// Resolve every anchor's rectangle in the overlay's own coordinate space,
   /// after layout. Retries on the next frame until the targets are mounted (they
@@ -80,6 +81,14 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
     // Re-resolve the spotlight whenever the active step changes.
     if (state.active && _resolvedForIndex != state.index) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _resolveRect(ref.read(tutorialControllerProvider));
+      });
+    }
+    // A second pass after a beat catches targets that animate into place (the
+    // drawer sliding open, a bottom sheet rising) so the hole lands settled.
+    if (state.active && _settleScheduledForIndex != state.index) {
+      _settleScheduledForIndex = state.index;
+      Future.delayed(const Duration(milliseconds: 360), () {
         if (mounted) _resolveRect(ref.read(tutorialControllerProvider));
       });
     }
@@ -207,6 +216,8 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialPreheatSheet;
     case 'addPrinter':
       return l.tutorialAddPrinter;
+    case 'menuTheme':
+      return l.tutorialMenuTheme;
     default:
       return '';
   }

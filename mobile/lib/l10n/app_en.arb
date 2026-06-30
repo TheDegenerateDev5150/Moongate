@@ -1055,5 +1055,7 @@
   "tutorialPreheatSheet": "Here you can set hotend and bed targets and an optional heat-soak time.",
   "@tutorialPreheatSheet": {"description": "Tutorial step shown while the preheat sheet is open, explaining the hotend / bed / heat-soak fields."},
   "tutorialAddPrinter": "Tap the plus button any time to add another printer and pair it.",
-  "@tutorialAddPrinter": {"description": "Tutorial step pointing at the add-printer button on the dashboard."}
+  "@tutorialAddPrinter": {"description": "Tutorial step pointing at the add-printer button on the dashboard."},
+  "tutorialMenuTheme": "This is the menu. Choose a light, dark, or fully custom colour theme here.",
+  "@tutorialMenuTheme": {"description": "First hamburger-menu tutorial step, pointing at the Theme selector in the drawer."}
 }

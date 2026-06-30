@@ -24,11 +24,16 @@ class TutorialStep {
   /// is on screen so the card sits above it rather than under it.
   final bool forceCardTop;
 
+  /// Whether the end (menu) drawer must be open for this step. The dashboard
+  /// opens it on entry and closes it when the tour leaves the menu steps.
+  final bool requiresDrawer;
+
   const TutorialStep({
     required this.id,
     this.anchors = const [],
     this.dimScreen = true,
     this.forceCardTop = false,
+    this.requiresDrawer = false,
   });
 }
 
@@ -85,6 +90,8 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'preheatPress', anchors: [a.preheatArea]),
       const TutorialStep(id: 'preheatSheet', dimScreen: false, forceCardTop: true),
       TutorialStep(id: 'addPrinter', anchors: [a.addPrinter]),
+      // Hamburger menu: the dashboard opens the drawer for these steps.
+      TutorialStep(id: 'menuTheme', anchors: [a.menuTheme], requiresDrawer: true),
     ];
   }
 

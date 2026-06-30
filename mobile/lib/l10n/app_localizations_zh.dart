@@ -1666,4 +1666,8 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get tutorialAddPrinter =>
       'Tap the plus button any time to add another printer and pair it.';
+
+  @override
+  String get tutorialMenuTheme =>
+      'This is the menu. Choose a light, dark, or fully custom colour theme here.';
 }

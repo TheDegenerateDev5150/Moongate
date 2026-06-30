@@ -53,6 +53,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   List<PrinterConfig> _printers = [];
   bool _updateDismissed = false;
 
+  /// Lets the live tutorial open/close the end drawer to demo the menu.
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _tutorialDrawerOpen = false;
+
   /// Transient (not persisted) manual-reorder editing state. Only meaningful
   /// when auto-arrange is off: true = tiles draggable + hint shown ("arranging");
   /// false = tiles locked in their saved order, dashboard clean ("settled").
@@ -209,6 +213,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
+    // The live tutorial opens/closes the menu drawer for its menu steps.
+    ref.listen<TutorialState>(
+      tutorialControllerProvider,
+      (_, next) => _syncTutorialDrawer(next),
+    );
     // Check for update - runs once per session, silently ignored on failure.
     final updateAsync = ref.watch(updateProvider);
     final update = _updateDismissed ? null : updateAsync.valueOrNull;
@@ -280,6 +289,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
 
     final scaffold = Scaffold(
+      key: _scaffoldKey,
       backgroundColor: hasCustomBg ? Colors.transparent : null,
       appBar: AppBar(
         backgroundColor: hasCustomBg ? Colors.transparent : null,
@@ -519,6 +529,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ?.copyWith(color: Colors.white54)),
                     ),
                     RadioGroup<AppThemeMode>(
+                      key: TutorialAnchors.instance.menuTheme,
                       groupValue: themeMode,
                       onChanged: (v) {
                         if (v == null) return;
@@ -1316,6 +1327,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// Launch the walkthrough now (from the offer popup or the drawer entry).
   void _startTutorial() {
     ref.read(tutorialControllerProvider.notifier).start();
+  }
+
+  /// Open or close the end drawer to match the tutorial's current step, so the
+  /// menu steps can spotlight drawer entries.
+  void _syncTutorialDrawer(TutorialState s) {
+    final wantOpen = s.active && (s.current?.requiresDrawer ?? false);
+    final st = _scaffoldKey.currentState;
+    if (st == null) return;
+    if (wantOpen && !_tutorialDrawerOpen) {
+      _tutorialDrawerOpen = true;
+      st.openEndDrawer();
+    } else if (!wantOpen && _tutorialDrawerOpen) {
+      _tutorialDrawerOpen = false;
+      if (st.isEndDrawerOpen) st.closeEndDrawer();
+    }
   }
 
   /// A one-time, low-pressure nudge to support the project, shown on a cold

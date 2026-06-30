@@ -3217,6 +3217,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap the plus button any time to add another printer and pair it.'**
   String get tutorialAddPrinter;
+
+  /// First hamburger-menu tutorial step, pointing at the Theme selector in the drawer.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the menu. Choose a light, dark, or fully custom colour theme here.'**
+  String get tutorialMenuTheme;
 }
 
 class _AppLocalizationsDelegate

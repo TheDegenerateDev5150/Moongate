@@ -35,4 +35,8 @@ class TutorialAnchors {
 
   /// The add-printer floating action button on the dashboard.
   final GlobalKey addPrinter = GlobalKey(debugLabel: 'tut_addPrinter');
+
+  // ── Hamburger menu (end drawer) ─────────────────────────────────────────────
+  /// The Theme selector in the drawer.
+  final GlobalKey menuTheme = GlobalKey(debugLabel: 'tut_menuTheme');
 }
