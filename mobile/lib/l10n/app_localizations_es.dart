@@ -1774,4 +1774,8 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tutorialMenuTheme =>
       'Choose a light, dark, or fully custom colour theme.';
+
+  @override
+  String get tutorialMenuDisplaySize =>
+      'Drag this to make everything bigger or smaller to suit your eyes.';
 }

@@ -48,4 +48,7 @@ class TutorialAnchors {
 
   /// The Theme selector in the drawer.
   final GlobalKey menuTheme = GlobalKey(debugLabel: 'tut_menuTheme');
+
+  /// The display-size (font size) slider in the drawer.
+  final GlobalKey menuDisplaySize = GlobalKey(debugLabel: 'tut_menuDisplaySize');
 }

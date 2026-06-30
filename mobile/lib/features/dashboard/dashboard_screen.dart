@@ -213,10 +213,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
-    // The live tutorial opens/closes the menu drawer for its menu steps.
+    // The live tutorial opens/closes the menu drawer and runs the menu demos.
     ref.listen<TutorialState>(
       tutorialControllerProvider,
-      (_, next) => _syncTutorialDrawer(next),
+      (_, next) {
+        _syncTutorialDrawer(next);
+        _syncTutorialDemos(next);
+      },
     );
     // Check for update - runs once per session, silently ignored on failure.
     final updateAsync = ref.watch(updateProvider);
@@ -597,7 +600,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     const Divider(),
 
-                    // Font size
+                    // Font size (grouped for the tutorial spotlight).
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuDisplaySize,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                       child: Text(l.dashboardFontSizeHeading,
@@ -623,6 +632,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ),
                           ),
                           const Icon(Icons.text_fields, size: 22),
+                        ],
+                      ),
+                    ),
                         ],
                       ),
                     ),
@@ -1375,6 +1387,54 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     } else if (_tutorialDrawerOpen) {
       _tutorialDrawerOpen = false;
       if (st.isEndDrawerOpen) st.closeEndDrawer();
+    }
+  }
+
+  // ── Live tutorial menu demos ────────────────────────────────────────────────
+  String? _activeDemoStep;
+  double? _savedFontScale;
+  int _demoToken = 0;
+
+  /// Run/stop the per-step menu demo as the tour moves. Each demo restores
+  /// whatever it changed when its step is left (next, back, skip, or finish).
+  void _syncTutorialDemos(TutorialState s) {
+    final id = s.active ? s.current?.id : null;
+    if (id == _activeDemoStep) return;
+    // Leaving the previous demo step: stop it and restore.
+    switch (_activeDemoStep) {
+      case 'menuDisplaySize':
+        _restoreDisplaySize();
+    }
+    _activeDemoStep = id;
+    switch (id) {
+      case 'menuDisplaySize':
+        _demoDisplaySize();
+    }
+  }
+
+  /// Display-size demo: pause so the user reads the callout, then slide the
+  /// display size up to the top, down to the bottom, and back to where it was.
+  Future<void> _demoDisplaySize() async {
+    final notifier = ref.read(fontScaleProvider.notifier);
+    _savedFontScale ??= ref.read(fontScaleProvider);
+    final token = ++_demoToken;
+    await Future.delayed(const Duration(milliseconds: 1100));
+    if (token != _demoToken || !mounted) return;
+    await notifier.set(1.4); // up to the top
+    await Future.delayed(const Duration(milliseconds: 1000));
+    if (token != _demoToken || !mounted) return;
+    await notifier.set(0.8); // down to the bottom
+    await Future.delayed(const Duration(milliseconds: 1000));
+    if (token != _demoToken || !mounted) return;
+    await notifier.set(_savedFontScale ?? 1.0); // back to normal
+    _savedFontScale = null;
+  }
+
+  void _restoreDisplaySize() {
+    _demoToken++; // cancel any in-flight animation
+    if (_savedFontScale != null) {
+      ref.read(fontScaleProvider.notifier).set(_savedFontScale!);
+      _savedFontScale = null;
     }
   }
 

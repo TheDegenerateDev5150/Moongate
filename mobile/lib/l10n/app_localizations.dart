@@ -3241,6 +3241,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a light, dark, or fully custom colour theme.'**
   String get tutorialMenuTheme;
+
+  /// Menu tutorial step pointing at the display-size slider, which then animates up and down.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag this to make everything bigger or smaller to suit your eyes.'**
+  String get tutorialMenuDisplaySize;
 }
 
 class _AppLocalizationsDelegate

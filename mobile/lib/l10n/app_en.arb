@@ -1063,5 +1063,7 @@
   "tutorialMenuBackup": "Back up your setup to a file, or restore it on another device.",
   "@tutorialMenuBackup": {"description": "Menu tutorial step for the backup / restore config entries."},
   "tutorialMenuTheme": "Choose a light, dark, or fully custom colour theme.",
-  "@tutorialMenuTheme": {"description": "Menu tutorial step pointing at the Theme selector in the drawer."}
+  "@tutorialMenuTheme": {"description": "Menu tutorial step pointing at the Theme selector in the drawer."},
+  "tutorialMenuDisplaySize": "Drag this to make everything bigger or smaller to suit your eyes.",
+  "@tutorialMenuDisplaySize": {"description": "Menu tutorial step pointing at the display-size slider, which then animates up and down."}
 }
