@@ -1067,5 +1067,11 @@
   "tutorialMenuDisplaySize": "Drag this to make everything bigger or smaller to suit your eyes.",
   "@tutorialMenuDisplaySize": {"description": "Menu tutorial step pointing at the display-size slider."},
   "tutorialMenuColumns": "Lay your printers out in one, two, or three columns.",
-  "@tutorialMenuColumns": {"description": "Menu tutorial step pointing at the dashboard column-count picker."}
+  "@tutorialMenuColumns": {"description": "Menu tutorial step pointing at the dashboard column-count picker."},
+  "tutorialMenuCameras": "Set how often the webcam feeds refresh, and turn each printer's camera on or off.",
+  "@tutorialMenuCameras": {"description": "Menu tutorial step pointing at the camera-feeds / webcams entries."},
+  "tutorialMenuAbout": "What's new, how pairing works, an icon guide, and where to report a problem all live here.",
+  "@tutorialMenuAbout": {"description": "Menu tutorial step pointing at the About section."},
+  "tutorialMenuSupport": "Buying me a coffee helps keep Moongate free for everyone and open source.",
+  "@tutorialMenuSupport": {"description": "Menu tutorial step pointing at the buy-me-a-coffee support entry."}
 }

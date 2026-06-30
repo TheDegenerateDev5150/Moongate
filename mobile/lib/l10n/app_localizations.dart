@@ -3253,6 +3253,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lay your printers out in one, two, or three columns.'**
   String get tutorialMenuColumns;
+
+  /// Menu tutorial step pointing at the camera-feeds / webcams entries.
+  ///
+  /// In en, this message translates to:
+  /// **'Set how often the webcam feeds refresh, and turn each printer\'s camera on or off.'**
+  String get tutorialMenuCameras;
+
+  /// Menu tutorial step pointing at the About section.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new, how pairing works, an icon guide, and where to report a problem all live here.'**
+  String get tutorialMenuAbout;
+
+  /// Menu tutorial step pointing at the buy-me-a-coffee support entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Buying me a coffee helps keep Moongate free for everyone and open source.'**
+  String get tutorialMenuSupport;
 }
 
 class _AppLocalizationsDelegate

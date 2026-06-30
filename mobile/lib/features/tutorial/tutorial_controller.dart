@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -99,6 +101,11 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'menuTheme', anchors: [a.menuTheme], requiresDrawer: true),
       TutorialStep(id: 'menuDisplaySize', anchors: [a.menuDisplaySize], requiresDrawer: true),
       TutorialStep(id: 'menuColumns', anchors: [a.menuColumns], requiresDrawer: true),
+      TutorialStep(id: 'menuCameras', anchors: [a.menuCameras], requiresDrawer: true),
+      TutorialStep(id: 'menuAbout', anchors: [a.menuAbout], requiresDrawer: true),
+      // The tip jar is Android-only (Apple bars in-app donation links).
+      if (Platform.isAndroid)
+        TutorialStep(id: 'menuSupport', anchors: [a.menuSupport], requiresDrawer: true),
     ];
   }
 

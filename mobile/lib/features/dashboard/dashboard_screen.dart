@@ -739,11 +739,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     const Divider(),
 
-                    // ── Camera feeds ──────────────────────────────────────────
+                    // ── Camera feeds (grouped for the tutorial spotlight) ──────
                     // Per-path tile webcam refresh rates. Opens a sheet with two
                     // Raw/1s/3s/5s pickers - each tile uses the local rate on the
                     // LAN and the tunnel rate when remote, so the remote feed can
                     // be throttled to save data.
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuCameras,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     ListTile(
                       dense: true,
                       leading: const Icon(Icons.shutter_speed),
@@ -780,6 +786,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       onChanged: (v) => ref
                           .read(showCameraConfigIconsProvider.notifier)
                           .set(v),
+                    ),
+                        ],
+                      ),
                     ),
 
                     // Print notifications run on an Android foreground service;
@@ -861,7 +870,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     const Divider(),
 
-                    // ── About ────────────────────────────────────────────────
+                    // ── About (grouped for the tutorial spotlight) ────────────
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuAbout,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                       child: Text(l.dashboardAboutHeading,
@@ -917,10 +932,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         context.push('/settings/app-lock');
                       },
                     ),
+                        ],
+                      ),
+                    ),
                     // Hidden on iOS: Apple rejects in-app donation links to
                     // the developer, so the tip jar is Android-only.
                     if (Platform.isAndroid)
                       ListTile(
+                        key: TutorialAnchors.instance.menuSupport,
                         leading: const Icon(Icons.coffee_outlined,
                             color: Colors.amber),
                         title: Text(l.dashboardBuyMeCoffee),

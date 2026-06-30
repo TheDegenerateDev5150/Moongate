@@ -54,4 +54,13 @@ class TutorialAnchors {
 
   /// The dashboard layout column picker in the drawer.
   final GlobalKey menuColumns = GlobalKey(debugLabel: 'tut_menuColumns');
+
+  /// The camera-feeds / webcams entries, grouped.
+  final GlobalKey menuCameras = GlobalKey(debugLabel: 'tut_menuCameras');
+
+  /// The About section, grouped.
+  final GlobalKey menuAbout = GlobalKey(debugLabel: 'tut_menuAbout');
+
+  /// The "buy me a coffee" support entry (Android only).
+  final GlobalKey menuSupport = GlobalKey(debugLabel: 'tut_menuSupport');
 }

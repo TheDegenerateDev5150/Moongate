@@ -1769,4 +1769,16 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get tutorialMenuColumns =>
       'Lay your printers out in one, two, or three columns.';
+
+  @override
+  String get tutorialMenuCameras =>
+      'Set how often the webcam feeds refresh, and turn each printer\'s camera on or off.';
+
+  @override
+  String get tutorialMenuAbout =>
+      'What\'s new, how pairing works, an icon guide, and where to report a problem all live here.';
+
+  @override
+  String get tutorialMenuSupport =>
+      'Buying me a coffee helps keep Moongate free for everyone and open source.';
 }

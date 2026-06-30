@@ -240,6 +240,12 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialMenuDisplaySize;
     case 'menuColumns':
       return l.tutorialMenuColumns;
+    case 'menuCameras':
+      return l.tutorialMenuCameras;
+    case 'menuAbout':
+      return l.tutorialMenuAbout;
+    case 'menuSupport':
+      return l.tutorialMenuSupport;
     default:
       return '';
   }
