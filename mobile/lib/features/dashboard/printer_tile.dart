@@ -141,8 +141,8 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
   // even if the real printer is offline or mid-print), with the step's twist
   // applied (tunnel mode, or a faked chamber reading). Restored on the way out.
   static const _tileDemoSteps = {
-    'localBar', 'tunnelBar', 'hotend', 'bed', 'chamber', 'estop', 'webcam',
-    'preheatPress', 'preheatSheet',
+    'localBar', 'tunnelBar', 'remoteBuilding', 'hotend', 'bed', 'chamber',
+    'estop', 'webcam', 'preheatPress', 'preheatSheet',
   };
 
   void _applyDemoForStep(TutorialState s) {
@@ -196,6 +196,9 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
     switch (id) {
       case 'tunnelBar':
         return base.copyWith(connection: PrinterConnection.remote);
+      case 'remoteBuilding':
+        // Stay on Local but show the tunnel as still building in the background.
+        return base.copyWith(tunnelReady: false);
       case 'chamber':
         return base.chamberTemp > 0 ? base : base.copyWith(chamberTemp: 28);
       default:
@@ -607,7 +610,10 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                                   // v0.5.0: when on LAN, a small tunnel-status pip
                                   // (connecting vs ready) next to the Local badge.
                                   if (_status.connection == PrinterConnection.local)
-                                    _TunnelStatusDot(ready: _status.tunnelReady),
+                                    _anchor(
+                                      TutorialAnchors.instance.tunnelDot,
+                                      _TunnelStatusDot(ready: _status.tunnelReady),
+                                    ),
                                 ],
                               ),
                             ),

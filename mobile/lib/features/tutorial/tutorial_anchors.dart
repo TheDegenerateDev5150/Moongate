@@ -19,6 +19,9 @@ class TutorialAnchors {
   /// The Local/Tunnel text label + its wifi/cloud icon in the tile's name row.
   final GlobalKey connectionLabel = GlobalKey(debugLabel: 'tut_connectionLabel');
 
+  /// The small tunnel-status pip next to the Local badge (building vs ready).
+  final GlobalKey tunnelDot = GlobalKey(debugLabel: 'tut_tunnelDot');
+
   /// The hotend / bed / chamber temperature chips on the first tile.
   final GlobalKey tempHotend = GlobalKey(debugLabel: 'tut_tempHotend');
   final GlobalKey tempBed = GlobalKey(debugLabel: 'tut_tempBed');

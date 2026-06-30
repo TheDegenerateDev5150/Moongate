@@ -1700,6 +1700,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Orange with a cloud icon means you are away from home, connected securely over the internet through your printer\'s tunnel. Moongate switches between the two automatically.';
 
   @override
+  String get tutorialRemoteBuilding =>
+      'When you first pair a printer, remote access isn\'t instant. This little cloud marker means the secure tunnel is still building in the background. Once it turns into a green cloud tick, you can reach this printer from anywhere.';
+
+  @override
   String get tutorialHotend => 'This is your hotend, the nozzle temperature.';
 
   @override

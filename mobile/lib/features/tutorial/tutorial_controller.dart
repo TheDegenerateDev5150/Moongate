@@ -81,6 +81,7 @@ class TutorialController extends Notifier<TutorialState> {
     return [
       TutorialStep(id: 'localBar', anchors: [a.connectionBar, a.connectionLabel]),
       TutorialStep(id: 'tunnelBar', anchors: [a.connectionBar, a.connectionLabel]),
+      TutorialStep(id: 'remoteBuilding', anchors: [a.tunnelDot]),
       TutorialStep(id: 'hotend', anchors: [a.tempHotend]),
       TutorialStep(id: 'bed', anchors: [a.tempBed]),
       TutorialStep(id: 'chamber', anchors: [a.tempChamber]),

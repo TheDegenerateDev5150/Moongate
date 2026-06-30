@@ -1040,6 +1040,8 @@
   "@tutorialLocalBar": {"description": "Tutorial step explaining the green local-mode connection bar on a printer tile."},
   "tutorialTunnelBar": "Orange with a cloud icon means you are away from home, connected securely over the internet through your printer's tunnel. Moongate switches between the two automatically.",
   "@tutorialTunnelBar": {"description": "Tutorial step explaining the orange tunnel-mode connection bar."},
+  "tutorialRemoteBuilding": "When you first pair a printer, remote access isn't instant. This little cloud marker means the secure tunnel is still building in the background. Once it turns into a green cloud tick, you can reach this printer from anywhere.",
+  "@tutorialRemoteBuilding": {"description": "Tutorial step explaining the tunnel-status pip while remote access is still being set up after pairing."},
   "tutorialHotend": "This is your hotend, the nozzle temperature.",
   "@tutorialHotend": {"description": "Tutorial step pointing at the hotend temperature chip."},
   "tutorialBed": "And this is the heated bed.",

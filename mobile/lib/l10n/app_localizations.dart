@@ -3170,6 +3170,12 @@ abstract class AppLocalizations {
   /// **'Orange with a cloud icon means you are away from home, connected securely over the internet through your printer\'s tunnel. Moongate switches between the two automatically.'**
   String get tutorialTunnelBar;
 
+  /// Tutorial step explaining the tunnel-status pip while remote access is still being set up after pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'When you first pair a printer, remote access isn\'t instant. This little cloud marker means the secure tunnel is still building in the background. Once it turns into a green cloud tick, you can reach this printer from anywhere.'**
+  String get tutorialRemoteBuilding;
+
   /// Tutorial step pointing at the hotend temperature chip.
   ///
   /// In en, this message translates to:

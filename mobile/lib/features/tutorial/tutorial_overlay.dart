@@ -219,6 +219,8 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialLocalBar;
     case 'tunnelBar':
       return l.tutorialTunnelBar;
+    case 'remoteBuilding':
+      return l.tutorialRemoteBuilding;
     case 'hotend':
       return l.tutorialHotend;
     case 'bed':
