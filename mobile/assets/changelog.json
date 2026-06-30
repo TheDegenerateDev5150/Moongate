@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.38",
+    "bullets": [
+      "Tutorial polish: in the temperatures step, the hotend, bed and chamber readings are now highlighted inside one box together, rather than a separate ring around each.",
+      "App-only update, no Pi update needed."
+    ]
+  },
+  {
     "version": "v0.9.37",
     "bullets": [
       "New: a \"Phone colours\" theme. On Android 12 and newer, choose Phone colours in the menu and Moongate matches your phone's own colour scheme - the wallpaper-based palette Android calls Material You - and follows your light/dark setting automatically. It sits alongside Dark, Light and Custom, and only appears on phones that support it (older Android and iPhone have no system palette to read, so it stays hidden there).",

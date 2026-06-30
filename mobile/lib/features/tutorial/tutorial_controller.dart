@@ -28,12 +28,19 @@ class TutorialStep {
   /// opens it on entry and closes it when the tour leaves the menu steps.
   final bool requiresDrawer;
 
+  /// When this step has several [anchors], whether to spotlight them as one
+  /// combined box (their bounding rectangle) rather than a separate ring around
+  /// each. Used for the hotend / bed / chamber temperatures so they read as a
+  /// single group. No effect with zero or one anchor.
+  final bool unifyAnchors;
+
   const TutorialStep({
     required this.id,
     this.anchors = const [],
     this.dimScreen = true,
     this.forceCardTop = false,
     this.requiresDrawer = false,
+    this.unifyAnchors = false,
   });
 }
 
@@ -81,8 +88,12 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'tunnelBar', anchors: [a.connectionBar, a.connectionLabel]),
       TutorialStep(id: 'remoteBuilding', anchors: [a.tunnelDot]),
       // Hotend, bed and chamber temperatures are spotlighted together in one
-      // step rather than three near-identical popups.
-      TutorialStep(id: 'temps', anchors: [a.tempHotend, a.tempBed, a.tempChamber]),
+      // step, as a single combined box around all three chips.
+      TutorialStep(
+        id: 'temps',
+        anchors: [a.tempHotend, a.tempBed, a.tempChamber],
+        unifyAnchors: true,
+      ),
       TutorialStep(id: 'estop', anchors: [a.estop]),
       TutorialStep(id: 'webcam', anchors: [a.webcam]),
       // Preheat: first spotlight the long-press area (name + temps), then open
