@@ -57,6 +57,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _tutorialDrawerOpen = false;
 
+  /// True once the first _load() has run, so the "offer the tutorial on the
+  /// first printer" trigger fires on a real pairing, not the initial load.
+  bool _firstLoadDone = false;
+
+  /// Guards against the tutorial offer popup being shown twice at once.
+  bool _tutorialOfferInFlight = false;
+
   /// Transient (not persisted) manual-reorder editing state. Only meaningful
   /// when auto-arrange is off: true = tiles draggable + hint shown ("arranging");
   /// false = tiles locked in their saved order, dashboard clean ("settled").
@@ -85,11 +92,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   void _load() {
     final list = PrinterRegistry.instance.printers;
+    final wasEmpty = _printers.isEmpty;
     if (mounted) setState(() => _printers = list);
     // Keep the print-notification isolate's printer list in step - it reads a
     // separate cached snapshot, so poke it whenever the set may have changed
     // (pair / remove / restore). No-op when notifications are off.
     PrintNotificationService.instance.refreshNow().ignore();
+    // Offer the walkthrough the moment the user's first printer lands on the
+    // dashboard (not just on the next cold launch). Skipped on the initial load
+    // - the first-run sequence handles existing users.
+    if (_firstLoadDone && wasEmpty && list.isNotEmpty) {
+      _maybeOfferTutorial();
+    }
+    _firstLoadDone = true;
   }
 
   /// Persist a drag-to-reorder from the dashboard grid (manual mode only).
@@ -1317,11 +1332,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// once (the flag is set when the user starts it or ticks "don't remind me").
   /// Dismissing without choosing leaves the flag clear, so it offers again.
   Future<void> _maybeOfferTutorial() async {
+    if (_tutorialOfferInFlight) return;
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_tutorialOfferedKey) ?? false) return;
     if (PrinterRegistry.instance.printers.isEmpty) return;
     if (!mounted) return;
+    _tutorialOfferInFlight = true;
     final result = await showTutorialOffer(context);
+    _tutorialOfferInFlight = false;
     if (result == null) return;
     if (result.start || result.dontRemind) {
       await prefs.setBool(_tutorialOfferedKey, true);
