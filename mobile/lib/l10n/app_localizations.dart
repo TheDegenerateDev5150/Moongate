@@ -3182,6 +3182,12 @@ abstract class AppLocalizations {
   /// **'If your printer has a chamber sensor, its temperature shows here too.'**
   String get tutorialChamber;
 
+  /// Tutorial step pointing at the E-STOP button and explaining the double-tap-to-fire safety.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the emergency stop. It needs a double tap to fire, so it can\'t be triggered by accident, and it halts the printer immediately.'**
+  String get tutorialEstop;
+
   /// Tutorial step pointing at the tile webcam square.
   ///
   /// In en, this message translates to:

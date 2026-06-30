@@ -1724,6 +1724,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'If your printer has a chamber sensor, its temperature shows here too.';
 
   @override
+  String get tutorialEstop =>
+      'This is the emergency stop. It needs a double tap to fire, so it can\'t be triggered by accident, and it halts the printer immediately.';
+
+  @override
   String get tutorialWebcam =>
       'Tapping the camera view opens the full printer interface, the live Klipper screen.';
 

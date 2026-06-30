@@ -29,4 +29,7 @@ class TutorialAnchors {
 
   /// The name + temperatures block, the long-press target that opens preheat.
   final GlobalKey preheatArea = GlobalKey(debugLabel: 'tut_preheatArea');
+
+  /// The emergency-stop button at the end of the temperature row.
+  final GlobalKey estop = GlobalKey(debugLabel: 'tut_estop');
 }

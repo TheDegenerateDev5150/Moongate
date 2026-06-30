@@ -77,6 +77,7 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'hotend', anchors: [a.tempHotend]),
       TutorialStep(id: 'bed', anchors: [a.tempBed]),
       TutorialStep(id: 'chamber', anchors: [a.tempChamber]),
+      TutorialStep(id: 'estop', anchors: [a.estop]),
       TutorialStep(id: 'webcam', anchors: [a.webcam]),
       // Preheat: first spotlight the long-press area (name + temps), then open
       // the real sheet. The sheet dims the rest itself, so that step adds no

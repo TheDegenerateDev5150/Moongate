@@ -1044,6 +1044,8 @@
   "@tutorialBed": {"description": "Tutorial step pointing at the bed temperature chip."},
   "tutorialChamber": "If your printer has a chamber sensor, its temperature shows here too.",
   "@tutorialChamber": {"description": "Tutorial step pointing at the chamber temperature chip."},
+  "tutorialEstop": "This is the emergency stop. It needs a double tap to fire, so it can't be triggered by accident, and it halts the printer immediately.",
+  "@tutorialEstop": {"description": "Tutorial step pointing at the E-STOP button and explaining the double-tap-to-fire safety."},
   "tutorialWebcam": "Tapping the camera view opens the full printer interface, the live Klipper screen.",
   "@tutorialWebcam": {"description": "Tutorial step pointing at the tile webcam square."},
   "tutorialPreheatPress": "Press and hold a printer's name or its temperatures to display the preheat panel.",

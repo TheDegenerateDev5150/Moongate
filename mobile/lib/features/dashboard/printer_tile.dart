@@ -141,7 +141,7 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
   // even if the real printer is offline or mid-print), with the step's twist
   // applied (tunnel mode, or a faked chamber reading). Restored on the way out.
   static const _tileDemoSteps = {
-    'localBar', 'tunnelBar', 'hotend', 'bed', 'chamber', 'webcam',
+    'localBar', 'tunnelBar', 'hotend', 'bed', 'chamber', 'estop', 'webcam',
     'preheatPress', 'preheatSheet',
   };
 
@@ -665,9 +665,12 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                                 onTap: _handleFirmwareRestart,
                               )
                             else
-                              _EstopButton(
-                                tooltip: l.tileEmergencyStop,
-                                onFire: _handleEmergencyStop,
+                              _anchor(
+                                TutorialAnchors.instance.estop,
+                                _EstopButton(
+                                  tooltip: l.tileEmergencyStop,
+                                  onFire: _handleEmergencyStop,
+                                ),
                               ),
                           ],
                         ),

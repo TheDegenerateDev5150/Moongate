@@ -191,6 +191,8 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialBed;
     case 'chamber':
       return l.tutorialChamber;
+    case 'estop':
+      return l.tutorialEstop;
     case 'webcam':
       return l.tutorialWebcam;
     case 'preheatPress':
