@@ -1765,6 +1765,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tap the plus button any time to add another printer and pair it.';
 
   @override
+  String get tutorialMenuIcon =>
+      'This is the menu. You can open it any time from here.';
+
+  @override
+  String get tutorialMenuPrinters =>
+      'Add another printer, or remove one you no longer use.';
+
+  @override
+  String get tutorialMenuBackup =>
+      'Back up your setup to a file, or restore it on another device.';
+
+  @override
   String get tutorialMenuTheme =>
-      'This is the menu. Choose a light, dark, or fully custom colour theme here.';
+      'Choose a light, dark, or fully custom colour theme.';
 }

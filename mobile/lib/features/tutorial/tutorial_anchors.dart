@@ -37,6 +37,15 @@ class TutorialAnchors {
   final GlobalKey addPrinter = GlobalKey(debugLabel: 'tut_addPrinter');
 
   // ── Hamburger menu (end drawer) ─────────────────────────────────────────────
+  /// The hamburger menu button in the app bar (spotlit before the drawer opens).
+  final GlobalKey menuIcon = GlobalKey(debugLabel: 'tut_menuIcon');
+
+  /// Add / remove printer entries, grouped.
+  final GlobalKey menuPrinters = GlobalKey(debugLabel: 'tut_menuPrinters');
+
+  /// Backup / restore config entries, grouped.
+  final GlobalKey menuBackup = GlobalKey(debugLabel: 'tut_menuBackup');
+
   /// The Theme selector in the drawer.
   final GlobalKey menuTheme = GlobalKey(debugLabel: 'tut_menuTheme');
 }

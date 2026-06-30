@@ -1056,6 +1056,12 @@
   "@tutorialPreheatSheet": {"description": "Tutorial step shown while the preheat sheet is open, explaining the hotend / bed / heat-soak fields."},
   "tutorialAddPrinter": "Tap the plus button any time to add another printer and pair it.",
   "@tutorialAddPrinter": {"description": "Tutorial step pointing at the add-printer button on the dashboard."},
-  "tutorialMenuTheme": "This is the menu. Choose a light, dark, or fully custom colour theme here.",
-  "@tutorialMenuTheme": {"description": "First hamburger-menu tutorial step, pointing at the Theme selector in the drawer."}
+  "tutorialMenuIcon": "This is the menu. You can open it any time from here.",
+  "@tutorialMenuIcon": {"description": "Tutorial step pointing at the hamburger menu button before the drawer opens."},
+  "tutorialMenuPrinters": "Add another printer, or remove one you no longer use.",
+  "@tutorialMenuPrinters": {"description": "Menu tutorial step for the add / remove printer entries."},
+  "tutorialMenuBackup": "Back up your setup to a file, or restore it on another device.",
+  "@tutorialMenuBackup": {"description": "Menu tutorial step for the backup / restore config entries."},
+  "tutorialMenuTheme": "Choose a light, dark, or fully custom colour theme.",
+  "@tutorialMenuTheme": {"description": "Menu tutorial step pointing at the Theme selector in the drawer."}
 }

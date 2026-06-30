@@ -90,7 +90,12 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'preheatPress', anchors: [a.preheatArea]),
       const TutorialStep(id: 'preheatSheet', dimScreen: false, forceCardTop: true),
       TutorialStep(id: 'addPrinter', anchors: [a.addPrinter]),
-      // Hamburger menu: the dashboard opens the drawer for these steps.
+      // Hamburger menu. First point at the menu button (drawer still closed),
+      // then the drawer opens and we walk its entries top to bottom; the
+      // dashboard auto-scrolls each entry into view.
+      TutorialStep(id: 'menuIcon', anchors: [a.menuIcon]),
+      TutorialStep(id: 'menuPrinters', anchors: [a.menuPrinters], requiresDrawer: true),
+      TutorialStep(id: 'menuBackup', anchors: [a.menuBackup], requiresDrawer: true),
       TutorialStep(id: 'menuTheme', anchors: [a.menuTheme], requiresDrawer: true),
     ];
   }

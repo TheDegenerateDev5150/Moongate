@@ -88,9 +88,13 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
     // drawer sliding open, a bottom sheet rising) so the hole lands settled.
     if (state.active && _settleScheduledForIndex != state.index) {
       _settleScheduledForIndex = state.index;
-      Future.delayed(const Duration(milliseconds: 360), () {
-        if (mounted) _resolveRect(ref.read(tutorialControllerProvider));
-      });
+      // Two passes: ~360ms catches the drawer/sheet open; ~760ms catches a
+      // follow-on scroll that brings a drawer entry into view.
+      for (final ms in const [360, 760]) {
+        Future.delayed(Duration(milliseconds: ms), () {
+          if (mounted) _resolveRect(ref.read(tutorialControllerProvider));
+        });
+      }
     }
 
     return Stack(
@@ -216,6 +220,12 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialPreheatSheet;
     case 'addPrinter':
       return l.tutorialAddPrinter;
+    case 'menuIcon':
+      return l.tutorialMenuIcon;
+    case 'menuPrinters':
+      return l.tutorialMenuPrinters;
+    case 'menuBackup':
+      return l.tutorialMenuBackup;
     case 'menuTheme':
       return l.tutorialMenuTheme;
     default:

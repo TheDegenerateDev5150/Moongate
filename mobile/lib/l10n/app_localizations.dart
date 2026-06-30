@@ -3218,10 +3218,28 @@ abstract class AppLocalizations {
   /// **'Tap the plus button any time to add another printer and pair it.'**
   String get tutorialAddPrinter;
 
-  /// First hamburger-menu tutorial step, pointing at the Theme selector in the drawer.
+  /// Tutorial step pointing at the hamburger menu button before the drawer opens.
   ///
   /// In en, this message translates to:
-  /// **'This is the menu. Choose a light, dark, or fully custom colour theme here.'**
+  /// **'This is the menu. You can open it any time from here.'**
+  String get tutorialMenuIcon;
+
+  /// Menu tutorial step for the add / remove printer entries.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another printer, or remove one you no longer use.'**
+  String get tutorialMenuPrinters;
+
+  /// Menu tutorial step for the backup / restore config entries.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up your setup to a file, or restore it on another device.'**
+  String get tutorialMenuBackup;
+
+  /// Menu tutorial step pointing at the Theme selector in the drawer.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a light, dark, or fully custom colour theme.'**
   String get tutorialMenuTheme;
 }
 

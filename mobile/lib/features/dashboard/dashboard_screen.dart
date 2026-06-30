@@ -317,6 +317,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           Builder(
             builder: (ctx) => IconButton(
+              key: TutorialAnchors.instance.menuIcon,
               icon: const Icon(Icons.menu),
               tooltip: l.dashboardMenuTooltip,
               onPressed: () => Scaffold.of(ctx).openEndDrawer(),
@@ -471,7 +472,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
 
-                    // Printer management
+                    // Printer management (grouped for the tutorial spotlight).
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuPrinters,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     ListTile(
                       leading: const Icon(Icons.add_circle_outline),
                       title: Text(l.dashboardAddPrinter),
@@ -492,10 +499,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           _showRemoveSheet(context);
                         },
                       ),
+                        ],
+                      ),
+                    ),
 
                     const Divider(),
 
-                    // Import / Export
+                    // Import / Export (grouped for the tutorial spotlight).
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuBackup,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     if (_printers.isNotEmpty)
                       ListTile(
                         leading: const Icon(Icons.upload_file_outlined),
@@ -515,6 +531,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         Navigator.pop(context);
                         _importConfig();
                       },
+                    ),
+                        ],
+                      ),
                     ),
 
                     const Divider(),
@@ -1332,13 +1351,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// Open or close the end drawer to match the tutorial's current step, so the
   /// menu steps can spotlight drawer entries.
   void _syncTutorialDrawer(TutorialState s) {
-    final wantOpen = s.active && (s.current?.requiresDrawer ?? false);
+    final step = s.current;
+    final wantOpen = s.active && (step?.requiresDrawer ?? false);
     final st = _scaffoldKey.currentState;
     if (st == null) return;
-    if (wantOpen && !_tutorialDrawerOpen) {
-      _tutorialDrawerOpen = true;
-      st.openEndDrawer();
-    } else if (!wantOpen && _tutorialDrawerOpen) {
+    if (wantOpen) {
+      if (!_tutorialDrawerOpen) {
+        _tutorialDrawerOpen = true;
+        st.openEndDrawer();
+      }
+      // Scroll the spotlighted entry into view (after the drawer settles, or
+      // after the previous menu step's scroll finishes).
+      final key = (step?.anchors.isNotEmpty ?? false) ? step!.anchors.first : null;
+      if (key != null) {
+        Future.delayed(const Duration(milliseconds: 320), () {
+          if (!mounted) return;
+          final ctx = key.currentContext;
+          if (ctx == null || !ctx.mounted) return;
+          Scrollable.ensureVisible(ctx,
+              duration: const Duration(milliseconds: 250), alignment: 0.5);
+        });
+      }
+    } else if (_tutorialDrawerOpen) {
       _tutorialDrawerOpen = false;
       if (st.isEndDrawerOpen) st.closeEndDrawer();
     }
