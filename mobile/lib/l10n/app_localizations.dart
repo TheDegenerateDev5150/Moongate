@@ -812,10 +812,10 @@ abstract class AppLocalizations {
   /// **'Theme'**
   String get dashboardThemeHeading;
 
-  /// Theme radio option: follow the system light/dark setting.
+  /// Theme radio option: use the phone's own system (Material You) colours. Android 12+ only.
   ///
   /// In en, this message translates to:
-  /// **'System default'**
+  /// **'Phone colours'**
   String get dashboardThemeSystem;
 
   /// Theme radio option: dark theme.
@@ -3149,7 +3149,7 @@ abstract class AppLocalizations {
   /// Button that ends the tutorial early.
   ///
   /// In en, this message translates to:
-  /// **'Skip'**
+  /// **'End'**
   String get tutorialSkip;
 
   /// Button that steps the tutorial back one step.
@@ -3193,6 +3193,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If your printer has a chamber sensor, its temperature shows here too.'**
   String get tutorialChamber;
+
+  /// Tutorial step spotlighting the hotend, bed and chamber temperature chips together in one popup.
+  ///
+  /// In en, this message translates to:
+  /// **'These are the live temperatures: the hotend (nozzle), the heated bed, and - if your printer has a chamber sensor - the chamber.'**
+  String get tutorialTemps;
 
   /// Tutorial step pointing at the E-STOP button and explaining the double-tap-to-fire safety.
   ///

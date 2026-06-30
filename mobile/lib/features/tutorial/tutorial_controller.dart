@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -82,9 +80,9 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'localBar', anchors: [a.connectionBar, a.connectionLabel]),
       TutorialStep(id: 'tunnelBar', anchors: [a.connectionBar, a.connectionLabel]),
       TutorialStep(id: 'remoteBuilding', anchors: [a.tunnelDot]),
-      TutorialStep(id: 'hotend', anchors: [a.tempHotend]),
-      TutorialStep(id: 'bed', anchors: [a.tempBed]),
-      TutorialStep(id: 'chamber', anchors: [a.tempChamber]),
+      // Hotend, bed and chamber temperatures are spotlighted together in one
+      // step rather than three near-identical popups.
+      TutorialStep(id: 'temps', anchors: [a.tempHotend, a.tempBed, a.tempChamber]),
       TutorialStep(id: 'estop', anchors: [a.estop]),
       TutorialStep(id: 'webcam', anchors: [a.webcam]),
       // Preheat: first spotlight the long-press area (name + temps), then open
@@ -99,15 +97,9 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'menuIcon', anchors: [a.menuIcon]),
       TutorialStep(id: 'menuPrinters', anchors: [a.menuPrinters], requiresDrawer: true),
       TutorialStep(id: 'menuBackup', anchors: [a.menuBackup], requiresDrawer: true),
-      TutorialStep(id: 'menuTheme', anchors: [a.menuTheme], requiresDrawer: true),
       TutorialStep(id: 'menuDisplaySize', anchors: [a.menuDisplaySize], requiresDrawer: true),
       TutorialStep(id: 'menuColumns', anchors: [a.menuColumns], requiresDrawer: true),
       TutorialStep(id: 'menuCameras', anchors: [a.menuCameras], requiresDrawer: true),
-      TutorialStep(id: 'menuAbout', anchors: [a.menuAbout], requiresDrawer: true),
-      // The tip jar is Android-only (Apple bars in-app donation links).
-      if (Platform.isAndroid)
-        TutorialStep(id: 'menuSupport', anchors: [a.menuSupport], requiresDrawer: true),
-      TutorialStep(id: 'menuSettings', anchors: [a.menuSettings], requiresDrawer: true),
       TutorialStep(id: 'menuLanguage', anchors: [a.menuLanguage], requiresDrawer: true),
     ];
   }

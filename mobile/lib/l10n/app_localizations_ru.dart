@@ -402,7 +402,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dashboardThemeHeading => 'Тема';
 
   @override
-  String get dashboardThemeSystem => 'Системная';
+  String get dashboardThemeSystem => 'Цвета телефона';
 
   @override
   String get dashboardThemeDark => 'Тёмная';
@@ -1703,7 +1703,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tutorialDone => 'Готово';
 
   @override
-  String get tutorialSkip => 'Пропустить';
+  String get tutorialSkip => 'Завершить';
 
   @override
   String get tutorialBack => 'Назад';
@@ -1729,6 +1729,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get tutorialChamber =>
       'Если у принтера есть датчик камеры, его температура тоже отображается здесь.';
+
+  @override
+  String get tutorialTemps =>
+      'Это температуры в реальном времени: хотенд (сопло), нагреваемый стол и, если у принтера есть датчик камеры, камера.';
 
   @override
   String get tutorialEstop =>

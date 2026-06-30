@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,7 +19,11 @@ import '../models/notif_fields.dart';
 /// `custom` is our own value - when selected, [app.dart] builds the
 /// MaterialApp theme from user-picked colours stored in
 /// [customThemeProvider] instead of the seeded purple defaults.
-enum AppThemeMode { dark, light, custom }
+/// `system` follows the phone's wallpaper-derived "Material You" palette
+/// (Android 12+) and the device light/dark setting; where that palette isn't
+/// available (older Android, iOS) [app.dart] falls back to the seeded theme,
+/// and the option itself is hidden (see [dynamicColorSupportedProvider]).
+enum AppThemeMode { dark, light, custom, system }
 
 class ThemeModeNotifier extends Notifier<AppThemeMode> {
   static const _key = 'theme_mode';
@@ -31,7 +37,8 @@ class ThemeModeNotifier extends Notifier<AppThemeMode> {
     state = switch (raw) {
       'light'  => AppThemeMode.light,
       'custom' => AppThemeMode.custom,
-      // 'system' (a removed option) and anything unknown fall back to Dark.
+      'system' => AppThemeMode.system,
+      // Anything unknown falls back to Dark.
       _        => AppThemeMode.dark,
     };
   }
@@ -46,6 +53,21 @@ class ThemeModeNotifier extends Notifier<AppThemeMode> {
 final themeModeProvider = NotifierProvider<ThemeModeNotifier, AppThemeMode>(
   ThemeModeNotifier.new,
 );
+
+/// Whether the optional "Phone colours" (Material You) theme can actually be
+/// applied on this device: true only on Android 12+, where the OS exposes a
+/// wallpaper-derived palette. Drives whether the theme option is offered at all
+/// - older Android and iOS have no such palette, so the option is hidden there
+/// rather than shown as a no-op. Resolved once; treated as false until it
+/// completes.
+final dynamicColorSupportedProvider = FutureProvider<bool>((ref) async {
+  if (!Platform.isAndroid) return false;
+  try {
+    return (await DynamicColorPlugin.getCorePalette()) != null;
+  } catch (_) {
+    return false;
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Font scale

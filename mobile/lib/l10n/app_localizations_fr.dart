@@ -408,7 +408,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardThemeHeading => 'Thème';
 
   @override
-  String get dashboardThemeSystem => 'Thème du système';
+  String get dashboardThemeSystem => 'Couleurs du téléphone';
 
   @override
   String get dashboardThemeDark => 'Sombre';
@@ -1721,7 +1721,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tutorialDone => 'Terminé';
 
   @override
-  String get tutorialSkip => 'Passer';
+  String get tutorialSkip => 'Terminer';
 
   @override
   String get tutorialBack => 'Retour';
@@ -1747,6 +1747,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tutorialChamber =>
       'Si votre imprimante possède un capteur de caisson, sa température s\'affiche aussi ici.';
+
+  @override
+  String get tutorialTemps =>
+      'Voici les températures en direct : le hotend (la buse), le plateau chauffant et, si votre imprimante possède un capteur de caisson, le caisson.';
 
   @override
   String get tutorialEstop =>

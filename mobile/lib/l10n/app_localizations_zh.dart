@@ -386,7 +386,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardThemeHeading => '主题';
 
   @override
-  String get dashboardThemeSystem => '跟随系统';
+  String get dashboardThemeSystem => '手机配色';
 
   @override
   String get dashboardThemeDark => '深色';
@@ -1623,7 +1623,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tutorialDone => '完成';
 
   @override
-  String get tutorialSkip => '跳过';
+  String get tutorialSkip => '结束';
 
   @override
   String get tutorialBack => '上一步';
@@ -1648,6 +1648,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tutorialChamber => '如果你的打印机有腔体传感器，其温度也会显示在这里。';
+
+  @override
+  String get tutorialTemps => '这些是实时温度：热端（喷嘴）、热床，如果你的打印机有腔体传感器，还会显示腔体温度。';
 
   @override
   String get tutorialEstop => '这是紧急停止。它需要双击才会触发，以免误触，触发后会立即停止打印机。';

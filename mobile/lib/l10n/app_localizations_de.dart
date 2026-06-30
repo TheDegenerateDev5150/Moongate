@@ -405,7 +405,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dashboardThemeHeading => 'Design';
 
   @override
-  String get dashboardThemeSystem => 'Systemstandard';
+  String get dashboardThemeSystem => 'Systemfarben';
 
   @override
   String get dashboardThemeDark => 'Dunkel';
@@ -1708,7 +1708,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tutorialDone => 'Fertig';
 
   @override
-  String get tutorialSkip => 'Überspringen';
+  String get tutorialSkip => 'Beenden';
 
   @override
   String get tutorialBack => 'Zurück';
@@ -1734,6 +1734,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tutorialChamber =>
       'Wenn dein Drucker einen Kammersensor hat, wird dessen Temperatur hier ebenfalls angezeigt.';
+
+  @override
+  String get tutorialTemps =>
+      'Das sind die Live-Temperaturen: das Hotend (Düse), das beheizte Bett und - falls dein Drucker einen Kammersensor hat - die Kammer.';
 
   @override
   String get tutorialEstop =>

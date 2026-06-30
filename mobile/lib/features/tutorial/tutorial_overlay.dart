@@ -221,12 +221,8 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialTunnelBar;
     case 'remoteBuilding':
       return l.tutorialRemoteBuilding;
-    case 'hotend':
-      return l.tutorialHotend;
-    case 'bed':
-      return l.tutorialBed;
-    case 'chamber':
-      return l.tutorialChamber;
+    case 'temps':
+      return l.tutorialTemps;
     case 'estop':
       return l.tutorialEstop;
     case 'webcam':
@@ -243,20 +239,12 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialMenuPrinters;
     case 'menuBackup':
       return l.tutorialMenuBackup;
-    case 'menuTheme':
-      return l.tutorialMenuTheme;
     case 'menuDisplaySize':
       return l.tutorialMenuDisplaySize;
     case 'menuColumns':
       return l.tutorialMenuColumns;
     case 'menuCameras':
       return l.tutorialMenuCameras;
-    case 'menuAbout':
-      return l.tutorialMenuAbout;
-    case 'menuSupport':
-      return l.tutorialMenuSupport;
-    case 'menuSettings':
-      return l.tutorialMenuSettings;
     case 'menuLanguage':
       return l.tutorialMenuLanguage;
     default:

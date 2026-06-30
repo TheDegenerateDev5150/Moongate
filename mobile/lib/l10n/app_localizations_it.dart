@@ -403,7 +403,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dashboardThemeHeading => 'Tema';
 
   @override
-  String get dashboardThemeSystem => 'Predefinito di sistema';
+  String get dashboardThemeSystem => 'Colori del telefono';
 
   @override
   String get dashboardThemeDark => 'Scuro';
@@ -1714,7 +1714,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get tutorialDone => 'Fatto';
 
   @override
-  String get tutorialSkip => 'Salta';
+  String get tutorialSkip => 'Termina';
 
   @override
   String get tutorialBack => 'Indietro';
@@ -1741,6 +1741,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get tutorialChamber =>
       'Se la tua stampante ha un sensore della camera, qui appare anche la sua temperatura.';
+
+  @override
+  String get tutorialTemps =>
+      'Queste sono le temperature in tempo reale: l\'hotend (l\'ugello), il piano riscaldato e, se la tua stampante ha un sensore della camera, la camera.';
 
   @override
   String get tutorialEstop =>

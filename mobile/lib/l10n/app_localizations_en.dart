@@ -400,7 +400,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardThemeHeading => 'Theme';
 
   @override
-  String get dashboardThemeSystem => 'System default';
+  String get dashboardThemeSystem => 'Phone colours';
 
   @override
   String get dashboardThemeDark => 'Dark';
@@ -1686,7 +1686,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialDone => 'Done';
 
   @override
-  String get tutorialSkip => 'Skip';
+  String get tutorialSkip => 'End';
 
   @override
   String get tutorialBack => 'Back';
@@ -1712,6 +1712,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tutorialChamber =>
       'If your printer has a chamber sensor, its temperature shows here too.';
+
+  @override
+  String get tutorialTemps =>
+      'These are the live temperatures: the hotend (nozzle), the heated bed, and - if your printer has a chamber sensor - the chamber.';
 
   @override
   String get tutorialEstop =>

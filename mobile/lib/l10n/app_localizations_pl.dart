@@ -404,7 +404,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get dashboardThemeHeading => 'Motyw';
 
   @override
-  String get dashboardThemeSystem => 'Domyślny systemu';
+  String get dashboardThemeSystem => 'Kolory telefonu';
 
   @override
   String get dashboardThemeDark => 'Ciemny';
@@ -1703,7 +1703,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get tutorialDone => 'Gotowe';
 
   @override
-  String get tutorialSkip => 'Pomiń';
+  String get tutorialSkip => 'Zakończ';
 
   @override
   String get tutorialBack => 'Wstecz';
@@ -1729,6 +1729,10 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get tutorialChamber =>
       'Jeśli Twoja drukarka ma czujnik komory, jej temperatura również pojawia się tutaj.';
+
+  @override
+  String get tutorialTemps =>
+      'To temperatury na żywo: głowica (dysza), podgrzewany stół oraz - jeśli Twoja drukarka ma czujnik komory - komora.';
 
   @override
   String get tutorialEstop =>
