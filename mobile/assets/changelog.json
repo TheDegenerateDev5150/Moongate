@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.37",
+    "bullets": [
+      "New: a \"Phone colours\" theme. On Android 12 and newer, choose Phone colours in the menu and Moongate matches your phone's own colour scheme - the wallpaper-based palette Android calls Material You - and follows your light/dark setting automatically. It sits alongside Dark, Light and Custom, and only appears on phones that support it (older Android and iPhone have no system palette to read, so it stays hidden there).",
+      "The first-run tutorial is a little shorter: it now skips the menu items that explain themselves - Theme, About, Settings and Buy me a coffee - and the button to leave the tour early reads \"End\" instead of \"Skip\".",
+      "App-only update, no Pi update needed."
+    ]
+  },
+  {
     "version": "v0.9.36",
     "bullets": [
       "New: an optional in-app tutorial. After you add your first printer, Moongate offers a quick guided walkthrough that highlights each part of the app live - the green/orange connection bars and what they mean, the tunnel-still-building marker, the hotend, bed and chamber temperatures, the double-tap emergency stop, the webcam, and preheat - then opens the menu and walks every option in it. Move through it with Next and Back, leave with Skip, and run it again any time from the bottom of the menu.",

@@ -1,3 +1,4 @@
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -114,61 +115,85 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
 
   @override
   Widget build(BuildContext context) {
-    final appMode   = ref.watch(themeModeProvider);
-    final fontScale = ref.watch(fontScaleProvider);
-    final custom    = ref.watch(customThemeProvider);
+    final appMode    = ref.watch(themeModeProvider);
+    final fontScale  = ref.watch(fontScaleProvider);
+    final custom     = ref.watch(customThemeProvider);
     final localeCode = ref.watch(localeProvider);
 
-    // When the user has picked Custom, force both light and dark slots to the
-    // same custom theme - the user is taking over colour decisions so the
-    // system's dark-mode toggle should not flip anything on us.
-    final isCustom  = appMode == AppThemeMode.custom;
-    final lightTheme = isCustom ? _buildCustomTheme(custom) : _buildSeededTheme(Brightness.light);
-    final darkTheme  = isCustom ? _buildCustomTheme(custom) : _buildSeededTheme(Brightness.dark);
+    final isCustom = appMode == AppThemeMode.custom;
+    final isSystem = appMode == AppThemeMode.system;
 
-    return MaterialApp.router(
-      title: 'Moongate',
-      themeMode: _toFlutterMode(appMode),
-      theme: lightTheme,
-      darkTheme: darkTheme,
-      routerConfig: _router,
-      debugShowCheckedModeBanner: false,
-      // i18n: a null locale follows the system language (resolved against
-      // supportedLocales, English fallback); a non-null code is the user's
-      // explicit pick from the language picker.
-      locale: localeCode == null ? null : Locale(localeCode),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      // Apply font scaling via builder so we inherit the real system MediaQuery
-      // (status-bar height, nav-bar height, etc.) rather than discarding it.
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.linear(fontScale),
-        ),
-        // Scale icons by the same factor as text. An Icon defaults to a fixed
-        // pixel size; applyTextScaling multiplies that by the ambient textScaler,
-        // so the display-size slider grows text and icons together across the
-        // whole app rather than fonts alone. Merged at the root so every Icon
-        // inherits it (a widget can still opt out with applyTextScaling: false).
-        child: IconTheme.merge(
-          data: const IconThemeData(applyTextScaling: true),
-          // The app-lock overlay sits above the router's Navigator, so no route
-          // can render without the lock and the underlying screen is preserved.
-          // The tutorial overlay sits below the lock (so a lock screen still
-          // covers it) but above the router, so it can spotlight any screen.
-          child: AppLockGate(child: TutorialOverlay(child: child!)),
-        ),
-      ),
+    // "Phone colours" reads the wallpaper-derived Material You palette. It only
+    // exists on Android 12+, so DynamicColorBuilder hands us null schemes
+    // elsewhere (older Android, iOS) and we fall back to the seeded theme.
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        final hasDynamic = lightDynamic != null && darkDynamic != null;
+
+        final ThemeData lightTheme;
+        final ThemeData darkTheme;
+        if (isCustom) {
+          // The user is taking over colour decisions, so pin both slots to the
+          // same custom theme - the system dark-mode toggle shouldn't flip it.
+          lightTheme = darkTheme = _buildCustomTheme(custom);
+        } else if (isSystem && hasDynamic) {
+          lightTheme = _buildDynamicTheme(lightDynamic);
+          darkTheme  = _buildDynamicTheme(darkDynamic);
+        } else {
+          lightTheme = _buildSeededTheme(Brightness.light);
+          darkTheme  = _buildSeededTheme(Brightness.dark);
+        }
+
+        return MaterialApp.router(
+          title: 'Moongate',
+          themeMode: _toFlutterMode(appMode),
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          routerConfig: _router,
+          debugShowCheckedModeBanner: false,
+          // i18n: a null locale follows the system language (resolved against
+          // supportedLocales, English fallback); a non-null code is the user's
+          // explicit pick from the language picker.
+          locale: localeCode == null ? null : Locale(localeCode),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          // Apply font scaling via builder so we inherit the real system
+          // MediaQuery (status-bar height, nav-bar height, etc.) rather than
+          // discarding it.
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(fontScale),
+            ),
+            // Scale icons by the same factor as text. An Icon defaults to a
+            // fixed pixel size; applyTextScaling multiplies that by the ambient
+            // textScaler, so the display-size slider grows text and icons
+            // together across the whole app rather than fonts alone. Merged at
+            // the root so every Icon inherits it (a widget can still opt out
+            // with applyTextScaling: false).
+            child: IconTheme.merge(
+              data: const IconThemeData(applyTextScaling: true),
+              // The app-lock overlay sits above the router's Navigator, so no
+              // route can render without the lock and the underlying screen is
+              // preserved. The tutorial overlay sits below the lock (so a lock
+              // screen still covers it) but above the router, so it can
+              // spotlight any screen.
+              child: AppLockGate(child: TutorialOverlay(child: child!)),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  /// Flutter's MaterialApp doesn't know about our extra `custom` value, so
-  /// fall through to `dark` for it.  When in custom mode we set `theme` and
-  /// `darkTheme` to the same thing anyway, so the mode passed here is moot.
+  /// Flutter's MaterialApp doesn't know about our extra values. `custom` falls
+  /// through to `dark` (in custom mode `theme` and `darkTheme` are identical, so
+  /// the mode is moot); `system` follows the device's own light/dark setting so
+  /// the Material You palette tracks it.
   ThemeMode _toFlutterMode(AppThemeMode m) => switch (m) {
         AppThemeMode.light  => ThemeMode.light,
         AppThemeMode.dark   => ThemeMode.dark,
         AppThemeMode.custom => ThemeMode.dark,
+        AppThemeMode.system => ThemeMode.system,
       };
 
   /// The original purple-seeded Material 3 theme.  Used for light / dark.
@@ -180,6 +205,18 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
         seedColor: const Color(0xFF6C63FF),
         brightness: brightness,
       ),
+    );
+  }
+
+  /// Build a [ThemeData] from a system-supplied dynamic [ColorScheme] - the
+  /// Android 12+ "Material You" palette handed to us by DynamicColorBuilder.
+  /// Each scheme already carries its own brightness, so the light and dark
+  /// slots are built from the two schemes the builder provides.
+  ThemeData _buildDynamicTheme(ColorScheme scheme) {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: scheme.brightness,
+      colorScheme: scheme,
     );
   }
 

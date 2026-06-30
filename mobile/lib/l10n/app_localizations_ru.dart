@@ -402,7 +402,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dashboardThemeHeading => 'Тема';
 
   @override
-  String get dashboardThemeSystem => 'Системная';
+  String get dashboardThemeSystem => 'Цвета телефона';
 
   @override
   String get dashboardThemeDark => 'Тёмная';
@@ -1703,7 +1703,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get tutorialDone => 'Готово';
 
   @override
-  String get tutorialSkip => 'Пропустить';
+  String get tutorialSkip => 'Завершить';
 
   @override
   String get tutorialBack => 'Назад';

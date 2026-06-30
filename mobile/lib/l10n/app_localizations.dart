@@ -812,10 +812,10 @@ abstract class AppLocalizations {
   /// **'Theme'**
   String get dashboardThemeHeading;
 
-  /// Theme radio option: follow the system light/dark setting.
+  /// Theme radio option: use the phone's own system (Material You) colours. Android 12+ only.
   ///
   /// In en, this message translates to:
-  /// **'System default'**
+  /// **'Phone colours'**
   String get dashboardThemeSystem;
 
   /// Theme radio option: dark theme.
@@ -3149,7 +3149,7 @@ abstract class AppLocalizations {
   /// Button that ends the tutorial early.
   ///
   /// In en, this message translates to:
-  /// **'Skip'**
+  /// **'End'**
   String get tutorialSkip;
 
   /// Button that steps the tutorial back one step.

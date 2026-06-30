@@ -386,7 +386,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardThemeHeading => '主题';
 
   @override
-  String get dashboardThemeSystem => '跟随系统';
+  String get dashboardThemeSystem => '手机配色';
 
   @override
   String get dashboardThemeDark => '深色';
@@ -1623,7 +1623,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tutorialDone => '完成';
 
   @override
-  String get tutorialSkip => '跳过';
+  String get tutorialSkip => '结束';
 
   @override
   String get tutorialBack => '上一步';

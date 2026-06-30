@@ -400,7 +400,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardThemeHeading => 'Theme';
 
   @override
-  String get dashboardThemeSystem => 'System default';
+  String get dashboardThemeSystem => 'Phone colours';
 
   @override
   String get dashboardThemeDark => 'Dark';
@@ -1686,7 +1686,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialDone => 'Done';
 
   @override
-  String get tutorialSkip => 'Skip';
+  String get tutorialSkip => 'End';
 
   @override
   String get tutorialBack => 'Back';

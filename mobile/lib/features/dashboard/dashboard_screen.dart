@@ -412,6 +412,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final l = AppLocalizations.of(context);
     final fontScale     = ref.watch(fontScaleProvider);
     final themeMode     = ref.watch(themeModeProvider);
+    // "Phone colours" is only offered where the OS actually provides a palette
+    // (Android 12+); elsewhere the option is hidden (see app.dart fallback).
+    final dynamicColourSupported =
+        ref.watch(dynamicColorSupportedProvider).valueOrNull ?? false;
     final gridColumns   = ref.watch(gridColumnsProvider);
     final allowRotation = ref.watch(allowRotationProvider);
     final autoArrange   = ref.watch(autoArrangeProvider);
@@ -553,6 +557,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             title: Text(l.dashboardThemeLight),
                             secondary: const Icon(Icons.light_mode),
                           ),
+                          // "Phone colours" (Material You) - shown only where
+                          // the OS provides a wallpaper palette (Android 12+).
+                          if (dynamicColourSupported)
+                            RadioListTile(
+                              value: AppThemeMode.system,
+                              title: Text(l.dashboardThemeSystem),
+                              secondary: const Icon(Icons.auto_awesome),
+                            ),
                           RadioListTile(
                             value: AppThemeMode.custom,
                             title: Text(l.dashboardThemeCustom),

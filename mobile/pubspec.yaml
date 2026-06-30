@@ -1,6 +1,6 @@
 name: moongate
 description: Remote control interface for Klipper 3D printers via local WiFi or Cloudflare tunnel.
-version: 0.9.36+107
+version: 0.9.37+108
 publish_to: none
 
 environment:
@@ -52,6 +52,12 @@ dependencies:
 
   # Persistent settings
   shared_preferences: ^2.2.0
+
+  # Material You "dynamic colour" - reads the wallpaper-derived palette on
+  # Android 12+ for the optional "Phone colours" theme. The builder returns
+  # null schemes on older Android / iOS, where the app falls back to its seeded
+  # theme; the option itself is only shown where the palette is available.
+  dynamic_color: ^1.7.0
 
   # App version info (reads version from the installed package manifest)
   package_info_plus: ^9.0.1
