@@ -1412,21 +1412,36 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
   }
 
-  /// Display-size demo: pause so the user reads the callout, then slide the
-  /// display size up to the top, down to the bottom, and back to where it was.
+  /// Display-size demo: pause so the user reads the callout, then nudge the
+  /// display size up a few notches and back down, one 0.1 step at a time so it
+  /// glides rather than snapping to the extremes.
   Future<void> _demoDisplaySize() async {
     final notifier = ref.read(fontScaleProvider.notifier);
-    _savedFontScale ??= ref.read(fontScaleProvider);
+    final double start = _savedFontScale ?? ref.read(fontScaleProvider);
+    _savedFontScale = start;
     final token = ++_demoToken;
-    await Future.delayed(const Duration(milliseconds: 1100));
-    if (token != _demoToken || !mounted) return;
-    await notifier.set(1.4); // up to the top
-    await Future.delayed(const Duration(milliseconds: 1000));
-    if (token != _demoToken || !mounted) return;
-    await notifier.set(0.8); // down to the bottom
-    await Future.delayed(const Duration(milliseconds: 1000));
-    if (token != _demoToken || !mounted) return;
-    await notifier.set(_savedFontScale ?? 1.0); // back to normal
+    await Future.delayed(const Duration(milliseconds: 1100)); // read pause
+
+    // Build a path: up to 3 notches up (capped at the 1.4 max), then back to
+    // where it started.
+    final path = <double>[];
+    var v = start;
+    for (var i = 0; i < 3; i++) {
+      final nv = double.parse((v + 0.1).toStringAsFixed(1));
+      if (nv > 1.4) break;
+      path.add(nv);
+      v = nv;
+    }
+    for (var i = path.length - 2; i >= 0; i--) {
+      path.add(path[i]);
+    }
+    path.add(start);
+
+    for (final target in path) {
+      if (token != _demoToken || !mounted) return;
+      await notifier.set(target);
+      await Future.delayed(const Duration(milliseconds: 420));
+    }
     _savedFontScale = null;
   }
 
