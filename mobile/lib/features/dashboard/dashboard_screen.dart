@@ -662,7 +662,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     const Divider(),
 
-                    // ── Dashboard layout ──────────────────────────────────────
+                    // ── Dashboard layout (grouped for the tutorial spotlight) ──
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuColumns,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                       child: Text(l.dashboardLayoutHeading,
@@ -692,6 +698,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         selected: {gridColumns},
                         onSelectionChanged: (s) =>
                             ref.read(gridColumnsProvider.notifier).set(s.first),
+                      ),
+                    ),
+                        ],
                       ),
                     ),
                     // Rotation toggle

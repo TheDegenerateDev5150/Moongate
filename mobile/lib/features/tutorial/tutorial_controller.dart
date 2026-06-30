@@ -98,6 +98,7 @@ class TutorialController extends Notifier<TutorialState> {
       TutorialStep(id: 'menuBackup', anchors: [a.menuBackup], requiresDrawer: true),
       TutorialStep(id: 'menuTheme', anchors: [a.menuTheme], requiresDrawer: true),
       TutorialStep(id: 'menuDisplaySize', anchors: [a.menuDisplaySize], requiresDrawer: true),
+      TutorialStep(id: 'menuColumns', anchors: [a.menuColumns], requiresDrawer: true),
     ];
   }
 

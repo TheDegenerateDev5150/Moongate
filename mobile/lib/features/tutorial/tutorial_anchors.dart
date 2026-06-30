@@ -51,4 +51,7 @@ class TutorialAnchors {
 
   /// The display-size (font size) slider in the drawer.
   final GlobalKey menuDisplaySize = GlobalKey(debugLabel: 'tut_menuDisplaySize');
+
+  /// The dashboard layout column picker in the drawer.
+  final GlobalKey menuColumns = GlobalKey(debugLabel: 'tut_menuColumns');
 }

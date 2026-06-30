@@ -238,6 +238,8 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialMenuTheme;
     case 'menuDisplaySize':
       return l.tutorialMenuDisplaySize;
+    case 'menuColumns':
+      return l.tutorialMenuColumns;
     default:
       return '';
   }

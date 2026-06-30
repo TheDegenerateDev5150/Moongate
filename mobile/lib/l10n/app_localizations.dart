@@ -3242,11 +3242,17 @@ abstract class AppLocalizations {
   /// **'Choose a light, dark, or fully custom colour theme.'**
   String get tutorialMenuTheme;
 
-  /// Menu tutorial step pointing at the display-size slider, which then animates up and down.
+  /// Menu tutorial step pointing at the display-size slider.
   ///
   /// In en, this message translates to:
   /// **'Drag this to make everything bigger or smaller to suit your eyes.'**
   String get tutorialMenuDisplaySize;
+
+  /// Menu tutorial step pointing at the dashboard column-count picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Lay your printers out in one, two, or three columns.'**
+  String get tutorialMenuColumns;
 }
 
 class _AppLocalizationsDelegate

@@ -1065,5 +1065,7 @@
   "tutorialMenuTheme": "Choose a light, dark, or fully custom colour theme.",
   "@tutorialMenuTheme": {"description": "Menu tutorial step pointing at the Theme selector in the drawer."},
   "tutorialMenuDisplaySize": "Drag this to make everything bigger or smaller to suit your eyes.",
-  "@tutorialMenuDisplaySize": {"description": "Menu tutorial step pointing at the display-size slider, which then animates up and down."}
+  "@tutorialMenuDisplaySize": {"description": "Menu tutorial step pointing at the display-size slider."},
+  "tutorialMenuColumns": "Lay your printers out in one, two, or three columns.",
+  "@tutorialMenuColumns": {"description": "Menu tutorial step pointing at the dashboard column-count picker."}
 }

@@ -1765,4 +1765,8 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get tutorialMenuDisplaySize =>
       'Drag this to make everything bigger or smaller to suit your eyes.';
+
+  @override
+  String get tutorialMenuColumns =>
+      'Lay your printers out in one, two, or three columns.';
 }
