@@ -106,6 +106,8 @@ class TutorialController extends Notifier<TutorialState> {
       // The tip jar is Android-only (Apple bars in-app donation links).
       if (Platform.isAndroid)
         TutorialStep(id: 'menuSupport', anchors: [a.menuSupport], requiresDrawer: true),
+      TutorialStep(id: 'menuSettings', anchors: [a.menuSettings], requiresDrawer: true),
+      TutorialStep(id: 'menuLanguage', anchors: [a.menuLanguage], requiresDrawer: true),
     ];
   }
 

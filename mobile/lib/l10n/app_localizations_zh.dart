@@ -1702,4 +1702,12 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get tutorialMenuSupport =>
       'Buying me a coffee helps keep Moongate free for everyone and open source.';
+
+  @override
+  String get tutorialMenuSettings =>
+      'Settings has two options inside: clear all your printers, or delete all your data and start completely fresh.';
+
+  @override
+  String get tutorialMenuLanguage =>
+      'And you can switch the app\'s language here - Moongate speaks eight. That\'s the tour, enjoy!';
 }

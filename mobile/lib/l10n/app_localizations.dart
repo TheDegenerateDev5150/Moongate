@@ -3271,6 +3271,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Buying me a coffee helps keep Moongate free for everyone and open source.'**
   String get tutorialMenuSupport;
+
+  /// Menu tutorial step pointing at the Settings entry, which holds remove-all-printers and delete-my-data.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings has two options inside: clear all your printers, or delete all your data and start completely fresh.'**
+  String get tutorialMenuSettings;
+
+  /// Final menu tutorial step pointing at the language entry.
+  ///
+  /// In en, this message translates to:
+  /// **'And you can switch the app\'s language here - Moongate speaks eight. That\'s the tour, enjoy!'**
+  String get tutorialMenuLanguage;
 }
 
 class _AppLocalizationsDelegate

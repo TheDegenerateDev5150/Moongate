@@ -63,4 +63,10 @@ class TutorialAnchors {
 
   /// The "buy me a coffee" support entry (Android only).
   final GlobalKey menuSupport = GlobalKey(debugLabel: 'tut_menuSupport');
+
+  /// The Settings entry in the drawer (holds remove-all + delete-my-data).
+  final GlobalKey menuSettings = GlobalKey(debugLabel: 'tut_menuSettings');
+
+  /// The language entry in the drawer.
+  final GlobalKey menuLanguage = GlobalKey(debugLabel: 'tut_menuLanguage');
 }

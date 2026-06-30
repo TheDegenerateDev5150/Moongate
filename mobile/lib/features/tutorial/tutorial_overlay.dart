@@ -246,6 +246,10 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialMenuAbout;
     case 'menuSupport':
       return l.tutorialMenuSupport;
+    case 'menuSettings':
+      return l.tutorialMenuSettings;
+    case 'menuLanguage':
+      return l.tutorialMenuLanguage;
     default:
       return '';
   }
