@@ -595,8 +595,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       leading: const Icon(Icons.font_download_outlined),
                       title: Text(l.dashboardFontHeading),
                       subtitle: Text(
-                        _fontLabel(l, appFont),
-                        style: TextStyle(fontFamily: appFont.family),
+                        appFontById(appFont).label,
+                        style: TextStyle(fontFamily: appFontById(appFont).family),
                       ),
                       trailing: Icon(
                         Icons.chevron_right,
@@ -1385,40 +1385,56 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.read(tutorialControllerProvider.notifier).start();
   }
 
-  /// Localised display name for an app-font choice.
-  String _fontLabel(AppLocalizations l, AppFont f) => switch (f) {
-        AppFont.standard => l.fontStandard,
-        AppFont.rounded  => l.fontRounded,
-        AppFont.serif    => l.fontSerif,
-        AppFont.readable => l.fontReadable,
-      };
-
-  /// Pick the app typeface from the small bundled set. Each option previews in
-  /// its own font; the phone's own selected font can't be read by the app.
+  /// Pick the app typeface from the bundled set, grouped by style. Each option
+  /// previews in its own font; the phone's own selected font can't be read by a
+  /// Flutter app, so this bundled set is the alternative.
   Future<void> _showFontPicker(BuildContext context) async {
     final l = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
     final current = ref.read(appFontProvider);
-    final picked = await showDialog<AppFont>(
+    final picked = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l.dashboardFontHeading),
-        content: RadioGroup<AppFont>(
-          groupValue: current,
-          onChanged: (v) {
-            if (v != null) Navigator.pop(ctx, v);
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final f in AppFont.values)
-                RadioListTile<AppFont>(
-                  value: f,
-                  title: Text(
-                    _fontLabel(l, f),
-                    style: TextStyle(fontFamily: f.family),
-                  ),
-                ),
-            ],
+        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: RadioGroup<String>(
+              groupValue: current,
+              onChanged: (v) {
+                if (v != null) Navigator.pop(ctx, v);
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final cat in kAppFontCategories)
+                    if (kAppFonts.any((f) => f.category == cat)) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 2),
+                        child: Text(
+                          cat,
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall
+                              ?.copyWith(
+                                color: cs.onSurface.withValues(alpha: 0.55),
+                              ),
+                        ),
+                      ),
+                      for (final f in kAppFonts.where((e) => e.category == cat))
+                        RadioListTile<String>(
+                          value: f.id,
+                          title: Text(
+                            f.label,
+                            style: TextStyle(fontFamily: f.family),
+                          ),
+                        ),
+                    ],
+                ],
+              ),
+            ),
           ),
         ),
       ),

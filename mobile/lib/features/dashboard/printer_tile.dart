@@ -579,6 +579,7 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                             child: Text(
                               widget.printer.name,
                               style: theme.textTheme.titleSmall,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -629,41 +630,50 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _anchor(
-                                  TutorialAnchors.instance.tempHotend,
-                                  _TempChip(
-                                    icon: Icons.whatshot,
-                                    color: Colors.deepOrange,
-                                    temp: _status.hotendTemp,
-                                    target: _status.hotendTarget,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                _anchor(
-                                  TutorialAnchors.instance.tempBed,
-                                  _TempChip(
-                                    icon: Icons.bed,
-                                    color: Colors.blue,
-                                    temp: _status.bedTemp,
-                                    target: _status.bedTarget,
-                                  ),
-                                ),
-                                if (_status.chamberTemp > 0) ...[
-                                  const SizedBox(width: 8),
-                                  _anchor(
-                                    TutorialAnchors.instance.tempChamber,
-                                    _TempChip(
-                                      icon: Icons.sensor_window,
-                                      color: Colors.teal,
-                                      temp: _status.chamberTemp,
-                                      target: _status.chamberTarget,
+                            // Scale the temperature group down if a very wide
+                            // app font would otherwise push it past the tile, so
+                            // the row never overflows whatever font is selected.
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _anchor(
+                                      TutorialAnchors.instance.tempHotend,
+                                      _TempChip(
+                                        icon: Icons.whatshot,
+                                        color: Colors.deepOrange,
+                                        temp: _status.hotendTemp,
+                                        target: _status.hotendTarget,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ],
+                                    const SizedBox(width: 8),
+                                    _anchor(
+                                      TutorialAnchors.instance.tempBed,
+                                      _TempChip(
+                                        icon: Icons.bed,
+                                        color: Colors.blue,
+                                        temp: _status.bedTemp,
+                                        target: _status.bedTarget,
+                                      ),
+                                    ),
+                                    if (_status.chamberTemp > 0) ...[
+                                      const SizedBox(width: 8),
+                                      _anchor(
+                                        TutorialAnchors.instance.tempChamber,
+                                        _TempChip(
+                                          icon: Icons.sensor_window,
+                                          color: Colors.teal,
+                                          temp: _status.chamberTemp,
+                                          target: _status.chamberTarget,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ),
                             // E-STOP at the right end of the temperature line.
                             const Spacer(),
@@ -773,6 +783,7 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                             child: Text(
                               widget.printer.name,
                               style: theme.textTheme.titleSmall,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -814,32 +825,40 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                           padding: const EdgeInsets.only(top: 5),
                           child: Row(
                             children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _TempChip(
-                                    icon: Icons.whatshot,
-                                    color: Colors.deepOrange,
-                                    temp: _status.hotendTemp,
-                                    target: _status.hotendTarget,
+                              // Scale down if a very wide app font would push the
+                              // temps past the compact tile, so it never overflows.
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _TempChip(
+                                        icon: Icons.whatshot,
+                                        color: Colors.deepOrange,
+                                        temp: _status.hotendTemp,
+                                        target: _status.hotendTarget,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _TempChip(
+                                        icon: Icons.bed,
+                                        color: Colors.blue,
+                                        temp: _status.bedTemp,
+                                        target: _status.bedTarget,
+                                      ),
+                                      if (_status.chamberTemp > 0) ...[
+                                        const SizedBox(width: 8),
+                                        _TempChip(
+                                          icon: Icons.sensor_window,
+                                          color: Colors.teal,
+                                          temp: _status.chamberTemp,
+                                          target: _status.chamberTarget,
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                  const SizedBox(width: 8),
-                                  _TempChip(
-                                    icon: Icons.bed,
-                                    color: Colors.blue,
-                                    temp: _status.bedTemp,
-                                    target: _status.bedTarget,
-                                  ),
-                                  if (_status.chamberTemp > 0) ...[
-                                    const SizedBox(width: 8),
-                                    _TempChip(
-                                      icon: Icons.sensor_window,
-                                      color: Colors.teal,
-                                      temp: _status.chamberTemp,
-                                      target: _status.chamberTarget,
-                                    ),
-                                  ],
-                                ],
+                                ),
                               ),
                               const Spacer(),
                               if (_status.klippyShutdown)
