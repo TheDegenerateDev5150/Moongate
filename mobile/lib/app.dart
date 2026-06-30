@@ -13,6 +13,7 @@ import 'features/settings/custom_theme_screen.dart';
 import 'features/settings/notification_content_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/splash/splash_screen.dart';
+import 'features/tutorial/tutorial_overlay.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/app_lock_provider.dart';
 import 'providers/custom_theme_provider.dart';
@@ -153,7 +154,9 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
           data: const IconThemeData(applyTextScaling: true),
           // The app-lock overlay sits above the router's Navigator, so no route
           // can render without the lock and the underlying screen is preserved.
-          child: AppLockGate(child: child!),
+          // The tutorial overlay sits below the lock (so a lock screen still
+          // covers it) but above the router, so it can spotlight any screen.
+          child: AppLockGate(child: TutorialOverlay(child: child!)),
         ),
       ),
     );

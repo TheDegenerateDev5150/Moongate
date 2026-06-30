@@ -33,6 +33,9 @@ import '../donation/donation_prompt.dart';
 import '../info/ui_guide.dart';
 import '../language/language_picker.dart';
 import '../notifications/notifications_prompt.dart';
+import '../tutorial/tutorial_anchors.dart';
+import '../tutorial/tutorial_controller.dart';
+import '../tutorial/tutorial_offer.dart';
 import 'feedback_sheet.dart';
 import 'printer_tile.dart';
 import 'camera_feeds_overlay.dart';
@@ -49,6 +52,17 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   List<PrinterConfig> _printers = [];
   bool _updateDismissed = false;
+
+  /// Lets the live tutorial open/close the end drawer to demo the menu.
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _tutorialDrawerOpen = false;
+
+  /// True once the first _load() has run, so the "offer the tutorial on the
+  /// first printer" trigger fires on a real pairing, not the initial load.
+  bool _firstLoadDone = false;
+
+  /// Guards against the tutorial offer popup being shown twice at once.
+  bool _tutorialOfferInFlight = false;
 
   /// Transient (not persisted) manual-reorder editing state. Only meaningful
   /// when auto-arrange is off: true = tiles draggable + hint shown ("arranging");
@@ -78,46 +92,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   void _load() {
     final list = PrinterRegistry.instance.printers;
+    final wasEmpty = _printers.isEmpty;
     if (mounted) setState(() => _printers = list);
     // Keep the print-notification isolate's printer list in step - it reads a
     // separate cached snapshot, so poke it whenever the set may have changed
     // (pair / remove / restore). No-op when notifications are off.
     PrintNotificationService.instance.refreshNow().ignore();
-  }
-
-  /// Confirm + perform "Delete my data": wipes the anonymous account and all
-  /// its cloud records, clears the local printer list, and carries on with a
-  /// fresh anonymous identity. App Store guideline 5.1.1(v).
-  Future<void> _confirmDeleteData(BuildContext context) async {
-    final l         = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.deleteDataConfirmTitle),
-        content: Text(l.deleteDataConfirmBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l.commonCancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l.commonDelete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    try {
-      await SupabaseService.instance.deleteAccount();
-      await PrinterRegistry.instance.clear();
-      _load();
-      messenger.showSnackBar(SnackBar(content: Text(l.deleteDataDone)));
-    } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.deleteDataError)));
+    // Offer the walkthrough the moment the user's first printer lands on the
+    // dashboard (not just on the next cold launch). Skipped on the initial load
+    // - the first-run sequence handles existing users.
+    if (_firstLoadDone && wasEmpty && list.isNotEmpty) {
+      _maybeOfferTutorial();
     }
+    _firstLoadDone = true;
   }
 
   /// Persist a drag-to-reorder from the dashboard grid (manual mode only).
@@ -206,6 +193,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
+    // The live tutorial opens/closes the menu drawer for its menu steps.
+    ref.listen<TutorialState>(
+      tutorialControllerProvider,
+      (_, next) => _syncTutorialDrawer(next),
+    );
     // Check for update - runs once per session, silently ignored on failure.
     final updateAsync = ref.watch(updateProvider);
     final update = _updateDismissed ? null : updateAsync.valueOrNull;
@@ -277,6 +269,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
 
     final scaffold = Scaffold(
+      key: _scaffoldKey,
       backgroundColor: hasCustomBg ? Colors.transparent : null,
       appBar: AppBar(
         backgroundColor: hasCustomBg ? Colors.transparent : null,
@@ -304,6 +297,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           Builder(
             builder: (ctx) => IconButton(
+              key: TutorialAnchors.instance.menuIcon,
               icon: const Icon(Icons.menu),
               tooltip: l.dashboardMenuTooltip,
               onPressed: () => Scaffold.of(ctx).openEndDrawer(),
@@ -372,6 +366,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       const SizedBox.shrink(),
                     // Bottom-right: add a printer.
                     FloatingActionButton(
+                      key: TutorialAnchors.instance.addPrinter,
                       heroTag: 'addFab',
                       onPressed: () async {
                         await context.push('/pair');
@@ -457,7 +452,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
 
-                    // Printer management
+                    // Printer management (grouped for the tutorial spotlight).
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuPrinters,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     ListTile(
                       leading: const Icon(Icons.add_circle_outline),
                       title: Text(l.dashboardAddPrinter),
@@ -478,10 +479,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           _showRemoveSheet(context);
                         },
                       ),
+                        ],
+                      ),
+                    ),
 
                     const Divider(),
 
-                    // Import / Export
+                    // Import / Export (grouped for the tutorial spotlight).
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuBackup,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     if (_printers.isNotEmpty)
                       ListTile(
                         leading: const Icon(Icons.upload_file_outlined),
@@ -502,6 +512,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         _importConfig();
                       },
                     ),
+                        ],
+                      ),
+                    ),
 
                     const Divider(),
 
@@ -515,6 +528,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ?.copyWith(color: Colors.white54)),
                     ),
                     RadioGroup<AppThemeMode>(
+                      key: TutorialAnchors.instance.menuTheme,
                       groupValue: themeMode,
                       onChanged: (v) {
                         if (v == null) return;
@@ -563,7 +577,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     const Divider(),
 
-                    // Font size
+                    // Font size (grouped for the tutorial spotlight).
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuDisplaySize,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                       child: Text(l.dashboardFontSizeHeading,
@@ -589,6 +609,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ),
                           ),
                           const Icon(Icons.text_fields, size: 22),
+                        ],
+                      ),
+                    ),
                         ],
                       ),
                     ),
@@ -619,7 +642,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     const Divider(),
 
-                    // ── Dashboard layout ──────────────────────────────────────
+                    // ── Dashboard layout (grouped for the tutorial spotlight) ──
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuColumns,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                       child: Text(l.dashboardLayoutHeading,
@@ -649,6 +678,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         selected: {gridColumns},
                         onSelectionChanged: (s) =>
                             ref.read(gridColumnsProvider.notifier).set(s.first),
+                      ),
+                    ),
+                        ],
                       ),
                     ),
                     // Rotation toggle
@@ -687,11 +719,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     const Divider(),
 
-                    // ── Camera feeds ──────────────────────────────────────────
+                    // ── Camera feeds (grouped for the tutorial spotlight) ──────
                     // Per-path tile webcam refresh rates. Opens a sheet with two
                     // Raw/1s/3s/5s pickers - each tile uses the local rate on the
                     // LAN and the tunnel rate when remote, so the remote feed can
                     // be throttled to save data.
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuCameras,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     ListTile(
                       dense: true,
                       leading: const Icon(Icons.shutter_speed),
@@ -728,6 +766,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       onChanged: (v) => ref
                           .read(showCameraConfigIconsProvider.notifier)
                           .set(v),
+                    ),
+                        ],
+                      ),
                     ),
 
                     // Print notifications run on an Android foreground service;
@@ -809,7 +850,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                     const Divider(),
 
-                    // ── About ────────────────────────────────────────────────
+                    // ── About (grouped for the tutorial spotlight) ────────────
+                    KeyedSubtree(
+                      key: TutorialAnchors.instance.menuAbout,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                       child: Text(l.dashboardAboutHeading,
@@ -865,10 +912,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         context.push('/settings/app-lock');
                       },
                     ),
+                        ],
+                      ),
+                    ),
                     // Hidden on iOS: Apple rejects in-app donation links to
                     // the developer, so the tip jar is Android-only.
                     if (Platform.isAndroid)
                       ListTile(
+                        key: TutorialAnchors.instance.menuSupport,
                         leading: const Icon(Icons.coffee_outlined,
                             color: Colors.amber),
                         title: Text(l.dashboardBuyMeCoffee),
@@ -887,6 +938,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // Settings + Language scroll with the rest of the menu now;
                     // only the build number stays pinned at the very bottom.
                     ListTile(
+                      key: TutorialAnchors.instance.menuSettings,
                       leading: const Icon(Icons.settings_outlined),
                       title: Text(l.dashboardSettings),
                       onTap: () {
@@ -895,6 +947,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       },
                     ),
                     ListTile(
+                      key: TutorialAnchors.instance.menuLanguage,
                       leading: const Icon(Icons.translate),
                       title: Text(l.menuLanguage),
                       subtitle: Text(
@@ -906,32 +959,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         showLanguagePicker(context);
                       },
                     ),
-
-                    const Divider(),
-
-                    // Account/data deletion (App Store guideline 5.1.1(v)):
-                    // wipes the anonymous account and its cloud records.
-                    // Destructive, so it lives at the very bottom behind a
-                    // confirmation dialog.
-                    ListTile(
-                      leading: const Icon(Icons.delete_forever_outlined,
-                          color: Colors.redAccent),
-                      title: Text(l.dashboardDeleteData,
-                          style: const TextStyle(color: Colors.redAccent)),
-                      subtitle: Text(l.dashboardDeleteDataSubtitle),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _confirmDeleteData(context);
-                      },
-                    ),
                   ],
                 ),
               ),
               ),
             ),
 
-            // ── Bottom bar - only the build number stays pinned ───────────────
-            const Divider(),
+            // ── Bottom: tutorial + build number stay pinned ───────────────────
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.school_outlined),
+              title: Text(l.tutorialMenuTitle),
+              onTap: () {
+                Navigator.pop(context);
+                _startTutorial();
+              },
+            ),
+            const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
               child: ref.watch(appVersionProvider).when(
@@ -1264,6 +1308,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   static const _languageSelectedKey = 'language_selected';
   static const _notifPromptedKey = 'notifications_prompted';
   static const _donationPromptedKey = 'donation_prompted';
+  static const _tutorialOfferedKey = 'tutorial_offered';
 
   /// First cold start: prompt for a language once, then run the pairing
   /// explainer. The language prompt is gated by [_languageSelectedKey] so it
@@ -1279,7 +1324,64 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await _maybeShowPairingHelp();
     await _maybeOfferNotifications();
     await _maybeShowDonationPrompt();
+    await _maybeOfferTutorial();
   }
+
+  /// Offer the live walkthrough once, after the user has a printer to look at.
+  /// Mirrors the other first-run prompts: gated on having ≥1 printer and shown
+  /// once (the flag is set when the user starts it or ticks "don't remind me").
+  /// Dismissing without choosing leaves the flag clear, so it offers again.
+  Future<void> _maybeOfferTutorial() async {
+    if (_tutorialOfferInFlight) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_tutorialOfferedKey) ?? false) return;
+    if (PrinterRegistry.instance.printers.isEmpty) return;
+    if (!mounted) return;
+    _tutorialOfferInFlight = true;
+    final result = await showTutorialOffer(context);
+    _tutorialOfferInFlight = false;
+    if (result == null) return;
+    if (result.start || result.dontRemind) {
+      await prefs.setBool(_tutorialOfferedKey, true);
+    }
+    if (result.start) _startTutorial();
+  }
+
+  /// Launch the walkthrough now (from the offer popup or the drawer entry).
+  void _startTutorial() {
+    ref.read(tutorialControllerProvider.notifier).start();
+  }
+
+  /// Open or close the end drawer to match the tutorial's current step, so the
+  /// menu steps can spotlight drawer entries.
+  void _syncTutorialDrawer(TutorialState s) {
+    final step = s.current;
+    final wantOpen = s.active && (step?.requiresDrawer ?? false);
+    final st = _scaffoldKey.currentState;
+    if (st == null) return;
+    if (wantOpen) {
+      if (!_tutorialDrawerOpen) {
+        _tutorialDrawerOpen = true;
+        st.openEndDrawer();
+      }
+      // Scroll the spotlighted entry into view (after the drawer settles, or
+      // after the previous menu step's scroll finishes).
+      final key = (step?.anchors.isNotEmpty ?? false) ? step!.anchors.first : null;
+      if (key != null) {
+        Future.delayed(const Duration(milliseconds: 180), () {
+          if (!mounted) return;
+          final ctx = key.currentContext;
+          if (ctx == null || !ctx.mounted) return;
+          Scrollable.ensureVisible(ctx,
+              duration: const Duration(milliseconds: 250), alignment: 0.5);
+        });
+      }
+    } else if (_tutorialDrawerOpen) {
+      _tutorialDrawerOpen = false;
+      if (st.isEndDrawerOpen) st.closeEndDrawer();
+    }
+  }
+
 
   /// A one-time, low-pressure nudge to support the project, shown on a cold
   /// start. Gated on having at least one printer so it never interrupts a brand
@@ -1763,6 +1865,8 @@ class _PrinterGrid extends StatelessWidget {
             onTap: () => onTap(printers[i]),
             tileOpacity: tileOpacity,
             bounded: bounded,
+            // The first tile carries the live-tutorial spotlight anchors.
+            anchorForTutorial: i == 0,
           );
 
       // Manual-order mode: drag the actual tiles around the grid - the original

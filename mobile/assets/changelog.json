@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.36",
+    "bullets": [
+      "New: an optional in-app tutorial. After you add your first printer, Moongate offers a quick guided walkthrough that highlights each part of the app live - the green/orange connection bars and what they mean, the tunnel-still-building marker, the hotend, bed and chamber temperatures, the double-tap emergency stop, the webcam, and preheat - then opens the menu and walks every option in it. Move through it with Next and Back, leave with Skip, and run it again any time from the bottom of the menu.",
+      "The press-and-hold area that opens preheat is now the whole tile (name and temperatures), so it's much easier to trigger - it had become fiddly at larger display sizes.",
+      "Delete my data now lives in Settings alongside Remove all printers, instead of its own menu entry."
+    ]
+  },
+  {
     "version": "v0.9.35",
     "bullets": [
       "The display-size slider in the menu (renamed from \"Font size\") now scales the dashboard icons as well as the text, so the whole dashboard grows and shrinks together. The emergency-stop button resizes with it and is a little smaller by default.",

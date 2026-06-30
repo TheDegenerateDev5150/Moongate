@@ -1689,4 +1689,122 @@ class AppLocalizationsEs extends AppLocalizations {
   String heatsoakDoneBody(String printer) {
     return '$printer está a temperatura';
   }
+
+  @override
+  String get tutorialOfferTitle => '¿Quieres un recorrido rápido?';
+
+  @override
+  String get tutorialOfferBody =>
+      '¿Te gustaría ver un breve recorrido de cómo funciona Moongate?';
+
+  @override
+  String get tutorialOfferDontRemind => 'No volver a recordármelo';
+
+  @override
+  String get tutorialOfferNo => 'No, gracias';
+
+  @override
+  String get tutorialOfferStart => 'Empezar tutorial';
+
+  @override
+  String get tutorialMenuTitle => 'Tutorial de la app';
+
+  @override
+  String get tutorialNext => 'Siguiente';
+
+  @override
+  String get tutorialDone => 'Listo';
+
+  @override
+  String get tutorialSkip => 'Saltar';
+
+  @override
+  String get tutorialBack => 'Atrás';
+
+  @override
+  String get tutorialLocalBar =>
+      'La barra de color muestra cómo Moongate está llegando a esta impresora. Verde con un icono de Wi-Fi significa que estás en la misma red, una conexión local directa y rápida.';
+
+  @override
+  String get tutorialTunnelBar =>
+      'Naranja con un icono de nube significa que estás fuera de casa, conectado de forma segura por internet a través del túnel de tu impresora. Moongate cambia entre ambas automáticamente.';
+
+  @override
+  String get tutorialRemoteBuilding =>
+      'Cuando vinculas una impresora por primera vez, el acceso remoto no es instantáneo. Esta pequeña marca de nube significa que el túnel seguro aún se está estableciendo en segundo plano. Cuando se convierta en una nube verde con tic, podrás llegar a esta impresora desde cualquier lugar.';
+
+  @override
+  String get tutorialHotend =>
+      'Este es tu hotend, la temperatura de la boquilla.';
+
+  @override
+  String get tutorialBed => 'Y esta es la cama caliente.';
+
+  @override
+  String get tutorialChamber =>
+      'Si tu impresora tiene un sensor de cámara interna, su temperatura también aparece aquí.';
+
+  @override
+  String get tutorialEstop =>
+      'Esta es la parada de emergencia. Necesita un doble toque para activarse, así que no puede dispararse por accidente, y detiene la impresora de inmediato.';
+
+  @override
+  String get tutorialWebcam =>
+      'Al tocar la vista de la cámara se abre la interfaz completa de la impresora, la pantalla en vivo de Klipper.';
+
+  @override
+  String get tutorialPreheatPress =>
+      'Mantén pulsado el nombre de una impresora o sus temperaturas para mostrar el panel de precalentamiento.';
+
+  @override
+  String get tutorialPreheatSheet =>
+      'Aquí puedes fijar los objetivos del hotend y la cama y un tiempo de calentamiento opcional.';
+
+  @override
+  String get tutorialAddPrinter =>
+      'Toca el botón más en cualquier momento para añadir otra impresora y vincularla.';
+
+  @override
+  String get tutorialMenuIcon =>
+      'Este es el menú. Puedes abrirlo en cualquier momento desde aquí.';
+
+  @override
+  String get tutorialMenuPrinters =>
+      'Añade otra impresora, o quita una que ya no uses.';
+
+  @override
+  String get tutorialMenuBackup =>
+      'Haz una copia de seguridad de tu configuración en un archivo, o restáurala en otro dispositivo.';
+
+  @override
+  String get tutorialMenuTheme =>
+      'Elige un tema de color claro, oscuro o totalmente personalizado.';
+
+  @override
+  String get tutorialMenuDisplaySize =>
+      'Arrastra esto para hacer todo más grande o más pequeño según tu vista.';
+
+  @override
+  String get tutorialMenuColumns =>
+      'Distribuye tus impresoras en una, dos o tres columnas.';
+
+  @override
+  String get tutorialMenuCameras =>
+      'Define con qué frecuencia se actualizan las cámaras, y enciende o apaga la cámara de cada impresora.';
+
+  @override
+  String get tutorialMenuAbout =>
+      'Las novedades, cómo funciona la vinculación, una guía de iconos y dónde informar de un problema están todos aquí.';
+
+  @override
+  String get tutorialMenuSupport =>
+      'Invitarme a un café ayuda a mantener Moongate gratis para todos y de código abierto.';
+
+  @override
+  String get tutorialMenuSettings =>
+      'Ajustes tiene dos opciones dentro: borrar todas tus impresoras, o eliminar todos tus datos y empezar completamente de cero.';
+
+  @override
+  String get tutorialMenuLanguage =>
+      'Y aquí puedes cambiar el idioma de la app - Moongate habla ocho. ¡Eso es todo el recorrido, disfruta!';
 }

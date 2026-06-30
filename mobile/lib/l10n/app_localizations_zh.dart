@@ -1597,4 +1597,104 @@ class AppLocalizationsZh extends AppLocalizations {
   String heatsoakDoneBody(String printer) {
     return '$printer 已达到温度';
   }
+
+  @override
+  String get tutorialOfferTitle => '来个快速导览？';
+
+  @override
+  String get tutorialOfferBody => '想快速了解一下 Moongate 的使用方法吗？';
+
+  @override
+  String get tutorialOfferDontRemind => '不再提醒我';
+
+  @override
+  String get tutorialOfferNo => '不用了，谢谢';
+
+  @override
+  String get tutorialOfferStart => '开始教程';
+
+  @override
+  String get tutorialMenuTitle => '应用教程';
+
+  @override
+  String get tutorialNext => '下一步';
+
+  @override
+  String get tutorialDone => '完成';
+
+  @override
+  String get tutorialSkip => '跳过';
+
+  @override
+  String get tutorialBack => '上一步';
+
+  @override
+  String get tutorialLocalBar =>
+      '颜色条显示 Moongate 是如何连接这台打印机的。绿色加 Wi-Fi 图标表示你在同一网络中，这是一种快速的直连本地连接。';
+
+  @override
+  String get tutorialTunnelBar =>
+      '橙色加云朵图标表示你不在家中，正通过打印机的隧道经由互联网安全连接。Moongate 会自动在两者之间切换。';
+
+  @override
+  String get tutorialRemoteBuilding =>
+      '首次配对打印机时，远程访问不会立即可用。这个小云朵标记表示安全隧道仍在后台建立。一旦它变成绿色云朵对勾，你就能从任何地方连接这台打印机了。';
+
+  @override
+  String get tutorialHotend => '这是你的热端，即喷嘴温度。';
+
+  @override
+  String get tutorialBed => '这是热床。';
+
+  @override
+  String get tutorialChamber => '如果你的打印机有腔体传感器，其温度也会显示在这里。';
+
+  @override
+  String get tutorialEstop => '这是紧急停止。它需要双击才会触发，以免误触，触发后会立即停止打印机。';
+
+  @override
+  String get tutorialWebcam => '点击摄像头画面会打开完整的打印机界面，即实时的 Klipper 屏幕。';
+
+  @override
+  String get tutorialPreheatPress => '按住打印机的名称或温度即可显示预热面板。';
+
+  @override
+  String get tutorialPreheatSheet => '在这里你可以设置热端和热床的目标温度，以及可选的热浸时间。';
+
+  @override
+  String get tutorialAddPrinter => '随时点击加号按钮即可添加并配对另一台打印机。';
+
+  @override
+  String get tutorialMenuIcon => '这是菜单。你可以随时从这里打开它。';
+
+  @override
+  String get tutorialMenuPrinters => '添加另一台打印机，或移除你不再使用的打印机。';
+
+  @override
+  String get tutorialMenuBackup => '将你的配置备份到文件，或在另一台设备上恢复。';
+
+  @override
+  String get tutorialMenuTheme => '选择浅色、深色或完全自定义的配色主题。';
+
+  @override
+  String get tutorialMenuDisplaySize => '拖动这里可让一切变大或变小，以适应你的视觉。';
+
+  @override
+  String get tutorialMenuColumns => '将你的打印机排列成一列、两列或三列。';
+
+  @override
+  String get tutorialMenuCameras => '设置摄像头画面的刷新频率，并开启或关闭每台打印机的摄像头。';
+
+  @override
+  String get tutorialMenuAbout => '更新内容、配对原理、图标指南，以及在哪里反馈问题，都在这里。';
+
+  @override
+  String get tutorialMenuSupport => '请我喝杯咖啡，有助于让 Moongate 对所有人保持免费和开源。';
+
+  @override
+  String get tutorialMenuSettings => '设置中有两个选项：清除所有打印机，或删除所有数据并完全重新开始。';
+
+  @override
+  String get tutorialMenuLanguage =>
+      '你还可以在这里切换应用的语言，Moongate 支持八种语言。导览到此结束，祝你使用愉快！';
 }
