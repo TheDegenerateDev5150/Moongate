@@ -213,13 +213,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
-    // The live tutorial opens/closes the menu drawer and runs the menu demos.
+    // The live tutorial opens/closes the menu drawer for its menu steps.
     ref.listen<TutorialState>(
       tutorialControllerProvider,
-      (_, next) {
-        _syncTutorialDrawer(next);
-        _syncTutorialDemos(next);
-      },
+      (_, next) => _syncTutorialDrawer(next),
     );
     // Check for update - runs once per session, silently ignored on failure.
     final updateAsync = ref.watch(updateProvider);
@@ -1390,68 +1387,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
   }
 
-  // ── Live tutorial menu demos ────────────────────────────────────────────────
-  String? _activeDemoStep;
-  double? _savedFontScale;
-  int _demoToken = 0;
-
-  /// Run/stop the per-step menu demo as the tour moves. Each demo restores
-  /// whatever it changed when its step is left (next, back, skip, or finish).
-  void _syncTutorialDemos(TutorialState s) {
-    final id = s.active ? s.current?.id : null;
-    if (id == _activeDemoStep) return;
-    // Leaving the previous demo step: stop it and restore.
-    switch (_activeDemoStep) {
-      case 'menuDisplaySize':
-        _restoreDisplaySize();
-    }
-    _activeDemoStep = id;
-    switch (id) {
-      case 'menuDisplaySize':
-        _demoDisplaySize();
-    }
-  }
-
-  /// Display-size demo: pause so the user reads the callout, then nudge the
-  /// display size up a few notches and back down, one 0.1 step at a time so it
-  /// glides rather than snapping to the extremes.
-  Future<void> _demoDisplaySize() async {
-    final notifier = ref.read(fontScaleProvider.notifier);
-    final double start = _savedFontScale ?? ref.read(fontScaleProvider);
-    _savedFontScale = start;
-    final token = ++_demoToken;
-    await Future.delayed(const Duration(milliseconds: 1100)); // read pause
-
-    // Build a path: up to 3 notches up (capped at the 1.4 max), then back to
-    // where it started.
-    final path = <double>[];
-    var v = start;
-    for (var i = 0; i < 3; i++) {
-      final nv = double.parse((v + 0.1).toStringAsFixed(1));
-      if (nv > 1.4) break;
-      path.add(nv);
-      v = nv;
-    }
-    for (var i = path.length - 2; i >= 0; i--) {
-      path.add(path[i]);
-    }
-    path.add(start);
-
-    for (final target in path) {
-      if (token != _demoToken || !mounted) return;
-      await notifier.set(target);
-      await Future.delayed(const Duration(milliseconds: 420));
-    }
-    _savedFontScale = null;
-  }
-
-  void _restoreDisplaySize() {
-    _demoToken++; // cancel any in-flight animation
-    if (_savedFontScale != null) {
-      ref.read(fontScaleProvider.notifier).set(_savedFontScale!);
-      _savedFontScale = null;
-    }
-  }
 
   /// A one-time, low-pressure nudge to support the project, shown on a cold
   /// start. Gated on having at least one printer so it never interrupts a brand

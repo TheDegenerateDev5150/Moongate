@@ -104,16 +104,6 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
         });
       }
     }
-    // Once a spotlight is shown, re-resolve on each rebuild so it tracks layout
-    // changes - e.g. the display-size demo resizing the drawer under it. Cheap:
-    // it only setStates when the rect actually moves, so it settles immediately.
-    if (state.active &&
-        _resolvedForIndex == state.index &&
-        _holeRects.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _resolveRect(ref.read(tutorialControllerProvider));
-      });
-    }
 
     return Stack(
       key: _stackKey,
