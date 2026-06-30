@@ -33,6 +33,7 @@ import '../donation/donation_prompt.dart';
 import '../info/ui_guide.dart';
 import '../language/language_picker.dart';
 import '../notifications/notifications_prompt.dart';
+import '../tutorial/tutorial_anchors.dart';
 import '../tutorial/tutorial_controller.dart';
 import '../tutorial/tutorial_offer.dart';
 import 'feedback_sheet.dart';
@@ -374,6 +375,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       const SizedBox.shrink(),
                     // Bottom-right: add a printer.
                     FloatingActionButton(
+                      key: TutorialAnchors.instance.addPrinter,
                       heroTag: 'addFab',
                       onPressed: () async {
                         await context.push('/pair');

@@ -3152,6 +3152,12 @@ abstract class AppLocalizations {
   /// **'Skip'**
   String get tutorialSkip;
 
+  /// Button that steps the tutorial back one step.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get tutorialBack;
+
   /// Tutorial step explaining the green local-mode connection bar on a printer tile.
   ///
   /// In en, this message translates to:
@@ -3205,6 +3211,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Here you can set hotend and bed targets and an optional heat-soak time.'**
   String get tutorialPreheatSheet;
+
+  /// Tutorial step pointing at the add-printer button on the dashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the plus button any time to add another printer and pair it.'**
+  String get tutorialAddPrinter;
 }
 
 class _AppLocalizationsDelegate

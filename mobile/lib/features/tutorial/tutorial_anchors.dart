@@ -32,4 +32,7 @@ class TutorialAnchors {
 
   /// The emergency-stop button at the end of the temperature row.
   final GlobalKey estop = GlobalKey(debugLabel: 'tut_estop');
+
+  /// The add-printer floating action button on the dashboard.
+  final GlobalKey addPrinter = GlobalKey(debugLabel: 'tut_addPrinter');
 }

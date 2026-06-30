@@ -1034,6 +1034,8 @@
   "@tutorialDone": {"description": "Button that finishes the tutorial on the last step."},
   "tutorialSkip": "Skip",
   "@tutorialSkip": {"description": "Button that ends the tutorial early."},
+  "tutorialBack": "Back",
+  "@tutorialBack": {"description": "Button that steps the tutorial back one step."},
   "tutorialLocalBar": "The colour bar shows how Moongate is reaching this printer. Green with a Wi-Fi icon means you are on the same network, a fast, direct local connection.",
   "@tutorialLocalBar": {"description": "Tutorial step explaining the green local-mode connection bar on a printer tile."},
   "tutorialTunnelBar": "Orange with a cloud icon means you are away from home, connected securely over the internet through your printer's tunnel. Moongate switches between the two automatically.",
@@ -1051,5 +1053,7 @@
   "tutorialPreheatPress": "Press and hold a printer's name or its temperatures to display the preheat panel.",
   "@tutorialPreheatPress": {"description": "Tutorial step that highlights the long-press area used to open preheat."},
   "tutorialPreheatSheet": "Here you can set hotend and bed targets and an optional heat-soak time.",
-  "@tutorialPreheatSheet": {"description": "Tutorial step shown while the preheat sheet is open, explaining the hotend / bed / heat-soak fields."}
+  "@tutorialPreheatSheet": {"description": "Tutorial step shown while the preheat sheet is open, explaining the hotend / bed / heat-soak fields."},
+  "tutorialAddPrinter": "Tap the plus button any time to add another printer and pair it.",
+  "@tutorialAddPrinter": {"description": "Tutorial step pointing at the add-printer button on the dashboard."}
 }

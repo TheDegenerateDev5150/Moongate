@@ -1719,6 +1719,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tutorialSkip => 'Skip';
 
   @override
+  String get tutorialBack => 'Back';
+
+  @override
   String get tutorialLocalBar =>
       'The colour bar shows how Moongate is reaching this printer. Green with a Wi-Fi icon means you are on the same network, a fast, direct local connection.';
 
@@ -1751,4 +1754,8 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tutorialPreheatSheet =>
       'Here you can set hotend and bed targets and an optional heat-soak time.';
+
+  @override
+  String get tutorialAddPrinter =>
+      'Tap the plus button any time to add another printer and pair it.';
 }

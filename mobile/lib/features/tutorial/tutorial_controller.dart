@@ -84,6 +84,7 @@ class TutorialController extends Notifier<TutorialState> {
       // scrim and floats the card above the sheet.
       TutorialStep(id: 'preheatPress', anchors: [a.preheatArea]),
       const TutorialStep(id: 'preheatSheet', dimScreen: false, forceCardTop: true),
+      TutorialStep(id: 'addPrinter', anchors: [a.addPrinter]),
     ];
   }
 
@@ -98,6 +99,13 @@ class TutorialController extends Notifier<TutorialState> {
       return;
     }
     state = state.copyWith(index: state.index + 1);
+  }
+
+  /// Step back one (so an accidental Next doesn't force a restart). No-op on the
+  /// first step.
+  void previous() {
+    if (!state.active || state.index == 0) return;
+    state = state.copyWith(index: state.index - 1);
   }
 
   /// End the tour (reached the end, or the user tapped Skip).

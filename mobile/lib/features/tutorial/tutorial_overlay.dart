@@ -94,6 +94,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
               state: state,
               holes: _holeRects,
               onNext: () => ref.read(tutorialControllerProvider.notifier).next(),
+              onBack: () => ref.read(tutorialControllerProvider.notifier).previous(),
               onSkip: () => ref.read(tutorialControllerProvider.notifier).finish(),
             ),
           ),
@@ -106,12 +107,14 @@ class _TutorialScrim extends StatelessWidget {
   final TutorialState state;
   final List<Rect> holes;
   final VoidCallback onNext;
+  final VoidCallback onBack;
   final VoidCallback onSkip;
 
   const _TutorialScrim({
     required this.state,
     required this.holes,
     required this.onNext,
+    required this.onBack,
     required this.onSkip,
   });
 
@@ -165,9 +168,12 @@ class _TutorialScrim extends StatelessWidget {
               stepIndex: state.index,
               stepTotal: state.total,
               isLast: state.isLast,
+              canBack: state.index > 0,
               onNext: onNext,
+              onBack: onBack,
               onSkip: onSkip,
               nextLabel: state.isLast ? l.tutorialDone : l.tutorialNext,
+              backLabel: l.tutorialBack,
               skipLabel: l.tutorialSkip,
             ),
           ),
@@ -199,6 +205,8 @@ String _copyFor(AppLocalizations l, String? id) {
       return l.tutorialPreheatPress;
     case 'preheatSheet':
       return l.tutorialPreheatSheet;
+    case 'addPrinter':
+      return l.tutorialAddPrinter;
     default:
       return '';
   }
@@ -209,9 +217,12 @@ class _CalloutCard extends StatelessWidget {
   final int stepIndex;
   final int stepTotal;
   final bool isLast;
+  final bool canBack;
   final VoidCallback onNext;
+  final VoidCallback onBack;
   final VoidCallback onSkip;
   final String nextLabel;
+  final String backLabel;
   final String skipLabel;
 
   const _CalloutCard({
@@ -219,9 +230,12 @@ class _CalloutCard extends StatelessWidget {
     required this.stepIndex,
     required this.stepTotal,
     required this.isLast,
+    required this.canBack,
     required this.onNext,
+    required this.onBack,
     required this.onSkip,
     required this.nextLabel,
+    required this.backLabel,
     required this.skipLabel,
   });
 
@@ -240,30 +254,37 @@ class _CalloutCard extends StatelessWidget {
           children: [
             Text(text, style: theme.textTheme.bodyLarge),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                // Progress dots.
-                if (stepTotal > 1)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (var i = 0; i < stepTotal; i++)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 5),
-                          child: Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: i == stepIndex
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.25),
-                            ),
+            // Progress dots, centred above the buttons.
+            if (stepTotal > 1)
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < stepTotal; i++)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2.5),
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: i == stepIndex
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.25),
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                // Back: step back one if the user advanced by mistake. Hidden on
+                // the first step.
+                if (canBack)
+                  TextButton(onPressed: onBack, child: Text(backLabel)),
                 const Spacer(),
                 // Skip is the exit hatch for the whole tour; on the last step
                 // it would just duplicate Done, so it's hidden there.
