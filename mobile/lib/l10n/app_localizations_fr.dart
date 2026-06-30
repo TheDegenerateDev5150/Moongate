@@ -420,6 +420,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardThemeCustom => 'Personnalisé';
 
   @override
+  String get dashboardFontHeading => 'Police';
+
+  @override
+  String get fontStandard => 'Par défaut';
+
+  @override
+  String get fontRounded => 'Arrondie';
+
+  @override
+  String get fontSerif => 'Serif';
+
+  @override
+  String get fontReadable => 'Haute lisibilité';
+
+  @override
   String get dashboardCustomiseColours => 'Personnaliser les couleurs';
 
   @override

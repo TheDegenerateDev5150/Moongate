@@ -412,6 +412,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final l = AppLocalizations.of(context);
     final fontScale     = ref.watch(fontScaleProvider);
     final themeMode     = ref.watch(themeModeProvider);
+    final appFont       = ref.watch(appFontProvider);
     // "Phone colours" is only offered where the OS actually provides a palette
     // (Android 12+); elsewhere the option is hidden (see app.dart fallback).
     final dynamicColourSupported =
@@ -587,6 +588,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           context.push('/theme/custom');
                         },
                       ),
+                    // Font - choose the app typeface. The phone's own system
+                    // font can't be read by a Flutter app, so we offer a small
+                    // bundled set instead (see appFontProvider).
+                    ListTile(
+                      leading: const Icon(Icons.font_download_outlined),
+                      title: Text(l.dashboardFontHeading),
+                      subtitle: Text(
+                        _fontLabel(l, appFont),
+                        style: TextStyle(fontFamily: appFont.family),
+                      ),
+                      trailing: Icon(
+                        Icons.chevron_right,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.4),
+                      ),
+                      onTap: () => _showFontPicker(context),
+                    ),
                     const Divider(),
 
                     // Font size (grouped for the tutorial spotlight).
@@ -1149,6 +1169,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(localeProvider.notifier).load();
     await ref.read(customThemeProvider.notifier).load();
     await ref.read(fontScaleProvider.notifier).load();
+    await ref.read(appFontProvider.notifier).load();
     await ref.read(gridColumnsProvider.notifier).load();
     await ref.read(allowRotationProvider.notifier).load();
     await ref.read(autoArrangeProvider.notifier).load();
@@ -1362,6 +1383,49 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// Launch the walkthrough now (from the offer popup or the drawer entry).
   void _startTutorial() {
     ref.read(tutorialControllerProvider.notifier).start();
+  }
+
+  /// Localised display name for an app-font choice.
+  String _fontLabel(AppLocalizations l, AppFont f) => switch (f) {
+        AppFont.standard => l.fontStandard,
+        AppFont.rounded  => l.fontRounded,
+        AppFont.serif    => l.fontSerif,
+        AppFont.readable => l.fontReadable,
+      };
+
+  /// Pick the app typeface from the small bundled set. Each option previews in
+  /// its own font; the phone's own selected font can't be read by the app.
+  Future<void> _showFontPicker(BuildContext context) async {
+    final l = AppLocalizations.of(context);
+    final current = ref.read(appFontProvider);
+    final picked = await showDialog<AppFont>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.dashboardFontHeading),
+        content: RadioGroup<AppFont>(
+          groupValue: current,
+          onChanged: (v) {
+            if (v != null) Navigator.pop(ctx, v);
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final f in AppFont.values)
+                RadioListTile<AppFont>(
+                  value: f,
+                  title: Text(
+                    _fontLabel(l, f),
+                    style: TextStyle(fontFamily: f.family),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked != null && picked != current) {
+      await ref.read(appFontProvider.notifier).set(picked);
+    }
   }
 
   /// Open or close the end drawer to match the tutorial's current step, so the

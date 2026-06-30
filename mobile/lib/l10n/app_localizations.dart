@@ -836,6 +836,36 @@ abstract class AppLocalizations {
   /// **'Custom'**
   String get dashboardThemeCustom;
 
+  /// Drawer item / dialog title for choosing the app's typeface.
+  ///
+  /// In en, this message translates to:
+  /// **'Font'**
+  String get dashboardFontHeading;
+
+  /// App font option: the platform default typeface.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get fontStandard;
+
+  /// App font option: a rounded sans-serif typeface.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounded'**
+  String get fontRounded;
+
+  /// App font option: a serif typeface.
+  ///
+  /// In en, this message translates to:
+  /// **'Serif'**
+  String get fontSerif;
+
+  /// App font option: a high-readability / accessibility typeface.
+  ///
+  /// In en, this message translates to:
+  /// **'High-readability'**
+  String get fontReadable;
+
   /// Drawer item to open the custom colour editor.
   ///
   /// In en, this message translates to:

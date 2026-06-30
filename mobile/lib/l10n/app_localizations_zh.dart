@@ -398,6 +398,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardThemeCustom => '自定义';
 
   @override
+  String get dashboardFontHeading => '字体';
+
+  @override
+  String get fontStandard => '默认';
+
+  @override
+  String get fontRounded => '圆体';
+
+  @override
+  String get fontSerif => '衬线';
+
+  @override
+  String get fontReadable => '高易读性';
+
+  @override
   String get dashboardCustomiseColours => '自定义配色';
 
   @override

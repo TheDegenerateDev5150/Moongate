@@ -414,6 +414,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dashboardThemeCustom => 'Своя';
 
   @override
+  String get dashboardFontHeading => 'Шрифт';
+
+  @override
+  String get fontStandard => 'По умолчанию';
+
+  @override
+  String get fontRounded => 'Округлый';
+
+  @override
+  String get fontSerif => 'С засечками';
+
+  @override
+  String get fontReadable => 'Высокая читаемость';
+
+  @override
   String get dashboardCustomiseColours => 'Настроить цвета';
 
   @override

@@ -417,6 +417,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dashboardThemeCustom => 'Benutzerdefiniert';
 
   @override
+  String get dashboardFontHeading => 'Schriftart';
+
+  @override
+  String get fontStandard => 'Standard';
+
+  @override
+  String get fontRounded => 'Abgerundet';
+
+  @override
+  String get fontSerif => 'Serif';
+
+  @override
+  String get fontReadable => 'Gut lesbar';
+
+  @override
   String get dashboardCustomiseColours => 'Farben anpassen';
 
   @override
