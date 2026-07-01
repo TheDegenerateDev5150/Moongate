@@ -463,6 +463,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kacheln nach Aktivität sortieren. Zum eigenen Anordnen ausschalten und Kacheln ziehen.';
 
   @override
+  String get dashboardShowButtons => 'Dashboard-Schaltflächen anzeigen';
+
+  @override
+  String get dashboardShowButtonsSubtitle =>
+      'Zeigt die Schaltflächen zum Hinzufügen und Umsortieren unten an. Drucker über das Menü hinzufügen, wenn ausgeblendet.';
+
+  @override
   String get dashboardReorderHint => 'Kachel halten und ziehen zum Umsortieren';
 
   @override

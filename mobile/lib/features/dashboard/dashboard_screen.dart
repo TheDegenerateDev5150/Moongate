@@ -205,6 +205,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final gridColumns = ref.watch(gridColumnsProvider);
     final autoArrange = ref.watch(autoArrangeProvider);
     final globalPowerButton = ref.watch(globalPowerButtonProvider);
+    final showDashboardButtons = ref.watch(dashboardButtonsProvider);
     // The custom dashboard background is part of the Custom theme - render it
     // only while that theme is active (it's configured on the Custom theme
     // screen, which is only reachable when Custom is selected, so this also
@@ -326,7 +327,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           );
         },
       ),
-      floatingActionButton: _printers.isEmpty
+      floatingActionButton: (_printers.isEmpty || !showDashboardButtons)
           ? null
           : SizedBox(
               width: double.infinity,
@@ -425,6 +426,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final pollInterval = ref.watch(notifPollIntervalProvider);
     final notifOnlineOnly = ref.watch(notifOnlineOnlyProvider);
     final globalPowerButton = ref.watch(globalPowerButtonProvider);
+    final showDashboardButtons = ref.watch(dashboardButtonsProvider);
 
     return Drawer(
       child: SafeArea(
@@ -747,6 +749,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       value: globalPowerButton,
                       onChanged: (v) =>
                           ref.read(globalPowerButtonProvider.notifier).set(v),
+                    ),
+                    // Show/hide the floating buttons at the bottom of the
+                    // dashboard (add printer + the reorder toggle). ON by
+                    // default; users with many printers hide them so they stop
+                    // covering the bottom tiles - adding a printer stays in the
+                    // menu, and reordering by turning the buttons back on.
+                    SwitchListTile(
+                      dense: true,
+                      secondary: const Icon(Icons.smart_button_outlined),
+                      title: Text(l.dashboardShowButtons),
+                      subtitle: Text(l.dashboardShowButtonsSubtitle),
+                      value: showDashboardButtons,
+                      onChanged: (v) =>
+                          ref.read(dashboardButtonsProvider.notifier).set(v),
                     ),
 
                     const Divider(),
@@ -1180,6 +1196,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(notificationFieldsProvider.notifier).load();
     await ref.read(notifOnlineOnlyProvider.notifier).load();
     await ref.read(globalPowerButtonProvider.notifier).load();
+    await ref.read(dashboardButtonsProvider.notifier).load();
     await PrintNotificationService.instance
         .sync(ref.read(printNotificationsEnabledProvider));
   }

@@ -461,6 +461,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Сортировать плитки по активности. Выключите, чтобы перетаскивать их в своём порядке.';
 
   @override
+  String get dashboardShowButtons => 'Показывать кнопки панели';
+
+  @override
+  String get dashboardShowButtonsSubtitle =>
+      'Показывает кнопки добавления и изменения порядка внизу. Когда скрыты, добавляйте принтеры из меню.';
+
+  @override
   String get dashboardReorderHint =>
       'Удерживайте и перетащите плитку, чтобы изменить порядок';
 

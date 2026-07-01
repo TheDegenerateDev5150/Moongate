@@ -459,6 +459,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sort tiles by activity. Turn off to drag tiles into your own order.';
 
   @override
+  String get dashboardShowButtons => 'Show dashboard buttons';
+
+  @override
+  String get dashboardShowButtonsSubtitle =>
+      'Show the add and reorder buttons at the bottom. Add printers from the menu when hidden.';
+
+  @override
   String get dashboardReorderHint => 'Hold and drag a tile to reorder';
 
   @override

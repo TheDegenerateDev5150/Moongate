@@ -442,6 +442,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardAutoArrangeSubtitle => '按活动状态排序磁贴。关闭后可拖动磁贴自定义顺序。';
 
   @override
+  String get dashboardShowButtons => '显示仪表板按钮';
+
+  @override
+  String get dashboardShowButtonsSubtitle => '在底部显示添加和重新排序按钮。隐藏时可从菜单添加打印机。';
+
+  @override
   String get dashboardReorderHint => '按住并拖动磁贴即可重新排序';
 
   @override

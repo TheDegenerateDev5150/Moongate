@@ -920,6 +920,18 @@ abstract class AppLocalizations {
   /// **'Sort tiles by activity. Turn off to drag tiles into your own order.'**
   String get dashboardAutoArrangeSubtitle;
 
+  /// Dashboard Layout switch title: show/hide the floating add + reorder buttons at the bottom of the dashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Show dashboard buttons'**
+  String get dashboardShowButtons;
+
+  /// Subtitle under the show-dashboard-buttons switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the add and reorder buttons at the bottom. Add printers from the menu when hidden.'**
+  String get dashboardShowButtonsSubtitle;
+
   /// Hint shown above the dashboard grid when manual drag-to-reorder is active.
   ///
   /// In en, this message translates to:

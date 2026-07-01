@@ -464,6 +464,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ordena las casillas por actividad. Desactívalo para arrastrarlas a tu propio orden.';
 
   @override
+  String get dashboardShowButtons => 'Mostrar botones del panel';
+
+  @override
+  String get dashboardShowButtonsSubtitle =>
+      'Muestra los botones de añadir y reordenar en la parte inferior. Añade impresoras desde el menú cuando están ocultos.';
+
+  @override
   String get dashboardReorderHint =>
       'Mantén y arrastra una casilla para reordenar';
 

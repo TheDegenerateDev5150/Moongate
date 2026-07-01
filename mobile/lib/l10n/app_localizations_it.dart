@@ -462,6 +462,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Ordina i riquadri per attività. Disattiva per trascinarli nel tuo ordine.';
 
   @override
+  String get dashboardShowButtons => 'Mostra i pulsanti della dashboard';
+
+  @override
+  String get dashboardShowButtonsSubtitle =>
+      'Mostra i pulsanti per aggiungere e riordinare in basso. Aggiungi stampanti dal menu quando sono nascosti.';
+
+  @override
   String get dashboardReorderHint =>
       'Tieni premuto e trascina un riquadro per riordinare';
 

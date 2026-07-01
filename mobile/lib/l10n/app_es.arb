@@ -154,6 +154,8 @@
   "dashboardRotateWithDeviceSubtitle": "Permite la orientación horizontal",
   "dashboardAutoArrange": "Ordenar automáticamente por estado",
   "dashboardAutoArrangeSubtitle": "Ordena las casillas por actividad. Desactívalo para arrastrarlas a tu propio orden.",
+  "dashboardShowButtons": "Mostrar botones del panel",
+  "dashboardShowButtonsSubtitle": "Muestra los botones de añadir y reordenar en la parte inferior. Añade impresoras desde el menú cuando están ocultos.",
   "dashboardReorderHint": "Mantén y arrastra una casilla para reordenar",
   "dashboardReorderStart": "Reordenar",
   "dashboardReorderDone": "Listo",
