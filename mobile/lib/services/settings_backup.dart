@@ -41,6 +41,7 @@ class SettingsBackup {
     'notif_online_only':           _Kind.boolean,
     'app_locale':                  _Kind.string,
     'show_camera_config_icons':    _Kind.boolean,
+    'show_dashboard_buttons':      _Kind.boolean,
   };
 
   /// Snapshot the currently-set preferences into a JSON-safe map. Unset keys

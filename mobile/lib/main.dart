@@ -50,6 +50,7 @@ void main() async {
   await container.read(notifOnlineOnlyProvider.notifier).load();
   await container.read(dashboardBackgroundProvider.notifier).load();
   await container.read(globalPowerButtonProvider.notifier).load();
+  await container.read(dashboardButtonsProvider.notifier).load();
 
   // Start listening for Wi-Fi <-> mobile-data changes now, so the dashboard's
   // camera feeds pick the right refresh rate from the first frame.

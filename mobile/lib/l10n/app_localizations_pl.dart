@@ -463,6 +463,13 @@ class AppLocalizationsPl extends AppLocalizations {
       'Sortuj kafelki wg aktywności. Wyłącz, aby przeciągać je we własnej kolejności.';
 
   @override
+  String get dashboardShowButtons => 'Pokaż przyciski pulpitu';
+
+  @override
+  String get dashboardShowButtonsSubtitle =>
+      'Pokazuje przyciski dodawania i zmiany kolejności na dole. Gdy ukryte, dodawaj drukarki z menu.';
+
+  @override
   String get dashboardReorderHint =>
       'Przytrzymaj i przeciągnij kafelek, aby zmienić kolejność';
 

@@ -154,6 +154,8 @@
   "dashboardRotateWithDeviceSubtitle": "Déverrouille l'orientation paysage",
   "dashboardAutoArrange": "Trier automatiquement par état",
   "dashboardAutoArrangeSubtitle": "Trie les tuiles par activité. Désactivez pour glisser les tuiles dans votre ordre.",
+  "dashboardShowButtons": "Afficher les boutons du tableau de bord",
+  "dashboardShowButtonsSubtitle": "Affiche les boutons d'ajout et de réorganisation en bas. Ajoutez des imprimantes depuis le menu lorsqu'ils sont masqués.",
   "dashboardReorderHint": "Maintenez et glissez une tuile pour réorganiser",
   "dashboardReorderStart": "Réorganiser",
   "dashboardReorderDone": "Terminé",

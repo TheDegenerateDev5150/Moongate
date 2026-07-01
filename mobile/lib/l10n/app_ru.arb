@@ -154,6 +154,8 @@
   "dashboardRotateWithDeviceSubtitle": "Разблокирует альбомную ориентацию",
   "dashboardAutoArrange": "Автосортировка по статусу",
   "dashboardAutoArrangeSubtitle": "Сортировать плитки по активности. Выключите, чтобы перетаскивать их в своём порядке.",
+  "dashboardShowButtons": "Показывать кнопки панели",
+  "dashboardShowButtonsSubtitle": "Показывает кнопки добавления и изменения порядка внизу. Когда скрыты, добавляйте принтеры из меню.",
   "dashboardReorderHint": "Удерживайте и перетащите плитку, чтобы изменить порядок",
   "dashboardReorderStart": "Изменить порядок",
   "dashboardReorderDone": "Готово",

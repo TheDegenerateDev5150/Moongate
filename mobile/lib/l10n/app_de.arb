@@ -154,6 +154,8 @@
   "dashboardRotateWithDeviceSubtitle": "Aktiviert das Querformat",
   "dashboardAutoArrange": "Automatisch nach Status anordnen",
   "dashboardAutoArrangeSubtitle": "Kacheln nach Aktivität sortieren. Zum eigenen Anordnen ausschalten und Kacheln ziehen.",
+  "dashboardShowButtons": "Dashboard-Schaltflächen anzeigen",
+  "dashboardShowButtonsSubtitle": "Zeigt die Schaltflächen zum Hinzufügen und Umsortieren unten an. Drucker über das Menü hinzufügen, wenn ausgeblendet.",
   "dashboardReorderHint": "Kachel halten und ziehen zum Umsortieren",
   "dashboardReorderStart": "Anordnen",
   "dashboardReorderDone": "Fertig",

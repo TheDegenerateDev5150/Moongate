@@ -154,6 +154,8 @@
   "dashboardRotateWithDeviceSubtitle": "解锁横屏方向",
   "dashboardAutoArrange": "按状态自动排列",
   "dashboardAutoArrangeSubtitle": "按活动状态排序磁贴。关闭后可拖动磁贴自定义顺序。",
+  "dashboardShowButtons": "显示仪表板按钮",
+  "dashboardShowButtonsSubtitle": "在底部显示添加和重新排序按钮。隐藏时可从菜单添加打印机。",
   "dashboardReorderHint": "按住并拖动磁贴即可重新排序",
   "dashboardReorderStart": "重新排序",
   "dashboardReorderDone": "完成",

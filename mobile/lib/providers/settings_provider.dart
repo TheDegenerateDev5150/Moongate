@@ -494,6 +494,34 @@ final globalPowerButtonProvider =
   GlobalPowerButtonNotifier.new,
 );
 
+/// Whether the dashboard shows the floating buttons at the bottom (add printer,
+/// plus the reorder toggle in manual mode). ON by default. Users with a lot of
+/// printers turn it off so the buttons stop floating over the bottom tiles;
+/// adding a printer stays available from the menu, and reordering by turning
+/// the buttons back on. Travels in backups.
+class DashboardButtonsNotifier extends Notifier<bool> {
+  static const _key = 'show_dashboard_buttons';
+
+  @override
+  bool build() => true;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? true;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, enabled);
+  }
+}
+
+final dashboardButtonsProvider =
+    NotifierProvider<DashboardButtonsNotifier, bool>(
+  DashboardButtonsNotifier.new,
+);
+
 // ---------------------------------------------------------------------------
 // Print notifications  (opt-in foreground-service progress + state alerts)
 // ---------------------------------------------------------------------------
