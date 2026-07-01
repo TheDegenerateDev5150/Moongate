@@ -52,6 +52,10 @@ class PrinterStatusService {
   /// gives the true active tool). Empty → fall back to the extruder scan.
   List<({int number, String extruder})> _toolchangerTools = const [];
 
+  /// Matches an extra-hotend object name (`extruder1`, `extruder2`, ...); the
+  /// bare `extruder` (T0) is handled separately.
+  static final _extruderNumRe = RegExp(r'^extruder\d+$');
+
   // ── File-metadata cache for accurate progress ────────────────────────────
   // The slicer's gcode body byte offsets, cached per filename. They drive the
   // Mainsail-matching "file position (relative)" progress in _parseStatus -
@@ -1040,44 +1044,34 @@ class PrinterStatusService {
     final klippyShutdown =
         klippyState == 'shutdown' || klippyState == 'error';
 
-    // Multi-toolhead list. Prefer the authoritative klipper-toolchanger map
-    // (each tool's own extruder heater + the active tool from the toolchanger
-    // object); fall back to the `extruder` + `extruderN` scan for IDEX / plain
-    // multi-extruder printers. Either way a single-hotend printer yields just
-    // T0, so the tile switches to the grid only when there's more than one.
+    // Multi-toolhead list, built from whatever extruder objects are present in
+    // the merged status map. On plugin 0.6.12+ the /status call itself carries
+    // every extruder + toolhead + toolchanger, so this works even when the app's
+    // own object queries can't get through (e.g. a remote / VPN client); on
+    // older plugins the supplements above fold the same objects in when they
+    // can. Active tool: the toolchanger's tool_number, else toolhead.extruder. A
+    // single-hotend printer yields just T0, so the tile shows the grid only when
+    // there's more than one.
+    final activeToolNum =
+        ((status['toolchanger'] as Map<String, dynamic>?)?['tool_number']
+                as num?)
+            ?.toInt();
+    final activeKey =
+        (status['toolhead'] as Map<String, dynamic>?)?['extruder'] as String?;
     final toolheads = <ToolheadTemp>[];
-    if (_toolchangerTools.isNotEmpty) {
-      final activeIdx =
-          ((status['toolchanger'] as Map<String, dynamic>?)?['tool_number']
-                  as num?)
-              ?.toInt();
-      for (final t in _toolchangerTools) {
-        final obj = status[t.extruder] as Map<String, dynamic>?;
-        if (obj == null || obj.isEmpty) continue;
-        toolheads.add(ToolheadTemp(
-          index:  t.number,
-          temp:   (obj['temperature'] as num?)?.toDouble() ?? 0,
-          target: (obj['target']      as num?)?.toDouble() ?? 0,
-          active: t.number == activeIdx,
-        ));
-      }
-    } else {
-      final activeKey =
-          (status['toolhead'] as Map<String, dynamic>?)?['extruder'] as String?;
-      void addTool(String key, Map<String, dynamic>? obj) {
-        if (obj == null || obj.isEmpty) return;
-        final idx = key == 'extruder' ? 0 : int.tryParse(key.substring(8)) ?? 0;
-        toolheads.add(ToolheadTemp(
-          index:  idx,
-          temp:   (obj['temperature'] as num?)?.toDouble() ?? 0,
-          target: (obj['target']      as num?)?.toDouble() ?? 0,
-          active: key == (activeKey ?? 'extruder'),
-        ));
-      }
-      addTool('extruder', extruder);
-      for (final key in _extraExtruderKeys) {
-        addTool(key, status[key] as Map<String, dynamic>?);
-      }
+    for (final key in status.keys) {
+      if (key != 'extruder' && !_extruderNumRe.hasMatch(key)) continue;
+      final obj = status[key] as Map<String, dynamic>?;
+      if (obj == null || obj.isEmpty) continue;
+      final idx = key == 'extruder' ? 0 : int.tryParse(key.substring(8)) ?? 0;
+      toolheads.add(ToolheadTemp(
+        index:  idx,
+        temp:   (obj['temperature'] as num?)?.toDouble() ?? 0,
+        target: (obj['target']      as num?)?.toDouble() ?? 0,
+        active: activeToolNum != null
+            ? idx == activeToolNum
+            : key == (activeKey ?? 'extruder'),
+      ));
     }
     toolheads.sort((a, b) => a.index.compareTo(b.index));
 
