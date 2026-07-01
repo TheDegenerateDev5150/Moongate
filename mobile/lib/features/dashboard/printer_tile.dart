@@ -378,129 +378,129 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
     );
   }
 
-  /// The classic one-row temperature layout: hotend / bed / chamber chips that
-  /// scale down as a group under a very wide app font, with the E-STOP at the
-  /// right end. Used by both the full and compact tiles when the printer has a
-  /// single toolhead. Output is identical to the previous inline rows - the
-  /// [_anchor] calls are no-ops on every tile except the one the tutorial
-  /// spotlights.
-  Widget _singleToolheadTemps(AppLocalizations l) {
-    return Row(
-      children: [
-        Flexible(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _anchor(
-                  TutorialAnchors.instance.tempHotend,
-                  _TempChip(
-                    icon: Icons.whatshot,
-                    color: Colors.deepOrange,
-                    temp: _status.hotendTemp,
-                    target: _status.hotendTarget,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _anchor(
-                  TutorialAnchors.instance.tempBed,
-                  _TempChip(
-                    icon: Icons.bed,
-                    color: Colors.blue,
-                    temp: _status.bedTemp,
-                    target: _status.bedTarget,
-                  ),
-                ),
-                if (_status.chamberTemp > 0) ...[
-                  const SizedBox(width: 8),
-                  _anchor(
-                    TutorialAnchors.instance.tempChamber,
-                    _TempChip(
-                      icon: Icons.sensor_window,
-                      color: Colors.teal,
-                      temp: _status.chamberTemp,
-                      target: _status.chamberTarget,
-                    ),
-                  ),
-                ],
-              ],
+  /// Shared temperature row for EVERY tile (single- and multi-toolhead). All
+  /// chips sit in one Wrap, so they flow onto as many rows as the tile width
+  /// needs at ONE global size (the display-size slider) - they never shrink
+  /// per-tile, which used to make a busy tile's temps smaller than a quiet
+  /// one's. When the tile is too narrow to fit even one horizontal chip the
+  /// chips stack (icon over value, much narrower) instead of clipping, so
+  /// nothing overflows into the E-STOP, which stays pinned at the right.
+  ///
+  /// [chips] is a builder because whether the chips stack depends on the width
+  /// the LayoutBuilder measures.
+  Widget _tempRow(
+    AppLocalizations l,
+    List<Widget> Function(bool stack) chips,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = MediaQuery.textScalerOf(context).scale(1.0);
+        // Width the Wrap has after reserving the E-STOP (its ring tracks the
+        // scale) plus the gap before it.
+        final wrapWidth = constraints.maxWidth - (24 * scale + 8);
+        // Stack when the font is already large (the historic threshold) OR when
+        // a horizontal chip would not fit the row - a labelled toolhead chip is
+        // the widest, roughly 66px * scale. Stacking collapses a chip to its
+        // widest single element (the value), which fits any tile, so this kills
+        // the clip WITHOUT shrinking; size stays globally controlled.
+        final stack = scale >= 1.15 || wrapWidth < 90 * scale;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: chips(stack),
+              ),
             ),
-          ),
-        ),
-        const Spacer(),
-        _estopWidget(l),
-      ],
+            const SizedBox(width: 8),
+            _estopWidget(l),
+          ],
+        );
+      },
     );
   }
 
-  /// Temperature layout for a printer that reports more than one toolhead: a
-  /// flame + `T{n}` + temperature chip per tool, wrapping to as many rows as the
-  /// tile width needs (2 tools = 1 row, 6 = a 3x2 grid), with the bed and
-  /// chamber dropped to a footer row alongside the E-STOP. Every detected
-  /// toolhead is shown, heated or not - a heating tool keeps the orange flame,
-  /// idle ones go grey, and the active tool's label is bold. Only reached when
-  /// `_status.toolheads.length > 1`; single-hotend printers are untouched.
+  /// The single-toolhead temperature row: hotend, bed, and (if present) chamber
+  /// flowed through [_tempRow]. The [_anchor] calls are no-ops on every tile
+  /// except the one the tutorial spotlights.
+  Widget _singleToolheadTemps(AppLocalizations l) {
+    return _tempRow(l, (stack) => [
+      _anchor(
+        TutorialAnchors.instance.tempHotend,
+        _TempChip(
+          icon: Icons.whatshot,
+          color: Colors.deepOrange,
+          temp: _status.hotendTemp,
+          target: _status.hotendTarget,
+          stack: stack,
+        ),
+      ),
+      _anchor(
+        TutorialAnchors.instance.tempBed,
+        _TempChip(
+          icon: Icons.bed,
+          color: Colors.blue,
+          temp: _status.bedTemp,
+          target: _status.bedTarget,
+          stack: stack,
+        ),
+      ),
+      if (_status.chamberTemp > 0)
+        _anchor(
+          TutorialAnchors.instance.tempChamber,
+          _TempChip(
+            icon: Icons.sensor_window,
+            color: Colors.teal,
+            temp: _status.chamberTemp,
+            target: _status.chamberTarget,
+            stack: stack,
+          ),
+        ),
+    ]);
+  }
+
+  /// The multi-toolhead temperature row: a flame + `T{n}` + temperature chip per
+  /// tool, then bed and (if present) chamber, all in one [_tempRow] Wrap so they
+  /// flow onto as many rows as the tile width needs (2 tools on a wide tile = one
+  /// line; 6 on a narrow tile = a 3x2-ish grid), every chip the same global size.
+  /// Bed and chamber are independent chips, so they wrap naturally with the
+  /// tools. Every detected tool shows heated or not - a heating tool keeps the
+  /// orange flame, idle ones go grey, the active tool's label is bold. Only
+  /// reached when `_status.toolheads.length > 1`.
   Widget _multiToolheadTemps(AppLocalizations l) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Wrap(
-          spacing: 12,
-          runSpacing: 6,
-          children: [
-            for (final t in _status.toolheads)
-              t.index == 0
-                  ? _anchor(
-                      TutorialAnchors.instance.tempHotend,
-                      _ToolheadChip(tool: t),
-                    )
-                  : _ToolheadChip(tool: t),
-          ],
+    return _tempRow(l, (stack) => [
+      for (final t in _status.toolheads)
+        t.index == 0
+            ? _anchor(
+                TutorialAnchors.instance.tempHotend,
+                _ToolheadChip(tool: t, stack: stack),
+              )
+            : _ToolheadChip(tool: t, stack: stack),
+      _anchor(
+        TutorialAnchors.instance.tempBed,
+        _TempChip(
+          icon: Icons.bed,
+          color: Colors.blue,
+          temp: _status.bedTemp,
+          target: _status.bedTarget,
+          stack: stack,
         ),
-        const SizedBox(height: 7),
-        Row(
-          children: [
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _anchor(
-                      TutorialAnchors.instance.tempBed,
-                      _TempChip(
-                        icon: Icons.bed,
-                        color: Colors.blue,
-                        temp: _status.bedTemp,
-                        target: _status.bedTarget,
-                      ),
-                    ),
-                    if (_status.chamberTemp > 0) ...[
-                      const SizedBox(width: 8),
-                      _anchor(
-                        TutorialAnchors.instance.tempChamber,
-                        _TempChip(
-                          icon: Icons.sensor_window,
-                          color: Colors.teal,
-                          temp: _status.chamberTemp,
-                          target: _status.chamberTarget,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const Spacer(),
-            _estopWidget(l),
-          ],
+      ),
+      if (_status.chamberTemp > 0)
+        _anchor(
+          TutorialAnchors.instance.tempChamber,
+          _TempChip(
+            icon: Icons.sensor_window,
+            color: Colors.teal,
+            temp: _status.chamberTemp,
+            target: _status.chamberTarget,
+            stack: stack,
+          ),
         ),
-      ],
-    );
+    ]);
   }
 
   @override
@@ -1581,11 +1581,18 @@ class _TempChip extends StatelessWidget {
   final double temp;
   final double target;
 
+  /// When non-null, forces stacked (true) or horizontal (false) layout - the
+  /// temp row computes it from the tile width + display-size so every chip on a
+  /// tile stacks together when the tile is too narrow, never shrinking. Null
+  /// falls back to the display-size-only threshold.
+  final bool? stack;
+
   const _TempChip({
     required this.icon,
     required this.color,
     required this.temp,
     required this.target,
+    this.stack,
   });
 
   @override
@@ -1610,7 +1617,7 @@ class _TempChip extends StatelessWidget {
     // row overflow a narrow tile. Past a threshold, stack each chip vertically
     // (icon over value) so the three read as two tidy rows - icons on top,
     // values beneath - instead of running off the edge.
-    final stacked = MediaQuery.textScalerOf(context).scale(1.0) >= 1.15;
+    final stacked = stack ?? (MediaQuery.textScalerOf(context).scale(1.0) >= 1.15);
     if (stacked) {
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -1636,7 +1643,10 @@ class _TempChip extends StatelessWidget {
 class _ToolheadChip extends StatelessWidget {
   final ToolheadTemp tool;
 
-  const _ToolheadChip({required this.tool});
+  /// See [_TempChip.stack] - forces stacked/horizontal, else display-size only.
+  final bool? stack;
+
+  const _ToolheadChip({required this.tool, this.stack});
 
   @override
   Widget build(BuildContext context) {
@@ -1662,7 +1672,7 @@ class _ToolheadChip extends StatelessWidget {
       ),
     );
 
-    final stacked = MediaQuery.textScalerOf(context).scale(1.0) >= 1.15;
+    final stacked = stack ?? (MediaQuery.textScalerOf(context).scale(1.0) >= 1.15);
     if (stacked) {
       return Column(
         mainAxisSize: MainAxisSize.min,

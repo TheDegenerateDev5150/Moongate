@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.40",
+    "bullets": [
+      "The dashboard temperatures now stay one consistent size on every tile, set only by the display-size slider. Instead of shrinking to tiny text when a tile is busy or narrow (a regression from the v0.9.39 font update), they wrap onto another row, or stack the icon above the number, to fit.",
+      "Multi-toolhead printers use the tile width better: on a wide single-column tile all the tool temperatures sit on one line with the bed and chamber, and they only flow onto extra rows when the tile is narrow.",
+      "App-only update, no Pi update needed."
+    ]
+  },
+  {
     "version": "v0.9.39",
     "bullets": [
       "New: printers with more than one toolhead (IDEX and tool changers) now show every hotend on the dashboard tile. Each tool gets its own temperature labelled T0, T1, T2 and so on, the tool currently in use is highlighted, and the bed and chamber move to a row beneath. Single-toolhead printers look exactly as before.",
