@@ -2,7 +2,8 @@
   {
     "version": "v0.9.40",
     "bullets": [
-      "Fixed: on the dashboard, printer temperatures could shrink to tiny text even when there was plenty of room on the tile (introduced with the font update in v0.9.39). They now show at full size and only shrink if a genuinely wide font needs it.",
+      "The dashboard temperatures now stay one consistent size on every tile, set only by the display-size slider. Instead of shrinking to tiny text when a tile is busy or narrow (a regression from the v0.9.39 font update), they wrap onto another row, or stack the icon above the number, to fit.",
+      "Multi-toolhead printers use the tile width better: on a wide single-column tile all the tool temperatures sit on one line with the bed and chamber, and they only flow onto extra rows when the tile is narrow.",
       "App-only update, no Pi update needed."
     ]
   },
