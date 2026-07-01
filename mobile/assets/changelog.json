@@ -5,6 +5,7 @@
       "New: printers with more than one toolhead (IDEX and tool changers) now show every hotend on the dashboard tile. Each tool gets its own temperature labelled T0, T1, T2 and so on, the tool currently in use is highlighted, and the bed and chamber move to a row beneath. Single-toolhead printers look exactly as before.",
       "The font picker now has a lot more to choose from - over 30 typefaces grouped by style (sans, rounded, serif, slab, monospace, techy, condensed, handwriting and even retro/pixel), each previewed in its own font.",
       "Tight spots like printer names and the temperature row now auto-shrink so no font ever gets clipped, whichever one you pick.",
+      "Fixed: the persistent status notification now follows your dashboard order. With \"Auto-arrange by status\" turned off (so your printers stay in the order you arranged them), the notification lists them the same way, instead of always floating the busiest printer to the top.",
       "App-only update, no Pi update needed."
     ]
   },

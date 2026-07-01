@@ -330,6 +330,11 @@ class _PrintTaskHandler extends TaskHandler {
         prefs.getString(kNotifFieldsEnabledKey),
       );
       final onlineOnly = prefs.getBool(kNotifOnlineOnlyKey) ?? false;
+      // Mirror the dashboard's "Auto-arrange by status" toggle (same key +
+      // default as autoArrangeProvider): ON floats active prints to the top by
+      // live status; OFF keeps the user's saved manual order so the roster
+      // matches the tiles.
+      final autoArrange = prefs.getBool(kAutoArrangeByStatusKey) ?? true;
 
       await PrinterRegistry.instance.load();
       final printers = PrinterRegistry.instance.printers;
@@ -359,13 +364,20 @@ class _PrintTaskHandler extends TaskHandler {
 
       // Float active prints to the top - same ranking the dashboard uses
       // (printerStatusRank), stable within a tier (original order preserved).
-      final ranked = [for (var i = 0; i < entries.length; i++) (i, entries[i])];
-      ranked.sort((a, b) {
-        final ra = _rank(a.$2.$2);
-        final rb = _rank(b.$2.$2);
-        return ra != rb ? ra.compareTo(rb) : a.$1.compareTo(b.$1);
-      });
-      final sorted = [for (final r in ranked) r.$2];
+      // Only when auto-arrange is on; off = keep the manual dashboard order
+      // (entries are already in the registry order the tiles use).
+      final List<(String, _Poll?)> sorted;
+      if (autoArrange) {
+        final ranked = [for (var i = 0; i < entries.length; i++) (i, entries[i])];
+        ranked.sort((a, b) {
+          final ra = _rank(a.$2.$2);
+          final rb = _rank(b.$2.$2);
+          return ra != rb ? ra.compareTo(rb) : a.$1.compareTo(b.$1);
+        });
+        sorted = [for (final r in ranked) r.$2];
+      } else {
+        sorted = entries;
+      }
 
       // "Show only online devices": drop offline / shut-down printers from the
       // roster (the foreground service keeps running - this is display-only).

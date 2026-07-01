@@ -277,20 +277,18 @@ final allowRotationProvider = NotifierProvider<AllowRotationNotifier, bool>(
 /// or starting a print would yank a hand-placed tile out from under the user.
 /// Travels in backups.
 class AutoArrangeNotifier extends Notifier<bool> {
-  static const _key = 'auto_arrange_by_status';
-
   @override
   bool build() => true;
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool(_key) ?? true;
+    state = prefs.getBool(kAutoArrangeByStatusKey) ?? true;
   }
 
   Future<void> set(bool enabled) async {
     state = enabled;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_key, enabled);
+    await prefs.setBool(kAutoArrangeByStatusKey, enabled);
   }
 }
 
