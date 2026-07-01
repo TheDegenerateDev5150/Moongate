@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.44",
+    "bullets": [
+      "Multi-toolhead detection, fixed at the source: the printer now sends every hotend and the active tool to the app in one go, so all your tools show on the dashboard even over a remote or VPN connection where the app couldn't fetch them separately before.",
+      "This one is not app-only: update the Moongate plugin on your printer too, from Moonraker's update panel (Machine tab), so it sends the extra hotends. Single-hotend and IDEX printers are unaffected."
+    ]
+  },
+  {
     "version": "v0.9.43",
     "bullets": [
       "More reliable multi-toolhead detection: tool changers (klipper-toolchanger / StealthChanger) are now recognised straight from the printer's tool setup, reading each tool's own hotend and the active tool, so every hotend shows on the dashboard. Plain single-hotend and IDEX printers are detected exactly as before.",
