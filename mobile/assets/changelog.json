@@ -1,5 +1,14 @@
 [
   {
+    "version": "v0.9.42",
+    "bullets": [
+      "Multi-toolhead preheat: long-press the temperatures on a tool changer or IDEX printer and the Preheat sheet now lists every hotend (T0, T1, T2 and so on) as its own row, so you can set them all at once, plus the bed. Single-hotend printers look exactly as before.",
+      "Multi-toolhead notifications: the print notification's hotend reading now shows every tool's temperature on one line (for example 210° 205° 25°) instead of just the first tool. Single-hotend printers still show the one reading.",
+      "Fixed: the \"Printer unreachable\" screen (shown when a printer can't be reached over the tunnel) now fills the whole page in your theme, instead of leaving a blank strip down the side with the failed page showing through.",
+      "App-only update, no Pi update needed."
+    ]
+  },
+  {
     "version": "v0.9.41",
     "bullets": [
       "New: a \"Show dashboard buttons\" switch (menu -> Dashboard Layout). Turn it off to hide the add and reorder buttons that float at the bottom of the dashboard - handy when you have a lot of printers and the buttons cover the bottom tiles. You can still add a printer from the menu, and turn the switch back on when you want to reorder.",
