@@ -40,6 +40,7 @@ MoongateApp                    (lib/app.dart - root widget, lifecycle observer)
 │   ├─ themeModeProvider       (AppThemeMode: system/dark/light/custom)
 │   ├─ customThemeProvider     (5 user-picked colours; persisted as JSON)
 │   ├─ fontScaleProvider       (0.8 - 1.4)
+│   ├─ appFontProvider         (selected bundled font id; 36-option picker)
 │   ├─ gridColumnsProvider     (1 / 2 / 3)
 │   ├─ allowRotationProvider   (bool; pins SystemChrome orientations)
 │   ├─ updateProvider          (one-shot GitHub release check)
@@ -66,6 +67,7 @@ MoongateApp                    (lib/app.dart - root widget, lifecycle observer)
 | Theme mode | `themeModeProvider` | Yes | `SharedPreferences` key `theme_mode` |
 | Custom theme | `customThemeProvider` | Yes | `SharedPreferences` key `custom_theme` (JSON of 5 HEX strings) |
 | Font scale / grid cols / rotation | `settings_provider.dart` | Yes | One `SharedPreferences` key each |
+| App font | `appFontProvider` | Yes | `SharedPreferences` key `app_font` (bundled font id) |
 | Current access token + tunnel URL | `PrinterAccessCache` | **No** (in-memory only) | Refreshed from the middleman every few minutes |
 | Live `PrinterStatus` per tile | `PrinterStatusService.stream` | **No** | StreamController - last emission only |
 

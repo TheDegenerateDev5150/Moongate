@@ -73,46 +73,100 @@ final dynamicColorSupportedProvider = FutureProvider<bool>((ref) async {
 // App font  (the bundled typeface used across the app)
 // ---------------------------------------------------------------------------
 
-/// The user's chosen app typeface. The phone's own system font can't be read by
-/// the app (Flutter renders text with its own engine, not Android's), so we
-/// offer a small set of bundled fonts instead. `standard` keeps the platform
-/// default; the others map to families declared in pubspec.yaml.
-enum AppFont { standard, rounded, serif, readable }
+/// One selectable app typeface. The phone's own system font can't be read by a
+/// Flutter app (Flutter renders text with its own engine, not Android's), so we
+/// offer a bundled set instead. Font names are universal, so the name doubles as
+/// the picker label (no per-font l10n).
+class AppFontOption {
+  /// Stable id persisted under the `app_font` key.
+  final String id;
 
-extension AppFontX on AppFont {
-  /// The bundled font family to apply, or null for the platform default.
-  String? get family => switch (this) {
-        AppFont.standard => null,
-        AppFont.rounded  => 'Nunito',
-        AppFont.serif    => 'Lora',
-        AppFont.readable => 'AtkinsonHyperlegible',
-      };
+  /// The pubspec font family to apply, or null for the platform default.
+  final String? family;
+
+  /// Display name, also previewed in its own font in the picker.
+  final String label;
+
+  /// Groups the picker (see [kAppFontCategories]).
+  final String category;
+
+  const AppFontOption(this.id, this.family, this.label, this.category);
 }
 
-class AppFontNotifier extends Notifier<AppFont> {
+/// Every selectable font. `standard` applies no override; the rest map to
+/// families declared in pubspec.yaml's `fonts:` block (bundled under
+/// assets/fonts/). Ids for the original four are kept stable.
+const List<AppFontOption> kAppFonts = [
+  AppFontOption('standard', null, 'Default', 'System'),
+  AppFontOption('rounded', 'Nunito', 'Nunito', 'Rounded'),
+  AppFontOption('serif', 'Lora', 'Lora', 'Serif'),
+  AppFontOption('readable', 'AtkinsonHyperlegible', 'Atkinson Hyperlegible', 'High-readability'),
+  AppFontOption('poppins', 'Poppins', 'Poppins', 'Sans'),
+  AppFontOption('lexend', 'Lexend', 'Lexend', 'Sans'),
+  AppFontOption('rubik', 'Rubik', 'Rubik', 'Sans'),
+  AppFontOption('manrope', 'Manrope', 'Manrope', 'Sans'),
+  AppFontOption('worksans', 'Work Sans', 'Work Sans', 'Sans'),
+  AppFontOption('mulish', 'Mulish', 'Mulish', 'Sans'),
+  AppFontOption('outfit', 'Outfit', 'Outfit', 'Sans'),
+  AppFontOption('montserrat', 'Montserrat', 'Montserrat', 'Sans'),
+  AppFontOption('raleway', 'Raleway', 'Raleway', 'Sans'),
+  AppFontOption('sourcesans3', 'Source Sans 3', 'Source Sans 3', 'Sans'),
+  AppFontOption('firasans', 'Fira Sans', 'Fira Sans', 'Sans'),
+  AppFontOption('quicksand', 'Quicksand', 'Quicksand', 'Rounded'),
+  AppFontOption('baloo2', 'Baloo 2', 'Baloo 2', 'Rounded'),
+  AppFontOption('fredoka', 'Fredoka', 'Fredoka', 'Rounded'),
+  AppFontOption('merriweather', 'Merriweather', 'Merriweather', 'Serif'),
+  AppFontOption('ptserif', 'PT Serif', 'PT Serif', 'Serif'),
+  AppFontOption('bitter', 'Bitter', 'Bitter', 'Serif'),
+  AppFontOption('robotoslab', 'Roboto Slab', 'Roboto Slab', 'Slab serif'),
+  AppFontOption('zillaslab', 'Zilla Slab', 'Zilla Slab', 'Slab serif'),
+  AppFontOption('arvo', 'Arvo', 'Arvo', 'Slab serif'),
+  AppFontOption('ibmplexmono', 'IBM Plex Mono', 'IBM Plex Mono', 'Monospace'),
+  AppFontOption('orbitron', 'Orbitron', 'Orbitron', 'Techy / display'),
+  AppFontOption('exo2', 'Exo 2', 'Exo 2', 'Techy / display'),
+  AppFontOption('chakrapetch', 'Chakra Petch', 'Chakra Petch', 'Techy / display'),
+  AppFontOption('rajdhani', 'Rajdhani', 'Rajdhani', 'Techy / display'),
+  AppFontOption('oswald', 'Oswald', 'Oswald', 'Condensed'),
+  AppFontOption('teko', 'Teko', 'Teko', 'Condensed'),
+  AppFontOption('bebasneue', 'Bebas Neue', 'Bebas Neue', 'Condensed'),
+  AppFontOption('caveat', 'Caveat', 'Caveat', 'Handwriting'),
+  AppFontOption('patrickhand', 'Patrick Hand', 'Patrick Hand', 'Handwriting'),
+  AppFontOption('vt323', 'VT323', 'VT323', 'Retro / pixel'),
+  AppFontOption('silkscreen', 'Silkscreen', 'Silkscreen', 'Retro / pixel'),
+];
+
+/// Look up a font option by id, falling back to Default for an unknown id.
+AppFontOption appFontById(String id) =>
+    kAppFonts.firstWhere((f) => f.id == id, orElse: () => kAppFonts.first);
+
+/// Category display order for the picker; categories with no fonts are skipped.
+const List<String> kAppFontCategories = [
+  'System', 'Sans', 'Rounded', 'Serif', 'Slab serif', 'Monospace',
+  'Techy / display', 'Condensed', 'Handwriting', 'Retro / pixel',
+  'High-readability',
+];
+
+class AppFontNotifier extends Notifier<String> {
   static const _key = 'app_font';
 
   @override
-  AppFont build() => AppFont.standard;
+  String build() => 'standard';
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_key);
-    state = AppFont.values.firstWhere(
-      (e) => e.name == raw,
-      orElse: () => AppFont.standard,
-    );
+    state = kAppFonts.any((f) => f.id == raw) ? raw! : 'standard';
   }
 
-  Future<void> set(AppFont font) async {
-    state = font;
+  Future<void> set(String id) async {
+    state = id;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, font.name);
+    await prefs.setString(_key, id);
   }
 }
 
 final appFontProvider =
-    NotifierProvider<AppFontNotifier, AppFont>(AppFontNotifier.new);
+    NotifierProvider<AppFontNotifier, String>(AppFontNotifier.new);
 
 // ---------------------------------------------------------------------------
 // Font scale
@@ -223,20 +277,18 @@ final allowRotationProvider = NotifierProvider<AllowRotationNotifier, bool>(
 /// or starting a print would yank a hand-placed tile out from under the user.
 /// Travels in backups.
 class AutoArrangeNotifier extends Notifier<bool> {
-  static const _key = 'auto_arrange_by_status';
-
   @override
   bool build() => true;
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool(_key) ?? true;
+    state = prefs.getBool(kAutoArrangeByStatusKey) ?? true;
   }
 
   Future<void> set(bool enabled) async {
     state = enabled;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_key, enabled);
+    await prefs.setBool(kAutoArrangeByStatusKey, enabled);
   }
 }
 

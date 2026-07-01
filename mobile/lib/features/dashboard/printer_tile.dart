@@ -359,6 +359,150 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
     );
   }
 
+  /// The E-STOP triangle, or the firmware-restart button when Klipper is shut
+  /// down. Shared by the single-hotend row and the multi-toolhead footer. The
+  /// E-STOP carries the tutorial anchor (a no-op on non-tutorial tiles).
+  Widget _estopWidget(AppLocalizations l) {
+    if (_status.klippyShutdown) {
+      return _RestartButton(
+        tooltip: l.tileFirmwareRestart,
+        onTap: _handleFirmwareRestart,
+      );
+    }
+    return _anchor(
+      TutorialAnchors.instance.estop,
+      _EstopButton(
+        tooltip: l.tileEmergencyStop,
+        onFire: _handleEmergencyStop,
+      ),
+    );
+  }
+
+  /// The classic one-row temperature layout: hotend / bed / chamber chips that
+  /// scale down as a group under a very wide app font, with the E-STOP at the
+  /// right end. Used by both the full and compact tiles when the printer has a
+  /// single toolhead. Output is identical to the previous inline rows - the
+  /// [_anchor] calls are no-ops on every tile except the one the tutorial
+  /// spotlights.
+  Widget _singleToolheadTemps(AppLocalizations l) {
+    return Row(
+      children: [
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _anchor(
+                  TutorialAnchors.instance.tempHotend,
+                  _TempChip(
+                    icon: Icons.whatshot,
+                    color: Colors.deepOrange,
+                    temp: _status.hotendTemp,
+                    target: _status.hotendTarget,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _anchor(
+                  TutorialAnchors.instance.tempBed,
+                  _TempChip(
+                    icon: Icons.bed,
+                    color: Colors.blue,
+                    temp: _status.bedTemp,
+                    target: _status.bedTarget,
+                  ),
+                ),
+                if (_status.chamberTemp > 0) ...[
+                  const SizedBox(width: 8),
+                  _anchor(
+                    TutorialAnchors.instance.tempChamber,
+                    _TempChip(
+                      icon: Icons.sensor_window,
+                      color: Colors.teal,
+                      temp: _status.chamberTemp,
+                      target: _status.chamberTarget,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const Spacer(),
+        _estopWidget(l),
+      ],
+    );
+  }
+
+  /// Temperature layout for a printer that reports more than one toolhead: a
+  /// flame + `T{n}` + temperature chip per tool, wrapping to as many rows as the
+  /// tile width needs (2 tools = 1 row, 6 = a 3x2 grid), with the bed and
+  /// chamber dropped to a footer row alongside the E-STOP. Every detected
+  /// toolhead is shown, heated or not - a heating tool keeps the orange flame,
+  /// idle ones go grey, and the active tool's label is bold. Only reached when
+  /// `_status.toolheads.length > 1`; single-hotend printers are untouched.
+  Widget _multiToolheadTemps(AppLocalizations l) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 6,
+          children: [
+            for (final t in _status.toolheads)
+              t.index == 0
+                  ? _anchor(
+                      TutorialAnchors.instance.tempHotend,
+                      _ToolheadChip(tool: t),
+                    )
+                  : _ToolheadChip(tool: t),
+          ],
+        ),
+        const SizedBox(height: 7),
+        Row(
+          children: [
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _anchor(
+                      TutorialAnchors.instance.tempBed,
+                      _TempChip(
+                        icon: Icons.bed,
+                        color: Colors.blue,
+                        temp: _status.bedTemp,
+                        target: _status.bedTarget,
+                      ),
+                    ),
+                    if (_status.chamberTemp > 0) ...[
+                      const SizedBox(width: 8),
+                      _anchor(
+                        TutorialAnchors.instance.tempChamber,
+                        _TempChip(
+                          icon: Icons.sensor_window,
+                          color: Colors.teal,
+                          temp: _status.chamberTemp,
+                          target: _status.chamberTarget,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const Spacer(),
+            _estopWidget(l),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -579,6 +723,7 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                             child: Text(
                               widget.printer.name,
                               style: theme.textTheme.titleSmall,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -627,61 +772,9 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                       // just the name (no meaningless 0°/0° row), like the K3.
                       if (!noLiveReading) ...[
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _anchor(
-                                  TutorialAnchors.instance.tempHotend,
-                                  _TempChip(
-                                    icon: Icons.whatshot,
-                                    color: Colors.deepOrange,
-                                    temp: _status.hotendTemp,
-                                    target: _status.hotendTarget,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                _anchor(
-                                  TutorialAnchors.instance.tempBed,
-                                  _TempChip(
-                                    icon: Icons.bed,
-                                    color: Colors.blue,
-                                    temp: _status.bedTemp,
-                                    target: _status.bedTarget,
-                                  ),
-                                ),
-                                if (_status.chamberTemp > 0) ...[
-                                  const SizedBox(width: 8),
-                                  _anchor(
-                                    TutorialAnchors.instance.tempChamber,
-                                    _TempChip(
-                                      icon: Icons.sensor_window,
-                                      color: Colors.teal,
-                                      temp: _status.chamberTemp,
-                                      target: _status.chamberTarget,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            // E-STOP at the right end of the temperature line.
-                            const Spacer(),
-                            if (_status.klippyShutdown)
-                              _RestartButton(
-                                tooltip: l.tileFirmwareRestart,
-                                onTap: _handleFirmwareRestart,
-                              )
-                            else
-                              _anchor(
-                                TutorialAnchors.instance.estop,
-                                _EstopButton(
-                                  tooltip: l.tileEmergencyStop,
-                                  onFire: _handleEmergencyStop,
-                                ),
-                              ),
-                          ],
-                        ),
+                        _status.toolheads.length > 1
+                            ? _multiToolheadTemps(l)
+                            : _singleToolheadTemps(l),
                       ],
                     ],
                   ))),
@@ -773,6 +866,7 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                             child: Text(
                               widget.printer.name,
                               style: theme.textTheme.titleSmall,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -812,48 +906,9 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                       if (!noLiveReading)
                         Padding(
                           padding: const EdgeInsets.only(top: 5),
-                          child: Row(
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _TempChip(
-                                    icon: Icons.whatshot,
-                                    color: Colors.deepOrange,
-                                    temp: _status.hotendTemp,
-                                    target: _status.hotendTarget,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _TempChip(
-                                    icon: Icons.bed,
-                                    color: Colors.blue,
-                                    temp: _status.bedTemp,
-                                    target: _status.bedTarget,
-                                  ),
-                                  if (_status.chamberTemp > 0) ...[
-                                    const SizedBox(width: 8),
-                                    _TempChip(
-                                      icon: Icons.sensor_window,
-                                      color: Colors.teal,
-                                      temp: _status.chamberTemp,
-                                      target: _status.chamberTarget,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const Spacer(),
-                              if (_status.klippyShutdown)
-                                _RestartButton(
-                                  tooltip: l.tileFirmwareRestart,
-                                  onTap: _handleFirmwareRestart,
-                                )
-                              else
-                                _EstopButton(
-                                  tooltip: l.tileEmergencyStop,
-                                  onFire: _handleEmergencyStop,
-                                ),
-                            ],
-                          ),
+                          child: _status.toolheads.length > 1
+                              ? _multiToolheadTemps(l)
+                              : _singleToolheadTemps(l),
                         ),
                     ],
                   )),
@@ -1565,6 +1620,64 @@ class _TempChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [iconWidget, const SizedBox(width: 2), valueWidget],
+    );
+  }
+}
+
+// ── Toolhead chip (multi-extruder printers) ───────────────────────────────────
+//
+// One tool's readout in the grid layout: a flame + T{index} + temperature.
+// Follows [_TempChip]'s colour rules (a neutral blueGrey that reads on both
+// the light and dark themes; the flame keeps its orange only while that tool
+// has a target, going grey when the tool is idle). The tool number is bold
+// when it's Klipper's currently-selected tool. Stacks icon-over-text past the
+// same display-size threshold [_TempChip] uses.
+
+class _ToolheadChip extends StatelessWidget {
+  final ToolheadTemp tool;
+
+  const _ToolheadChip({required this.tool});
+
+  @override
+  Widget build(BuildContext context) {
+    const neutral = Colors.blueGrey;
+    final muted   = neutral.withValues(alpha: 0.7);
+    final heating = tool.target > 0;
+
+    final iconWidget = Icon(Icons.whatshot,
+        size: 13, color: heating ? Colors.deepOrange : muted);
+    final labelWidget = Text(
+      'T${tool.index}',
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: tool.active ? FontWeight.w700 : FontWeight.w500,
+        color: tool.active ? neutral : muted,
+      ),
+    );
+    final valueWidget = Text(
+      '${tool.temp.toStringAsFixed(0)}°',
+      style: TextStyle(
+        fontSize: 12,
+        color: heating ? neutral : muted,
+      ),
+    );
+
+    final stacked = MediaQuery.textScalerOf(context).scale(1.0) >= 1.15;
+    if (stacked) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [iconWidget, const SizedBox(height: 1), labelWidget, valueWidget],
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        iconWidget,
+        const SizedBox(width: 2),
+        labelWidget,
+        const SizedBox(width: 3),
+        valueWidget,
+      ],
     );
   }
 }

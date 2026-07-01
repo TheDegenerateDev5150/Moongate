@@ -119,7 +119,7 @@ class _MoongateAppState extends ConsumerState<MoongateApp>
     final fontScale  = ref.watch(fontScaleProvider);
     final custom     = ref.watch(customThemeProvider);
     final localeCode = ref.watch(localeProvider);
-    final fontFamily = ref.watch(appFontProvider).family;
+    final fontFamily = appFontById(ref.watch(appFontProvider)).family;
 
     final isCustom = appMode == AppThemeMode.custom;
     final isSystem = appMode == AppThemeMode.system;

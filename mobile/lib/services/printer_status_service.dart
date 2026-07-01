@@ -38,6 +38,12 @@ class PrinterStatusService {
   String? _chamberKey;
   bool    _chamberDiscovered = false;
 
+  /// Extra extruder object names beyond the first (`extruder1`, `extruder2`, ...)
+  /// found in the object list, for multi-toolhead printers - empty on an
+  /// ordinary single-hotend machine. Discovered once alongside the chamber
+  /// sensor. Excludes `extruder_stepper <name>` helpers (those aren't hotends).
+  List<String> _extraExtruderKeys = const [];
+
   // ── File-metadata cache for accurate progress ────────────────────────────
   // The slicer's gcode body byte offsets, cached per filename. They drive the
   // Mainsail-matching "file position (relative)" progress in _parseStatus -
@@ -520,6 +526,20 @@ class PrinterStatusService {
           }
         }
         _chamberKey = exact ?? partial;
+
+        // Multi-toolhead: collect any extruder1, extruder2 ... (T1 and up).
+        // Klipper names extra hotends extruderN; the bare `extruder` is T0 and
+        // is always queried, and `extruder_stepper <name>` helpers carry a
+        // space, so an exact ^extruder\d+$ match picks out only real hotends.
+        final extra = <String>[];
+        for (final obj in objects) {
+          final key = obj.toString();
+          if (RegExp(r'^extruder\d+$').hasMatch(key)) extra.add(key);
+        }
+        extra.sort((a, b) =>
+            int.parse(a.substring(8)).compareTo(int.parse(b.substring(8))));
+        _extraExtruderKeys = extra;
+
         // Only mark discovery done once the list call actually returned 200, so
         // a cold-tunnel 502/503 on the first poll retries next time instead of
         // giving up for the whole service lifetime (which left chamber blank).
@@ -602,6 +622,13 @@ class PrinterStatusService {
         await _supplementaryChamberQuery(baseUrl, access.accessToken, status,
             isLan: isLan);
       }
+      // The plugin's /status only returns the first extruder, so fetch the extra
+      // hotends (and the active tool) separately when this is a multi-toolhead
+      // printer - same supplement pattern the chamber sensor uses.
+      if (_extraExtruderKeys.isNotEmpty) {
+        await _supplementaryExtruderQuery(baseUrl, access.accessToken, status,
+            isLan: isLan);
+      }
       if (status['display_status'] == null ||
           status['virtual_sdcard'] == null) {
         await _supplementaryProgressQuery(baseUrl, access.accessToken, status,
@@ -659,6 +686,36 @@ class PrinterStatusService {
         final s    = body['result']?['status'] as Map<String, dynamic>?;
         final data = s?[_chamberKey!];
         if (data != null) status[_chamberKey!] = data;
+      }
+    } catch (_) {}
+  }
+
+  // ── Extra toolheads (multi-extruder printers) ────────────────────────────
+
+  /// Fetches the extra hotends (`extruder1`, `extruder2`, ...) plus `toolhead`
+  /// (for the currently-selected tool) in one query and folds them into
+  /// [status]. The Moongate plugin's /status only carries the first extruder,
+  /// so a multi-toolhead printer needs this supplement - it works on LAN and
+  /// through the tunnel proxy, exactly like the chamber query.
+  Future<void> _supplementaryExtruderQuery(
+      String baseUrl, String accessToken, Map<String, dynamic> status,
+      {required bool isLan}) async {
+    try {
+      final objects = [..._extraExtruderKeys, 'toolhead'];
+      final query   = objects.map(Uri.encodeComponent).join('&');
+      final uri      = Uri.parse('$baseUrl/printer/objects/query?$query');
+      final response = await _authedGet(
+          uri, accessToken,
+          isLan: isLan,
+          timeout: const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final s    = body['result']?['status'] as Map<String, dynamic>?;
+        if (s != null) {
+          for (final key in objects) {
+            if (s[key] != null) status[key] = s[key];
+          }
+        }
       }
     } catch (_) {}
   }
@@ -886,6 +943,29 @@ class PrinterStatusService {
     final klippyShutdown =
         klippyState == 'shutdown' || klippyState == 'error';
 
+    // Multi-toolhead list: T0 is `extruder`; extruder1, extruder2 ... are
+    // T1, T2 ... Populated even for a single hotend (just T0) so the tile
+    // switches to the grid only when there's genuinely more than one. The
+    // active tool comes from toolhead.extruder (defaults to T0 when absent).
+    final toolheads = <ToolheadTemp>[];
+    final activeKey =
+        (status['toolhead'] as Map<String, dynamic>?)?['extruder'] as String?;
+    void addTool(String key, Map<String, dynamic>? obj) {
+      if (obj == null || obj.isEmpty) return;
+      final idx = key == 'extruder' ? 0 : int.tryParse(key.substring(8)) ?? 0;
+      toolheads.add(ToolheadTemp(
+        index:  idx,
+        temp:   (obj['temperature'] as num?)?.toDouble() ?? 0,
+        target: (obj['target']      as num?)?.toDouble() ?? 0,
+        active: key == (activeKey ?? 'extruder'),
+      ));
+    }
+    addTool('extruder', extruder);
+    for (final key in _extraExtruderKeys) {
+      addTool(key, status[key] as Map<String, dynamic>?);
+    }
+    toolheads.sort((a, b) => a.index.compareTo(b.index));
+
     return PrinterStatus(
       state:              state,
       progress:           progress,
@@ -895,6 +975,7 @@ class PrinterStatusService {
       bedTarget:          (heaterBed['target']           as num?)?.toDouble() ?? 0,
       chamberTemp:        (chamberSensor?['temperature'] as num?)?.toDouble() ?? 0,
       chamberTarget:      (chamberSensor?['target']      as num?)?.toDouble() ?? 0,
+      toolheads:          toolheads,
       filename:           printStats['filename']         as String?,
       connection:         isLan ? PrinterConnection.local : PrinterConnection.remote,
       tunnelReady:        tunnelReady,
