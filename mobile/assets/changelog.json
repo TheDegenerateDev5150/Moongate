@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.40",
+    "bullets": [
+      "Fixed: on the dashboard, printer temperatures could shrink to tiny text even when there was plenty of room on the tile (introduced with the font update in v0.9.39). They now show at full size and only shrink if a genuinely wide font needs it.",
+      "App-only update, no Pi update needed."
+    ]
+  },
+  {
     "version": "v0.9.39",
     "bullets": [
       "New: printers with more than one toolhead (IDEX and tool changers) now show every hotend on the dashboard tile. Each tool gets its own temperature labelled T0, T1, T2 and so on, the tool currently in use is highlighted, and the bed and chamber move to a row beneath. Single-toolhead printers look exactly as before.",

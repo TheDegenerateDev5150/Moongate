@@ -387,7 +387,12 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
   Widget _singleToolheadTemps(AppLocalizations l) {
     return Row(
       children: [
-        Flexible(
+        // Expanded (not Flexible + Spacer): the temps get the FULL row width up
+        // to the E-STOP, so the scale-to-fit only kicks in when they genuinely
+        // exceed it. A Spacer here would split the row 50/50 and shrink the
+        // temps to fit half, leaving a big empty gap - the "everything tiny with
+        // lots of room" bug. Left-aligned, so the gap sits before the E-STOP.
+        Expanded(
           child: FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
@@ -429,7 +434,6 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
             ),
           ),
         ),
-        const Spacer(),
         _estopWidget(l),
       ],
     );
@@ -463,7 +467,9 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
         const SizedBox(height: 7),
         Row(
           children: [
-            Flexible(
+            // Expanded (not Flexible + Spacer) so the bed/chamber group gets the
+            // full width up to the E-STOP - see _singleToolheadTemps.
+            Expanded(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
@@ -495,7 +501,6 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                 ),
               ),
             ),
-            const Spacer(),
             _estopWidget(l),
           ],
         ),
