@@ -226,10 +226,12 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // The OS may have frozen us (battery optimisation) and suspended the poll
-    // timer. On return to the foreground, poll immediately so a stale 'offline'
-    // tile refreshes at once instead of waiting up to a full cycle. The
-    // app-level observer (app.dart) kicks the mDNS browse in parallel.
-    if (state == AppLifecycleState.resumed) _statusService.pollNow();
+    // timer. On return to the foreground, re-seed cloud liveness and poll
+    // immediately so a stale 'offline' tile refreshes at once instead of waiting
+    // up to a full cycle - and, crucially, so a printer powered back on while we
+    // were away isn't held offline by a stale liveness verdict. The app-level
+    // observer (app.dart) kicks the mDNS browse in parallel.
+    if (state == AppLifecycleState.resumed) _statusService.resumePoll();
   }
 
   Future<void> _handlePause() async {

@@ -1,5 +1,12 @@
 [
   {
+    "version": "v0.9.45",
+    "bullets": [
+      "Fixed: a printer switched back on while Moongate was in the background could stay stuck on \"offline\" until you force-closed and reopened it. Moongate now re-checks each printer's live status the moment you return to the app.",
+      "Multi-toolhead preheat now sends each hotend its own command, so setting several tools at once is more reliable and one heater refusing a target no longer stops the others. The preheat panel also scrolls, so every tool fits on a tool changer with lots of hotends."
+    ]
+  },
+  {
     "version": "v0.9.44",
     "bullets": [
       "Multi-toolhead detection, fixed at the source: the printer now sends every hotend and the active tool to the app in one go, so all your tools show on the dashboard even over a remote or VPN connection where the app couldn't fetch them separately before.",

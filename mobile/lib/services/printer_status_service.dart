@@ -218,6 +218,19 @@ class PrinterStatusService {
   /// is already in flight.
   void pollNow() => _poll();
 
+  /// Poll on app resume. Re-seeds cloud liveness FIRST, then polls: while
+  /// backgrounded the process can be frozen (dropping the liveness Realtime
+  /// socket and freezing its re-seed timer), leaving [PrinterLivenessService]
+  /// with a stale 'offline' `last_seen`. Without the re-seed the gate below
+  /// would keep skipping a printer that has since come back on, so the tile
+  /// stays offline until a cold start (the notification service, on its own
+  /// isolate, meanwhile shows it correctly). The fleet-wide re-seed is coalesced
+  /// across tiles into one SELECT.
+  Future<void> resumePoll() async {
+    await PrinterLivenessService.instance.refresh();
+    await _poll();
+  }
+
   void dispose() {
     _disposed = true;
     _timer?.cancel();
