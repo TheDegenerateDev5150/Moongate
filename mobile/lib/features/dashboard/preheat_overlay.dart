@@ -223,7 +223,7 @@ class _PreheatSheetState extends ConsumerState<_PreheatSheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
         top: false,
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
