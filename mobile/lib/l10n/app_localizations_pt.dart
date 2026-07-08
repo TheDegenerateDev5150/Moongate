@@ -1496,6 +1496,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notifContentSubtitle => 'Escolha e reordene o que é mostrado';
 
   @override
+  String get notifRosterTitle => 'Barra de status de todas as impressoras';
+
+  @override
+  String get notifRosterShownSubtitle =>
+      'Visível. Toque para ocultar apenas esta barra nas configurações de notificação do seu telefone - os cartões de impressão continuam chegando.';
+
+  @override
+  String get notifRosterHiddenSubtitle =>
+      'Oculta nas configurações de notificação do seu telefone. Toque para exibi-la novamente.';
+
+  @override
   String get notifContentIntro =>
       'Escolha quais detalhes aparecem no cartão de notificação de cada impressão, e arraste-os para a ordem que desejar.';
 

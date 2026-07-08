@@ -1499,6 +1499,17 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notifContentSubtitle => 'Scegli e riordina cosa mostrare';
 
   @override
+  String get notifRosterTitle => 'Barra di stato di tutte le stampanti';
+
+  @override
+  String get notifRosterShownSubtitle =>
+      'Visibile. Tocca per nascondere solo questa barra nelle impostazioni di notifica del telefono: le schede di stampa continuano ad arrivare.';
+
+  @override
+  String get notifRosterHiddenSubtitle =>
+      'Nascosta nelle impostazioni di notifica del telefono. Tocca per mostrarla di nuovo.';
+
+  @override
   String get notifContentIntro =>
       'Scegli quali dettagli appaiono sulla scheda di notifica di ogni stampa e trascinali nell\'ordine che preferisci.';
 

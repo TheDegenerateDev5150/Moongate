@@ -2758,6 +2758,24 @@ abstract class AppLocalizations {
   /// **'Choose & reorder what\'s shown'**
   String get notifContentSubtitle;
 
+  /// Drawer item for the persistent all-printers status notification; tapping opens its category in Android's notification settings.
+  ///
+  /// In en, this message translates to:
+  /// **'All printers status bar'**
+  String get notifRosterTitle;
+
+  /// Subtitle when the status-bar notification category is visible; tapping opens Android's settings page for it.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown. Tap to hide just this bar in your phone\'s notification settings - print cards keep coming.'**
+  String get notifRosterShownSubtitle;
+
+  /// Subtitle when the user has blocked the status-bar notification category in Android's settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden in your phone\'s notification settings. Tap to show it again.'**
+  String get notifRosterHiddenSubtitle;
+
   /// Intro text at the top of the Notification content screen.
   ///
   /// In en, this message translates to:

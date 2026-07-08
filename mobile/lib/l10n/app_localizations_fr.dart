@@ -1508,6 +1508,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notifContentSubtitle => 'Choisir et réorganiser l\'affichage';
 
   @override
+  String get notifRosterTitle => 'Barre d\'état de toutes les imprimantes';
+
+  @override
+  String get notifRosterShownSubtitle =>
+      'Affichée. Touchez pour masquer uniquement cette barre dans les paramètres de notifications de votre téléphone - les cartes d\'impression continuent d\'arriver.';
+
+  @override
+  String get notifRosterHiddenSubtitle =>
+      'Masquée dans les paramètres de notifications de votre téléphone. Touchez pour l\'afficher à nouveau.';
+
+  @override
   String get notifContentIntro =>
       'Choisissez les détails affichés sur la carte de notification de chaque impression, et faites-les glisser dans l\'ordre souhaité.';
 

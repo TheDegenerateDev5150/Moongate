@@ -2,6 +2,8 @@ package com.moongate.app.moongate
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.view.WindowManager
 import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -13,6 +15,7 @@ class MainActivity : FlutterFragmentActivity() {
     companion object {
         private const val SECURE_CHANNEL = "com.moongate.app/secure"
         private const val INSTALL_CHANNEL = "com.moongate.app/install"
+        private const val NOTIF_SETTINGS_CHANNEL = "com.moongate.app/notif_settings"
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -32,6 +35,41 @@ class MainActivity : FlutterFragmentActivity() {
                             window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
                         }
                         result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+
+        // Notification-category shortcut: open Android's OWN settings page for
+        // one of our notification channels. A channel's visibility belongs to
+        // the user (apps can't flip it), so the menu row for hiding the
+        // persistent status roster deep-links here instead of toggling in-app.
+        // Below Android 8 channels don't exist - fall back to the app's
+        // notification settings screen.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, NOTIF_SETTINGS_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "openChannelSettings" -> {
+                        val channelId = call.argument<String>("channelId")
+                        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                            channelId != null
+                        ) {
+                            Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                                putExtra(Settings.EXTRA_CHANNEL_ID, channelId)
+                            }
+                        } else {
+                            Intent("android.settings.APP_NOTIFICATION_SETTINGS").apply {
+                                putExtra("app_package", packageName)
+                                putExtra("app_uid", applicationInfo.uid)
+                            }
+                        }
+                        try {
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.error("open_failed", e.message, null)
+                        }
                     }
                     else -> result.notImplemented()
                 }

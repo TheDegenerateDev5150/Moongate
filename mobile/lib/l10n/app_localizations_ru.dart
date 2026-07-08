@@ -1489,6 +1489,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notifContentSubtitle => 'Выберите и измените порядок';
 
   @override
+  String get notifRosterTitle => 'Строка состояния всех принтеров';
+
+  @override
+  String get notifRosterShownSubtitle =>
+      'Показана. Нажмите, чтобы скрыть только эту строку в настройках уведомлений телефона - карточки печати продолжат приходить.';
+
+  @override
+  String get notifRosterHiddenSubtitle =>
+      'Скрыта в настройках уведомлений телефона. Нажмите, чтобы показать её снова.';
+
+  @override
   String get notifContentIntro =>
       'Выберите, какие данные показывать на карточке уведомления каждой печати, и перетащите их в нужном порядке.';
 

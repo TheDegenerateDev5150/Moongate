@@ -1411,6 +1411,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notifContentSubtitle => '选择并排序显示内容';
 
   @override
+  String get notifRosterTitle => '所有打印机状态栏';
+
+  @override
+  String get notifRosterShownSubtitle => '显示中。点按可在手机的通知设置中仅隐藏此栏，打印卡片仍会照常显示。';
+
+  @override
+  String get notifRosterHiddenSubtitle => '已在手机的通知设置中隐藏。点按可重新显示。';
+
+  @override
   String get notifContentIntro => '选择每个打印任务通知卡片上显示的信息，并拖动以排列顺序。';
 
   @override
