@@ -1154,16 +1154,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   /// Lets the user pick a previously saved backup file via the SAF document
-  /// picker and restores it, making the dashboard match the backup exactly. If
-  /// the device has printers the backup doesn't include, [_confirmRestoreReplace]
-  /// asks before removing them.
+  /// picker and restores it. Printers the backup doesn't include are KEPT by
+  /// default (a merge); [_resolveRestoreExtras] offers removing them instead
+  /// so the dashboard matches the backup exactly.
   Future<void> _importConfig() async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     ImportOutcome? outcome;
     try {
       outcome = await PrinterRegistry.instance.importFromBackupFile(
-        confirmReplace: _confirmRestoreReplace,
+        resolveExtras: _resolveRestoreExtras,
       );
     } catch (_) {
       if (!mounted) return;
@@ -1202,32 +1202,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  /// Confirms a destructive restore: the backup doesn't include [toRemove], so
-  /// restoring will drop those tiles to match it. Returns true to proceed. Never
-  /// shown on a clean install (nothing to remove). Removed printers stay paired,
+  /// The backup doesn't include [extras]: asks whether to keep them alongside
+  /// the restored printers (the default - a merge) or remove them so the
+  /// dashboard matches the backup exactly. Returns true to remove, false to
+  /// keep, null to cancel the whole restore (dialog dismissed / Cancel). Never
+  /// shown on a clean install (nothing extra). Removed printers stay paired,
   /// so they can be re-added or restored later.
-  Future<bool> _confirmRestoreReplace(List<PrinterConfig> toRemove) async {
-    if (!mounted) return false;
+  Future<bool?> _resolveRestoreExtras(List<PrinterConfig> extras) async {
+    if (!mounted) return null;
     final l = AppLocalizations.of(context);
-    final names = toRemove.map((p) => p.name).join(', ');
-    final proceed = await showDialog<bool>(
+    final names = extras.map((p) => p.name).join(', ');
+    return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l.dashboardRestoreReplaceTitle),
-        content: Text(l.dashboardRestoreReplaceBody(names)),
+        title: Text(l.dashboardRestoreExtrasTitle),
+        content: Text(l.dashboardRestoreExtrasBody(names)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
+            onPressed: () => Navigator.pop(ctx),
             child: Text(l.commonCancel),
           ),
-          FilledButton(
+          TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l.dashboardRestoreReplaceConfirm),
+            child: Text(l.dashboardRestoreExtrasRemove),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.dashboardRestoreExtrasKeep),
           ),
         ],
       ),
     );
-    return proceed ?? false;
   }
 
   /// Re-read the settings providers from prefs after a restore wrote new

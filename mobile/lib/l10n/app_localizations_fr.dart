@@ -628,15 +628,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tableau de bord restauré pour correspondre à votre sauvegarde.';
 
   @override
-  String get dashboardRestoreReplaceTitle => 'Remplacer le tableau de bord ?';
+  String get dashboardRestoreExtrasTitle =>
+      'Conserver vos imprimantes actuelles ?';
 
   @override
-  String dashboardRestoreReplaceBody(String names) {
-    return 'Ces imprimantes sont sur ce tableau de bord mais pas dans la sauvegarde : $names. La restauration les supprimera pour que le tableau de bord corresponde exactement à la sauvegarde. Elles restent appairées - vous pourrez les rajouter ou les restaurer plus tard.';
+  String dashboardRestoreExtrasBody(String names) {
+    return 'Ces imprimantes sont sur ce tableau de bord mais pas dans la sauvegarde : $names. Vous pouvez les conserver aux côtés des imprimantes restaurées, ou les retirer pour que le tableau de bord corresponde exactement à la sauvegarde. Les imprimantes retirées restent appairées - vous pourrez les rajouter ou les restaurer plus tard.';
   }
 
   @override
-  String get dashboardRestoreReplaceConfirm => 'Remplacer';
+  String get dashboardRestoreExtrasKeep => 'Les conserver';
+
+  @override
+  String get dashboardRestoreExtrasRemove => 'Les retirer';
 
   @override
   String get dashboardRemoveSheetTitle => 'Retirer une imprimante';

@@ -1186,23 +1186,29 @@ abstract class AppLocalizations {
   /// **'Dashboard restored to match your backup.'**
   String get dashboardRestoreApplied;
 
-  /// Title of the confirm dialog shown when a restore would remove printers not in the backup.
+  /// Title of the dialog shown when a restore finds printers on the dashboard that the backup doesn't include.
   ///
   /// In en, this message translates to:
-  /// **'Replace dashboard?'**
-  String get dashboardRestoreReplaceTitle;
+  /// **'Keep your current printers?'**
+  String get dashboardRestoreExtrasTitle;
 
-  /// Body of the restore-replace confirm dialog; lists the printers that would be removed.
+  /// Body of the restore keep-or-remove dialog; lists the printers the backup doesn't include.
   ///
   /// In en, this message translates to:
-  /// **'These printers are on this dashboard but not in the backup: {names}. Restoring will remove them so the dashboard matches the backup exactly. They stay paired - you can re-add or restore them later.'**
-  String dashboardRestoreReplaceBody(String names);
+  /// **'These printers are on this dashboard but not in the backup: {names}. You can keep them alongside the restored printers, or remove them so the dashboard matches the backup exactly. Removed printers stay paired - you can re-add or restore them later.'**
+  String dashboardRestoreExtrasBody(String names);
 
-  /// Confirm button on the restore-replace dialog; proceeds with removing printers not in the backup.
+  /// Default button on the restore dialog: keep the extra printers alongside the restored ones (merge).
   ///
   /// In en, this message translates to:
-  /// **'Replace'**
-  String get dashboardRestoreReplaceConfirm;
+  /// **'Keep them'**
+  String get dashboardRestoreExtrasKeep;
+
+  /// Button on the restore dialog: remove the extra printers so the dashboard matches the backup exactly.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove them'**
+  String get dashboardRestoreExtrasRemove;
 
   /// Heading of the bottom sheet listing printers to remove.
   ///

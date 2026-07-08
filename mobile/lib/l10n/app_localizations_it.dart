@@ -619,15 +619,18 @@ class AppLocalizationsIt extends AppLocalizations {
       'Dashboard ripristinata in modo da corrispondere al backup.';
 
   @override
-  String get dashboardRestoreReplaceTitle => 'Sostituire la dashboard?';
+  String get dashboardRestoreExtrasTitle => 'Mantenere le stampanti attuali?';
 
   @override
-  String dashboardRestoreReplaceBody(String names) {
-    return 'Queste stampanti sono in questa dashboard ma non nel backup: $names. Il ripristino le rimuoverà in modo che la dashboard corrisponda esattamente al backup. Restano associate: puoi riaggiungerle o ripristinarle in seguito.';
+  String dashboardRestoreExtrasBody(String names) {
+    return 'Queste stampanti sono in questa dashboard ma non nel backup: $names. Puoi mantenerle insieme alle stampanti ripristinate, oppure rimuoverle in modo che la dashboard corrisponda esattamente al backup. Le stampanti rimosse restano associate: puoi riaggiungerle o ripristinarle in seguito.';
   }
 
   @override
-  String get dashboardRestoreReplaceConfirm => 'Sostituisci';
+  String get dashboardRestoreExtrasKeep => 'Mantienile';
+
+  @override
+  String get dashboardRestoreExtrasRemove => 'Rimuovile';
 
   @override
   String get dashboardRemoveSheetTitle => 'Rimuovi una stampante';
