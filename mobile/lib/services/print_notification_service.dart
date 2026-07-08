@@ -58,7 +58,7 @@ const _serviceId            = 4711;
 // to call the user back to the machine. A separate channel so it can be muted on
 // its own. See HeatsoakTimers (the armed deadlines) + _fireDueHeatsoaks.
 const _heatsoakChannelId   = 'moongate_heatsoak';
-const _heatsoakChannelName = 'Heatsoak timer';
+const _heatsoakChannelName = 'Heat soak timer';
 const _heatsoakChannelDesc =
     'Alerts you when a preheat / heat-soak timer set on a printer finishes.';
 
