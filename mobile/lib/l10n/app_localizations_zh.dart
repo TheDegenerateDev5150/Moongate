@@ -515,24 +515,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardBuyMeCoffeeSubtitle => '通过 PayPal 给开发者打赏';
 
   @override
-  String get dashboardDeleteData => 'Delete my data';
+  String get dashboardDeleteData => '删除我的数据';
 
   @override
-  String get dashboardDeleteDataSubtitle =>
-      'Erase your account and printers from the cloud';
+  String get dashboardDeleteDataSubtitle => '从云端抹除您的账户和打印机';
 
   @override
-  String get deleteDataConfirmTitle => 'Delete my data?';
+  String get deleteDataConfirmTitle => '删除我的数据？';
 
   @override
   String get deleteDataConfirmBody =>
-      'This permanently deletes your anonymous account and removes your printers and notification settings from the cloud. Your printers will need to be paired again. This can\'t be undone.';
+      '此操作将永久删除您的匿名账户，并从云端移除您的打印机和通知设置。打印机需要重新配对。此操作无法撤销。';
 
   @override
-  String get deleteDataDone => 'Your data has been deleted';
+  String get deleteDataDone => '您的数据已删除';
 
   @override
-  String get deleteDataError => 'Couldn\'t delete your data. Please try again.';
+  String get deleteDataError => '无法删除您的数据，请重试。';
 
   @override
   String get donationPromptTitle => '喜欢 Moongate 吗？';
@@ -1720,7 +1719,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tutorialMenuLanguage =>
-      '你还可以在这里切换应用的语言，Moongate 支持八种语言。导览到此结束，祝你使用愉快！';
+      '你还可以在这里切换应用的语言，Moongate 支持九种语言。导览到此结束，祝你使用愉快！';
 
   @override
   String get notifPauseTooltip => '暂停监控';

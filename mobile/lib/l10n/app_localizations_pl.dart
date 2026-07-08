@@ -542,24 +542,25 @@ class AppLocalizationsPl extends AppLocalizations {
   String get dashboardBuyMeCoffeeSubtitle => 'Wesprzyj dewelopera przez PayPal';
 
   @override
-  String get dashboardDeleteData => 'Delete my data';
+  String get dashboardDeleteData => 'Usuń moje dane';
 
   @override
   String get dashboardDeleteDataSubtitle =>
-      'Erase your account and printers from the cloud';
+      'Usuwa Twoje konto i drukarki z chmury';
 
   @override
-  String get deleteDataConfirmTitle => 'Delete my data?';
+  String get deleteDataConfirmTitle => 'Usunąć moje dane?';
 
   @override
   String get deleteDataConfirmBody =>
-      'This permanently deletes your anonymous account and removes your printers and notification settings from the cloud. Your printers will need to be paired again. This can\'t be undone.';
+      'Spowoduje to trwałe usunięcie anonimowego konta oraz usunięcie drukarek i ustawień powiadomień z chmury. Drukarki trzeba będzie sparować ponownie. Tej operacji nie można cofnąć.';
 
   @override
-  String get deleteDataDone => 'Your data has been deleted';
+  String get deleteDataDone => 'Twoje dane zostały usunięte';
 
   @override
-  String get deleteDataError => 'Couldn\'t delete your data. Please try again.';
+  String get deleteDataError =>
+      'Nie udało się usunąć danych. Spróbuj ponownie.';
 
   @override
   String get donationPromptTitle => 'Podoba Ci się Moongate?';
@@ -1818,7 +1819,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get tutorialMenuLanguage =>
-      'A tutaj możesz zmienić język aplikacji - Moongate mówi w ośmiu. To koniec wprowadzenia, miłego korzystania!';
+      'A tutaj możesz zmienić język aplikacji - Moongate mówi w dziewięciu. To koniec wprowadzenia, miłego korzystania!';
 
   @override
   String get notifPauseTooltip => 'Wstrzymaj monitorowanie';

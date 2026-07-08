@@ -3337,7 +3337,7 @@ abstract class AppLocalizations {
   /// Final menu tutorial step pointing at the language entry.
   ///
   /// In en, this message translates to:
-  /// **'And you can switch the app\'s language here - Moongate speaks eight. That\'s the tour, enjoy!'**
+  /// **'And you can switch the app\'s language here - Moongate speaks nine. That\'s the tour, enjoy!'**
   String get tutorialMenuLanguage;
 
   /// Tooltip on the app bar pause button that suspends the print-notification service.
