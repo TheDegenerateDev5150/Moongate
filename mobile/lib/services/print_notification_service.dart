@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:ui' as ui;
 
+import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
@@ -21,24 +22,33 @@ import 'printer_registry.dart';
 import 'supabase_service.dart';
 
 // ── Tuning ────────────────────────────────────────────────────────────────
-// Everything posts on ONE silent channel, "Print status":
-//   • the persistent foreground-service notification - a status-only roster of
-//     every printer (Name - Printing / Ready / Idle / Offline). No numbers; the
-//     live detail lives on the cards below;
-//   • one live card per active print: progress while it runs, then a clearable
-//     "Finished <time>" summary.
-// The cards used to live on a separate HIGH-importance "Print jobs" channel so
-// they could buzz on start/finish - but a HIGH card always outranks the LOW,
-// silent roster in the shade, and as both refresh each poll Android kept
-// re-sorting them (the two "swapped places"). Sharing the LOW channel keeps each
-// card pinned directly under the roster and silent; _postActiveCard also fixes
-// each card's `when` to its print-start so the roster - refreshed to "now" every
-// poll - keeps sorting above it. The old 'alerts' channel is deleted on startup.
+// Two silent LOW channels, plus the loud heat-soak one below:
+//   • "Print status" (the foreground service's own channel) - the persistent,
+//     status-only roster of every printer (Name - Printing / Ready / Idle /
+//     Offline). No numbers; the live detail lives on the cards;
+//   • "Print jobs" - one live card per active print: progress while it runs,
+//     then a clearable "Finished <time>" summary.
+// History: the cards originally lived on a HIGH channel so they could buzz,
+// but a HIGH card always outranks the LOW roster and Android kept re-sorting
+// the two ("swapping places"), so v0.9.27 merged them onto the roster's
+// channel. What actually pins the order though is BOTH being LOW + each card
+// fixing its `when` to the print start while the roster refreshes to "now"
+// every poll (see _postActiveCard) - so the cards are now back on their OWN
+// silent channel. That restores per-category control in Android's settings:
+// the roster can be hidden on its own (a user-requested setup - print cards
+// only) while the service keeps running and the cards keep coming.
 const _serviceChannelId     = 'moongate_print_progress';
 const _serviceChannelName   = 'Print status';
 const _serviceChannelDesc   = 'A live, at-a-glance status of all your printers.';
-// Legacy HIGH-importance card channel, retired for the shared status channel
-// above. Kept only so onStart can delete it from existing installs.
+// The per-print cards' channel. A FRESH id (not the retired
+// 'moongate_print_alerts') so nobody's years-old block of that channel
+// silently swallows their cards.
+const _cardsChannelId       = 'moongate_print_cards';
+const _cardsChannelName     = 'Print jobs';
+const _cardsChannelDesc     =
+    'A live card for each running print, then its finished summary.';
+// Legacy HIGH-importance card channel from before v0.9.27. Kept only so
+// onStart can delete it from existing installs.
 const _legacyCardsChannelId = 'moongate_print_alerts';
 const _serviceId            = 4711;
 
@@ -48,7 +58,7 @@ const _serviceId            = 4711;
 // to call the user back to the machine. A separate channel so it can be muted on
 // its own. See HeatsoakTimers (the armed deadlines) + _fireDueHeatsoaks.
 const _heatsoakChannelId   = 'moongate_heatsoak';
-const _heatsoakChannelName = 'Heatsoak timer';
+const _heatsoakChannelName = 'Heat soak timer';
 const _heatsoakChannelDesc =
     'Alerts you when a preheat / heat-soak timer set on a printer finishes.';
 
@@ -163,6 +173,44 @@ class PrintNotificationService {
   /// startup and whenever the toggle changes.
   Future<void> sync(bool enabled) => enabled ? start() : stop();
 
+  // ── Roster visibility (Android notification-channel settings) ────────────
+  //
+  // The persistent all-printers roster is the foreground service's own
+  // notification: the app must always post it, but its VISIBILITY belongs to
+  // the user via its notification channel. With the print cards on their own
+  // channel, hiding just the roster's gives a "cards only" shade - the menu
+  // row below the Notification content entry surfaces that.
+
+  static const _notifSettings =
+      MethodChannel('com.moongate.app/notif_settings');
+
+  /// True when the user has hidden the roster's channel in Android's
+  /// notification settings (importance == none); null when it can't be read
+  /// (channel not created yet, or pre-Android 8).
+  Future<bool?> isRosterHidden() async {
+    try {
+      final channels = await FlutterLocalNotificationsPlugin()
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.getNotificationChannels();
+      final roster =
+          channels?.where((c) => c.id == _serviceChannelId).firstOrNull;
+      if (roster == null) return null;
+      return roster.importance == Importance.none;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Open Android's own settings page for the roster's notification channel -
+  /// the one place its visibility can actually be flipped.
+  Future<void> openRosterChannelSettings() async {
+    try {
+      await _notifSettings.invokeMethod(
+          'openChannelSettings', {'channelId': _serviceChannelId});
+    } catch (_) {}
+  }
+
   /// Re-read the poll interval and, if the service is running, restart it so a
   /// new cadence takes effect at once (the repeat interval is fixed at service
   /// start, so changing it needs a stop/start).
@@ -239,16 +287,16 @@ class _PrintTaskHandler extends TaskHandler {
     ));
     final androidPlugin = _alerts.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
-    // Live print cards share the foreground service's silent "Print status"
-    // channel so they sit with - and just under - the status roster instead of
-    // outranking it (a HIGH card always floats above the LOW roster, which made
-    // the two swap places). Ensure it exists at LOW importance; the service
-    // creates it too, so this is idempotent.
+    // Live print cards get their own silent LOW channel, separate from the
+    // roster's, so the roster can be hidden on its own from Android's
+    // notification settings. LOW + the fixed per-card `when` (see
+    // _postActiveCard) keep them pinned just under the roster - the ordering
+    // never depended on sharing its channel. Idempotent.
     await androidPlugin?.createNotificationChannel(
       const AndroidNotificationChannel(
-        _serviceChannelId,
-        _serviceChannelName,
-        description: _serviceChannelDesc,
+        _cardsChannelId,
+        _cardsChannelName,
+        description: _cardsChannelDesc,
         importance: Importance.low,
       ),
     );
@@ -1003,16 +1051,16 @@ class _PrintTaskHandler extends TaskHandler {
   /// collapsed view the bar sits in place of that body line, which is exactly
   /// what users had to expand the card to get past.
   ///
-  /// Silent, on the shared "Print status" channel, with [startedMs] (the print's
-  /// start) as a fixed `when`: same LOW importance as the roster so it can't
-  /// outrank it, and an older timestamp so the roster - refreshed to "now" every
-  /// poll - keeps sorting above it. Together that pins the card just under the
-  /// roster and stops the two swapping places in the shade.
+  /// Silent, on the cards' own "Print jobs" channel, with [startedMs] (the
+  /// print's start) as a fixed `when`: same LOW importance as the roster so it
+  /// can't outrank it, and an older timestamp so the roster - refreshed to
+  /// "now" every poll - keeps sorting above it. Together that pins the card
+  /// just under the roster and stops the two swapping places in the shade.
   Future<void> _postActiveCard(PrinterConfig p, _Poll s, int startedMs) async {
     final android = AndroidNotificationDetails(
-      _serviceChannelId,
-      _serviceChannelName,
-      channelDescription: _serviceChannelDesc,
+      _cardsChannelId,
+      _cardsChannelName,
+      channelDescription: _cardsChannelDesc,
       importance: Importance.low,
       priority: Priority.low,
       silent: true,
@@ -1028,9 +1076,9 @@ class _PrintTaskHandler extends TaskHandler {
 
   /// Post the clearable summary card for a finished / cancelled / errored print.
   /// Swipeable, with a ✕ "Clear" action; either way of dismissing it is picked
-  /// up by [_detectClearedDoneCards] on the next tick. Silent and on the shared
-  /// "Print status" channel, keeping [startedMs] as its `when` so it stays put
-  /// under the roster (see _postActiveCard).
+  /// up by [_detectClearedDoneCards] on the next tick. Silent and on the cards'
+  /// own "Print jobs" channel, keeping [startedMs] as its `when` so it stays
+  /// put under the roster (see _postActiveCard).
   Future<void> _postDoneCard(
       PrinterConfig p, String state, int startedMs) async {
     final clock = _nowClock();
@@ -1050,9 +1098,9 @@ class _PrintTaskHandler extends TaskHandler {
             : '${_l.printNotifFinished} $clock';
     }
     final android = AndroidNotificationDetails(
-      _serviceChannelId,
-      _serviceChannelName,
-      channelDescription: _serviceChannelDesc,
+      _cardsChannelId,
+      _cardsChannelName,
+      channelDescription: _cardsChannelDesc,
       importance: Importance.low,
       priority: Priority.low,
       silent: true,

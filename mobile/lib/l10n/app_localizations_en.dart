@@ -1472,6 +1472,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifContentSubtitle => 'Choose & reorder what\'s shown';
 
   @override
+  String get notifRosterTitle => 'All printers status bar';
+
+  @override
+  String get notifRosterShownSubtitle =>
+      'Shown. Tap to hide just this bar in your phone\'s notification settings - print cards keep coming.';
+
+  @override
+  String get notifRosterHiddenSubtitle =>
+      'Hidden in your phone\'s notification settings. Tap to show it again.';
+
+  @override
   String get notifContentIntro =>
       'Pick which details appear on each print\'s notification card, and drag them into the order you want.';
 

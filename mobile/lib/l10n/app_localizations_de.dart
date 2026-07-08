@@ -1494,6 +1494,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notifContentSubtitle => 'Wählen & anordnen, was angezeigt wird';
 
   @override
+  String get notifRosterTitle => 'Statusleiste aller Drucker';
+
+  @override
+  String get notifRosterShownSubtitle =>
+      'Sichtbar. Tippe, um nur diese Leiste in den Benachrichtigungseinstellungen deines Telefons auszublenden - die Druckkarten kommen weiterhin.';
+
+  @override
+  String get notifRosterHiddenSubtitle =>
+      'In den Benachrichtigungseinstellungen deines Telefons ausgeblendet. Tippe, um sie wieder anzuzeigen.';
+
+  @override
   String get notifContentIntro =>
       'Wähle, welche Details auf der Benachrichtigungskarte jedes Drucks erscheinen, und ziehe sie in die gewünschte Reihenfolge.';
 

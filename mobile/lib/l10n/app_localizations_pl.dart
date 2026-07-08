@@ -1489,6 +1489,17 @@ class AppLocalizationsPl extends AppLocalizations {
   String get notifContentSubtitle => 'Wybierz i zmień kolejność';
 
   @override
+  String get notifRosterTitle => 'Pasek stanu wszystkich drukarek';
+
+  @override
+  String get notifRosterShownSubtitle =>
+      'Widoczny. Dotknij, aby ukryć tylko ten pasek w ustawieniach powiadomień telefonu - karty wydruków nadal będą przychodzić.';
+
+  @override
+  String get notifRosterHiddenSubtitle =>
+      'Ukryty w ustawieniach powiadomień telefonu. Dotknij, aby znów go pokazać.';
+
+  @override
   String get notifContentIntro =>
       'Wybierz, które informacje pojawiają się na karcie powiadomienia każdego wydruku, i przeciągnij je w żądanej kolejności.';
 

@@ -948,6 +948,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           context.push('/settings/notifications');
                         },
                       ),
+                      // Hide / show the persistent all-printers status bar.
+                      // Its visibility is owned by Android (it's the foreground
+                      // service's own notification, on its own channel now the
+                      // cards moved off it), so this opens ITS page in the
+                      // system notification settings rather than toggling
+                      // in-app; the subtitle reflects the real state so a
+                      // hidden roster stays discoverable.
+                      FutureBuilder<bool?>(
+                        future:
+                            PrintNotificationService.instance.isRosterHidden(),
+                        builder: (context, snap) {
+                          final hidden = snap.data == true;
+                          return ListTile(
+                            leading: Icon(hidden
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined),
+                            title: Text(l.notifRosterTitle),
+                            subtitle: Text(hidden
+                                ? l.notifRosterHiddenSubtitle
+                                : l.notifRosterShownSubtitle),
+                            onTap: () => PrintNotificationService.instance
+                                .openRosterChannelSettings(),
+                          );
+                        },
+                      ),
                     ],
 
                     const Divider(),
