@@ -127,26 +127,28 @@ class PrinterRegistry {
   /// Legacy alias for [addClaimed], retained for API compatibility.
   Future<void> add(PrinterConfig printer) => addClaimed(printer);
 
-  /// Opens the SAF document picker, parses a Moongate backup, and restores it so
-  /// the dashboard matches the backup exactly: the backup's printers (in their
-  /// saved order, with each tile's config) become the list, missing ones are
-  /// added, and any local printer the backup doesn't contain is dropped. Because
-  /// dropping printers is destructive, [confirmReplace] is invoked first with the
-  /// printers that would be removed; if it returns false the whole restore is
-  /// cancelled (and the single-use restore code is left unspent). With no
-  /// callback wired (the first-launch import is always onto an empty list, so
-  /// this can't normally arise) extras are kept rather than wiped silently.
+  /// Opens the SAF document picker, parses a Moongate backup, and restores it.
+  /// The backup's printers are applied in their saved order - existing entries
+  /// are updated to the backup's per-tile config, missing ones are added - and
+  /// by DEFAULT any local printer the backup doesn't contain is KEPT (a merge,
+  /// so restoring an old backup can't wipe printers paired since it was made).
+  /// Removing those extras instead, so the dashboard matches the backup
+  /// exactly, is an explicit choice: [resolveExtras] is invoked with them and
+  /// returns true to remove, false to keep, or null to cancel the whole
+  /// restore (leaving the single-use restore code unspent). With no callback
+  /// wired (the first-launch import is always onto an empty list, so extras
+  /// can't normally arise) they are kept.
   ///
-  /// Returns the outcome, or null if the user cancelled the picker or declined
-  /// the replace. Throws on a malformed / unreadable file so the caller can
-  /// surface an error.
+  /// Returns the outcome, or null if the user cancelled the picker or the
+  /// keep-or-remove dialog. Throws on a malformed / unreadable file so the
+  /// caller can surface an error.
   ///
   /// Shared by the dashboard "Restore config" item and the first-launch pairing
   /// screen. A backup carries the printer list only, NOT the Supabase anon
   /// identity - restored printers stay offline until reclaimed by the restore
   /// code or re-paired (a reinstall gets a new cloud identity).
   Future<ImportOutcome?> importFromBackupFile({
-    Future<bool> Function(List<PrinterConfig> toRemove)? confirmReplace,
+    Future<bool?> Function(List<PrinterConfig> extras)? resolveExtras,
   }) async {
     // withData:true returns bytes inline rather than a path we may not be able
     // to read under scoped storage. Accept any file type (Android often greys
@@ -182,24 +184,20 @@ class PrinterRegistry {
       throw const FormatException('unrecognised_backup');
     }
 
-    // The backup is authoritative: restoring should reproduce its dashboard
-    // exactly (printers, their saved order, each tile's config). Work out which
-    // local printers the backup doesn't contain - a full replace would drop
-    // them. Dropping is destructive, so confirm first, and BEFORE redeeming the
-    // single-use restore code so a decline costs nothing. With no callback wired
-    // (the first-launch import is always onto an empty list, so this can't
-    // normally arise) we keep the extras rather than wipe silently.
+    // Merge by default: the backup's printers are applied, and local printers
+    // the backup doesn't contain are KEPT unless the user explicitly chooses
+    // otherwise. Ask BEFORE redeeming the single-use restore code so backing
+    // out costs nothing. With no callback wired (the first-launch import is
+    // always onto an empty list, so extras can't normally arise) keep them.
     final importedIds = imported.map((p) => p.id).toSet();
     final previousIds = _printers.map((p) => p.id).toSet();
-    final toRemove =
+    final extras =
         _printers.where((p) => !importedIds.contains(p.id)).toList();
-    var dropExtras = true;
-    if (toRemove.isNotEmpty) {
-      if (confirmReplace != null) {
-        if (!await confirmReplace(toRemove)) return null; // declined → cancel
-      } else {
-        dropExtras = false; // can't ask → never wipe without consent
-      }
+    var dropExtras = false;
+    if (extras.isNotEmpty && resolveExtras != null) {
+      final removeExtras = await resolveExtras(extras);
+      if (removeExtras == null) return null; // cancelled → nothing changes
+      dropExtras = removeExtras;
     }
 
     // Reclaim ownership FIRST so the restored printers resolve online on their
@@ -222,12 +220,12 @@ class PrinterRegistry {
     }
 
     // Rebuild the list from the backup, in its saved order: existing printers
-    // are updated to the backup's per-tile config, missing ones added, and (when
-    // confirmed) any not in the backup dropped. Extras are kept on the end only
-    // when there was no way to confirm their removal.
+    // are updated to the backup's per-tile config, missing ones added, and any
+    // not in the backup kept on the end (the merge default) - or dropped when
+    // the user explicitly chose to match the backup exactly.
     _printers = dropExtras
         ? List<PrinterConfig>.of(imported)
-        : [...imported, ...toRemove];
+        : [...imported, ...extras];
     await _save();
     final added = imported.where((p) => !previousIds.contains(p.id)).length;
 
@@ -240,7 +238,7 @@ class PrinterRegistry {
 
     return ImportOutcome(
       added: added,
-      removed: dropExtras ? toRemove.length : 0,
+      removed: dropExtras ? extras.length : 0,
       reconnectedCount: reconnectedCount,
       hadRestoreCode: hadRestoreCode,
     );

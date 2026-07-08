@@ -621,15 +621,18 @@ class AppLocalizationsPl extends AppLocalizations {
       'Pulpit przywrócony zgodnie z kopią zapasową.';
 
   @override
-  String get dashboardRestoreReplaceTitle => 'Zastąpić pulpit?';
+  String get dashboardRestoreExtrasTitle => 'Zachować obecne drukarki?';
 
   @override
-  String dashboardRestoreReplaceBody(String names) {
-    return 'Te drukarki są na tym pulpicie, ale nie ma ich w kopii zapasowej: $names. Przywracanie usunie je, aby pulpit dokładnie odpowiadał kopii. Pozostaną sparowane - możesz je później dodać ponownie lub przywrócić.';
+  String dashboardRestoreExtrasBody(String names) {
+    return 'Te drukarki są na tym pulpicie, ale nie ma ich w kopii zapasowej: $names. Możesz zachować je obok przywróconych drukarek albo usunąć, aby pulpit dokładnie odpowiadał kopii. Usunięte drukarki pozostaną sparowane - możesz je później dodać ponownie lub przywrócić.';
   }
 
   @override
-  String get dashboardRestoreReplaceConfirm => 'Zastąp';
+  String get dashboardRestoreExtrasKeep => 'Zachowaj je';
+
+  @override
+  String get dashboardRestoreExtrasRemove => 'Usuń je';
 
   @override
   String get dashboardRemoveSheetTitle => 'Usuń drukarkę';

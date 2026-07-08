@@ -625,15 +625,18 @@ class AppLocalizationsPt extends AppLocalizations {
       'Painel restaurado para corresponder ao seu backup.';
 
   @override
-  String get dashboardRestoreReplaceTitle => 'Substituir painel?';
+  String get dashboardRestoreExtrasTitle => 'Manter suas impressoras atuais?';
 
   @override
-  String dashboardRestoreReplaceBody(String names) {
-    return 'Estas impressoras estão neste painel, mas não no backup: $names. A restauração irá removê-las para que o painel corresponda exatamente ao backup. Elas permanecem pareadas - você pode adicioná-las novamente ou restaurá-las mais tarde.';
+  String dashboardRestoreExtrasBody(String names) {
+    return 'Estas impressoras estão neste painel, mas não no backup: $names. Você pode mantê-las junto com as impressoras restauradas ou removê-las para que o painel corresponda exatamente ao backup. As impressoras removidas permanecem pareadas - você pode adicioná-las novamente ou restaurá-las mais tarde.';
   }
 
   @override
-  String get dashboardRestoreReplaceConfirm => 'Substituir';
+  String get dashboardRestoreExtrasKeep => 'Mantê-las';
+
+  @override
+  String get dashboardRestoreExtrasRemove => 'Removê-las';
 
   @override
   String get dashboardRemoveSheetTitle => 'Remover uma impressora';
