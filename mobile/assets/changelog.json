@@ -1,5 +1,15 @@
 [
   {
+    "version": "v0.9.47",
+    "bullets": [
+      "New language: Brazilian Portuguese! A full translation contributed by community member Daniel Morais (obrigado!), making nine languages. Pick it on first launch or any time from the menu.",
+      "Restoring a backup now keeps any printers you paired after that backup was made, adding the backup's printers alongside them. If you'd rather the dashboard match the backup exactly, the restore asks and offers that as a choice, and cancelling changes nothing and doesn't use up the backup's one-time restore code.",
+      "The per-print notification now shows heat from the very first moments: the warm-up climb (like 25→220°) while heaters ramp, then your chosen hotend and bed readings. Progress and time estimates still join a little later, once the print is far enough along for them to be trustworthy.",
+      "Filled in missing translations: the Delete-my-data screens now show in your language instead of English.",
+      "App-only update, no Pi update needed."
+    ]
+  },
+  {
     "version": "v0.9.46",
     "bullets": [
       "New: a pause / play button in the dashboard top bar to quickly turn print notifications off and on. When your printers will be off for a while, tap pause to stop Moongate checking on them in the background and save battery, then tap play to start watching again. It only shows when notifications are on, and a pause is remembered even if you restart the app.",
