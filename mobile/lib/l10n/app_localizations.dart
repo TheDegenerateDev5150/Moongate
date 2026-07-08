@@ -13,6 +13,7 @@ import 'app_localizations_it.dart';
 import 'app_localizations_pl.dart';
 import 'app_localizations_ru.dart';
 import 'app_localizations_zh.dart';
+import 'app_localizations_pt_BR.dart';
 
 // ignore_for_file: type=lint
 
@@ -107,7 +108,8 @@ abstract class AppLocalizations {
     Locale('it'),
     Locale('pl'),
     Locale('ru'),
-    Locale('zh')
+    Locale('zh'),
+    Locale('pt', 'BR')
   ];
 
   /// Title of the in-app update dialog while the new APK is downloading.

@@ -28,6 +28,7 @@ const List<LanguageOption> kLanguageOptions = [
   LanguageOption('zh', '中文（简体）'),
   LanguageOption('ru', 'Русский'),
   LanguageOption('pl', 'Polski'),
+  LanguageOption('pt_BR', 'Português (Brasil)'),
 ];
 
 /// Native name for a stored language [code], or `null` if it isn't one we ship
