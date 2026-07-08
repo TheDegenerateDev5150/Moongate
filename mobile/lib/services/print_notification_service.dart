@@ -1103,8 +1103,11 @@ class _PrintTaskHandler extends TaskHandler {
   }
 
   /// The card's text for a running / paused print: the user-chosen detail
-  /// segments (progress / remaining / finish-time / temps), or "Printing
-  /// started" until the print is far enough along to estimate.
+  /// segments (progress / remaining / finish-time / temps). Below 2% progress
+  /// the time/progress segments are withheld (Klipper's early estimates are
+  /// wild), but the card still reads "Printing started" plus live heat: the
+  /// ramp ("25→210°") while warming, else the enabled temperature fields - so
+  /// it never looks stalled between the start alert and the first estimate.
   String _cardBody(_Poll s) {
     final segs = _enabledSegments(s);
     if (s.state == 'paused') {
@@ -1114,8 +1117,8 @@ class _PrintTaskHandler extends TaskHandler {
     }
     // printing
     if (s.progress < 0.02) {
-      final warm = _warming(s) ? _heatingSegs(s) : const <String>[];
-      return [_l.printNotifStarted, ...warm].join(' · ');
+      final heat = _warming(s) ? _heatingSegs(s) : _tempSegments(s);
+      return [_l.printNotifStarted, ...heat].join(' · ');
     }
     return segs.isEmpty ? _l.printStatusPrinting : segs.join(' · ');
   }
@@ -1138,6 +1141,20 @@ class _PrintTaskHandler extends TaskHandler {
         if (s.hotendTarget > 0) '${s.hotend.round()}→${s.hotendTarget.round()}°',
         if (s.bedTarget > 0) '${s.bed.round()}→${s.bedTarget.round()}°',
       ];
+
+  /// Just the enabled temperature fields (hotend / bed, in the user's chosen
+  /// order) - the early-print card shows these once the heaters are at target,
+  /// while the time/progress segments are still withheld.
+  List<String> _tempSegments(_Poll s) {
+    final segs = <String>[];
+    for (final f in _fields.order) {
+      if (f != NotifField.hotend && f != NotifField.bed) continue;
+      if (!_fields.enabled.contains(f)) continue;
+      final seg = _fieldSegment(f, s);
+      if (seg != null) segs.add(seg);
+    }
+    return segs;
+  }
 
   /// Localised wall-clock now ("3:45 PM" / "15:45") for the finished card, or
   /// null if the locale's date symbols didn't load.
