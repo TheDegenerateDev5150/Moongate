@@ -541,24 +541,25 @@ class AppLocalizationsRu extends AppLocalizations {
       'Поддержать разработчика через PayPal';
 
   @override
-  String get dashboardDeleteData => 'Delete my data';
+  String get dashboardDeleteData => 'Удалить мои данные';
 
   @override
   String get dashboardDeleteDataSubtitle =>
-      'Erase your account and printers from the cloud';
+      'Стереть ваш аккаунт и принтеры из облака';
 
   @override
-  String get deleteDataConfirmTitle => 'Delete my data?';
+  String get deleteDataConfirmTitle => 'Удалить мои данные?';
 
   @override
   String get deleteDataConfirmBody =>
-      'This permanently deletes your anonymous account and removes your printers and notification settings from the cloud. Your printers will need to be paired again. This can\'t be undone.';
+      'Это навсегда удалит ваш анонимный аккаунт, а также уберёт принтеры и настройки уведомлений из облака. Принтеры придётся сопрячь заново. Это действие нельзя отменить.';
 
   @override
-  String get deleteDataDone => 'Your data has been deleted';
+  String get deleteDataDone => 'Ваши данные удалены';
 
   @override
-  String get deleteDataError => 'Couldn\'t delete your data. Please try again.';
+  String get deleteDataError =>
+      'Не удалось удалить данные. Попробуйте ещё раз.';
 
   @override
   String get donationPromptTitle => 'Нравится Moongate?';
@@ -1818,7 +1819,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tutorialMenuLanguage =>
-      'А здесь можно сменить язык приложения - Moongate говорит на восьми. На этом обзор завершён, приятного пользования!';
+      'А здесь можно сменить язык приложения - Moongate говорит на девяти. На этом обзор завершён, приятного пользования!';
 
   @override
   String get notifPauseTooltip => 'Приостановить мониторинг';

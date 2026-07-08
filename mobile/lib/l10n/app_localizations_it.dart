@@ -541,24 +541,24 @@ class AppLocalizationsIt extends AppLocalizations {
       'Lascia una mancia allo sviluppatore via PayPal';
 
   @override
-  String get dashboardDeleteData => 'Delete my data';
+  String get dashboardDeleteData => 'Elimina i miei dati';
 
   @override
   String get dashboardDeleteDataSubtitle =>
-      'Erase your account and printers from the cloud';
+      'Cancella il tuo account e le tue stampanti dal cloud';
 
   @override
-  String get deleteDataConfirmTitle => 'Delete my data?';
+  String get deleteDataConfirmTitle => 'Eliminare i miei dati?';
 
   @override
   String get deleteDataConfirmBody =>
-      'This permanently deletes your anonymous account and removes your printers and notification settings from the cloud. Your printers will need to be paired again. This can\'t be undone.';
+      'Questo elimina definitivamente il tuo account anonimo e rimuove le tue stampanti e le impostazioni di notifica dal cloud. Le stampanti dovranno essere abbinate di nuovo. L\'operazione non può essere annullata.';
 
   @override
-  String get deleteDataDone => 'Your data has been deleted';
+  String get deleteDataDone => 'I tuoi dati sono stati eliminati';
 
   @override
-  String get deleteDataError => 'Couldn\'t delete your data. Please try again.';
+  String get deleteDataError => 'Impossibile eliminare i tuoi dati. Riprova.';
 
   @override
   String get donationPromptTitle => 'Ti piace Moongate?';
@@ -1830,7 +1830,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get tutorialMenuLanguage =>
-      'E qui puoi cambiare la lingua dell\'app - Moongate ne parla otto. Questo è il tour, buon divertimento!';
+      'E qui puoi cambiare la lingua dell\'app - Moongate ne parla nove. Questo è il tour, buon divertimento!';
 
   @override
   String get notifPauseTooltip => 'Sospendi monitoraggio';

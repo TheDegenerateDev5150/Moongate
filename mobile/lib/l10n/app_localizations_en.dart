@@ -1801,7 +1801,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialMenuLanguage =>
-      'And you can switch the app\'s language here - Moongate speaks eight. That\'s the tour, enjoy!';
+      'And you can switch the app\'s language here - Moongate speaks nine. That\'s the tour, enjoy!';
 
   @override
   String get notifPauseTooltip => 'Pause monitoring';
