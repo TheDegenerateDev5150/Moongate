@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [master]
   workflow_dispatch:
+    inputs:
+      play_build_number:
+        description: "Play .aab versionCode override (e.g. 121). Empty = pubspec's build number. Only affects the .aab artifact; the APK, Release and manifest are untouched."
+        required: false
+        type: string
+        default: ''
 
 jobs:
   build:
@@ -65,8 +71,14 @@ jobs:
         # REQUEST_INSTALL_PACKAGES (see the `play` flavor + src/github split).
         # Uploaded as a workflow artifact for a MANUAL Play Console submission -
         # it is never auto-published, mirroring the iOS altool/ASC flow.
+        # play_build_number exists so a corrected bundle can be cut from exact
+        # master when Play has consumed a versionCode on a bad upload (the
+        # 2026-07-09 incident: a stale work-box checkout shipped v0.9.46 code
+        # labelled 0.9.48/120). Always prefer this over local .aab builds.
         working-directory: mobile
-        run: flutter build appbundle --release --flavor play --dart-define=MOONGATE_CHANNEL=play
+        env:
+          PLAY_BUILD_NUMBER: ${{ github.event.inputs.play_build_number }}
+        run: flutter build appbundle --release --flavor play --dart-define=MOONGATE_CHANNEL=play ${PLAY_BUILD_NUMBER:+--build-number=$PLAY_BUILD_NUMBER}
 
       - name: Stage APK + read version
         # The signed APK is published ONLY as a GitHub Release asset (next step)
