@@ -300,6 +300,16 @@ So **the only thing you commit by hand is code + screenshots + docs**. The relea
 
 ---
 
+## Adding or updating a translation
+
+Moongate ships nine languages, all as simple `.arb` string files - the Brazilian-Portuguese community contribution ([#183](https://github.com/PEEKYPAUL/Moongate/pull/183)/[#184](https://github.com/PEEKYPAUL/Moongate/pull/184)) is the reference example. To add a language:
+
+1. Copy [`mobile/lib/l10n/app_en.arb`](mobile/lib/l10n/app_en.arb) to `app_<code>.arb` using a **plain base language code** (`app_pt.arb`, not `app_pt_BR.arb`) and set its `"@@locale"` to the same code. `flutter gen-l10n` refuses a country-coded file unless a base file for that language also exists, and the app stores plain codes - a regional file quietly never loads.
+2. Translate every key, keeping each `{placeholder}` exactly as it appears in English. The file is strict JSON: UTF-8 without BOM, no trailing commas.
+3. Add the language to `kLanguageOptions` in [`mobile/lib/features/language/language_picker.dart`](mobile/lib/features/language/language_picker.dart) - the label is the language's own native name and is deliberately the same in every locale.
+4. Run `flutter gen-l10n` from `mobile/` and commit the regenerated `app_localizations*.dart` files. **Never edit the generated files by hand** - the delegate wiring inside them is exactly the part hand-edits get wrong, and the next regeneration discards them anyway.
+5. `flutter analyze` should come back clean, and gen-l10n itself reports any untranslated keys per language.
+
 ## Bumping a release
 
 1. Edit `mobile/pubspec.yaml`:
