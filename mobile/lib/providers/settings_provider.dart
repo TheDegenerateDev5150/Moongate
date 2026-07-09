@@ -496,6 +496,68 @@ final globalPowerButtonProvider =
   GlobalPowerButtonNotifier.new,
 );
 
+// ---------------------------------------------------------------------------
+// Local only  (a quick top-bar toggle that turns remote/tunnel connections off)
+// ---------------------------------------------------------------------------
+
+/// Whether the dashboard shows the Local-only cloud toggle in the top bar,
+/// beside the notification pause button. OFF by default - turned on from the
+/// menu, mirroring the global-power-button pattern, so the extra icon only
+/// appears for users who asked for it. Travels in backups. The button itself
+/// flips [localOnlyProvider].
+class ShowLocalOnlyButtonNotifier extends Notifier<bool> {
+  static const _key = 'show_local_only_button';
+
+  @override
+  bool build() => false;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? false;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, enabled);
+  }
+}
+
+final showLocalOnlyButtonProvider =
+    NotifierProvider<ShowLocalOnlyButtonNotifier, bool>(
+  ShowLocalOnlyButtonNotifier.new,
+);
+
+/// Whether Local-only mode is active: remote (tunnel) connections are switched
+/// OFF and only printers reachable on the local network connect - the status
+/// poller, the printer page, the cameras and the background notification
+/// service all skip the tunnel as a transport, so a printer with no LAN
+/// address settles to offline instead of connecting remotely. Pairing and
+/// cloud identity are untouched; flipping back restores remote on the next
+/// poll. Persisted so the mode sticks across restarts, but like the
+/// notifications pause it is deliberately NOT in the settings backup - a
+/// restore should never silently cut someone's remote access. Non-widget code
+/// reads the same pref via [kLocalOnlyKey], so everything stays in step.
+class LocalOnlyNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(kLocalOnlyKey) ?? false;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(kLocalOnlyKey, enabled);
+  }
+}
+
+final localOnlyProvider = NotifierProvider<LocalOnlyNotifier, bool>(
+  LocalOnlyNotifier.new,
+);
+
 /// Whether the dashboard shows the floating buttons at the bottom (add printer,
 /// plus the reorder toggle in manual mode). ON by default. Users with a lot of
 /// printers turn it off so the buttons stop floating over the bottom tiles;

@@ -27,6 +27,15 @@ const String kNotifOnlineOnlyKey = 'notif_online_only';
 /// dashboard's order in either mode. Rides the settings backup.
 const String kAutoArrangeByStatusKey = 'auto_arrange_by_status';
 
+/// The Local-only mode key (the dashboard's quick cloud toggle). While true,
+/// the app never uses the Cloudflare tunnel as a transport - the status
+/// poller, the printer page, the cameras and the background notification
+/// isolate all go LAN-only, and a printer with no reachable LAN address reads
+/// offline. Read by the toggle (localOnlyProvider), PrinterStatusService, the
+/// printer WebView screen and the background isolate. Deliberately NOT in the
+/// settings backup - a restore should never silently cut remote access.
+const String kLocalOnlyKey = 'local_only_mode';
+
 /// Inline markers prefixing the finish-time / temperature segments so each stays
 /// self-describing even when the user reorders them. Shared by the live
 /// notification renderer and the settings-screen preview so the two never drift.

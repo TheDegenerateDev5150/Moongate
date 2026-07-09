@@ -1214,6 +1214,27 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get printerLocalOnlyNoLan =>
+      'L\'accès à distance est désactivé (Local uniquement) et cette imprimante n\'est pas joignable sur votre réseau.';
+
+  @override
+  String get localOnlyButtonTitle => 'Bouton local uniquement';
+
+  @override
+  String get localOnlyButtonSubtitle =>
+      'Un bouton dans la barre supérieure qui coupe les connexions distantes (tunnel), pour ne connecter que les imprimantes de votre réseau';
+
+  @override
+  String get localOnlyTooltip => 'Local uniquement';
+
+  @override
+  String get localOnlySnackOn =>
+      'Connexions distantes coupées - réseau local uniquement';
+
+  @override
+  String get localOnlySnackOff => 'Connexions distantes rétablies';
+
+  @override
   String get printerEdit => 'Modifier l\'imprimante';
 
   @override
