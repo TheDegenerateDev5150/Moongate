@@ -63,7 +63,7 @@ logger = logging.getLogger("moonraker.moongate")
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running - the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.12"
+MOONGATE_PLUGIN_VERSION = "0.6.13"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -258,13 +258,24 @@ class DeviceKey:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class JwksCache:
+    # Minimum spacing between /jwks fetch ATTEMPTS. A successful fetch is
+    # naturally rate-limited by `ttl` (it updates _fetched_at), but a FAILED
+    # one is not - fetch_now() leaves _fetched_at stale on failure, so before
+    # this guard a Pi whose fetch never succeeds (no network, or a broken
+    # cryptography lib yielding "no usable keys" from a 200) re-fetched on
+    # EVERY token verification. One such Pi was ~245 calls/hr - nearly all
+    # the jwks Edge Function invocations fleet-wide (2026-07-09 log audit).
+    # Worst case this adds ~2 min of 401s after an outage before keys land.
+    FETCH_RETRY_SECONDS = 120
+
     def __init__(self, supabase_url: str, anon_key: str, cache_path: Path, ttl: int) -> None:
         self.supabase_url = supabase_url.rstrip("/")
         self.anon_key     = anon_key
         self.cache_path   = cache_path
         self.ttl          = ttl
-        self._keys:       Dict[str, Ed25519PublicKey] = {}
-        self._fetched_at: float                       = 0.0
+        self._keys:        Dict[str, Ed25519PublicKey] = {}
+        self._fetched_at:  float                       = 0.0
+        self._attempt_at:  float                       = 0.0
         self._load_from_disk()
 
     def _load_from_disk(self) -> None:
@@ -292,6 +303,7 @@ class JwksCache:
 
     def fetch_now(self) -> bool:
         """Synchronously fetch /jwks. Returns True iff at least one key landed."""
+        self._attempt_at = time.time()
         url = f"{self.supabase_url}/functions/v1/jwks"
         req = urllib.request.Request(url, headers={"apikey": self.anon_key})
         try:
@@ -328,7 +340,9 @@ class JwksCache:
         return True
 
     def get_key(self, kid: str) -> Optional[Ed25519PublicKey]:
-        if time.time() - self._fetched_at > self.ttl:
+        now = time.time()
+        if (now - self._fetched_at > self.ttl
+                and now - self._attempt_at > self.FETCH_RETRY_SECONDS):
             self.fetch_now()
         return self._keys.get(kid)
 
