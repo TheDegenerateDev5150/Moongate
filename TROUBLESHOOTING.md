@@ -121,6 +121,14 @@ In v0.4.0 the app retries LAN on every poll, so this should self-correct within 
   ```
 - If the IP changed: remove the printer in the app and re-pair on the new IP. The LAN URL persists across launches but isn't auto-discovered after a DHCP change.
 
+## Every printer away from home shows offline (orange crossed-out cloud in the top bar)
+
+That's the **Local only** switch (v0.9.48): while it's on, Moongate deliberately makes no remote connections, so only printers on your current network connect and everything else settles to offline. Tap the orange crossed-out cloud in the top bar to turn remote back on (a snackbar confirms), or turn the whole button off under the menu's **Local-only button** switch - switching the menu entry off also turns the mode off. The state survives app restarts, so a toggle you flipped days ago is the usual culprit.
+
+## Opening a printer shows "the web interface isn't answering yet"
+
+From v0.9.48 this friendly message (with an automatic retry every few seconds) replaces the raw Cloudflare **"Bad gateway / Error 502"** page you used to see when opening a printer whose Pi was still starting up - the tunnel comes up a little before Mainsail does, so the first moments after a Pi boot can answer 502. It normally clears by itself within a minute. If it doesn't: check Mainsail loads in a browser on the printer's own network, and that Moonraker/Klipper are actually running on the Pi - the tunnel being up only proves the Pi is powered, not that the web stack behind it is healthy.
+
 ## Remote tunnel not connecting
 
 - Check the systemd unit:

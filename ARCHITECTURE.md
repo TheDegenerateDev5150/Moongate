@@ -269,7 +269,7 @@ The off-LAN cost is an extra ~2 s per poll cycle (LAN timeout fires before the t
 
 ### Connectivity-aware camera feed rate
 
-The dashboard keeps two webcam refresh rates - a faster "Local" rate and a throttled "Tunnel" rate (v0.9.14). As of v0.9.15 the tile picks between them by the **phone's network type** rather than by which URL the status poll happened to win on: an `onMobileDataProvider` (backed by `connectivity_plus`) drives the choice, so the faster Local rate applies on **any Wi-Fi** - including when you're away and reaching the printer over the tunnel - and the throttled Tunnel rate applies only on **mobile data**, where cellular data actually costs something. Reaching a printer on the LAN is always Wi-Fi, so home behaviour is unchanged.
+The dashboard keeps two webcam refresh rates - a faster "Local" rate and a throttled "Tunnel" rate (v0.9.14). As of v0.9.15 the tile picks between them by the **phone's network type** rather than by which URL the status poll happened to win on: an `onMobileDataProvider` (backed by `connectivity_plus`) drives the choice, so the faster Local rate applies on **any Wi-Fi** - including when you're away and reaching the printer over the tunnel - and the throttled Tunnel rate applies only on **mobile data**, where cellular data actually costs something. Reaching a printer on the LAN is always Wi-Fi, so home behaviour is unchanged. As of v0.9.48 the Local rate **defaults to Raw** (the camera's own target FPS) - Wi-Fi can afford it - while the Tunnel rate keeps its 3 s default; an explicitly chosen rate is always kept. The full-screen camera view ignores the dashboard throttle entirely and always runs at the camera's own frame rate.
 
 ### Print progress matches Mainsail (file-relative, single source)
 
@@ -278,6 +278,12 @@ Progress used to be computed two different ways - the dashboard tile preferred e
 ### Liveness-gated polling for offline printers
 
 Status polling a powered-off printer is wasted work: every cycle mints an access token from the middleman (an Edge Function call) only for the request to fail. As of v0.9.16 a `PrinterLivenessService` learns each printer's online/offline state from the cloud's `last_seen` (the Pi heartbeats it) over a **Supabase Realtime** subscription, with a periodic RLS-scoped `SELECT` as a fallback when the socket is down. While a printer reads as offline, both the dashboard and the background notification service **stop requesting access for it**, so an offline Pi costs zero Edge Function invocations and far less mobile data / battery. Reading `last_seen` over Realtime (or a plain RLS-scoped read) is **not** a billed Edge Function call, unlike `/printer-access`. Online printers behave exactly as before, and LAN polling still works even if the cloud is unreachable - liveness only *suppresses* remote token requests, it never gates the LAN path.
+
+Two v0.9.48 additions close the remaining cost gaps. A printer whose cloud row is **gone** (deleted, or re-bound to another device by a restore) is invisible to liveness - it has no `last_seen` at all, which reads as "unknown" and deliberately fails open - so before v0.9.48 such a tile minted-and-404'd on every 4 s poll forever. The access cache now remembers a "not found" answer and re-probes on an exponential back-off (1 min doubling to a 15 min ceiling) instead. And the plugin (0.6.13) applies the same idea to its JWKS key fetches: a fetch that keeps failing retries at most every 2 minutes rather than on every incoming request.
+
+### Local-only mode (v0.9.48)
+
+An opt-in top-bar toggle turns the tunnel off as a *transport*: while active, the status poller skips the tunnel fallback and its reachability probes, the printer WebView only loads over LAN (a kept-warm tunnel session is dropped rather than reused), the cameras inherit LAN-only from the poller, and the background notification isolate skips the tunnel base too - zero remote traffic. Printers with no reachable LAN address settle to offline. Pairing and cloud identity are untouched; the pref is re-read every poll (and each notification tick), so flipping it takes effect within ~4 s without restarting anything. The mode persists across restarts but is deliberately excluded from settings backups, so a restore can never silently cut remote access.
 
 ### Persistent UI type detection
 
