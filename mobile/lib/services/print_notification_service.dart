@@ -271,6 +271,9 @@ class _PrintTaskHandler extends TaskHandler {
   // Which notification segments to show + their order - re-read from prefs each
   // tick (the user edits them on the main isolate). Defaults to all-on.
   NotifFieldsConfig _fields = NotifFieldsConfig.defaults();
+  // Local-only mode (kLocalOnlyKey) - re-read each tick like _fields; while
+  // true the tunnel is skipped as a transport in _poll/_isReachable.
+  bool _localOnly = false;
 
   void _log(String msg) => dev.log(msg, name: 'MOONGATE/NOTIF');
 
@@ -384,6 +387,11 @@ class _PrintTaskHandler extends TaskHandler {
         prefs.getString(kNotifFieldsEnabledKey),
       );
       final onlineOnly = prefs.getBool(kNotifOnlineOnlyKey) ?? false;
+      // Local-only mode (the dashboard's cloud toggle): background monitoring
+      // is LAN-only too - the tunnel base and its reachability probe are
+      // skipped in _poll, so a printer with no LAN answer reads Offline. The
+      // reload() above keeps this in step with the toggle within one tick.
+      _localOnly = prefs.getBool(kLocalOnlyKey) ?? false;
       // Mirror the dashboard's "Auto-arrange by status" toggle (same key +
       // default as autoArrangeProvider): ON floats active prints to the top by
       // live status; OFF keeps the user's saved manual order so the roster
@@ -570,7 +578,8 @@ class _PrintTaskHandler extends TaskHandler {
     }
     final bases = <(String, bool)>[
       if (p.lanUrl != null && p.lanUrl!.isNotEmpty) (p.lanUrl!, true),
-      if (access.tunnelUrl != null && access.tunnelUrl!.isNotEmpty)
+      if (!_localOnly &&
+          access.tunnelUrl != null && access.tunnelUrl!.isNotEmpty)
         (access.tunnelUrl!, false),
     ];
     for (final (base, isLan) in bases) {
@@ -607,7 +616,10 @@ class _PrintTaskHandler extends TaskHandler {
   Future<bool> _isReachable(PrinterConfig p, PrinterAccess access) async {
     final candidates = <String>[
       if (p.lanUrl != null && p.lanUrl!.isNotEmpty) p.lanUrl!,
-      if (access.tunnelUrl != null && access.tunnelUrl!.isNotEmpty)
+      // Local-only mode: even a HEAD to the tunnel is remote traffic the
+      // toggle promises not to send.
+      if (!_localOnly &&
+          access.tunnelUrl != null && access.tunnelUrl!.isNotEmpty)
         access.tunnelUrl!,
     ];
     for (final base in candidates) {

@@ -1201,6 +1201,27 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get printerLocalOnlyNoLan =>
+      'Удалённый доступ выключен (Только локально), и этот принтер недоступен в вашей сети.';
+
+  @override
+  String get localOnlyButtonTitle => 'Кнопка «Только локально»';
+
+  @override
+  String get localOnlyButtonSubtitle =>
+      'Кнопка в верхней панели, отключающая удалённые подключения (туннель), чтобы подключались только принтеры в вашей сети';
+
+  @override
+  String get localOnlyTooltip => 'Только локально';
+
+  @override
+  String get localOnlySnackOn =>
+      'Удалённые подключения выключены - только локальная сеть';
+
+  @override
+  String get localOnlySnackOff => 'Удалённые подключения снова включены';
+
+  @override
   String get printerEdit => 'Изменить принтер';
 
   @override
