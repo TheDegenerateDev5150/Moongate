@@ -1,5 +1,16 @@
 [
   {
+    "version": "v0.9.48",
+    "bullets": [
+      "Hold your finger on a tile's camera picture and it opens full screen - the same pinch-to-zoom live view as the little eye icon, running at your camera's full frame rate. Close it and the dashboard tiles go straight back to your chosen feed rate.",
+      "The Local camera feed rate now defaults to Raw (your camera's own frame rate) - Wi-Fi can afford it. If you ever picked a rate yourself your choice is kept, and the mobile-data rate stays throttled at 3s.",
+      "Print cards get their own notification category again, separate from the all-printers status bar, so you can silence one without the other. A new row under Print notifications jumps straight to your phone's per-category switches.",
+      "Opening a printer whose Pi is still starting up no longer shows a raw \"Bad gateway\" error page: Moongate now explains it in plain English and retries by itself until the web interface comes up.",
+      "Fixed: a printer that no longer exists on your account (deleted, or moved to another phone by a restore) made the app silently re-check it every few seconds forever. It now backs off, saving your battery and data.",
+      "Not app-only: this release also updates the Moongate Pi plugin (0.6.13) with a fix that stops a Pi that can't load its signing keys from retrying on every request - update the plugin from Moonraker's update panel too."
+    ]
+  },
+  {
     "version": "v0.9.47",
     "bullets": [
       "New language: Brazilian Portuguese! A full translation contributed by community member Daniel Morais (obrigado!), making nine languages. Pick it on first launch or any time from the menu.",
