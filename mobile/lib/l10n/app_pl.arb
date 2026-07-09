@@ -378,6 +378,7 @@
   "printerAddressCleared": "Wyczyszczono niestandardowy adres",
   "printerAddressUpdated": "Zaktualizowano adres drukarki",
   "printerTunnelUnreachable": "Tunel Cloudflare nieosiągalny.\n{description}",
+  "printerWebUiRetry": "Interfejs WWW drukarki jeszcze nie odpowiada. Przez około minutę po włączeniu to normalne. Ponawianie za {seconds} s…",
   "printerEdit": "Edytuj drukarkę",
   "printerLocalNetwork": "Sieć lokalna",
   "printerTunnelVia": "Tunel przez Moongate",

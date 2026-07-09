@@ -378,6 +378,7 @@
   "printerAddressCleared": "Benutzerdefinierte Adresse entfernt",
   "printerAddressUpdated": "Druckeradresse aktualisiert",
   "printerTunnelUnreachable": "Cloudflare-Tunnel nicht erreichbar.\n{description}",
+  "printerWebUiRetry": "Die Weboberfläche des Druckers antwortet noch nicht. Kurz nach dem Einschalten ist das für etwa eine Minute normal. Erneuter Versuch in {seconds}s…",
   "printerEdit": "Drucker bearbeiten",
   "printerLocalNetwork": "Lokales Netzwerk",
   "printerTunnelVia": "Tunnel über Moongate",

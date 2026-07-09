@@ -1196,6 +1196,11 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String printerWebUiRetry(int seconds) {
+    return 'Interfejs WWW drukarki jeszcze nie odpowiada. Przez około minutę po włączeniu to normalne. Ponawianie za $seconds s…';
+  }
+
+  @override
   String get printerEdit => 'Edytuj drukarkę';
 
   @override

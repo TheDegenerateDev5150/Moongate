@@ -1209,6 +1209,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String printerWebUiRetry(int seconds) {
+    return 'L\'interface web de l\'imprimante ne répond pas encore. C\'est normal pendant environ une minute après la mise en marche. Nouvelle tentative dans $seconds s…';
+  }
+
+  @override
   String get printerEdit => 'Modifier l\'imprimante';
 
   @override

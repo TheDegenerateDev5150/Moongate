@@ -717,6 +717,8 @@
   "@printerAddressUpdated": {"description": "Snackbar confirming the custom printer address override was saved."},
   "printerTunnelUnreachable": "Cloudflare tunnel unreachable.\n{description}",
   "@printerTunnelUnreachable": {"description": "Error-overlay text when the WebView fails to load over the Cloudflare tunnel. 'Cloudflare' is a product name.", "placeholders": {"description": {"type": "String"}}},
+  "printerWebUiRetry": "The printer's web interface isn't answering yet. This is normal for a minute or so after switching on. Retrying in {seconds}s…",
+  "@printerWebUiRetry": {"description": "Error-overlay text when the main page returns a server error (e.g. Cloudflare 502 while the Pi's web stack is still booting behind a live tunnel); auto-retries after the given number of seconds.", "placeholders": {"seconds": {"type": "int"}}},
   "printerEdit": "Edit printer",
   "@printerEdit": {"description": "Tooltip on the app-bar edit button and title of the edit-printer dialog."},
   "printerLocalNetwork": "Local network",

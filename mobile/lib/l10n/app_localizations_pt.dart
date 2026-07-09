@@ -1200,6 +1200,11 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String printerWebUiRetry(int seconds) {
+    return 'A interface web da impressora ainda não está respondendo. Isso é normal por cerca de um minuto depois de ligar. Tentando novamente em ${seconds}s…';
+  }
+
+  @override
   String get printerEdit => 'Editar impressora';
 
   @override

@@ -378,6 +378,7 @@
   "printerAddressCleared": "已清除自定义地址",
   "printerAddressUpdated": "已更新打印机地址",
   "printerTunnelUnreachable": "无法连接 Cloudflare 隧道。\n{description}",
+  "printerWebUiRetry": "打印机的网页界面尚未响应。开机后一分钟左右属于正常现象。将在 {seconds} 秒后重试…",
   "printerEdit": "编辑打印机",
   "printerLocalNetwork": "本地网络",
   "printerTunnelVia": "通过 Moongate 隧道",

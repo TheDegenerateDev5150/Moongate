@@ -101,6 +101,10 @@ class _PrinterScreenState extends State<PrinterScreen>
   Future<void> _start() async {
     final l = AppLocalizations.of(context);
 
+    // An explicit (re)start supersedes any pending auto-retry - without this a
+    // manual Retry racing a scheduled one could fire two loads back to back.
+    _retryTimer?.cancel();
+
     // Warm? Re-attach to the live controller - instant, no reload, no
     // "Initializing…". Re-point the navigation delegate at this screen, then
     // revalidate in the background (a LAN session is dead if you've left home).
@@ -301,6 +305,29 @@ class _PrinterScreenState extends State<PrinterScreen>
         },
         onPageFinished: (_) {
           if (mounted) setState(() => _loading = false);
+        },
+        // A 5xx on the main document is a SUCCESSFUL load to the WebView, so
+        // without this it renders the upstream error page raw - typically
+        // Cloudflare's "Bad gateway" when the tunnel is up but the web stack
+        // behind it is still booting (a cold Pi answers 502/503 for its first
+        // moments; issue #180). Show our own overlay and retry until the page
+        // comes up. Main-document gate: only our loadRequest/reload requests
+        // the bare '/' path - every Mainsail asset/XHR is deeper - and iOS
+        // (which only reports main-frame responses here) may omit the request.
+        onHttpError: (err) {
+          if ((err.response?.statusCode ?? 0) < 500) return;
+          final path = err.request?.uri.path;
+          if (path != null && path != '/' && path != '') return;
+          if (!mounted) return;
+          final l = AppLocalizations.of(context);
+          _retryTimer?.cancel();
+          _retryTimer = Timer(const Duration(seconds: 5), () {
+            if (mounted) _webController?.reload();
+          });
+          setState(() {
+            _loading  = false;
+            _errorMsg = l.printerWebUiRetry(5);
+          });
         },
         onWebResourceError: (err) {
           if (err.isForMainFrame != true) return;

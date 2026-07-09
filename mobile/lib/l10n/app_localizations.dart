@@ -2218,6 +2218,12 @@ abstract class AppLocalizations {
   /// **'Cloudflare tunnel unreachable.\n{description}'**
   String printerTunnelUnreachable(String description);
 
+  /// Error-overlay text when the main page returns a server error (e.g. Cloudflare 502 while the Pi's web stack is still booting behind a live tunnel); auto-retries after the given number of seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'The printer\'s web interface isn\'t answering yet. This is normal for a minute or so after switching on. Retrying in {seconds}s…'**
+  String printerWebUiRetry(int seconds);
+
   /// Tooltip on the app-bar edit button and title of the edit-printer dialog.
   ///
   /// In en, this message translates to:
