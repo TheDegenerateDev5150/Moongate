@@ -337,7 +337,8 @@ extension DashboardCameraRefreshX on DashboardCameraRefresh {
 /// Legacy single-rate key (pre-v0.9.14). A user who set it keeps that value:
 /// both the local and tunnel rates fall back to it when their own key is unset,
 /// so updating preserves the old behaviour. Fresh installs use the per-path
-/// defaults below (local 1 s; tunnel 3 s - throttled to save mobile data).
+/// defaults below (local raw - Wi-Fi can afford the printer's own FPS; tunnel
+/// 3 s - throttled to save mobile data).
 const _legacyCameraRefreshKey = 'dashboard_camera_refresh';
 
 /// Shared load/set for the two dashboard camera-refresh settings. A tile reads
@@ -373,7 +374,7 @@ class LocalCameraRefreshNotifier extends _CameraRefreshNotifier {
   @override
   String get key => 'dashboard_camera_refresh_local';
   @override
-  DashboardCameraRefresh get fallback => DashboardCameraRefresh.oneSecond;
+  DashboardCameraRefresh get fallback => DashboardCameraRefresh.raw;
 }
 
 class TunnelCameraRefreshNotifier extends _CameraRefreshNotifier {
@@ -383,7 +384,8 @@ class TunnelCameraRefreshNotifier extends _CameraRefreshNotifier {
   DashboardCameraRefresh get fallback => DashboardCameraRefresh.threeSeconds;
 }
 
-/// Tile webcam refresh rate while the phone is on Wi-Fi (default 1 s).
+/// Tile webcam refresh rate while the phone is on Wi-Fi (default Raw - the
+/// printer's own target FPS).
 final localCameraRefreshProvider =
     NotifierProvider<LocalCameraRefreshNotifier, DashboardCameraRefresh>(
   LocalCameraRefreshNotifier.new,

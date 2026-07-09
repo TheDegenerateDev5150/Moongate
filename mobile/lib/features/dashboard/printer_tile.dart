@@ -363,6 +363,26 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
     );
   }
 
+  /// Wrap the webcam square so holding a finger anywhere on the feed opens the
+  /// same full-screen camera overlay as the corner eye (and the printer page's
+  /// camera button) - it runs at the printer's raw target FPS while open, and
+  /// the tile is back on its own throttled rate the moment it closes. Only when
+  /// the tile actually has a live feed, and never in the manual-reorder grid
+  /// ([PrinterTile.bounded]), where a long-press must stay the drag handle.
+  Widget _holdToFullscreen(Widget square) {
+    if (widget.bounded || (_status.webcamSnapshotUrl ?? '').isEmpty) {
+      return square;
+    }
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: () {
+        HapticFeedback.mediumImpact();
+        showPrinterCameraOverlay(context, widget.printer);
+      },
+      child: square,
+    );
+  }
+
   /// The E-STOP triangle, or the firmware-restart button when Klipper is shut
   /// down. Shared by the single-hotend row and the multi-toolhead footer. The
   /// E-STOP carries the tutorial anchor (a no-op on non-tutorial tiles).
@@ -584,7 +604,7 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
             // tile give height back rather than overflow.
             _anchor(
                 TutorialAnchors.instance.webcam,
-                _webcamCell(AspectRatio(
+                _webcamCell(_holdToFullscreen(AspectRatio(
               aspectRatio: 1.0,
               child: Stack(
                 fit: StackFit.expand,
@@ -675,7 +695,7 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                   ),
                 ],
               ),
-            ))),
+            )))),
 
             // ── Progress + buttons in ONE row ────────────────────────────
             // Hide action row when there's nothing to act on: offline,
