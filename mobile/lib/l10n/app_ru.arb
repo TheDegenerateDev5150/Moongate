@@ -378,6 +378,7 @@
   "printerAddressCleared": "Свой адрес сброшен",
   "printerAddressUpdated": "Адрес принтера обновлён",
   "printerTunnelUnreachable": "Туннель Cloudflare недоступен.\n{description}",
+  "printerWebUiRetry": "Веб-интерфейс принтера пока не отвечает. В течение минуты после включения это нормально. Повтор через {seconds} с…",
   "printerEdit": "Изменить принтер",
   "printerLocalNetwork": "Локальная сеть",
   "printerTunnelVia": "Туннель через Moongate",

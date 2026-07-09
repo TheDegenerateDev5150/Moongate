@@ -1198,6 +1198,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String printerWebUiRetry(int seconds) {
+    return 'Die Weboberfläche des Druckers antwortet noch nicht. Kurz nach dem Einschalten ist das für etwa eine Minute normal. Erneuter Versuch in ${seconds}s…';
+  }
+
+  @override
   String get printerEdit => 'Drucker bearbeiten';
 
   @override

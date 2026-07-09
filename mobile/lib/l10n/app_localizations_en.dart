@@ -1180,6 +1180,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String printerWebUiRetry(int seconds) {
+    return 'The printer\'s web interface isn\'t answering yet. This is normal for a minute or so after switching on. Retrying in ${seconds}s…';
+  }
+
+  @override
   String get printerEdit => 'Edit printer';
 
   @override

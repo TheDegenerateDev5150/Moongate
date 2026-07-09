@@ -1138,6 +1138,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String printerWebUiRetry(int seconds) {
+    return '打印机的网页界面尚未响应。开机后一分钟左右属于正常现象。将在 $seconds 秒后重试…';
+  }
+
+  @override
   String get printerEdit => '编辑打印机';
 
   @override

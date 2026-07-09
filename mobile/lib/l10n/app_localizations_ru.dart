@@ -1196,6 +1196,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String printerWebUiRetry(int seconds) {
+    return 'Веб-интерфейс принтера пока не отвечает. В течение минуты после включения это нормально. Повтор через $seconds с…';
+  }
+
+  @override
   String get printerEdit => 'Изменить принтер';
 
   @override
