@@ -3,6 +3,7 @@
     "version": "v0.9.48",
     "bullets": [
       "Hold your finger on a tile's camera picture and it opens full screen - the same pinch-to-zoom live view as the little eye icon, running at your camera's full frame rate. Close it and the dashboard tiles go straight back to your chosen feed rate.",
+      "New: a Local only switch. Turn on the Local-only button in the menu and a cloud icon appears in the top bar - tap it and Moongate stops using the remote tunnel entirely, connecting only to printers on your own network (everything else shows offline until you tap it again). Handy if you only ever print from home, and it stops all remote checking in the background too.",
       "The Local camera feed rate now defaults to Raw (your camera's own frame rate) - Wi-Fi can afford it. If you ever picked a rate yourself your choice is kept, and the mobile-data rate stays throttled at 3s.",
       "Print cards get their own notification category again, separate from the all-printers status bar, so you can silence one without the other. A new row under Print notifications jumps straight to your phone's per-category switches.",
       "Opening a printer whose Pi is still starting up no longer shows a raw \"Bad gateway\" error page: Moongate now explains it in plain English and retries by itself until the web interface comes up.",
