@@ -1201,6 +1201,27 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get printerLocalOnlyNoLan =>
+      'Zdalny dostęp jest wyłączony (Tylko lokalnie), a ta drukarka nie jest osiągalna w twojej sieci.';
+
+  @override
+  String get localOnlyButtonTitle => 'Przycisk tylko lokalnie';
+
+  @override
+  String get localOnlyButtonSubtitle =>
+      'Przycisk na górnym pasku wyłączający połączenia zdalne (tunel), aby łączyły się tylko drukarki w twojej sieci';
+
+  @override
+  String get localOnlyTooltip => 'Tylko lokalnie';
+
+  @override
+  String get localOnlySnackOn =>
+      'Połączenia zdalne wyłączone - tylko sieć lokalna';
+
+  @override
+  String get localOnlySnackOff => 'Połączenia zdalne włączone ponownie';
+
+  @override
   String get printerEdit => 'Edytuj drukarkę';
 
   @override

@@ -1212,6 +1212,27 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get printerLocalOnlyNoLan =>
+      'El acceso remoto está desactivado (Solo local) y esta impresora no está accesible en tu red.';
+
+  @override
+  String get localOnlyButtonTitle => 'Botón de solo local';
+
+  @override
+  String get localOnlyButtonSubtitle =>
+      'Un botón en la barra superior que desactiva las conexiones remotas (túnel), de modo que solo se conectan las impresoras de tu red';
+
+  @override
+  String get localOnlyTooltip => 'Solo local';
+
+  @override
+  String get localOnlySnackOn =>
+      'Conexiones remotas desactivadas - solo red local';
+
+  @override
+  String get localOnlySnackOff => 'Conexiones remotas reactivadas';
+
+  @override
   String get printerEdit => 'Editar impresora';
 
   @override

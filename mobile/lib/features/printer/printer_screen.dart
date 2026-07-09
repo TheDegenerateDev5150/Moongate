@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../models/notif_fields.dart';
 import '../../models/printer_config.dart';
 import '../../services/lan_discovery_service.dart';
 import '../../services/printer_access_cache.dart';
@@ -56,6 +57,7 @@ class _PrinterScreenState extends State<PrinterScreen>
 
   bool    _loading   = true;
   bool    _usingLan  = false;
+  bool    _localOnly = false;
   String? _errorMsg;
   String? _tunnelUrl;
   Timer?  _retryTimer;
@@ -105,10 +107,23 @@ class _PrinterScreenState extends State<PrinterScreen>
     // manual Retry racing a scheduled one could fire two loads back to back.
     _retryTimer?.cancel();
 
+    // Local-only mode (the dashboard's cloud toggle): the tunnel is never used
+    // as a transport here - read up front so a warm TUNNEL session isn't
+    // silently re-attached while the toggle is on.
+    _localOnly =
+        (await SharedPreferences.getInstance()).getBool(kLocalOnlyKey) ?? false;
+    if (!mounted) return;
+
     // Warm? Re-attach to the live controller - instant, no reload, no
     // "Initializing…". Re-point the navigation delegate at this screen, then
     // revalidate in the background (a LAN session is dead if you've left home).
-    final warm = PrinterWebViewCache.instance.lookup(widget.printer.id);
+    var warm = PrinterWebViewCache.instance.lookup(widget.printer.id);
+    if (warm != null && _localOnly && !warm.usingLan) {
+      // A live tunnel session can't be reused in Local-only - drop it and
+      // cold-load below (LAN when reachable, else the local-only notice).
+      PrinterWebViewCache.instance.invalidate(widget.printer.id);
+      warm = null;
+    }
     if (warm != null) {
       _webController = warm.controller;
       _webController!.setNavigationDelegate(_navDelegate());
@@ -144,16 +159,25 @@ class _PrinterScreenState extends State<PrinterScreen>
       if (lanUrl != null && await _isLanReachable(lanUrl)) {
         useUrl    = lanUrl;
         _usingLan = true;
-      } else if (access.tunnelUrl != null) {
+      } else if (!_localOnly && access.tunnelUrl != null) {
         useUrl    = access.tunnelUrl;
         _usingLan = false;
       }
 
-      // Neither LAN reachable nor a tunnel URL yet - the printer was just
-      // paired / is rebooting and remote isn't up. Show the same "starting up"
-      // retry the 503 path uses instead of loading a null URL.
+      // No usable URL. In Local-only mode that means the printer isn't on this
+      // network - say so plainly (no auto-retry loop; Retry or turning the
+      // toggle off re-probes). Otherwise the printer was just paired / is
+      // rebooting and remote isn't up: show the same "starting up" retry the
+      // 503 path uses instead of loading a null URL.
       if (useUrl == null) {
         if (!mounted) return;
+        if (_localOnly) {
+          setState(() {
+            _loading  = false;
+            _errorMsg = l.printerLocalOnlyNoLan;
+          });
+          return;
+        }
         setState(() {
           _loading  = false;
           _errorMsg = l.printerStartingUpRetry(5);
@@ -522,7 +546,9 @@ class _PrinterScreenState extends State<PrinterScreen>
                           icon: const Icon(Icons.refresh),
                           label: Text(l.commonRetry),
                         ),
-                        if (_usingLan && _tunnelUrl != null) ...[
+                        // No tunnel escape hatch in Local-only mode - the
+                        // whole point of the toggle is that remote stays off.
+                        if (_usingLan && _tunnelUrl != null && !_localOnly) ...[
                           const SizedBox(height: 12),
                           OutlinedButton.icon(
                             onPressed: _retryViaTunnel,

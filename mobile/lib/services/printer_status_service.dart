@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/notif_fields.dart';
 import '../models/printer_config.dart';
 import 'lan_discovery_service.dart';
 import 'print_progress.dart';
@@ -322,6 +324,15 @@ class PrinterStatusService {
     // wins this poll.
     final bool tunnelReady = access.tunnelUrl != null;
 
+    // Local-only mode (the dashboard's quick cloud toggle): the tunnel is not
+    // used as a transport - LAN-first below stays, the remote fallback and the
+    // tunnel reachability probe are skipped, so a printer with no reachable
+    // LAN address settles to offline instead of connecting remotely. Re-read
+    // every poll (SharedPreferences is a cached in-memory read) so a toggle
+    // takes effect on the next 4s tick without restarting the pollers.
+    final localOnly =
+        (await SharedPreferences.getInstance()).getBool(kLocalOnlyKey) ?? false;
+
     // 2. Discover chamber sensor on first reach
     if (!_chamberDiscovered) {
       await _discoverChamberSensor(access);
@@ -357,8 +368,9 @@ class PrinterStatusService {
       }
     }
 
-    // 4. Tunnel via Cloudflare - only when we actually have a URL.
-    if (access.tunnelUrl != null) {
+    // 4. Tunnel via Cloudflare - only when we actually have a URL, and never
+    //    in Local-only mode.
+    if (!localOnly && access.tunnelUrl != null) {
       final tunnelStatus = await _tryMoongateEndpoint(
           baseUrl: access.tunnelUrl!, access: access, isLan: false, tunnelReady: true);
       _recordPollDiag({
@@ -414,7 +426,7 @@ class PrinterStatusService {
     // unreachable (powered off) never heartbeats a tunnel URL, so tunnelReady
     // stays false forever. Without the time bound the tile would sit on
     // "Starting up…" indefinitely instead of settling to offline.
-    final reachable = await _isPiReachable(access);
+    final reachable = await _isPiReachable(access, lanOnly: localOnly);
     if (reachable) {
       if (!_disposed) _controller.add(PrinterStatus.waiting);
       return;
@@ -435,17 +447,19 @@ class PrinterStatusService {
   // answered. We only get an exception when nothing on that host is
   // listening. Used to differentiate "Klipper not running" from "Pi off"
   // after the moongate /status path has given up.
-  Future<bool> _isPiReachable(PrinterAccess access) async {
+  Future<bool> _isPiReachable(PrinterAccess access, {bool lanOnly = false}) async {
     // Include the mDNS-discovered URL, not just the persisted one: right after
     // a fresh pair the LAN /status poll may have failed (owner-bind/token not
     // settled yet) so _currentLanUrl is still null - but the printer is plainly
     // on the network. Probing the discovered URL here keeps the tile on
     // "Starting up…" instead of flipping to a scary "Offline" while it settles.
+    // [lanOnly] (Local-only mode) skips the tunnel probe - even a HEAD is
+    // remote traffic the toggle promises not to send.
     final discovered = LanDiscoveryService.instance.lookup(config.id);
     final candidates = <String>[
       if (discovered != null) discovered,
       if (_currentLanUrl != null) _currentLanUrl!,
-      if (access.tunnelUrl != null) access.tunnelUrl!,
+      if (!lanOnly && access.tunnelUrl != null) access.tunnelUrl!,
     ];
     for (final base in candidates) {
       try {

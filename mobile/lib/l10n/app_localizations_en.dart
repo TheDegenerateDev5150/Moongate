@@ -1185,6 +1185,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get printerLocalOnlyNoLan =>
+      'Remote access is switched off (Local only) and this printer isn\'t reachable on your network.';
+
+  @override
+  String get localOnlyButtonTitle => 'Local-only button';
+
+  @override
+  String get localOnlyButtonSubtitle =>
+      'A button in the top bar that turns remote (tunnel) connections off, so only printers on your network connect';
+
+  @override
+  String get localOnlyTooltip => 'Local only';
+
+  @override
+  String get localOnlySnackOn => 'Remote connections off - local network only';
+
+  @override
+  String get localOnlySnackOff => 'Remote connections back on';
+
+  @override
   String get printerEdit => 'Edit printer';
 
   @override

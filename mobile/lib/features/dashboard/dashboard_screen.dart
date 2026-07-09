@@ -210,6 +210,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // on (the master switch lives in the menu). [notifPaused] flips its icon.
     final printNotifications = ref.watch(printNotificationsEnabledProvider);
     final notifPaused = ref.watch(notificationsPausedProvider);
+    // Local-only cloud toggle in the app bar - only when enabled in the menu
+    // (mirrors the pause button's opt-in pattern). [localOnly] flips its icon.
+    final showLocalOnlyButton = ref.watch(showLocalOnlyButtonProvider);
+    final localOnly = ref.watch(localOnlyProvider);
     // The custom dashboard background is part of the Custom theme - render it
     // only while that theme is active (it's configured on the Custom theme
     // screen, which is only reachable when Custom is selected, so this also
@@ -312,6 +316,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               tooltip:
                   notifPaused ? l.notifResumeTooltip : l.notifPauseTooltip,
               onPressed: _toggleNotificationsPaused,
+            ),
+          // Local-only toggle (opt-in, drawer switch): turns remote (tunnel)
+          // connections off so only printers on this network connect. The
+          // crossed cloud goes orange while active - the same accent as the
+          // "Tunnel via Moongate" label - so the unusual mode stays visible.
+          if (showLocalOnlyButton && _printers.isNotEmpty)
+            IconButton(
+              icon: Icon(
+                localOnly ? Icons.cloud_off : Icons.cloud_outlined,
+                color: localOnly ? Colors.orange : null,
+              ),
+              tooltip: l.localOnlyTooltip,
+              onPressed: _toggleLocalOnly,
             ),
           Builder(
             builder: (ctx) => IconButton(
@@ -463,6 +480,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
   }
 
+  /// Quick Local-only toggle from the app bar. Flips the persisted mode - the
+  /// status pollers, the printer page, the cameras and the background
+  /// notification isolate all re-read it on their next tick, so remote
+  /// (tunnel) transport stops within one poll without restarting anything.
+  Future<void> _toggleLocalOnly() async {
+    final localOnly = !ref.read(localOnlyProvider);
+    await ref.read(localOnlyProvider.notifier).set(localOnly);
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content:
+            Text(localOnly ? l.localOnlySnackOn : l.localOnlySnackOff),
+        duration: const Duration(seconds: 2),
+      ));
+  }
+
   Widget _buildDrawer(BuildContext context) {
     final l = AppLocalizations.of(context);
     final fontScale     = ref.watch(fontScaleProvider);
@@ -481,6 +516,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final notifOnlineOnly = ref.watch(notifOnlineOnlyProvider);
     final globalPowerButton = ref.watch(globalPowerButtonProvider);
     final showDashboardButtons = ref.watch(dashboardButtonsProvider);
+    final showLocalOnlyButton = ref.watch(showLocalOnlyButtonProvider);
 
     return Drawer(
       child: SafeArea(
@@ -803,6 +839,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       value: globalPowerButton,
                       onChanged: (v) =>
                           ref.read(globalPowerButtonProvider.notifier).set(v),
+                    ),
+                    // Local-only button: adds the cloud toggle to the top bar
+                    // that turns remote (tunnel) connections off, so only
+                    // printers on this network connect. Off by default; the
+                    // MODE itself is flipped from the top bar, this switch
+                    // only reveals the button. Turning the switch off while
+                    // the mode is active also lifts the mode - a hidden
+                    // toggle must never silently keep remote access off.
+                    SwitchListTile(
+                      dense: true,
+                      secondary: const Icon(Icons.cloud_off_outlined),
+                      title: Text(l.localOnlyButtonTitle),
+                      subtitle: Text(l.localOnlyButtonSubtitle),
+                      value: showLocalOnlyButton,
+                      onChanged: (v) async {
+                        await ref
+                            .read(showLocalOnlyButtonProvider.notifier)
+                            .set(v);
+                        if (!v) {
+                          await ref.read(localOnlyProvider.notifier).set(false);
+                        }
+                      },
                     ),
                     // Show/hide the floating buttons at the bottom of the
                     // dashboard (add printer + the reorder toggle). ON by
@@ -1282,6 +1340,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(notifOnlineOnlyProvider.notifier).load();
     await ref.read(globalPowerButtonProvider.notifier).load();
     await ref.read(dashboardButtonsProvider.notifier).load();
+    // The local-only MODE isn't in backups, but reload both anyway so the
+    // button preference lands and the mode reflects whatever this device had.
+    await ref.read(showLocalOnlyButtonProvider.notifier).load();
+    await ref.read(localOnlyProvider.notifier).load();
     await PrintNotificationService.instance.sync(
         ref.read(printNotificationsEnabledProvider) &&
             !ref.read(notificationsPausedProvider));

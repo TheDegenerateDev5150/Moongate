@@ -1203,6 +1203,26 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get printerLocalOnlyNoLan =>
+      'Der Fernzugriff ist ausgeschaltet (Nur lokal) und dieser Drucker ist in deinem Netzwerk nicht erreichbar.';
+
+  @override
+  String get localOnlyButtonTitle => 'Nur-lokal-Taste';
+
+  @override
+  String get localOnlyButtonSubtitle =>
+      'Eine Taste in der oberen Leiste, die Fernverbindungen (Tunnel) ausschaltet, sodass sich nur Drucker in deinem Netzwerk verbinden';
+
+  @override
+  String get localOnlyTooltip => 'Nur lokal';
+
+  @override
+  String get localOnlySnackOn => 'Fernverbindungen aus - nur lokales Netzwerk';
+
+  @override
+  String get localOnlySnackOff => 'Fernverbindungen wieder an';
+
+  @override
   String get printerEdit => 'Drucker bearbeiten';
 
   @override

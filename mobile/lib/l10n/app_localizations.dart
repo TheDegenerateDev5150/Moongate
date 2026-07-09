@@ -2224,6 +2224,42 @@ abstract class AppLocalizations {
   /// **'The printer\'s web interface isn\'t answering yet. This is normal for a minute or so after switching on. Retrying in {seconds}s…'**
   String printerWebUiRetry(int seconds);
 
+  /// Error-overlay text on the printer page when Local-only mode is active and the printer has no reachable LAN address. 'Local only' matches localOnlyTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote access is switched off (Local only) and this printer isn\'t reachable on your network.'**
+  String get printerLocalOnlyNoLan;
+
+  /// Menu switch title: reveals the app-bar cloud toggle that turns remote (tunnel) connections off.
+  ///
+  /// In en, this message translates to:
+  /// **'Local-only button'**
+  String get localOnlyButtonTitle;
+
+  /// Menu switch subtitle for the Local-only button.
+  ///
+  /// In en, this message translates to:
+  /// **'A button in the top bar that turns remote (tunnel) connections off, so only printers on your network connect'**
+  String get localOnlyButtonSubtitle;
+
+  /// Tooltip on the app-bar cloud toggle that switches remote (tunnel) connections off and on.
+  ///
+  /// In en, this message translates to:
+  /// **'Local only'**
+  String get localOnlyTooltip;
+
+  /// Snackbar shown when the Local-only toggle is switched ON (remote/tunnel disabled).
+  ///
+  /// In en, this message translates to:
+  /// **'Remote connections off - local network only'**
+  String get localOnlySnackOn;
+
+  /// Snackbar shown when the Local-only toggle is switched OFF (remote/tunnel restored).
+  ///
+  /// In en, this message translates to:
+  /// **'Remote connections back on'**
+  String get localOnlySnackOff;
+
   /// Tooltip on the app-bar edit button and title of the edit-printer dialog.
   ///
   /// In en, this message translates to:

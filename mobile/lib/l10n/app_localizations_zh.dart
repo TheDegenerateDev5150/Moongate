@@ -1143,6 +1143,24 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get printerLocalOnlyNoLan => '远程访问已关闭（仅本地），且此打印机在你的网络中不可达。';
+
+  @override
+  String get localOnlyButtonTitle => '仅本地按钮';
+
+  @override
+  String get localOnlyButtonSubtitle => '在顶栏添加一个按钮，可关闭远程（隧道）连接，只连接本网络内的打印机';
+
+  @override
+  String get localOnlyTooltip => '仅本地';
+
+  @override
+  String get localOnlySnackOn => '已关闭远程连接 - 仅限本地网络';
+
+  @override
+  String get localOnlySnackOff => '已恢复远程连接';
+
+  @override
   String get printerEdit => '编辑打印机';
 
   @override
