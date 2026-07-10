@@ -70,7 +70,12 @@ if grep -qs 'append:/run/moongate-authproxy\.log' "$UNIT_FILE"; then
         warn "  sudo sed -i 's|append:/run/moongate-authproxy.log|journal|' $UNIT_FILE"
         warn "  sudo rm -f /run/moongate-authproxy.log"
         warn "  sudo systemctl daemon-reload && sudo systemctl restart moongate-authproxy"
+        warn "If /run is already full, a single power-cycle also clears it (/run is a"
+        warn "RAM disk, emptied on every boot) - the updated proxy then stays quiet."
     fi
 fi
+# /run/moongate-tunnel.log intentionally stays a file: the plugin reads the
+# cloudflared tunnel URL out of it, and cloudflared only writes a banner plus
+# occasional reconnect lines (KBs over weeks, cleared on every boot).
 
 ok "Update complete."
