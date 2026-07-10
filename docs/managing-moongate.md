@@ -18,6 +18,8 @@ Prefer to do it by hand? Tap **What's new** on the banner to read the changes fi
 
 Pi-side updates appear automatically in **Mainsail → Machine → Software Updates → Moongate** - click **Update** there, no SSH needed.
 
+> Updating from **KlipperScreen** instead? If the update console seems to freeze on a line like `create mode 100644`, the update has completed - the console just loses its connection when Moonraker restarts at the end. See [Troubleshooting](../TROUBLESHOOTING.md#updating-moongate-from-klipperscreen-looks-stuck-on-create-mode-100644).
+
 Prefer the command line? SSH in and re-run the installer - it pulls the latest and restarts the services:
 
 ```bash

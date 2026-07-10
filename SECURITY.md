@@ -190,7 +190,7 @@ Practical implications:
 - **The plugin does not run arbitrary G-code on behalf of token holders.** There is no `POST /server/moongate/gcode` endpoint. Print control is restricted to the five whitelisted actions; adding more requires editing [`klipper-plugin/moongate_standalone.py`](klipper-plugin/moongate_standalone.py) and auditing the new behaviour.
 - **The plugin reads its own state from `~/.config/moongate/`** and calls `systemctl` / `journalctl` to discover the current tunnel URL when its own log lookup fails. It does not read `printer.cfg` or any other Klipper internals beyond what Moonraker exposes.
 
-The auth proxy is even more constrained - it doesn't talk to Klipper at all, it just routes HTTP / WebSocket between Cloudflare and nginx. The verifier classes it uses for token checks are imported from the plugin file, not duplicated, so signature semantics stay single-source.
+The auth proxy is even more constrained - it doesn't talk to Klipper at all, it just routes HTTP / WebSocket between Cloudflare and nginx. The verifier classes it uses for token checks are imported from the plugin file, not duplicated, so signature semantics stay single-source. Since plugin **0.6.14** it also keeps **no per-request access log**: earlier versions wrote one to `/run/moongate-authproxy.log` on the Pi, including the short-lived `mg_token` query values (local to the Pi and cleared on reboot, but more than a proxy needs to record); now only its own warnings and errors are emitted, into the systemd journal.
 
 ---
 

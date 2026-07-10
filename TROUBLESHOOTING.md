@@ -47,6 +47,22 @@ sudo systemctl restart KlipperScreen
 
 `127.0.0.1` is also sturdier than a LAN IP - it survives the Pi's address changing on a DHCP renewal. A client on a **separate device** (a standalone KlipperScreen tablet, a second Pi) can't use localhost and is fundamentally incompatible with the rebind; run it on the printer Pi instead.
 
+## Updating Moongate from KlipperScreen looks stuck on "create mode 100644"
+
+Cosmetic - the update has actually completed. A Moongate plugin update restarts Moonraker as its final step, and KlipperScreen's update console watches the update through a live Moonraker connection. The restart cuts that connection mid-scroll, so the console freezes on the last line it received (usually one of git's `create mode 100644` file lines) and the "finished" message never arrives. Close the dialog and carry on, or restart KlipperScreen from Mainsail's **Services** panel if it won't dismiss. You can confirm the update landed under **Machine → Software Updates**: Moongate shows up to date.
+
+(Klipper itself is left alone on purpose: the plugin lives inside Moonraker, so a plugin update never needs to touch a running print.)
+
+## The Pi acts strangely after weeks of uptime (failed updates, sudo password errors)
+
+Plugin versions before **0.6.14** kept the remote-access proxy's request log on a small memory-backed disk (`/run`) that nothing trimmed. A printer left powered on for a few weeks could fill it completely, and a full `/run` makes unrelated things on the Pi misbehave: `sudo` fails with odd errors, updates act up, services get flaky. Check with:
+
+```bash
+df -h /run
+```
+
+If it shows 100% (and `du -sh /run/*` blames `moongate-authproxy.log`), that's this. Fix: **update the Moongate plugin to 0.6.14 or later** (Mainsail → Machine → Software Updates), which stops the log growing for good, then **reboot the Pi once** to empty the memory disk. After that it can't recur: the proxy now logs almost nothing, and what it does log goes to the system journal, which cleans up after itself.
+
 ## All your printers suddenly show offline (and you use a VPN)
 
 If every printer goes offline at once, especially after reinstalling the app or changing networks, and trying to connect shows a `trycloudflare.com` address failing, check whether a **VPN** on your phone is in the way.
