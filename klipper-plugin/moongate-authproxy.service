@@ -50,10 +50,14 @@ Environment=MG_MAINSAIL=http://127.0.0.1:80
 # Where to find moongate_standalone.py for the shared verifier classes.
 Environment=MG_PLUGIN_DIR=REPLACE_PLUGIN_DIR
 
-# Logging
+# Logging goes to the journal (journalctl -u moongate-authproxy), which
+# journald rate-limits and size-caps. Never append to a file on /run: it
+# is a small tmpfs with no rotation, and an unbounded log there fills it
+# and breaks sudo + other daemons (seen live 2026-07-10).
 Environment=MG_LOG_LEVEL=INFO
-StandardOutput=append:/run/moongate-authproxy.log
-StandardError=append:/run/moongate-authproxy.log
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=moongate-authproxy
 
 # Hardening - proxy doesn't need any of these.
 NoNewPrivileges=true

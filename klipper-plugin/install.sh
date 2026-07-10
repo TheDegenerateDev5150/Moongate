@@ -608,8 +608,9 @@ Environment=MG_MAINSAIL=http://127.0.0.1:$MOONGATE_PORT
 Environment=MG_PLUGIN_DIR=$PLUGIN_DIR
 Environment=MG_LOG_LEVEL=INFO
 
-StandardOutput=append:/run/moongate-authproxy.log
-StandardError=append:/run/moongate-authproxy.log
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=moongate-authproxy
 
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -649,6 +650,10 @@ fi
 # Use StandardOutput/StandardError instead of cloudflared's --logfile flag:
 # cloudflared prints the tunnel URL banner to stdout; systemd captures it
 # and appends it to /run/moongate-tunnel.log where the plugin can read it.
+# NOTE: unlike the authproxy unit (which logs to the journal, see step 6),
+# this one MUST stay an append: file - the plugin parses the tunnel URL from
+# it. That is safe only because cloudflared is quiet (a banner + occasional
+# reconnect lines, KBs over weeks); never point a chatty service at /run.
 #
 # v0.4: target is now the auth proxy ($MG_AUTHPROXY_PORT) instead of
 # Moonraker / Mainsail directly. Every request goes through the EdDSA gate
