@@ -608,8 +608,9 @@ Environment=MG_MAINSAIL=http://127.0.0.1:$MOONGATE_PORT
 Environment=MG_PLUGIN_DIR=$PLUGIN_DIR
 Environment=MG_LOG_LEVEL=INFO
 
-StandardOutput=append:/run/moongate-authproxy.log
-StandardError=append:/run/moongate-authproxy.log
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=moongate-authproxy
 
 NoNewPrivileges=true
 ProtectSystem=strict

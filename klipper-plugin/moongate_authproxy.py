@@ -655,7 +655,12 @@ def main() -> None:
         level=getattr(logging, LOG_LEVEL, logging.INFO),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-    web.run_app(make_app(), host=LISTEN_HOST, port=LISTEN_PORT)
+    # access_log=None: aiohttp's default access logger writes one INFO line
+    # per proxied request, and at the app's poll cadence that is ~13 MB/day
+    # into a log nothing rotates (it filled a Pi's /run tmpfs in ~2 weeks).
+    # The lines also carry the mg_token query parameter. Warnings/errors
+    # from the proxy itself still log normally.
+    web.run_app(make_app(), host=LISTEN_HOST, port=LISTEN_PORT, access_log=None)
 
 
 if __name__ == "__main__":
