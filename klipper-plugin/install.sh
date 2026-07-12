@@ -86,6 +86,11 @@ KLIPPER_CFG_DIR="$PRINTER_DATA/config"
 MG_TIME_HOST="${MG_TIME_HOST:-https://www.cloudflare.com}"
 MG_CLOCK_MAX_SKEW=30   # seconds; the server's hard cutoff is 60
 
+# Skipped in LAN-only mode: the clock check exists solely so the *cloud*
+# auth rejects nothing as a replay. LAN-only has no cloud path, so this makes
+# LAN-only a genuinely zero-external-call install. Guard body left un-indented
+# to keep the htpdate systemd heredocs byte-for-byte identical.
+if [[ -z "$MOONGATE_LAN_ONLY" ]]; then
 info "Checking the system clock (remote auth needs it within 60s of real time)..."
 MG_HTTP_DATE=$(curl -fsSI -k --max-time 10 "$MG_TIME_HOST" 2>/dev/null \
                | grep -i '^date:' | head -n1 | cut -d' ' -f2- || true)
@@ -148,6 +153,7 @@ UNIT
         fi
     fi
 fi
+fi  # end LAN-only clock-check guard
 
 ARCH=$(uname -m)
 
