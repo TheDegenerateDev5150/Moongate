@@ -236,6 +236,23 @@ Tapping **Update** downloads the new version inside the app, then hands it to An
 
 If the download or install fails for any reason, Moongate **falls back to opening the APK in your browser** - finish there and open it to install. Either route installs **in place** over your existing app (same signing key), so your printers and settings are kept.
 
+## An amber update icon appeared on a printer's tile
+
+That printer's **Moongate Pi plugin is older than the one this app version shipped with** (v0.9.50+). It's a reminder, not an error - the printer keeps working - and it stays until the plugin is updated, then clears by itself on the next status refresh.
+
+Tap the icon:
+
+- On plugins **0.6.16 or newer** you get an **Update now** button - one tap and the printer fetches and applies the update itself in the background (about a minute). The button is greyed out while that printer is **mid-print**; update after the print finishes.
+- On **older plugins** the dialog points you at the printer's web interface instead: **Mainsail (or Fluidd) → Software Updates → Moongate → Update**. After that first manual update the one-tap path is available forever.
+
+If a one-tap update doesn't seem to take (the icon never clears), do it once from Mainsail's Software Updates panel - the usual cause is a hand-installed plugin that Moonraker's update manager doesn't know about.
+
+## The Klipper console says the printer was released and "cloud contact is paused"
+
+This appears when the printer's cloud registration is gone - usually because the printer was **removed in the app** (or the record was reset). Rather than checking in every few minutes forever, the plugin (0.6.15+) goes quiet and waits. **Nothing about the printer itself is affected** - printing, Mainsail, and LAN use all keep working.
+
+To reconnect it to the app, just run **`MOONGATE_PAIR`** in the Klipper console and pair as normal - pairing instantly wakes the plugin, no restart or reinstall needed.
+
 ## QR scan won't work / camera fails
 
 - Grant camera permission when prompted, or via **Settings → Apps → Moongate → Permissions → Camera**.
