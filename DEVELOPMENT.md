@@ -330,7 +330,9 @@ In-app, users running an older version will see the update banner appear within 
 
 ### Plugin version (Pi side)
 
-The version shown in Mainsail's **Software Update** panel is derived from the repo's git **tags** - the same `vX.Y.Z` release tags CI creates - not from a number the plugin sets, so the panel tracks the project release with nothing extra to bump. (The plugin *does* define a `MOONGATE_PLUGIN_VERSION` constant, but it's reported only in **bug-report diagnostics** to pin down the exact plugin build; it doesn't drive the update panel.)
+The version shown in Mainsail's **Software Update** panel is derived from the repo's git **tags** - the same `vX.Y.Z` release tags CI creates - not from a number the plugin sets, so the panel tracks the project release with nothing extra to bump. The plugin *does* define a `MOONGATE_PLUGIN_VERSION` constant, reported in its `/status` reply: it pins down the exact plugin build in **bug-report diagnostics**, and since v0.9.50 it also drives the dashboard's **plugin-update badge** - the app compares it against `kCurrentPluginVersion` in [`mobile/lib/config/plugin_version.dart`](mobile/lib/config/plugin_version.dart).
+
+> **Rule: bump `kCurrentPluginVersion` in the SAME PR as any `MOONGATE_PLUGIN_VERSION` bump.** The two travel together in a release; if they drift, the app either nags about a plugin that doesn't exist yet or fails to nag about one that does.
 
 For this to work the Pi's clone must carry tags. `install.sh` uses a **blobless** clone (`git clone --filter=blob:none`) - full ref/tag history, but without the large historical APK blobs - and converts any old shallow (`--depth=1`) clone on re-run. A shallow clone shows `v0.0.0-…-inferred` instead; see [TROUBLESHOOTING.md](TROUBLESHOOTING.md#software-update-panel-shows-an-inferred-version-for-moongate).
 
