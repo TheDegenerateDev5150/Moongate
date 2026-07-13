@@ -655,6 +655,39 @@ class AppLocalizationsPl extends AppLocalizations {
       'Otwórz przewodnik szybkiego startu';
 
   @override
+  String get pluginUpdateTooltip => 'Dostępna aktualizacja wtyczki';
+
+  @override
+  String get pluginUpdateTitle => 'Dostępna aktualizacja wtyczki';
+
+  @override
+  String pluginUpdateBody(String current, String latest) {
+    return 'Ta drukarka używa wtyczki Moongate $current. Dostępna jest wersja $latest.';
+  }
+
+  @override
+  String get pluginUpdateVersionUnknown => 'stara wersja';
+
+  @override
+  String get pluginUpdateNow => 'Aktualizuj teraz';
+
+  @override
+  String get pluginUpdateManual =>
+      'Tej wersji wtyczki nie można jeszcze zaktualizować z aplikacji. W interfejsie WWW drukarki: Mainsail (lub Fluidd) → Software Updates → Moongate → Update.';
+
+  @override
+  String get pluginUpdateBusyPrinting =>
+      'Ta drukarka właśnie drukuje. Zaktualizuj po zakończeniu wydruku.';
+
+  @override
+  String get pluginUpdateStarted =>
+      'Aktualizacja rozpoczęta. Działa w tle na drukarce - ikona zniknie po zakończeniu (około minuty).';
+
+  @override
+  String get pluginUpdateFailed =>
+      'Nie udało się rozpocząć aktualizacji. Użyj interfejsu WWW drukarki: Software Updates → Moongate → Update.';
+
+  @override
   String get dashboardPairingHelpPairOnceTitle => 'Sparuj raz';
 
   @override

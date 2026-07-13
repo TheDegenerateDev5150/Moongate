@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.50",
+    "bullets": [
+      "The dashboard now tells you when a printer's Moongate plugin is out of date: a small amber update icon appears on that machine's camera box (or next to the power button on compact tiles) and stays until the plugin is updated - it disappears by itself the moment the printer reports the new version.",
+      "Tap the icon and, on plugins from 0.6.16 onward, one tap updates the plugin straight from your phone - the printer fetches and applies it in the background. Older plugins get pointed at Mainsail's Software Updates panel instead (they predate the one-tap path; after this update they have it). Machines that are mid-print are left alone until the print finishes.",
+      "Not app-only: update the Moongate plugin (0.6.16) from Moonraker's update panel to give your printers the one-tap update path."
+    ]
+  },
+  {
     "version": "v0.9.49",
     "bullets": [
       "The \"How pairing works\" pop-up finally stops re-appearing on every launch: its \"Don't show this again\" tick was hiding at the bottom of the scrolling text where most phones never showed it - it now sits right above the OK button. The notice also now tells you the one thing to do after installing the plugin: run the MOONGATE_PAIR macro on the printer (or type it in the Mainsail/Fluidd console) to get your pairing code or QR link.",

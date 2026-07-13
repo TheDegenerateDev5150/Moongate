@@ -655,6 +655,39 @@ class AppLocalizationsRu extends AppLocalizations {
       'Открыть руководство по быстрому старту';
 
   @override
+  String get pluginUpdateTooltip => 'Доступно обновление плагина';
+
+  @override
+  String get pluginUpdateTitle => 'Доступно обновление плагина';
+
+  @override
+  String pluginUpdateBody(String current, String latest) {
+    return 'На этом принтере работает плагин Moongate $current. Доступна версия $latest.';
+  }
+
+  @override
+  String get pluginUpdateVersionUnknown => 'старая версия';
+
+  @override
+  String get pluginUpdateNow => 'Обновить сейчас';
+
+  @override
+  String get pluginUpdateManual =>
+      'Эту версию плагина пока нельзя обновить из приложения. В веб-интерфейсе принтера: Mainsail (или Fluidd) → Software Updates → Moongate → Update.';
+
+  @override
+  String get pluginUpdateBusyPrinting =>
+      'Принтер сейчас печатает. Обновите после завершения печати.';
+
+  @override
+  String get pluginUpdateStarted =>
+      'Обновление запущено. Оно выполняется на принтере в фоне - значок исчезнет после завершения (около минуты).';
+
+  @override
+  String get pluginUpdateFailed =>
+      'Не удалось запустить обновление. Используйте веб-интерфейс принтера: Software Updates → Moongate → Update.';
+
+  @override
   String get dashboardPairingHelpPairOnceTitle => 'Сопряжение - один раз';
 
   @override

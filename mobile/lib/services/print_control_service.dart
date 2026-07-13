@@ -81,6 +81,14 @@ class PrintControlService {
                  timeout: const Duration(seconds: 10));
   }
 
+  /// Ask the plugin to update itself via Moonraker's update manager
+  /// (plugin 0.6.16+, advertised as `plugin_can_self_update` in /status).
+  /// Returns true when the printer ACCEPTED the request - the update itself
+  /// runs on the Pi in the background and ends in a Moonraker restart, so
+  /// completion is observed by the tile's normal /status polls reporting the
+  /// new plugin_version (which clears the update badge by itself).
+  Future<bool> updatePlugin() => sendAction('update_plugin');
+
   Future<bool> _send(
     String baseUrl,
     String token,

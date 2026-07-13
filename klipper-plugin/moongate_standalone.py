@@ -63,7 +63,7 @@ logger = logging.getLogger("moonraker.moongate")
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running - the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.15"
+MOONGATE_PLUGIN_VERSION = "0.6.16"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1522,6 +1522,10 @@ class MoongatePlugin:
         result["local_ip"]   = _get_local_ip()
         result["http_port"]  = self.http_port
         result["plugin_version"] = MOONGATE_PLUGIN_VERSION
+        # v0.6.16: advertises the remote self-update action, so the app's
+        # update dialog knows to offer one-tap "Update now" instead of the
+        # Mainsail instructions it shows for older plugins.
+        result["plugin_can_self_update"] = True
 
         webcam = await self._get_webcam_info(client)
         result["webcam_snapshot_path"]   = webcam["snapshot_path"]
@@ -1543,6 +1547,13 @@ class MoongatePlugin:
 
         args   = webrequest.get_args()
         action = str(args.get("action", "")).strip()
+        # v0.6.16: one-tap plugin self-update (the app's dashboard badge).
+        # Not part of the pass-through map below because it talks to the
+        # update manager and must not wait for completion - Moonraker
+        # restarts at the end of the update, which would kill a waited-on
+        # response anyway.
+        if action == "update_plugin":
+            return await self._handle_update_plugin()
         action_map = {
             "pause":             "/printer/print/pause",
             "resume":            "/printer/print/resume",
@@ -1571,6 +1582,56 @@ class MoongatePlugin:
                 f"Moonraker returned HTTP {resp.code} for '{action}'", 502
             )
         return {"action": action, "ok": True}
+
+    async def _handle_update_plugin(self) -> dict:
+        """One-tap plugin self-update (v0.6.16, driven by the app's dashboard
+        update badge; caller already authenticated by _handle_control).
+
+        Refuses while a print is running or paused: the update ends in a
+        Moonraker restart, and although Klipper keeps printing through one,
+        there is no reason to gamble mid-print.
+
+        Fires Moonraker's own update manager - POST
+        /machine/update/client?name=moongate, the same route used to update
+        the RatRig remotely on 2026-07-10 (the plain /machine/update/update
+        404s on Moonraker v0.10) - and returns immediately: waiting would be
+        pointless because the restart kills the connection anyway. The app
+        watches plugin_version on its normal /status polls to see the update
+        land, which is also what clears its badge."""
+        from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+
+        state = None
+        try:
+            client = AsyncHTTPClient()
+            resp = await client.fetch(HTTPRequest(
+                "http://127.0.0.1:7125/printer/objects/query?print_stats",
+                method="GET", request_timeout=3.0,
+            ), raise_error=False)
+            if resp.code == 200:
+                ps = json.loads(resp.body).get("result", {}).get("status", {})
+                state = (ps.get("print_stats") or {}).get("state")
+        except Exception as exc:
+            # Klipper down or slow is fine - an update can't hurt an idle
+            # stack, so only a POSITIVE "printing" answer blocks.
+            logger.debug("update_plugin print-state check skipped: %s", exc)
+        if state in ("printing", "paused"):
+            raise self.server.error(
+                "Printer is mid-print - update after it finishes", 409)
+
+        async def _fire() -> None:
+            try:
+                resp = await AsyncHTTPClient().fetch(HTTPRequest(
+                    "http://127.0.0.1:7125/machine/update/client?name=moongate",
+                    method="POST", body=b"", request_timeout=300.0,
+                ), raise_error=False)
+                logger.info("Plugin self-update finished: HTTP %s", resp.code)
+            except Exception as exc:
+                # Expected when the update restarts Moonraker mid-request.
+                logger.info("Plugin self-update request ended: %s", exc)
+
+        asyncio.get_event_loop().create_task(_fire())
+        logger.info("Plugin self-update started from the app")
+        return {"update": "started", "ok": True}
 
     async def _handle_reset_owner(self, webrequest: Any) -> dict:
         """LAN-only owner reset (no token required by design; LAN access is

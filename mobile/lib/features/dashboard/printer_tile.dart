@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../config/plugin_version.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/printer_config.dart';
 import '../../providers/custom_theme_provider.dart';
@@ -655,6 +656,19 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Plugin-update badge (v0.9.50): leads the cluster and
+                        // shows ONLY while this printer reports a Moongate
+                        // plugin older than the one this app shipped with. It
+                        // clears itself the moment a poll reports the new
+                        // version - persistent until then by design.
+                        if (_status.connection != PrinterConnection.offline &&
+                            pluginVersionIsOutdated(_status.pluginVersion)) ...[
+                          _PluginUpdateButton(
+                            printer: widget.printer,
+                            status: _status,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
                         _CameraConfigButton(
                           printer: widget.printer,
                           onApplied: _statusService.pollNow,
@@ -886,6 +900,17 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                             status: _status,
                             onSurface: true,
                           ),
+                          // Plugin-update badge - compact tiles have no webcam
+                          // box to host it, so it joins the name row like the
+                          // power button does. Same visibility rule as the
+                          // full tile's corner badge.
+                          if (_status.connection != PrinterConnection.offline &&
+                              pluginVersionIsOutdated(_status.pluginVersion))
+                            _PluginUpdateButton(
+                              printer: widget.printer,
+                              status: _status,
+                              onSurface: true,
+                            ),
                           Expanded(
                             child: Text(
                               widget.printer.name,
@@ -1795,6 +1820,140 @@ class _CameraExpandButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Plugin-update badge ──────────────────────────────────────────────────────
+//
+// An amber update arrow shown ONLY while this printer reports a Moongate
+// plugin older than the one this app shipped with ([kCurrentPluginVersion]).
+// Deliberately persistent - it clears itself the moment a poll reports the new
+// version, and nagging until then is the point: an out-of-date fleet is what
+// let the 2026-06/07 Edge-Function quota spinners run for weeks. Tapping opens
+// a dialog that one-tap updates a 0.6.16+ plugin through Moonraker's update
+// manager, or shows the Mainsail route for older plugins that predate the
+// remote-update action. The one-tap path is refused while the printer is
+// mid-print (the update restarts Moonraker; not worth the gamble).
+
+class _PluginUpdateButton extends StatelessWidget {
+  final PrinterConfig printer;
+  final PrinterStatus status;
+
+  /// True on the compact tile's name row (plain surface icon, no dark chip) -
+  /// same convention as [_PowerButton.onSurface].
+  final bool onSurface;
+
+  const _PluginUpdateButton({
+    required this.printer,
+    required this.status,
+    this.onSurface = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final icon = Icon(
+      Icons.system_update_alt,
+      size: 18,
+      color: onSurface ? Colors.amber.shade700 : Colors.amber,
+    );
+    if (onSurface) {
+      return Tooltip(
+        message: l.pluginUpdateTooltip,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: InkWell(
+            onTap: () => _showDialog(context),
+            onLongPress: () {}, // swallow - stays out of the preheat gesture
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(padding: const EdgeInsets.all(2), child: icon),
+          ),
+        ),
+      );
+    }
+    return Tooltip(
+      message: l.pluginUpdateTooltip,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.38),
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _showDialog(context),
+          child: Padding(padding: const EdgeInsets.all(5), child: icon),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showDialog(BuildContext context) async {
+    final l = AppLocalizations.of(context);
+    final current = status.pluginVersion ?? l.pluginUpdateVersionUnknown;
+    // Capability + print-state are captured at dialog-open time; both are
+    // fresh (they ride every status poll).
+    final canPush  = status.pluginCanSelfUpdate;
+    final printing = status.isPrinting;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.system_update_alt, color: Colors.amber.shade700, size: 22),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l.pluginUpdateTitle)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.pluginUpdateBody(current, kCurrentPluginVersion)),
+            if (!canPush) ...[
+              const SizedBox(height: 10),
+              Text(
+                l.pluginUpdateManual,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ] else if (printing) ...[
+              const SizedBox(height: 10),
+              Text(
+                l.pluginUpdateBusyPrinting,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.commonOk),
+          ),
+          if (canPush && !printing)
+            FilledButton.icon(
+              icon: const Icon(Icons.system_update_alt, size: 18),
+              label: Text(l.pluginUpdateNow),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                final messenger = ScaffoldMessenger.of(context);
+                final ok =
+                    await PrintControlService(printer).updatePlugin();
+                messenger.showSnackBar(SnackBar(
+                  content: Text(
+                      ok ? l.pluginUpdateStarted : l.pluginUpdateFailed),
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 4),
+                ));
+              },
+            ),
+        ],
       ),
     );
   }

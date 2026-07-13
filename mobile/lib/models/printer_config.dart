@@ -417,6 +417,17 @@ class PrinterStatus {
   /// The tile swaps the E-STOP triangle for a firmware-restart button then.
   final bool klippyShutdown;
 
+  /// The Moongate Pi-plugin version this printer reported on the poll
+  /// (`plugin_version` in /status, present from plugin 0.6.4). Null = this
+  /// poll didn't come through the plugin path, or a pre-0.6.4 plugin. Drives
+  /// the tile's plugin-update badge via `pluginVersionIsOutdated`.
+  final String? pluginVersion;
+
+  /// True when the plugin advertises the remote self-update action
+  /// (`plugin_can_self_update` in /status, plugin 0.6.16+). The update dialog
+  /// then offers one-tap "Update now" instead of Mainsail instructions.
+  final bool pluginCanSelfUpdate;
+
   const PrinterStatus({
     required this.state,
     required this.progress,
@@ -438,6 +449,8 @@ class PrinterStatus {
     this.webcamIsExternal = false,
     this.lightOn,
     this.klippyShutdown = false,
+    this.pluginVersion,
+    this.pluginCanSelfUpdate = false,
   });
 
   bool get isPrinting => state == 'printing' || state == 'paused';
@@ -467,6 +480,8 @@ class PrinterStatus {
     bool? webcamIsExternal,
     bool? lightOn,
     bool? klippyShutdown,
+    String? pluginVersion,
+    bool? pluginCanSelfUpdate,
   }) {
     return PrinterStatus(
       state:            state ?? this.state,
@@ -489,6 +504,8 @@ class PrinterStatus {
       webcamIsExternal: webcamIsExternal ?? this.webcamIsExternal,
       lightOn:          lightOn ?? this.lightOn,
       klippyShutdown:   klippyShutdown ?? this.klippyShutdown,
+      pluginVersion:    pluginVersion ?? this.pluginVersion,
+      pluginCanSelfUpdate: pluginCanSelfUpdate ?? this.pluginCanSelfUpdate,
     );
   }
 

@@ -621,6 +621,37 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardPairingHelpPluginAction => '打开快速入门指南';
 
   @override
+  String get pluginUpdateTooltip => '插件有可用更新';
+
+  @override
+  String get pluginUpdateTitle => '插件有可用更新';
+
+  @override
+  String pluginUpdateBody(String current, String latest) {
+    return '这台打印机运行的是 Moongate 插件 $current，现已有 $latest 版本可用。';
+  }
+
+  @override
+  String get pluginUpdateVersionUnknown => '旧版本';
+
+  @override
+  String get pluginUpdateNow => '立即更新';
+
+  @override
+  String get pluginUpdateManual =>
+      '此插件版本暂不支持从应用内更新。请在打印机的网页界面操作：Mainsail（或 Fluidd）→ Software Updates → Moongate → Update。';
+
+  @override
+  String get pluginUpdateBusyPrinting => '这台打印机正在打印，请等打印完成后再更新。';
+
+  @override
+  String get pluginUpdateStarted => '更新已开始，将在打印机上后台运行 - 完成后该图标会自动消失（约一分钟）。';
+
+  @override
+  String get pluginUpdateFailed =>
+      '无法启动更新。请使用打印机的网页界面：Software Updates → Moongate → Update。';
+
+  @override
   String get dashboardPairingHelpPairOnceTitle => '只需配对一次';
 
   @override
