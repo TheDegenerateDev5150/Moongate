@@ -135,6 +135,35 @@ class _PrinterScreenState extends State<PrinterScreen>
       return;
     }
 
+    // Cloudless LAN-only printer: load Mainsail straight from the LAN. No
+    // Supabase access, no EdDSA cookie - the Pi serves nginx/Moonraker on the
+    // LAN directly.
+    if (widget.printer.lanOnly) {
+      setState(() { _loading = true; _errorMsg = null; });
+      final lanUrl = widget.printer.lanUrl;
+      if (lanUrl == null || !await _isLanReachable(lanUrl)) {
+        if (!mounted) return;
+        setState(() { _loading = false; _errorMsg = l.printerLocalOnlyNoLan; });
+        return;
+      }
+      if (!mounted) return;
+      _usingLan  = true;
+      _tunnelUrl = null;
+      _initControllerIfNeeded();
+      await _webController!.loadRequest(Uri.parse('$lanUrl/'));
+      PrinterWebViewCache.instance.store(
+        widget.printer.id,
+        LiveWebSession(
+          controller: _webController!,
+          baseUrl:    lanUrl,
+          usingLan:   true,
+          tunnelUrl:  null,
+        ),
+      );
+      _maybeShowCameraHint();
+      return;
+    }
+
     setState(() { _loading = true; _errorMsg = null; });
     try {
       final access = await PrinterAccessCache.instance.get(widget.printer.id);

@@ -252,6 +252,13 @@ class PrinterStatusService {
   }
 
   Future<void> _doPoll() async {
+    // Cloudless LAN-only printer: no Supabase, no tunnel. Poll the plugin over
+    // the LAN with an empty token (the lan_only plugin skips auth) and reuse
+    // the exact same /status parsing as the cloud path.
+    if (config.lanOnly) {
+      await _doPollLanOnly();
+      return;
+    }
     _firstPollAt ??= DateTime.now();
     _pollDiag = {};
     if (!SupabaseService.instance.ready) {
@@ -438,6 +445,36 @@ class PrinterStatusService {
             : PrinterStatus.offline,
       );
     }
+  }
+
+  // ── LAN-only (cloudless) poll ────────────────────────────────────────────
+  // A printer added from a `moongate://lan` QR has no Supabase row and no
+  // tunnel. We hit the plugin's /status directly on the LAN with an empty
+  // token; the lan_only plugin trusts the LAN and skips the EdDSA check, so the
+  // response (and all the supplementary LAN queries, which already send no auth
+  // header) come back exactly as on the cloud LAN path. No Edge calls, ever.
+  Future<void> _doPollLanOnly() async {
+    _firstPollAt ??= DateTime.now();
+    _pollDiag = {};
+    final lanUrl = _currentLanUrl;
+    if (lanUrl == null) {
+      if (!_disposed) _controller.add(PrinterStatus.offline);
+      return;
+    }
+    final access = PrinterAccess(
+      tunnelUrl:   null,
+      accessToken: '',
+      expiresAt:   DateTime.now().add(const Duration(days: 365)),
+    );
+    _lastEndpointReason = null;
+    final status = await _tryMoongateEndpoint(
+        baseUrl: lanUrl, access: access, isLan: true, tunnelReady: false);
+    _recordPollDiag({
+      'lan_only':   true,
+      'lan_url':    lanUrl,
+      'lan_status': _lastEndpointReason ?? 'unknown',
+    });
+    if (!_disposed) _controller.add(status ?? PrinterStatus.offline);
   }
 
   // ── Reachability probe ───────────────────────────────────────────────────
