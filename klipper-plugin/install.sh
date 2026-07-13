@@ -53,6 +53,11 @@ done
 [[ "$MOONGATE_PORT" -ge 1 && "$MOONGATE_PORT" -le 65535 ]] \
     || die "Port out of range (1-65535): $MOONGATE_PORT"
 info "HTTP port: $MOONGATE_PORT"
+
+# Normalise to "1" (on) or "" (off) so MOONGATE_LAN_ONLY=0 opts OUT - matches
+# how uninstall.sh treats MOONGATE_YES. --lan-only above already set it to 1.
+# Every check below is an emptiness test, so "" reliably means tunnel mode.
+[[ "$MOONGATE_LAN_ONLY" == "1" ]] && MOONGATE_LAN_ONLY=1 || MOONGATE_LAN_ONLY=""
 [[ -n "$MOONGATE_LAN_ONLY" ]] \
     && info "LAN-only mode: no Cloudflare tunnel or auth proxy will be installed."
 
@@ -86,10 +91,11 @@ KLIPPER_CFG_DIR="$PRINTER_DATA/config"
 MG_TIME_HOST="${MG_TIME_HOST:-https://www.cloudflare.com}"
 MG_CLOCK_MAX_SKEW=30   # seconds; the server's hard cutoff is 60
 
-# Skipped in LAN-only mode: the clock check exists solely so the *cloud*
-# auth rejects nothing as a replay. LAN-only has no cloud path, so this makes
-# LAN-only a genuinely zero-external-call install. Guard body left un-indented
-# to keep the htpdate systemd heredocs byte-for-byte identical.
+# Skipped in LAN-only mode: this check (and the htpdate timer it can install)
+# exists solely to keep the *cloud* auth from rejecting signed heartbeats as
+# replays. LAN-only has no tunnel, so we skip the check and never stand up the
+# recurring htpdate timer. Guard body left un-indented to keep the htpdate
+# systemd heredocs byte-for-byte identical.
 if [[ -z "$MOONGATE_LAN_ONLY" ]]; then
 info "Checking the system clock (remote auth needs it within 60s of real time)..."
 MG_HTTP_DATE=$(curl -fsSI -k --max-time 10 "$MG_TIME_HOST" 2>/dev/null \
@@ -319,29 +325,39 @@ backup_once() {
 # via the Pi's local IP is unchanged because moonraker's `trusted_clients`
 # still allows the LAN subnet.
 #
-# LAN-only mode: bind to 0.0.0.0 so Moonraker stays reachable on the LAN / the
-# user's own VPN (there is no tunnel or auth proxy to front it). Setting it
-# explicitly also restores LAN access if a prior full install locked it to
-# loopback.
+# LAN-only mode: keep Moonraker reachable on the LAN / the user's own VPN
+# (there is no tunnel or auth proxy to front it). We only ever flip an explicit
+# `host: 127.0.0.1` (our own prior full install) back to 0.0.0.0 - we do NOT
+# append a host line where none exists (Moonraker already defaults to all
+# interfaces) and we do NOT overwrite a deliberate bind such as a WireGuard-
+# only interface IP. Default (tunnel) mode still force-sets 127.0.0.1.
 if [[ -n "$MOONGATE_LAN_ONLY" ]]; then
     MG_MOONRAKER_HOST="0.0.0.0"
-    info "Binding Moonraker to 0.0.0.0 (LAN-only mode)..."
+    MG_HOST_ONLY_IF_LOOPBACK=1
+    info "Ensuring Moonraker stays reachable on the LAN (LAN-only mode)..."
 else
     MG_MOONRAKER_HOST="127.0.0.1"
+    MG_HOST_ONLY_IF_LOOPBACK=""
     info "Binding Moonraker to 127.0.0.1 (v0.4 hardening)..."
 fi
 backup_once "$MOONRAKER_CONF" "moonraker.conf.orig"
 
-python3 - "$MOONRAKER_CONF" "$MG_MOONRAKER_HOST" << 'PYEOF'
+python3 - "$MOONRAKER_CONF" "$MG_MOONRAKER_HOST" "$MG_HOST_ONLY_IF_LOOPBACK" << 'PYEOF'
 import re, sys
 path = sys.argv[1]
 host = sys.argv[2]
+only_if_loopback = sys.argv[3] == "1"   # LAN-only: only touch host: 127.0.0.1
 with open(path) as f:
     content = f.read()
 
 # Find or create the [server] section.
 server_match = re.search(r'(?m)^\[server\]\s*$', content)
 if not server_match:
+    if only_if_loopback:
+        # LAN-only: no [server] block -> Moonraker binds all interfaces by
+        # default, which is already LAN-reachable. Nothing to change.
+        print("moonraker.conf: no [server] block - left as-is (LAN-only)")
+        sys.exit(0)
     # No [server] block at all - append one with our settings.
     content = content.rstrip() + f"\n\n[server]\nhost: {host}\nport: 7125\n"
 else:
@@ -351,7 +367,13 @@ else:
     end = start + next_section.start() if next_section else len(content)
     section = content[start:end]
 
-    if re.search(r'(?m)^\s*host\s*[:=]', section):
+    host_match = re.search(r'(?m)^\s*host\s*[:=]\s*(\S+)', section)
+    if host_match:
+        current = host_match.group(1)
+        if only_if_loopback and current != "127.0.0.1":
+            # LAN-only: leave a deliberate bind (e.g. a WireGuard IP) alone.
+            print(f"moonraker.conf: [server] host={current} - left as-is (LAN-only)")
+            sys.exit(0)
         # host: already set - force to our target host.
         new_section = re.sub(
             r'(?m)^(\s*host\s*[:=]\s*).*$',
@@ -360,6 +382,10 @@ else:
             count=1,
         )
     else:
+        if only_if_loopback:
+            # LAN-only: no host line -> default (all interfaces). Leave it.
+            print("moonraker.conf: [server] has no host - left as-is (LAN-only)")
+            sys.exit(0)
         # No host: line in [server] - inject one right after the header.
         new_section = f"\nhost: {host}" + section
 
@@ -369,7 +395,11 @@ with open(path, 'w') as f:
     f.write(content)
 print(f"moonraker.conf: [server] host={host}")
 PYEOF
-success "Moonraker bound to $MG_MOONRAKER_HOST"
+if [[ -n "$MOONGATE_LAN_ONLY" ]]; then
+    success "Moonraker [server] host ready for LAN access."
+else
+    success "Moonraker bound to 127.0.0.1"
+fi
 
 # NOTE: We intentionally do NOT patch nginx vhosts in v0.4.0. The original
 # v0.4 design considered binding nginx to 127.0.0.1 (defense in depth), but
@@ -726,16 +756,31 @@ success "moongate-tunnel service started"
 else
     # ── LAN-only: retire any tunnel stack from a prior full install ──────────
     # Converts an existing tunnel-mode box to LAN-only: stop + disable the
-    # tunnel and auth proxy and kill any orphan cloudflared. Moonraker was
-    # already rebound to 0.0.0.0 in §2e, so LAN access keeps working.
-    for svc in moongate-tunnel moongate-authproxy; do
-        if systemctl list-unit-files "$svc.service" &>/dev/null \
-           && systemctl cat "$svc.service" &>/dev/null; then
-            sudo systemctl disable --now "$svc" 2>/dev/null || true
-            info "Disabled $svc (LAN-only mode)"
+    # tunnel, auth proxy, and the htpdate time-sync timer (that one calls out
+    # every 30 min, so leaving it would defeat the no-external-traffic point).
+    # Moonraker was already rebound in §2e, so LAN access keeps working.
+    MG_RETIRED_TUNNEL=""
+    for unit in moongate-tunnel.service moongate-authproxy.service moongate-timesync.timer; do
+        if systemctl list-unit-files "$unit" &>/dev/null \
+           && systemctl cat "$unit" &>/dev/null; then
+            sudo systemctl disable --now "$unit" 2>/dev/null || true
+            info "Disabled $unit (LAN-only mode)"
+            [[ "$unit" == "moongate-tunnel.service" ]] && MG_RETIRED_TUNNEL=1
         fi
     done
-    pkill -f "cloudflared tunnel" 2>/dev/null || true
+
+    # Only clean up after OUR tunnel, and only if it existed. systemctl already
+    # stopped the managed process above; this catches a stray one from a crash
+    # or old run. The pattern is the exact moongate invocation so a user's own
+    # cloudflared (e.g. a Home Assistant tunnel) as the same user is left alone.
+    if [[ -n "$MG_RETIRED_TUNNEL" ]]; then
+        pkill -f "cloudflared tunnel --url http://localhost:$MG_AUTHPROXY_PORT" 2>/dev/null || true
+        # Drop the tunnel-URL logs: the plugin's _get_tunnel_url() reads these
+        # as a fallback, so a stale URL here would keep a paired printer
+        # heartbeating a dead tunnel to the server until the next reboot.
+        sudo rm -f /run/moongate-tunnel.log /tmp/moongate-tunnel.log
+        info "Cleared stale tunnel URL logs (LAN-only mode)"
+    fi
 fi
 
 # ── 7b. Avahi mDNS advertisement - sudoers + daemon (v0.4.4) ────────────────
