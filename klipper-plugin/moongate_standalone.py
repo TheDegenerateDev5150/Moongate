@@ -115,6 +115,11 @@ DEFAULT_CONFIG = {
     "heartbeat_interval_seconds": 300,   # 5 min
     "jwks_ttl_seconds":           3600,  # 1 hour
     "enrollment_ttl_seconds":     600,   # 10 min
+    # LAN-only mode: no cloud, no tunnel. Set true by install.sh --lan-only.
+    # Pairing becomes a cloud-free "add by LAN address" QR, and /status +
+    # /control skip the EdDSA token (LAN is trusted by subnet, exactly as
+    # Moonraker's own trusted_clients treats it). See _authenticate + _handle_qr.
+    "lan_only":                   False,
 }
 
 ACCESS_TOKEN_AUDIENCE = "moongate-printer"
@@ -360,6 +365,16 @@ class TokenClaims:
     exp:        int
     iat:        int
     jti:        str
+
+
+# Placeholder claims returned by _authenticate in LAN-only mode. The status and
+# control handlers only call _authenticate for its enforcement side-effect and
+# ignore the return, so the field values are never read - they just satisfy the
+# type. LAN-only has no owner/token concept.
+_LAN_ONLY_CLAIMS = TokenClaims(
+    sub="lan-only", printer_id="lan-only", aud=ACCESS_TOKEN_AUDIENCE,
+    iss=ACCESS_TOKEN_ISSUER, exp=0, iat=0, jti="lan-only",
+)
 
 
 class AccessTokenVerifier:
@@ -906,10 +921,15 @@ class MoongatePlugin:
         self.server.register_remote_method("moongate_generate_pair_code", self._klipper_pair)
         self.server.register_remote_method("moongate_reset_owner",        self._klipper_reset_owner)
 
-        # Bootstrap JWKS (best effort) and start the heartbeat + print-watch loops
-        self.jwks.fetch_now()
-        self.heartbeat.start()
-        self.watcher.start()
+        # Bootstrap JWKS (best effort) and start the heartbeat + print-watch loops.
+        # LAN-only mode has no cloud: skip all of it so the plugin makes zero
+        # outbound calls (no Supabase JWKS fetch, no heartbeat, no print-event push).
+        if not self.lan_only:
+            self.jwks.fetch_now()
+            self.heartbeat.start()
+            self.watcher.start()
+        else:
+            logger.info("Moongate LAN-only mode: cloud loops disabled (no tunnel, no Supabase).")
 
         owner_str = (
             f"{self.owner.owner_user_id[:8]}.../{self.owner.printer_id[:8]}..."
@@ -945,6 +965,10 @@ class MoongatePlugin:
         except (TypeError, ValueError):
             return 80
 
+    @property
+    def lan_only(self) -> bool:
+        return bool(self._config.get("lan_only", False))
+
     # ── Pairing ───────────────────────────────────────────────────────────────
 
     @staticmethod
@@ -953,7 +977,41 @@ class MoongatePlugin:
         part2 = "".join(random.choices(CODE_CHARS, k=4))
         return f"GATE-{part1}-{part2}"
 
+    def _lan_qr_payload(self) -> Optional[str]:
+        """LAN-only QR: ``moongate://lan?v=1&ip=<lan-ip>&port=<http-port>&name=<host>``.
+
+        No cloud, no enrollment token - it just tells the app to add this
+        printer by its LAN address and talk to Moonraker directly. Static (the
+        IP/port), so it needs no pairing session and never expires. Returns
+        None only if the Pi's LAN IP can't be determined."""
+        import socket
+        local_ip = _get_local_ip()
+        if not local_ip or local_ip == "localhost":
+            return None
+        params = {"v": "1", "ip": local_ip, "port": str(self.http_port)}
+        try:
+            host = socket.gethostname()
+        except Exception:
+            host = ""
+        if host:
+            params["name"] = host
+        return "moongate://lan?" + urllib.parse.urlencode(params)
+
     def _start_pairing(self) -> Optional[PendingPair]:
+        if self.lan_only:
+            # LAN-only: no Supabase enrollment. The QR carries only the LAN
+            # address; the app adds the printer directly and talks to Moonraker
+            # over the LAN (no owner binding, no tunnel).
+            qr = self._lan_qr_payload()
+            if qr is None:
+                logger.error("LAN-only pair: could not determine the Pi's LAN IP")
+                return None
+            pending = PendingPair(
+                raw_token="", expires_at=time.time() + 3600, qr_payload=qr,
+            )
+            self._pending = pending
+            return pending
+
         raw  = self._generate_enrollment_token()
         hash_b64 = _b64std(hashlib.sha256(raw.encode()).digest())
 
@@ -993,6 +1051,10 @@ class MoongatePlugin:
 
     async def _klipper_pair(self) -> None:
         """MOONGATE_PAIR macro entry point."""
+        if self.lan_only:
+            await self._klipper_pair_lan()
+            return
+
         pending = self._start_pairing()
         await asyncio.sleep(0.3)
 
@@ -1047,6 +1109,43 @@ class MoongatePlugin:
             ]
             script = "\n".join(lines)
 
+        try:
+            klippy_apis: Any = self.server.lookup_component("klippy_apis")
+            await klippy_apis.run_gcode(script)
+        except Exception as exc:
+            logger.error("run_gcode failed: %s", exc)
+
+    async def _klipper_pair_lan(self) -> None:
+        """MOONGATE_PAIR in LAN-only mode: no cloud, no GATE code. Print the
+        pair-page URL (scan the QR) and the direct LAN address (manual add)."""
+        local_ip = _get_local_ip()
+        if not local_ip or local_ip == "localhost":
+            script = "\n".join([
+                "M118 ==========================================",
+                "M118 Moongate LAN-only: could not find the Pi's LAN IP.",
+                "M118 Check the network, then try MOONGATE_PAIR again.",
+                "M118 ==========================================",
+            ])
+        else:
+            port_sfx   = "" if self.http_port == 80 else f":{self.http_port}"
+            local_page = f"http://{local_ip}{port_sfx}/moongate-pair.html"
+            lan_addr   = f"http://{local_ip}{port_sfx}"
+            logger.info("MOONGATE LAN-only pair page: %s", local_page)
+            script = "\n".join([
+                "M118 ==========================================",
+                "M118 Moongate LAN-only (no tunnel, no cloud)",
+                "M118 ==========================================",
+                "M118 Option A - Scan the QR. Open this URL on a",
+                "M118 PC, tablet, or other phone:",
+                f"M118   {local_page}",
+                "M118 then scan it with the Moongate app",
+                "M118 (Add Printer > Scan QR code).",
+                "M118 ==========================================",
+                "M118 Option B - Add Printer > Advanced, enter:",
+                f"M118   {lan_addr}",
+                "M118 ==========================================",
+                "M118 Your phone must be on this LAN / your VPN.",
+            ])
         try:
             klippy_apis: Any = self.server.lookup_component("klippy_apis")
             await klippy_apis.run_gcode(script)
@@ -1216,6 +1315,14 @@ class MoongatePlugin:
         """Verify EdDSA token from ?mg_token= query param. Raises 401 on any
         failure. On first valid call when no owner is recorded, locks in the
         caller as the printer's permanent owner."""
+        # LAN-only mode: there is no cloud, so no EdDSA tokens exist. The plugin
+        # trusts the LAN exactly as Moonraker does - a request only reaches this
+        # endpoint after clearing Moonraker's own trusted_clients gate. No token,
+        # no owner binding. (_handle_status/_handle_control ignore the return, and
+        # _handle_reset_owner is already token-free by the same reasoning.)
+        if self.lan_only:
+            return _LAN_ONLY_CLAIMS
+
         args  = webrequest.get_args()
         token = args.get("mg_token", "")
         if not token:
@@ -1313,16 +1420,26 @@ class MoongatePlugin:
     async def _handle_pair(self, webrequest: Any) -> dict:
         pending = self._start_pairing()
         if pending is None:
-            raise self.server.error("Supabase /enroll-prepare unreachable", 502)
+            msg = ("Could not determine the Pi's LAN IP" if self.lan_only
+                   else "Supabase /enroll-prepare unreachable")
+            raise self.server.error(msg, 502)
         return {
             "code":               pending.raw_token,
             "qr_payload":         pending.qr_payload,
             "local_url":          f"http://{_get_local_ip()}:{self.http_port}",
-            "tunnel_url":         _get_tunnel_url(),
+            "tunnel_url":         None if self.lan_only else _get_tunnel_url(),
+            "lan_only":           self.lan_only,
             "expires_in_seconds": max(0, int(pending.expires_at - time.time())),
         }
 
     async def _handle_qr(self, webrequest: Any) -> dict:
+        # LAN-only: the QR is static (LAN address), so serve it directly - no
+        # pairing session required, the page shows it the moment it loads.
+        if self.lan_only:
+            qr = self._lan_qr_payload()
+            if qr is None:
+                raise self.server.error("Could not determine the Pi's LAN IP", 500)
+            return {"qr_url": qr, "tunnel_url": None, "lan_only": True}
         if self._pending is None or time.time() > self._pending.expires_at:
             raise self.server.error("No active pairing session. Run MOONGATE_PAIR first.", 404)
         return {
@@ -1331,6 +1448,15 @@ class MoongatePlugin:
         }
 
     async def _handle_pair_page(self, webrequest: Any) -> dict:
+        if self.lan_only:
+            return {
+                "qr_url":     self._lan_qr_payload(),
+                "tunnel_url": None,
+                "subdomain":  None,
+                "local_ip":   _get_local_ip(),
+                "ready":      True,
+                "lan_only":   True,
+            }
         tunnel_url = _get_tunnel_url()
         return {
             "qr_url":     self._pending.qr_payload if self._pending else None,
