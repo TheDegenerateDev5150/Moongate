@@ -25,11 +25,13 @@
 //   400 - malformed body
 //   401 - signature invalid OR timestamp out of window
 //   404 - no printer with this pi_public_key (Pi should treat as unpaired)
+//   410 - the owner deliberately released this printer (revoked_at tombstone,
+//         kept 1 week) - plugin 0.6.15 stops heartbeating immediately on this
 //   500 - internal
 
 import { handleCorsPreflight } from "../_shared/cors.ts";
 import {
-  emptyResponse, badRequest, unauthorized, notFound,
+  emptyResponse, badRequest, unauthorized, notFound, gone,
   methodNotAllowed, internalError,
 } from "../_shared/responses.ts";
 import { adminClient } from "../_shared/supabaseClients.ts";
@@ -37,6 +39,19 @@ import { encryptTunnelUrl, verifyEd25519, base64ToBytes } from "../_shared/crypt
 
 const REPLAY_WINDOW_SECONDS = 60;
 const MAX_TUNNEL_URL_LENGTH = 256;
+
+// MOONGATE_MUTED_IPS: comma-separated caller IPs whose ROWLESS heartbeats get
+// a 204 instead of 404/410. Surgical mute for an orphaned Pi spinning on an
+// old (pre-0.6.10) plugin, which treats any non-success as "keep retrying
+// fast" - it reads the 204 as success and settles to its steady cadence, no
+// owner cooperation needed. Only the rowless path is muted: a muted Pi that
+// re-pairs has a live row again and takes the normal 'ok' path, so a mute
+// never blocks a comeback. (Designed 2026-06-24 during the Schlonky spinner
+// hunt; built 2026-07-13 for the 87.122.x spinner.)
+const MUTED_IPS = new Set(
+  (Deno.env.get("MOONGATE_MUTED_IPS") ?? "")
+    .split(",").map((s) => s.trim()).filter((s) => s.length > 0),
+);
 
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
@@ -102,19 +117,26 @@ Deno.serve(async (req) => {
 
   // Update the printer row (lookup by pi_public_key)
   const db = adminClient();
-  const { data, error } = await db.rpc("record_heartbeat", {
+  const { data, error } = await db.rpc("record_heartbeat_v2", {
     p_pi_public_key:        piPubKey,
     p_tunnel_url_enc_b64:   ciphertextB64,
     p_tunnel_url_nonce_b64: nonceB64,
   });
 
   if (error) {
-    console.error("record_heartbeat rpc error", error);
+    console.error("record_heartbeat_v2 rpc error", error);
     return internalError();
   }
 
-  // record_heartbeat returns the printer_id (uuid) on success, null if no row
-  if (!data) return notFound();
+  // record_heartbeat_v2 answers 'ok' (row updated), 'revoked' (owner released
+  // this Pi; tombstone still present) or 'not_found' (no row at all).
+  if (data === "ok") return emptyResponse(204);
 
-  return emptyResponse(204);
+  // Rowless outcome. A muted spinner gets a calming 204 before anything else.
+  const callerIp = req.headers.get("cf-connecting-ip")
+                ?? req.headers.get("x-real-ip") ?? "";
+  if (MUTED_IPS.has(callerIp)) return emptyResponse(204);
+
+  if (data === "revoked") return gone("printer_released");
+  return notFound();
 });

@@ -29,6 +29,17 @@ export function forbidden(): Response {
   return jsonResponse({ error: "forbidden" }, 403);
 }
 
+// 410 deliberately DOES distinguish "deliberately released" from "never
+// existed" - the exception to the header rule above. Its one caller
+// (printer-heartbeat) verifies the requester's Ed25519 signature against the
+// claimed pi_public_key BEFORE the lookup, so a caller can only ever probe a
+// key whose private half it already holds - nothing about other users leaks.
+// The explicit answer is what lets plugin 0.6.15 stop heartbeating the moment
+// its owner releases it, instead of guessing at 404s for a day.
+export function gone(reason: string): Response {
+  return jsonResponse({ error: reason }, 410);
+}
+
 export function conflict(detail: string): Response {
   return jsonResponse({ error: "conflict", detail }, 409);
 }
