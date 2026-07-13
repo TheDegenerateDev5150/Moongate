@@ -1228,16 +1228,16 @@ abstract class AppLocalizations {
   /// **'First: install the Pi plugin'**
   String get dashboardPairingHelpPluginTitle;
 
-  /// Pairing-help item body telling first-time users to install the Pi plugin via the quick-start guide.
+  /// Pairing-help item body telling first-time users to install the Pi plugin and run MOONGATE_PAIR to get a pairing code.
   ///
   /// In en, this message translates to:
-  /// **'Moongate needs its plugin running on your Klipper printer before you can pair. If you haven\'t installed it yet, open the quick-start guide.'**
+  /// **'Moongate requires its plugin to be running on your Klipper printer before pairing. After installation, run the MOONGATE_PAIR macro (or enter it in the Mainsail/Fluidd console) to get a pairing code or URL for QR-code pairing.'**
   String get dashboardPairingHelpPluginBody;
 
   /// Button label that opens the GitHub quick-start guide.
   ///
   /// In en, this message translates to:
-  /// **'Open the setup guide'**
+  /// **'Open the quick-start guide here'**
   String get dashboardPairingHelpPluginAction;
 
   /// Pairing-help item title: pairing only needs to happen once.

@@ -652,10 +652,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpPluginBody =>
-      'Moongate necesita su complemento en tu impresora Klipper antes de poder emparejar. Si aún no lo has instalado, abre la guía de inicio rápido.';
+      'Moongate necesita que su complemento esté en ejecución en tu impresora Klipper antes de emparejar. Tras la instalación, ejecuta la macro MOONGATE_PAIR (o escríbela en la consola de Mainsail/Fluidd) para obtener un código de emparejamiento o una URL para emparejar con código QR.';
 
   @override
-  String get dashboardPairingHelpPluginAction => 'Abrir la guía';
+  String get dashboardPairingHelpPluginAction =>
+      'Abrir la guía de inicio rápido';
 
   @override
   String get dashboardPairingHelpPairOnceTitle => 'Vincula una vez';

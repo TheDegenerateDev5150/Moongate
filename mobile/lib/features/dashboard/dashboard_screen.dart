@@ -1738,92 +1738,103 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           content: ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 440, maxWidth: 360),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Prerequisite, called out first: the app cannot pair until
-                  // the Moongate plugin is running on the user's Klipper Pi.
-                  // Tinted to stand out, with a tappable link to the README
-                  // quick-start (install step 1).
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 14),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: cs.primaryContainer.withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+            // The "Don't show this again" tick lives OUTSIDE the scroll view,
+            // pinned above OK. It used to be the last item inside it, which
+            // put it below the fold on most phones - users never saw it,
+            // pressed OK, and got the dialog again every cold launch (Play
+            // Store report, 2026-07-13).
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.extension, color: cs.primary, size: 20),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
+                        // Prerequisite, called out first: the app cannot pair until
+                        // the Moongate plugin is running on the user's Klipper Pi.
+                        // Tinted to stand out, with a tappable link to the README
+                        // quick-start (install step 1).
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 14),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: cs.primaryContainer.withValues(alpha: 0.45),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(l.dashboardPairingHelpPluginTitle,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 2),
-                                  Text(l.dashboardPairingHelpPluginBody,
-                                      style: TextStyle(
-                                          fontSize: 13,
-                                          color: cs.onSurfaceVariant)),
+                                  Icon(Icons.extension, color: cs.primary, size: 20),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(l.dashboardPairingHelpPluginTitle,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 2),
+                                        Text(l.dashboardPairingHelpPluginBody,
+                                            style: TextStyle(
+                                                fontSize: 13,
+                                                color: cs.onSurfaceVariant)),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton.icon(
-                            onPressed: () => launchUrl(
-                              Uri.parse(
-                                  'https://github.com/PEEKYPAUL/Moongate#quick-start'),
-                              mode: LaunchMode.externalApplication,
-                            ),
-                            icon: const Icon(Icons.open_in_new, size: 16),
-                            label: Text(l.dashboardPairingHelpPluginAction),
-                            style: TextButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
-                              minimumSize: const Size(0, 32),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
+                              const SizedBox(height: 4),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed: () => launchUrl(
+                                    Uri.parse(
+                                        'https://github.com/PEEKYPAUL/Moongate#quick-start'),
+                                    mode: LaunchMode.externalApplication,
+                                  ),
+                                  icon: const Icon(Icons.open_in_new, size: 16),
+                                  label: Text(l.dashboardPairingHelpPluginAction),
+                                  style: TextButton.styleFrom(
+                                    padding:
+                                        const EdgeInsets.symmetric(horizontal: 8),
+                                    minimumSize: const Size(0, 32),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        _pairingHelpItem(ctx, Icons.qr_code_2, cs.primary,
+                            l.dashboardPairingHelpPairOnceTitle,
+                            l.dashboardPairingHelpPairOnceBody),
+                        _pairingHelpItem(ctx, Icons.check_circle_outline, Colors.green,
+                            l.dashboardPairingHelpUpdatesTitle,
+                            l.dashboardPairingHelpUpdatesBody),
+                        _pairingHelpItem(ctx, Icons.cloud_download_outlined, cs.primary,
+                            l.dashboardPairingHelpReinstallTitle,
+                            l.dashboardPairingHelpReinstallBody),
+                        _pairingHelpItem(ctx, Icons.restart_alt, Colors.orangeAccent,
+                            l.dashboardPairingHelpNoBackupTitle,
+                            l.dashboardPairingHelpNoBackupBody),
                       ],
                     ),
                   ),
-                  _pairingHelpItem(ctx, Icons.qr_code_2, cs.primary,
-                      l.dashboardPairingHelpPairOnceTitle,
-                      l.dashboardPairingHelpPairOnceBody),
-                  _pairingHelpItem(ctx, Icons.check_circle_outline, Colors.green,
-                      l.dashboardPairingHelpUpdatesTitle,
-                      l.dashboardPairingHelpUpdatesBody),
-                  _pairingHelpItem(ctx, Icons.cloud_download_outlined, cs.primary,
-                      l.dashboardPairingHelpReinstallTitle,
-                      l.dashboardPairingHelpReinstallBody),
-                  _pairingHelpItem(ctx, Icons.restart_alt, Colors.orangeAccent,
-                      l.dashboardPairingHelpNoBackupTitle,
-                      l.dashboardPairingHelpNoBackupBody),
-                  const SizedBox(height: 4),
-                  CheckboxListTile(
-                    value: dontShowAgain,
-                    onChanged: (v) => setLocal(() => dontShowAgain = v ?? false),
-                    title: Text(l.dashboardDontShowAgain),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                  ),
-                ],
-              ),
+                ),
+                CheckboxListTile(
+                  value: dontShowAgain,
+                  onChanged: (v) => setLocal(() => dontShowAgain = v ?? false),
+                  title: Text(l.dashboardDontShowAgain),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+              ],
             ),
           ),
           actions: [

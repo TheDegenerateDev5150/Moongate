@@ -648,10 +648,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpPluginBody =>
-      'Moongate требует, чтобы его плагин работал на вашем принтере Klipper до сопряжения. Если вы ещё не установили его, откройте руководство по быстрому старту.';
+      'Moongate требует, чтобы его плагин работал на вашем принтере Klipper до сопряжения. После установки запустите макрос MOONGATE_PAIR (или введите его в консоли Mainsail/Fluidd), чтобы получить код сопряжения или URL для сопряжения по QR-коду.';
 
   @override
-  String get dashboardPairingHelpPluginAction => 'Открыть руководство';
+  String get dashboardPairingHelpPluginAction =>
+      'Открыть руководство по быстрому старту';
 
   @override
   String get dashboardPairingHelpPairOnceTitle => 'Сопряжение - один раз';
