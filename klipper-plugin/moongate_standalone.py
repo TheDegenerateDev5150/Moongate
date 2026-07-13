@@ -63,7 +63,7 @@ logger = logging.getLogger("moonraker.moongate")
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running - the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.14"
+MOONGATE_PLUGIN_VERSION = "0.6.15"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -580,13 +580,29 @@ class HeartbeatLoop:
         sb: SupabaseClient,
         interval: int,
         on_unpaired_cb=None,
+        on_dormant_cb=None,
     ) -> None:
         self.device      = device
         self.sb          = sb
         self.interval    = interval
         self.on_unpaired = on_unpaired_cb
+        self.on_dormant  = on_dormant_cb
         self._task: Optional[asyncio.Task] = None
         self._last_url_reported: Optional[str] = None
+        # Orphan dormancy (v0.6.15). A Pi whose cloud row is gone for good
+        # used to heartbeat forever - ~8.6k Edge Function calls/month each at
+        # the steady cadence, and one pre-0.6.10 spinner ≈ the whole free
+        # quota (2026-06-24 and 2026-07-13 log audits). Once the server has
+        # answered "no such printer" for a full day with no pairing activity,
+        # or has said outright that the owner released this printer (410),
+        # the loop drops to a 6-hourly pulse. Any poke (MOONGATE_PAIR, an
+        # owner bind) or an accepted heartbeat wakes it instantly, so every
+        # recovery path is untouched. In-memory only: a Moonraker restart
+        # buys one more day of steady-cadence probing before re-dorming,
+        # which is self-limiting and makes a stuck-dormant state impossible.
+        self._dormant:         bool            = False
+        self._notfound_streak: int             = 0
+        self._notfound_since:  Optional[float] = None
         # Wall-clock deadline until which we hold the fast bootstrap cadence
         # after a pairing poke, so a transient send failure (e.g. flaky WiFi)
         # doesn't drop us to the 5-minute interval mid-pair. 0 = not active.
@@ -621,6 +637,21 @@ class HeartbeatLoop:
     # 5-minute heartbeat cycle (flaky-WiFi boards like the CB1).
     _FAST_WINDOW_SECONDS = 180
 
+    # Dormancy trigger: this many CONSECUTIVE confirmed "not_found" answers
+    # spanning at least _DORMANT_AFTER_SECONDS, with no pairing activity in
+    # between. The count floor keeps a handful of stray 404s from qualifying;
+    # the time floor keeps a legitimate "reset tonight, re-pair tomorrow" gap
+    # from qualifying (waiting costs ~288 calls per orphan event - nothing
+    # next to the ~8.6k/month an orphan burns forever). Only bodies carrying
+    # the server's own {"error": "not_found"} marker count, so a proxy/CDN
+    # 404 during an outage can never dorm the fleet.
+    _DORMANT_MIN_STREAK    = 12
+    _DORMANT_AFTER_SECONDS = 24 * 3600
+
+    # Dormant pulse cadence. ~4 calls/day (vs ~288) keeps "the row came back"
+    # recovery alive without the cost - and means dormant never equals dead.
+    _DORMANT_INTERVAL = 6 * 3600
+
     async def _run(self) -> None:
         # First heartbeat after a brief delay so cloudflared has time to come up
         await asyncio.sleep(5)
@@ -643,11 +674,15 @@ class HeartbeatLoop:
             # (armed above), the post-poke window (request_immediate_send), or
             # the post-404 re-pair window. Each is capped by _FAST_WINDOW_SECONDS
             # so a Pi that never lands a cloud row falls back to the steady
-            # interval instead of polling every 5 s forever.
+            # interval instead of polling every 5 s forever. A dormant orphan
+            # sits below even the steady interval, on the 6-hourly pulse.
             fast = time.time() < self._fast_deadline
-            effective_interval = (
-                self._BOOTSTRAP_INTERVAL if fast else self.interval
-            )
+            if self._dormant:
+                effective_interval = self._DORMANT_INTERVAL
+            elif fast:
+                effective_interval = self._BOOTSTRAP_INTERVAL
+            else:
+                effective_interval = self.interval
             # Wait for either the scheduled interval OR a poke from
             # MOONGATE_PAIR. Poke wakes the loop early so the cloud sees
             # the current tunnel URL before the user's app calls
@@ -673,8 +708,14 @@ class HeartbeatLoop:
         Now we keep retrying every few seconds until the cloud accepts it.
 
         Idempotent; the poke itself is a no-op until the loop has started (the
-        first 5 s post-boot), but the fast window is still armed."""
+        first 5 s post-boot), but the fast window is still armed.
+
+        A poke is also what wakes a dormant orphan: every pairing path runs
+        through here (MOONGATE_PAIR and the owner bind in _authenticate), so
+        dormancy ends the instant a user starts pairing - no special recovery
+        step to know about."""
         self._fast_deadline = time.time() + self._FAST_WINDOW_SECONDS
+        self._clear_orphan_state("pairing activity")
         if self._poke_event is not None:
             self._poke_event.set()
 
@@ -694,6 +735,7 @@ class HeartbeatLoop:
             # Got through - drop out of the post-poke fast window and resume the
             # steady cadence.
             self._fast_deadline = 0.0
+            self._clear_orphan_state("heartbeat accepted")
             if tunnel != self._last_url_reported:
                 logger.info("Heartbeat: reported tunnel URL %s", tunnel)
                 self._last_url_reported = tunnel
@@ -721,6 +763,25 @@ class HeartbeatLoop:
                     self.on_unpaired()
                 except Exception as exc:
                     logger.warning("on_unpaired callback failed: %s", exc)
+            # Count only the server's own answer towards dormancy - a generic
+            # gateway/CDN 404 (no marker body) stays a transient.
+            if body.get("error") == "not_found":
+                self._note_confirmed_notfound()
+            return
+        if status == 410:
+            # Explicit, server-verified answer: the owner deliberately released
+            # this printer (its tombstone row is still on the server). No
+            # guessing needed - stop the cloud chatter right away. MOONGATE_PAIR
+            # wakes us and pairs again as if nothing happened.
+            logger.warning("Heartbeat 410 - the owner released this printer")
+            self._last_url_reported = None
+            if self.on_unpaired:
+                try:
+                    self.on_unpaired()
+                except Exception as exc:
+                    logger.warning("on_unpaired callback failed: %s", exc)
+            if body.get("error") == "printer_released":
+                self._enter_dormant("released by its owner")
             return
         if status == 401:
             skew = self.sb.clock_skew_seconds()
@@ -736,6 +797,47 @@ class HeartbeatLoop:
                 logger.warning("Heartbeat 401 - signature or replay window failure")
             return
         logger.warning("Heartbeat HTTP %s: %s", status, body)
+
+    # ── Orphan dormancy (v0.6.15) ────────────────────────────────────────────
+
+    @property
+    def dormant(self) -> bool:
+        return self._dormant
+
+    def _note_confirmed_notfound(self) -> None:
+        """Advance the orphan evidence: one more confirmed "no such printer"
+        answer. Network errors and 401s neither count nor reset - only an
+        accepted heartbeat or pairing activity clears the streak."""
+        now = time.time()
+        if self._notfound_since is None:
+            self._notfound_since = now
+        self._notfound_streak += 1
+        if (not self._dormant
+                and self._notfound_streak >= self._DORMANT_MIN_STREAK
+                and now - self._notfound_since >= self._DORMANT_AFTER_SECONDS
+                and now >= self._fast_deadline):
+            self._enter_dormant("unknown to the cloud for a day")
+
+    def _clear_orphan_state(self, reason: str) -> None:
+        self._notfound_streak = 0
+        self._notfound_since  = None
+        if self._dormant:
+            self._dormant = False
+            logger.info("Heartbeat waking from dormant (%s)", reason)
+
+    def _enter_dormant(self, why: str) -> None:
+        if self._dormant:
+            return
+        self._dormant = True
+        logger.warning(
+            "Heartbeat going dormant (this printer was %s): dropping to one "
+            "pulse every %d h. Run MOONGATE_PAIR to pair again at any time.",
+            why, self._DORMANT_INTERVAL // 3600)
+        if self.on_dormant:
+            try:
+                self.on_dormant(why)
+            except Exception as exc:
+                logger.warning("on_dormant callback failed: %s", exc)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -760,10 +862,15 @@ class PrintEventWatcher:
     # catch a finished print promptly without being chatty.
     _POLL_INTERVAL = 20
 
-    def __init__(self, device: DeviceKey, sb: SupabaseClient, moonraker_port: int = 7125) -> None:
+    def __init__(self, device: DeviceKey, sb: SupabaseClient,
+                 moonraker_port: int = 7125, is_dormant=None) -> None:
         self.device = device
         self.sb     = sb
         self.port   = moonraker_port
+        # Callable answering "is cloud contact dormant?" (see HeartbeatLoop).
+        # A dormant Pi's row is gone server-side, so a send could only 404 -
+        # skip it and keep the orphan's cloud footprint at the pulse alone.
+        self._is_dormant = is_dormant
         self._task: Optional[asyncio.Task] = None
         # Last print_stats.state we saw. None until the first poll, which only
         # establishes a baseline - we never fire an event for whatever state
@@ -786,7 +893,10 @@ class PrintEventWatcher:
                 if state is not None and state != self._last_state:
                     event = self._event_for(self._last_state, state)
                     self._last_state = state
-                    if event:
+                    if event and self._is_dormant is not None and self._is_dormant():
+                        logger.debug(
+                            "Push event '%s' skipped - cloud contact dormant", event)
+                    elif event:
                         await loop.run_in_executor(None, self._send_event, event, filename)
             except asyncio.CancelledError:
                 return
@@ -885,8 +995,12 @@ class MoongatePlugin:
             self.device, self.sb,
             int(self._config["heartbeat_interval_seconds"]),
             on_unpaired_cb=self._on_unpaired,
+            on_dormant_cb=self._on_dormant,
         )
-        self.watcher   = PrintEventWatcher(self.device, self.sb)
+        self.watcher   = PrintEventWatcher(
+            self.device, self.sb,
+            is_dormant=lambda: self.heartbeat.dormant,
+        )
 
         self._pending: Optional[PendingPair]   = None
         self._chamber_key: Optional[str]       = None
@@ -1138,6 +1252,30 @@ class MoongatePlugin:
         if self.owner is not None:
             logger.warning("Server has no record of this printer - wiping local owner state")
             self._wipe_owner()
+
+    def _on_dormant(self, why: str) -> None:
+        """Heartbeat callback: cloud contact just went dormant. Put a notice in
+        the Klipper console (best effort - Klipper may be down or mid-restart)
+        so someone standing at the printer knows why the app can't see it and
+        how to bring it back; moonraker.log always carries the same message."""
+        async def _notify() -> None:
+            script = "\n".join([
+                "M118 ============================================",
+                f"M118 Moongate: this printer was {why},",
+                "M118 so cloud contact is paused.",
+                "M118 The printer itself is unaffected.",
+                "M118 Run MOONGATE_PAIR to pair again.",
+                "M118 ============================================",
+            ])
+            try:
+                klippy_apis: Any = self.server.lookup_component("klippy_apis")
+                await klippy_apis.run_gcode(script)
+            except Exception as exc:
+                logger.info("Dormant console notice skipped: %s", exc)
+        try:
+            asyncio.get_event_loop().create_task(_notify())
+        except RuntimeError:
+            pass
 
     # ── v0.4.4: Avahi mDNS advertisement ──────────────────────────────────────
     # See docs/v0.5-lan-discovery-design.md §6. The plugin owns the lifecycle
