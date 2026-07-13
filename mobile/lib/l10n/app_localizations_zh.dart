@@ -615,10 +615,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpPluginBody =>
-      '配对之前，Moongate 需要在你的 Klipper 打印机上运行其插件。如果尚未安装，请打开快速入门指南。';
+      '配对之前，Moongate 需要其插件在你的 Klipper 打印机上运行。安装完成后，运行 MOONGATE_PAIR 宏（或在 Mainsail/Fluidd 控制台中输入该命令），即可获取配对码或用于二维码配对的 URL。';
 
   @override
-  String get dashboardPairingHelpPluginAction => '打开设置指南';
+  String get dashboardPairingHelpPluginAction => '打开快速入门指南';
 
   @override
   String get dashboardPairingHelpPairOnceTitle => '只需配对一次';

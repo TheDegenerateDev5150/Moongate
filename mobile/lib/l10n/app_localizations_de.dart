@@ -647,10 +647,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpPluginBody =>
-      'Moongate benötigt sein Plugin auf deinem Klipper-Drucker, bevor du koppeln kannst. Falls es noch nicht installiert ist, öffne die Schnellstart-Anleitung.';
+      'Moongate benötigt sein laufendes Plugin auf deinem Klipper-Drucker, bevor du koppeln kannst. Führe nach der Installation das Makro MOONGATE_PAIR aus (oder gib es in der Mainsail-/Fluidd-Konsole ein), um einen Kopplungscode oder eine URL für die Kopplung per QR-Code zu erhalten.';
 
   @override
-  String get dashboardPairingHelpPluginAction => 'Anleitung öffnen';
+  String get dashboardPairingHelpPluginAction =>
+      'Schnellstart-Anleitung öffnen';
 
   @override
   String get dashboardPairingHelpPairOnceTitle => 'Einmal koppeln';

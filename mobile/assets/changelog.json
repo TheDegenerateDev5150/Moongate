@@ -1,5 +1,14 @@
 [
   {
+    "version": "v0.9.49",
+    "bullets": [
+      "The \"How pairing works\" pop-up finally stops re-appearing on every launch: its \"Don't show this again\" tick was hiding at the bottom of the scrolling text where most phones never showed it - it now sits right above the OK button. The notice also now tells you the one thing to do after installing the plugin: run the MOONGATE_PAIR macro on the printer (or type it in the Mainsail/Fluidd console) to get your pairing code or QR link.",
+      "Starred macros no longer vanish. Starring a macro, closing the macro menu and opening it again could silently drop the new stars (they only came back after restarting the app) - the menu now always shows your latest stars.",
+      "Printers removed from your account stop calling home. The Pi plugin used to keep checking in every 5 minutes forever after its printer was removed; it now notices, goes quiet, and leaves a note in the Klipper console - pairing again wakes it instantly.",
+      "Not app-only: this release also updates the Moongate Pi plugin (0.6.15) with the go-quiet fix above - update the plugin from Moonraker's update panel too."
+    ]
+  },
+  {
     "version": "v0.9.48",
     "bullets": [
       "Hold your finger on a tile's camera picture and it opens full screen - the same pinch-to-zoom live view as the little eye icon, running at your camera's full frame rate. Close it and the dashboard tiles go straight back to your chosen feed rate.",

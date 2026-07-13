@@ -652,10 +652,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get dashboardPairingHelpPluginBody =>
-      'O Moongate precisa que o plugin dele esteja em execução na sua impressora Klipper antes que você possa parear. Se você ainda não o instalou, abra o guia de início rápido.';
+      'O Moongate exige que o plugin dele esteja em execução na sua impressora Klipper antes do pareamento. Após a instalação, execute a macro MOONGATE_PAIR (ou digite-a no console do Mainsail/Fluidd) para obter um código de pareamento ou uma URL para pareamento por código QR.';
 
   @override
-  String get dashboardPairingHelpPluginAction => 'Abrir o guia de configuração';
+  String get dashboardPairingHelpPluginAction =>
+      'Abrir o guia de início rápido';
 
   @override
   String get dashboardPairingHelpPairOnceTitle => 'Pareie uma vez';

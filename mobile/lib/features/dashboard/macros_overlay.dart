@@ -55,7 +55,21 @@ class _MacrosSheetState extends State<_MacrosSheet> {
   void initState() {
     super.initState();
     _control = PrintControlService(widget.printer);
-    _favourites = {...widget.printer.favouriteMacros};
+    // Seed from the REGISTRY's current copy of this printer, not the tile's.
+    // The tile's PrinterConfig is a snapshot from the last dashboard build
+    // and the registry doesn't push updates back into built tiles, so after
+    // star -> close -> reopen the tile's copy still carried the OLD
+    // favourites: the new stars looked gone, and the next toggle wrote that
+    // stale set back, genuinely erasing them (they only survived once a
+    // restart rebuilt the tiles from disk). Discord report, 2026-07-13.
+    var seed = widget.printer;
+    for (final p in PrinterRegistry.instance.printers) {
+      if (p.id == widget.printer.id) {
+        seed = p;
+        break;
+      }
+    }
+    _favourites = {...seed.favouriteMacros};
     _future = _control.listMacros();
   }
 
