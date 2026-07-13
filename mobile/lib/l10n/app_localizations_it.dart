@@ -652,6 +652,39 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dashboardPairingHelpPluginAction => 'Apri la guida rapida';
 
   @override
+  String get pluginUpdateTooltip => 'Aggiornamento del plugin disponibile';
+
+  @override
+  String get pluginUpdateTitle => 'Aggiornamento del plugin disponibile';
+
+  @override
+  String pluginUpdateBody(String current, String latest) {
+    return 'Questa stampante esegue il plugin Moongate $current. È disponibile la versione $latest.';
+  }
+
+  @override
+  String get pluginUpdateVersionUnknown => 'una versione vecchia';
+
+  @override
+  String get pluginUpdateNow => 'Aggiorna ora';
+
+  @override
+  String get pluginUpdateManual =>
+      'Questa versione del plugin non può ancora essere aggiornata dall\'app. Nell\'interfaccia web della stampante: Mainsail (o Fluidd) → Software Updates → Moongate → Update.';
+
+  @override
+  String get pluginUpdateBusyPrinting =>
+      'Questa stampante sta stampando. Aggiorna quando la stampa è finita.';
+
+  @override
+  String get pluginUpdateStarted =>
+      'Aggiornamento avviato. Viene eseguito in background sulla stampante - l\'icona sparisce quando è completato (circa un minuto).';
+
+  @override
+  String get pluginUpdateFailed =>
+      'Impossibile avviare l\'aggiornamento. Usa l\'interfaccia web della stampante: Software Updates → Moongate → Update.';
+
+  @override
   String get dashboardPairingHelpPairOnceTitle => 'Abbina una sola volta';
 
   @override

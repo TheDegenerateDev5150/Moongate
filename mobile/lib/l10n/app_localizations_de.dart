@@ -654,6 +654,39 @@ class AppLocalizationsDe extends AppLocalizations {
       'Schnellstart-Anleitung öffnen';
 
   @override
+  String get pluginUpdateTooltip => 'Plugin-Update verfügbar';
+
+  @override
+  String get pluginUpdateTitle => 'Plugin-Update verfügbar';
+
+  @override
+  String pluginUpdateBody(String current, String latest) {
+    return 'Auf diesem Drucker läuft Moongate-Plugin $current. Version $latest ist verfügbar.';
+  }
+
+  @override
+  String get pluginUpdateVersionUnknown => 'eine alte Version';
+
+  @override
+  String get pluginUpdateNow => 'Jetzt aktualisieren';
+
+  @override
+  String get pluginUpdateManual =>
+      'Diese Plugin-Version kann noch nicht aus der App aktualisiert werden. Im Web-Interface des Druckers: Mainsail (oder Fluidd) → Software Updates → Moongate → Update.';
+
+  @override
+  String get pluginUpdateBusyPrinting =>
+      'Dieser Drucker druckt gerade. Aktualisiere, sobald der Druck fertig ist.';
+
+  @override
+  String get pluginUpdateStarted =>
+      'Update gestartet. Es läuft im Hintergrund auf dem Drucker - das Symbol verschwindet, sobald es fertig ist (etwa eine Minute).';
+
+  @override
+  String get pluginUpdateFailed =>
+      'Update konnte nicht gestartet werden. Nutze das Web-Interface des Druckers: Software Updates → Moongate → Update.';
+
+  @override
   String get dashboardPairingHelpPairOnceTitle => 'Einmal koppeln';
 
   @override

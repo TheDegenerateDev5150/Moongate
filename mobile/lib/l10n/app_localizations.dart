@@ -1240,6 +1240,60 @@ abstract class AppLocalizations {
   /// **'Open the quick-start guide here'**
   String get dashboardPairingHelpPluginAction;
 
+  /// Tooltip/semantic label of the tile badge shown while the printer's Pi plugin is outdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin update available'**
+  String get pluginUpdateTooltip;
+
+  /// Title of the plugin-update dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin update available'**
+  String get pluginUpdateTitle;
+
+  /// Body of the plugin-update dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'This printer is running Moongate plugin {current}. Version {latest} is available.'**
+  String pluginUpdateBody(String current, String latest);
+
+  /// Stands in for {current} when the plugin is too old to report a version.
+  ///
+  /// In en, this message translates to:
+  /// **'an old version'**
+  String get pluginUpdateVersionUnknown;
+
+  /// Button that starts the one-tap plugin update.
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get pluginUpdateNow;
+
+  /// Instructions shown for plugins that predate the remote-update action.
+  ///
+  /// In en, this message translates to:
+  /// **'This plugin version can\'t be updated from the app yet. On the printer\'s web interface: Mainsail (or Fluidd) → Software Updates → Moongate → Update.'**
+  String get pluginUpdateManual;
+
+  /// Hint shown instead of the update button while the printer is printing.
+  ///
+  /// In en, this message translates to:
+  /// **'This printer is mid-print. Update once the print has finished.'**
+  String get pluginUpdateBusyPrinting;
+
+  /// Snackbar after the update request was accepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Update started. It runs on the printer in the background - the icon disappears once it\'s done (about a minute).'**
+  String get pluginUpdateStarted;
+
+  /// Snackbar when the update request failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the update. Use the printer\'s web interface: Software Updates → Moongate → Update.'**
+  String get pluginUpdateFailed;
+
   /// Pairing-help item title: pairing only needs to happen once.
   ///
   /// In en, this message translates to:

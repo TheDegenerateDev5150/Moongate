@@ -1123,6 +1123,9 @@ class PrinterStatusService {
       webcamIsExternal: webcamIsExternal,
       lightOn:          lightOn,
       klippyShutdown:   klippyShutdown,
+      pluginVersion:    moongateResult?['plugin_version'] as String?,
+      pluginCanSelfUpdate:
+          (moongateResult?['plugin_can_self_update'] as bool?) ?? false,
     );
   }
 }
