@@ -1259,6 +1259,25 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get printerDirectModeToggle => 'Tryb bezpośredni (LAN/VPN)';
+
+  @override
+  String get printerDirectModeSubtitle =>
+      'Komunikuj się z tą drukarką tylko przez swoją sieć lub VPN - bez chmury. Wymaga adresu drukarki zainstalowanej w trybie tylko LAN.';
+
+  @override
+  String get printerDirectModeNeedsAddress =>
+      'Tryb bezpośredni wymaga adresu drukarki';
+
+  @override
+  String get printerDirectModeOn =>
+      'Tryb bezpośredni włączony - ta drukarka łączy się teraz tylko przez Twoją sieć';
+
+  @override
+  String get printerDirectModeOff =>
+      'Tryb bezpośredni wyłączony - przywrócono połączenie z chmurą';
+
+  @override
   String get printerAddressCleared => 'Wyczyszczono niestandardowy adres';
 
   @override

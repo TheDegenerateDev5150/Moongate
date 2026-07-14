@@ -395,6 +395,11 @@
 
   "printerStartingUpRetry": "La stampante si sta avviando. Nuovo tentativo tra {seconds} s…",
   "printerCouldNotReach": "Impossibile raggiungere la stampante: {error}",
+  "printerDirectModeToggle": "Modalità diretta (LAN/VPN)",
+  "printerDirectModeSubtitle": "Parla con questa stampante solo tramite la tua rete o VPN - niente cloud. Richiede l'indirizzo della stampante, installata in modalità solo LAN.",
+  "printerDirectModeNeedsAddress": "La modalità diretta richiede l'indirizzo della stampante",
+  "printerDirectModeOn": "Modalità diretta attiva - questa stampante ora si collega solo tramite la tua rete",
+  "printerDirectModeOff": "Modalità diretta disattivata - connessione cloud ripristinata",
   "printerAddressCleared": "Indirizzo personalizzato cancellato",
   "printerAddressUpdated": "Indirizzo stampante aggiornato",
   "printerTunnelUnreachable": "Tunnel Cloudflare irraggiungibile.\n{description}",

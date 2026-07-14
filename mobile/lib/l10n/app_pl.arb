@@ -395,6 +395,11 @@
 
   "printerStartingUpRetry": "Drukarka się uruchamia. Ponawianie za {seconds} s…",
   "printerCouldNotReach": "Nie można połączyć z drukarką: {error}",
+  "printerDirectModeToggle": "Tryb bezpośredni (LAN/VPN)",
+  "printerDirectModeSubtitle": "Komunikuj się z tą drukarką tylko przez swoją sieć lub VPN - bez chmury. Wymaga adresu drukarki zainstalowanej w trybie tylko LAN.",
+  "printerDirectModeNeedsAddress": "Tryb bezpośredni wymaga adresu drukarki",
+  "printerDirectModeOn": "Tryb bezpośredni włączony - ta drukarka łączy się teraz tylko przez Twoją sieć",
+  "printerDirectModeOff": "Tryb bezpośredni wyłączony - przywrócono połączenie z chmurą",
   "printerAddressCleared": "Wyczyszczono niestandardowy adres",
   "printerAddressUpdated": "Zaktualizowano adres drukarki",
   "printerTunnelUnreachable": "Tunel Cloudflare nieosiągalny.\n{description}",

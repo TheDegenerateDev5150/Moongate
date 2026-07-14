@@ -1259,6 +1259,25 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get printerDirectModeToggle => 'Прямой режим (LAN/VPN)';
+
+  @override
+  String get printerDirectModeSubtitle =>
+      'Общаться с этим принтером только через вашу сеть или VPN - без облака. Нужен адрес принтера, установленного в режиме только LAN.';
+
+  @override
+  String get printerDirectModeNeedsAddress =>
+      'Для прямого режима нужен адрес принтера';
+
+  @override
+  String get printerDirectModeOn =>
+      'Прямой режим включён - принтер теперь подключается только через вашу сеть';
+
+  @override
+  String get printerDirectModeOff =>
+      'Прямой режим выключен - облачное подключение восстановлено';
+
+  @override
   String get printerAddressCleared => 'Свой адрес сброшен';
 
   @override

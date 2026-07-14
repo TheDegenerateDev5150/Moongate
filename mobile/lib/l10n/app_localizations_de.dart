@@ -1261,6 +1261,25 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get printerDirectModeToggle => 'Direktmodus (LAN/VPN)';
+
+  @override
+  String get printerDirectModeSubtitle =>
+      'Mit diesem Drucker nur über dein Netzwerk oder VPN sprechen - keine Cloud. Braucht die Druckeradresse und einen im LAN-only-Modus installierten Drucker.';
+
+  @override
+  String get printerDirectModeNeedsAddress =>
+      'Der Direktmodus braucht die Druckeradresse';
+
+  @override
+  String get printerDirectModeOn =>
+      'Direktmodus an - dieser Drucker verbindet sich jetzt nur über dein Netzwerk';
+
+  @override
+  String get printerDirectModeOff =>
+      'Direktmodus aus - Cloud-Verbindung wiederhergestellt';
+
+  @override
   String get printerAddressCleared => 'Benutzerdefinierte Adresse entfernt';
 
   @override

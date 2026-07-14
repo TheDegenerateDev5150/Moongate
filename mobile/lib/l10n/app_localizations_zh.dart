@@ -1195,6 +1195,22 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get printerDirectModeToggle => '直连模式 (LAN/VPN)';
+
+  @override
+  String get printerDirectModeSubtitle =>
+      '仅通过您的网络或 VPN 与此打印机通信 - 不使用云。需要打印机地址，且打印机以仅局域网模式安装。';
+
+  @override
+  String get printerDirectModeNeedsAddress => '直连模式需要打印机地址';
+
+  @override
+  String get printerDirectModeOn => '直连模式已开启 - 此打印机现在仅通过您的网络连接';
+
+  @override
+  String get printerDirectModeOff => '直连模式已关闭 - 已恢复云连接';
+
+  @override
   String get printerAddressCleared => '已清除自定义地址';
 
   @override

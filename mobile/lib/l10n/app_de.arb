@@ -395,6 +395,11 @@
 
   "printerStartingUpRetry": "Drucker startet. Erneuter Versuch in {seconds}s…",
   "printerCouldNotReach": "Drucker nicht erreichbar: {error}",
+  "printerDirectModeToggle": "Direktmodus (LAN/VPN)",
+  "printerDirectModeSubtitle": "Mit diesem Drucker nur über dein Netzwerk oder VPN sprechen - keine Cloud. Braucht die Druckeradresse und einen im LAN-only-Modus installierten Drucker.",
+  "printerDirectModeNeedsAddress": "Der Direktmodus braucht die Druckeradresse",
+  "printerDirectModeOn": "Direktmodus an - dieser Drucker verbindet sich jetzt nur über dein Netzwerk",
+  "printerDirectModeOff": "Direktmodus aus - Cloud-Verbindung wiederhergestellt",
   "printerAddressCleared": "Benutzerdefinierte Adresse entfernt",
   "printerAddressUpdated": "Druckeradresse aktualisiert",
   "printerTunnelUnreachable": "Cloudflare-Tunnel nicht erreichbar.\n{description}",

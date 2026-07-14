@@ -2320,6 +2320,36 @@ abstract class AppLocalizations {
   /// **'Could not reach printer: {error}'**
   String printerCouldNotReach(String error);
 
+  /// Switch in the edit-printer dialog that flips a cloud-paired printer to the cloudless direct connection and back.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct (LAN/VPN) mode'**
+  String get printerDirectModeToggle;
+
+  /// Subtitle under the Direct-mode switch explaining what it does and its prerequisites.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk to this printer only over your network or VPN - no cloud. Needs the printer address, and the printer installed in LAN-only mode.'**
+  String get printerDirectModeSubtitle;
+
+  /// Address-field error when saving with Direct mode on but no address set.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct mode needs the printer address'**
+  String get printerDirectModeNeedsAddress;
+
+  /// Snackbar after switching a printer to Direct (LAN/VPN) mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct mode on - this printer now connects over your network only'**
+  String get printerDirectModeOn;
+
+  /// Snackbar after switching a printer back from Direct mode to the cloud connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct mode off - cloud connection restored'**
+  String get printerDirectModeOff;
+
   /// Snackbar confirming the custom printer address override was removed.
   ///
   /// In en, this message translates to:

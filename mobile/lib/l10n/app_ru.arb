@@ -395,6 +395,11 @@
 
   "printerStartingUpRetry": "Принтер запускается. Повтор через {seconds} с…",
   "printerCouldNotReach": "Не удалось связаться с принтером: {error}",
+  "printerDirectModeToggle": "Прямой режим (LAN/VPN)",
+  "printerDirectModeSubtitle": "Общаться с этим принтером только через вашу сеть или VPN - без облака. Нужен адрес принтера, установленного в режиме только LAN.",
+  "printerDirectModeNeedsAddress": "Для прямого режима нужен адрес принтера",
+  "printerDirectModeOn": "Прямой режим включён - принтер теперь подключается только через вашу сеть",
+  "printerDirectModeOff": "Прямой режим выключен - облачное подключение восстановлено",
   "printerAddressCleared": "Свой адрес сброшен",
   "printerAddressUpdated": "Адрес принтера обновлён",
   "printerTunnelUnreachable": "Туннель Cloudflare недоступен.\n{description}",

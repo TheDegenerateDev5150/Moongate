@@ -251,11 +251,19 @@ class PrinterStatusService {
     }
   }
 
+  /// Live lanOnly flag - the registry copy wins over the construction-time
+  /// config so a Direct-mode toggle takes effect on the very next poll
+  /// without recreating this service (mirrors PrintControlService).
+  bool get _liveLanOnly =>
+      PrinterRegistry.instance.printers
+          .firstWhere((p) => p.id == config.id, orElse: () => config)
+          .lanOnly;
+
   Future<void> _doPoll() async {
     // Cloudless LAN-only printer: no Supabase, no tunnel. Poll the plugin over
     // the LAN with an empty token (the lan_only plugin skips auth) and reuse
     // the exact same /status parsing as the cloud path.
-    if (config.lanOnly) {
+    if (_liveLanOnly) {
       await _doPollLanOnly();
       return;
     }

@@ -395,6 +395,11 @@
 
   "printerStartingUpRetry": "打印机正在启动。将在 {seconds} 秒后重试…",
   "printerCouldNotReach": "无法连接打印机：{error}",
+  "printerDirectModeToggle": "直连模式 (LAN/VPN)",
+  "printerDirectModeSubtitle": "仅通过您的网络或 VPN 与此打印机通信 - 不使用云。需要打印机地址，且打印机以仅局域网模式安装。",
+  "printerDirectModeNeedsAddress": "直连模式需要打印机地址",
+  "printerDirectModeOn": "直连模式已开启 - 此打印机现在仅通过您的网络连接",
+  "printerDirectModeOff": "直连模式已关闭 - 已恢复云连接",
   "printerAddressCleared": "已清除自定义地址",
   "printerAddressUpdated": "已更新打印机地址",
   "printerTunnelUnreachable": "无法连接 Cloudflare 隧道。\n{description}",
