@@ -35,6 +35,7 @@ What Moongate **does not** claim to protect:
 | Cloudflare is compromised or compelled (subpoena, court order) | Cloudflare terminates TLS at their edge. They see request URLs, headers, and bodies in plaintext for the leg between your phone and the edge. Their ToS apply. If this is unacceptable, swap `cloudflared` for any other tunnel that points at the auth proxy's port - Moongate doesn't care which tunnel you use |
 | HTTP traffic between your phone and the Pi is sniffed on your LAN | Local Moonraker is plain HTTP. This is the standard Klipper setup, not a Moongate choice. The access token is sent in headers; on LAN, anyone with the WiFi password who is actively MITM-ing your TCP can read it. If you need LAN encryption, put nginx + TLS in front of Moonraker (outside Moongate's scope) |
 | You port-forward port 80 / 7125 from your router to the Pi | Don't. The whole point of the tunnel + auth proxy is so you never need to. If you do anyway, the public LAN port bypasses the auth proxy and anyone who finds the IP can hammer Moonraker directly |
+| Someone on your own LAN (or inside your VPN) targets a **Direct (LAN/VPN)** printer | Direct mode deliberately trusts what Moonraker trusts: anyone your `[authorization] trusted_clients` admits has Moonraker-level control - the same standing Mainsail and Fluidd have on every stock install. Moongate adds no second gate on the LAN, and your VPN's membership *is* the remote perimeter. See [Direct (LAN/VPN) mode](#direct-lanvpn-mode-v0951) |
 | A malicious developer pushes a backdoored APK | All releases are GitHub Actions builds from `master`. You can read the commits. You can build the APK yourself (see [DEVELOPMENT.md](DEVELOPMENT.md)) |
 | You pair a friend's phone and they later misuse it | Once paired, a phone has full operator-level control over the printer. Same as handing them the Mainsail URL on your LAN. Un-pair the device from `Dashboard → Remove printer` when you no longer want them to have access |
 
@@ -178,6 +179,18 @@ Phone ──HTTPS/QUIC── Cloudflare edge ──TLS── cloudflared (on Pi)
 If you don't want Cloudflare in the picture, point the cloudflared step at any other tunneling layer that reaches the auth proxy's port (Tailscale Funnel, frp, ngrok paid, a self-hosted nginx-on-VPS reverse proxy, etc.). The auth proxy doesn't care what's in front of it.
 
 ---
+
+## Direct (LAN/VPN) mode (v0.9.51)
+
+An opt-in, per-printer alternative to everything above: a Pi installed with `install.sh --lan-only` runs **no tunnel, no auth proxy, and makes zero outbound calls** - and the app, in its **Direct (LAN/VPN)** mode, talks straight to Moonraker on the LAN (or across your own WireGuard / Tailscale VPN) with **no cloud account and no tokens**.
+
+What that changes, stated plainly:
+
+- **The trust boundary is Moonraker's `trusted_clients`, nothing else.** In LAN-only mode the plugin's `/status` and `/control` endpoints skip the access-token check; a request only reaches them after clearing Moonraker's own authorization, exactly like every Mainsail/Fluidd request on a stock install. On the LAN, Moongate is as trusted - and as unauthenticated - as any other Moonraker client. This is not a new exposure class: stock nginx already proxies Moonraker unauthenticated on port 80.
+- **Remote access is your VPN's perimeter.** There is no tunnel to leak and no token to steal; if your WireGuard/Tailscale subnet is in `trusted_clients`, VPN membership is the credential. Choose that subnet deliberately (Tailscale uses `100.64.0.0/10`).
+- **Nothing is stored in the cloud.** A Direct-added printer has no cloud row, sends no heartbeats, and mints no tokens - the middleman never learns it exists.
+- **The tunnel path is unaffected.** The token bypass applies only when the plugin itself runs `lan_only`. On a half-converged box (flag set but the tunnel stack somehow still running) the auth proxy still does its own independent token verification, so the internet-facing promise above - flat 401s without a valid broker-signed token - holds regardless of the plugin's mode.
+- **Switching modes is explicit.** A cloud-paired printer flipped to Direct in the app simply stops using its cloud identity (and can flip back); converting a box's *install* between modes is a deliberate re-run of the installer with or without `--lan-only`.
 
 ## What the plugin can see and do
 

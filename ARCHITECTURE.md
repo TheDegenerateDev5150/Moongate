@@ -134,6 +134,7 @@ Responsibilities:
 - **Status.** Aggregates Klipper / Moonraker objects into a single `/server/moongate/status` response - `print_stats`, temperatures, the discovered chamber sensor, webcam transforms, the current tunnel URL, and (0.6.4+) the plugin's own version, which the app compares against the version it shipped with to drive the dashboard's **plugin-update badge**.
 - **Control.** A small whitelist of safe actions: `pause`, `resume`, `cancel`, `firmware_restart`, `emergency_stop`, plus (0.6.16) `update_plugin` - which triggers Moonraker's **own update manager** for the Moongate component (the app's one-tap plugin update) and is refused while a print is running. There is no arbitrary G-code endpoint.
 - **Owner state.** Knows the user this Pi is paired to, persisted at `~/.config/moongate/owner.json`. The `MOONGATE_RESET_OWNER` macro wipes it.
+- **LAN-only mode (0.6.16+, set by `install.sh --lan-only`).** With `lan_only` in `~/.config/moongate/config.json` the plugin becomes fully cloudless: the heartbeat loop, print-event watcher, and signing-key fetch are **never started** (zero outbound calls), `MOONGATE_PAIR` and the pair page serve a static **`moongate://lan?ip=…&port=…&name=…`** QR instead of a cloud enrollment, and `/server/moongate/status` + `/control` **skip the access-token check** - a request only reaches them after clearing Moonraker's own `trusted_clients` gate, so the plugin trusts the LAN exactly as Moonraker itself does (the same reasoning as the already token-free `/reset-owner`). Re-running the installer without the flag converts the box back.
 
 ### The auth proxy (v0.4+)
 
@@ -150,6 +151,8 @@ LAN traffic doesn't go through the proxy - nginx still listens on the LAN interf
 ### The tunnel
 
 `cloudflared` Quick Tunnel runs as `moongate-tunnel.service`. It makes an outbound connection to the Cloudflare edge - no inbound ports opened on your router. The URL rotates each time the Pi reboots; the Moongate plugin heartbeats the current one to the cloud middleman so the app always knows where to reach the Pi.
+
+On a **LAN-only install** (`install.sh --lan-only`, v0.9.51) neither the tunnel nor the auth proxy exists: the installer skips cloudflared entirely (including its architecture check), never creates the two systemd units, skips the clock check and its htpdate timer, and leaves Moonraker bound to the LAN. Run on a box that already has the tunnel stack, the same flag **retires** it - units disabled, the stale tunnel-URL logs removed so the plugin can't heartbeat a dead URL.
 
 ### Where state lives on the Pi
 
@@ -251,6 +254,17 @@ If the phone's camera doesn't work (permission denied, hardware fault, can't foc
 3. Try `POST /server/moongate/control?mg_token=...&action=pause` first; the auth proxy + plugin both verify the token.
 4. Return `true` as soon as the Pi answers 200.
 
+### Direct (LAN/VPN) status poll + control (v0.9.51)
+
+A printer added through the pairing screen's **Direct (LAN/VPN)** tab (or flipped to Direct in its edit dialog) short-circuits all of the above:
+
+1. `PrinterStatusService._doPoll()` sees the registry-live `lanOnly` flag and calls `_doPollLanOnly()` instead: one GET to `/server/moongate/status` at the stored LAN address with an **empty token** - no `PrinterAccessCache`, no middleman, no tunnel fallback. The response parses through the exact same code path as the cloud route.
+2. `PrintControlService` does the same for actions, and the printer page loads Mainsail/Fluidd straight from the LAN root with no token cookie.
+3. The background notification service **skips Direct printers entirely** (their cards would need the cloud path), so they cost zero middleman calls there too.
+4. Unreachable simply means offline - there is nothing to fall back to, which is the honest answer for a LAN/VPN-only machine that you're away from.
+
+Direct-added printers mint a **local id** (`lan-<address>`), so `PrinterConfig.cloudPaired` can tell them apart from cloud printers that merely have Direct mode switched on: only the former have no cloud row to release on removal or return to when toggled. Cloud-pairing a machine that already exists as a Direct tile **absorbs** the old tile (same LAN host + port) - the new cloud tile inherits its persisted settings and the Direct tile is retired.
+
 ### Tunnel URL rotation
 
 `cloudflared` Quick Tunnels get a fresh URL every time `cloudflared` restarts (so every Pi reboot, plus any manual restart). To make this transparent:
@@ -289,7 +303,11 @@ v0.9.49 closes the same gap on the **Pi side**: an orphaned plugin (its cloud re
 
 An opt-in top-bar toggle turns the tunnel off as a *transport*: while active, the status poller skips the tunnel fallback and its reachability probes, the printer WebView only loads over LAN (a kept-warm tunnel session is dropped rather than reused), the cameras inherit LAN-only from the poller, and the background notification isolate skips the tunnel base too - zero remote traffic. Printers with no reachable LAN address settle to offline. Pairing and cloud identity are untouched; the pref is re-read every poll (and each notification tick), so flipping it takes effect within ~4 s without restarting anything. The mode persists across restarts but is deliberately excluded from settings backups, so a restore can never silently cut remote access.
 
-### Persistent UI type detection
+### Direct (LAN/VPN) mode is per-printer, and distinct from Local-only (v0.9.51)
+
+**Local-only** (above) is a *transport* toggle for cloud printers: identity and pairing stay cloud-side, the tunnel is just not used while it's on. **Direct (LAN/VPN)** is a per-printer *identity* choice: the printer has no cloud existence at all (or ignores it while switched), and the trust model is Moonraker's own `trusted_clients` - the same thing that lets Mainsail on your desktop control the printer without a password. Moongate deliberately adds no second gate there: on the LAN you are exactly as trusted as any other Moonraker client, and remote access is whatever your own VPN provides.
+
+The flag lives on `PrinterConfig.lanOnly` and is read **registry-live** by the status/control services and the printer page, so the edit-dialog switch takes effect on the next poll with no restart and no service rebuild. The switch only shows for cloud-paired printers (both directions are meaningful there); a Direct-added `lan-` printer has no cloud row to switch back to - converting one to cloud is a real pairing, which then absorbs the old tile.
 
 When the dashboard tile can't render a webcam (camera off, printer powered off, etc.) it shows the printer's web-UI logo as a placeholder - Mainsail or Fluidd. Detection is a one-time HTML sniff of the root page. In v0.4 the result is persisted on `PrinterConfig`, so a fresh cold launch shows the correct logo immediately, even when the printer is currently offline. Before v0.4, detection had to re-run on every cold launch and the logo only appeared after the first successful poll.
 

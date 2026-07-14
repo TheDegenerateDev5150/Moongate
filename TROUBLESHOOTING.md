@@ -141,6 +141,31 @@ In v0.4.0 the app retries LAN on every poll, so this should self-correct within 
 
 That's the **Local only** switch (v0.9.48): while it's on, Moongate deliberately makes no remote connections, so only printers on your current network connect and everything else settles to offline. Tap the orange crossed-out cloud in the top bar to turn remote back on (a snackbar confirms), or turn the whole button off under the menu's **Local-only button** switch - switching the menu entry off also turns the mode off. The state survives app restarts, so a toggle you flipped days ago is the usual culprit.
 
+## A Direct (LAN/VPN) printer shows offline
+
+A printer added through **Add Printer → Direct (LAN/VPN)** (v0.9.51+) has exactly one path to it - the address you gave it, over your network - so "offline" always means one of these:
+
+1. **The phone isn't on the printer's network.** On WiFi at home this is your LAN; away from home it means your **own VPN must be connected** (WireGuard, Tailscale). Direct printers have no tunnel to fall back to - that's the mode's whole point.
+2. **Moonraker is rejecting the phone.** The app talks straight to Moonraker, so the phone's network must be inside `[authorization] trusted_clients` in `moonraker.conf`. Home subnets usually already are; **VPN subnets usually are not** - WireGuard setups often use `10.x` ranges that happen to be covered, but **Tailscale's `100.64.0.0/10` almost never is**. Add the subnet and restart Moonraker:
+   ```ini
+   [authorization]
+   trusted_clients:
+       192.168.1.0/24
+       100.64.0.0/10   # Tailscale
+   ```
+3. **The Pi isn't actually in LAN-only mode.** Direct mode needs the plugin installed with `--lan-only` (see the README's LAN-only install section). Against a normal cloud-mode install the plugin still demands a token and answers `401`, so the tile sits offline. Check from any PC on the LAN:
+   ```bash
+   curl -s -o /dev/null -w "%{http_code}\n" "http://<pi-ip>/server/moongate/status?mg_token="
+   ```
+   `200` = LAN-only mode; `401` = cloud mode (re-run the installer with `--lan-only`, or pair the printer through the cloud instead).
+4. **The Pi's address changed** (DHCP handed it a new IP). The app stores the address a Direct printer was added with - fix it in the printer's edit dialog (the pencil on its page), and give the Pi a **DHCP reservation / static IP** so it stops moving.
+
+Also by design: Direct printers have **no print notifications** (there's no cloud to send them), so a quiet notification shade for one isn't a fault.
+
+## A Direct printer works at home but not over my VPN
+
+Same checklist as above with the VPN hat on: the VPN must be **connected on the phone**, its subnet must be in Moonraker's `trusted_clients` (point 2 above - this is the usual culprit, especially Tailscale's `100.64.0.0/10`), and the printer's stored address must be reachable *through* the VPN - for router-based WireGuard that's the printer's normal LAN IP; for Tailscale it's the Pi's Tailscale address, which is what you should have entered when adding the printer.
+
 ## Opening a printer shows "the web interface isn't answering yet"
 
 From v0.9.48 this friendly message (with an automatic retry every few seconds) replaces the raw Cloudflare **"Bad gateway / Error 502"** page you used to see when opening a printer whose Pi was still starting up - the tunnel comes up a little before Mainsail does, so the first moments after a Pi boot can answer 502. It normally clears by itself within a minute. If it doesn't: check Mainsail loads in a browser on the printer's own network, and that Moonraker/Klipper are actually running on the Pi - the tunnel being up only proves the Pi is powered, not that the web stack behind it is healthy.
