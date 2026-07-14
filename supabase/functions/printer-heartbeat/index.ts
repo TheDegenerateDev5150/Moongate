@@ -48,10 +48,18 @@ const MAX_TUNNEL_URL_LENGTH = 256;
 // re-pairs has a live row again and takes the normal 'ok' path, so a mute
 // never blocks a comeback. (Designed 2026-06-24 during the Schlonky spinner
 // hunt; built 2026-07-13 for the 87.122.x spinner.)
-const MUTED_IPS = new Set(
-  (Deno.env.get("MOONGATE_MUTED_IPS") ?? "")
-    .split(",").map((s) => s.trim()).filter((s) => s.length > 0),
-);
+//
+// An entry ending in "." is a PREFIX match ("87.122.16." mutes that whole
+// block): residential IPs rotate, so an exact IP goes stale overnight (the
+// 87.122.x spinner moved .205 -> .219 within a day, 2026-07-14).
+const MUTED_ENTRIES  = (Deno.env.get("MOONGATE_MUTED_IPS") ?? "")
+  .split(",").map((s) => s.trim()).filter((s) => s.length > 0);
+const MUTED_IPS      = new Set(MUTED_ENTRIES.filter((e) => !e.endsWith(".")));
+const MUTED_PREFIXES = MUTED_ENTRIES.filter((e) => e.endsWith("."));
+
+const isMuted = (ip: string) =>
+  ip.length > 0 &&
+  (MUTED_IPS.has(ip) || MUTED_PREFIXES.some((p) => ip.startsWith(p)));
 
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
@@ -135,7 +143,7 @@ Deno.serve(async (req) => {
   // Rowless outcome. A muted spinner gets a calming 204 before anything else.
   const callerIp = req.headers.get("cf-connecting-ip")
                 ?? req.headers.get("x-real-ip") ?? "";
-  if (MUTED_IPS.has(callerIp)) return emptyResponse(204);
+  if (isMuted(callerIp)) return emptyResponse(204);
 
   if (data === "revoked") return gone("printer_released");
   return notFound();
