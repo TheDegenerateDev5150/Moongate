@@ -76,6 +76,12 @@ class _PairingScreenState extends State<PairingScreen> {
   // here - server uses its stored value from enrollment_tokens.
   String? _manualEnrollmentToken;
 
+  // Cloudless LAN-only path: scanned a `moongate://lan` QR from a Pi installed
+  // with --lan-only. No enrollment token, no Supabase claim - we just add the
+  // printer by its LAN address. `_scannedLanUrl` above holds the address.
+  bool    _scannedLanOnly = false;
+  String? _scannedLanName;
+
   @override
   void dispose() {
     _barcodeSub?.cancel();
@@ -259,6 +265,31 @@ class _PairingScreenState extends State<PairingScreen> {
       setState(() => _error = l.pairingErrorNotMoongateQr);
       return;
     }
+    // Cloudless LAN-only QR: `moongate://lan?v=1&ip=<ip>&port=<port>&name=<host>`.
+    // No enrollment token - it just carries the LAN address. Handled here,
+    // before the cloud-pairing v=3 check below.
+    if (uri.host == 'lan') {
+      final ip   = uri.queryParameters['ip'];
+      final port = uri.queryParameters['port'];
+      // Validate the scanned address through the same normaliser as manual
+      // entry so a malformed QR can't create a garbage printer entry.
+      final raw    = (port == null || port.isEmpty) ? (ip ?? '') : '$ip:$port';
+      final lanUrl = PrinterConfig.parseLanUrl(raw);
+      if (lanUrl == null) {
+        setState(() => _error = l.pairingErrorNotMoongateQr);
+        return;
+      }
+      final name = uri.queryParameters['name'];
+      setState(() {
+        _scannedLanOnly         = true;
+        _scannedLanUrl          = lanUrl;
+        _scannedLanName         = (name != null && name.isNotEmpty) ? name : null;
+        _scannedPubKey          = null;
+        _scannedEnrollmentToken = null;
+        _error                  = null;
+      });
+      return;
+    }
     final version = uri.queryParameters['v'];
     final pk      = uri.queryParameters['pk'];
     final et      = uri.queryParameters['et'];
@@ -289,6 +320,43 @@ class _PairingScreenState extends State<PairingScreen> {
 
   Future<void> _claim() async {
     final l = AppLocalizations.of(context);
+
+    // Cloudless LAN-only path: no Supabase claim. Mint a local id from the LAN
+    // address (stable, so re-scanning the same Pi dedupes) and add it directly.
+    // The status/control services see lanOnly and poll the plugin over the LAN
+    // with no cloud token.
+    if (_scannedLanOnly) {
+      final manualLanUrl = PrinterConfig.parseLanUrl(_addressController.text);
+      if (_addressController.text.trim().isNotEmpty && manualLanUrl == null) {
+        setState(() => _error = l.pairingErrorBadAddress);
+        return;
+      }
+      final effectiveLan = manualLanUrl ?? _scannedLanUrl;
+      if (effectiveLan == null) {
+        setState(() => _error = l.pairingErrorBadAddress);
+        return;
+      }
+      final name = _nameController.text.trim().isEmpty
+          ? (_scannedLanName ?? 'My Printer')
+          : _nameController.text.trim();
+      setState(() { _loading = true; _error = null; });
+      try {
+        final id = 'lan-${effectiveLan.replaceAll(RegExp(r'[^A-Za-z0-9]'), '-')}';
+        await PrinterRegistry.instance.addClaimed(
+          PrinterConfig(id: id, name: name, lanUrl: effectiveLan, lanOnly: true),
+        );
+        if (!mounted) return;
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/dashboard');
+        }
+      } catch (e) {
+        if (mounted) setState(() { _error = l.pairingErrorFailed(e.toString()); _loading = false; });
+      }
+      return;
+    }
+
     // QR-scan path wins if present (it carries the pubkey for the
     // defense-in-depth server check). Manual path is the fallback.
     final scannedEt = _scannedEnrollmentToken;
@@ -437,6 +505,9 @@ class _PairingScreenState extends State<PairingScreen> {
     setState(() {
       _scannedPubKey         = null;
       _scannedEnrollmentToken = null;
+      _scannedLanOnly        = false;
+      _scannedLanName        = null;
+      _scannedLanUrl         = null;
       _error                 = null;
     });
   }
@@ -447,9 +518,10 @@ class _PairingScreenState extends State<PairingScreen> {
   Widget build(BuildContext context) {
     final l         = AppLocalizations.of(context);
     final cs        = Theme.of(context).colorScheme;
-    final hasScan   = _scannedPubKey != null && _scannedEnrollmentToken != null;
-    final hasManual = !hasScan && _manualEnrollmentToken != null;
-    final hasInput  = hasScan || hasManual;
+    final hasScan    = _scannedPubKey != null && _scannedEnrollmentToken != null;
+    final hasLanScan = _scannedLanOnly;
+    final hasManual  = !hasScan && !hasLanScan && _manualEnrollmentToken != null;
+    final hasInput   = hasScan || hasLanScan || hasManual;
 
     return Scaffold(
       appBar: AppBar(
@@ -659,7 +731,7 @@ class _PairingScreenState extends State<PairingScreen> {
               ),
             ],
 
-            if (hasScan) ...[
+            if (hasScan || hasLanScan) ...[
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(14),
@@ -673,7 +745,10 @@ class _PairingScreenState extends State<PairingScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        l.pairingQrScanned(_scannedEnrollmentToken!),
+                        // TODO(l10n): add a dedicated LAN-only string.
+                        hasLanScan
+                            ? 'LAN printer scanned - ${_scannedLanUrl ?? ''}'
+                            : l.pairingQrScanned(_scannedEnrollmentToken!),
                         style: TextStyle(
                           color: cs.onPrimaryContainer,
                           fontWeight: FontWeight.w600,

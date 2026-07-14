@@ -559,6 +559,11 @@ class _PrintTaskHandler extends TaskHandler {
   // ── Polling ───────────────────────────────────────────────────────────────
 
   Future<_Poll?> _poll(PrinterConfig p) async {
+    // Cloudless LAN-only printer: no cloud row exists, so minting a
+    // printer-access token here just 404s on every tick. Skip it outright -
+    // zero cloud calls. (LAN-side notification polling is a separate follow-up.)
+    if (p.lanOnly) return null;
+
     // Liveness gate (mirrors the dashboard): skip the token mint - an Edge call
     // - for a printer with positive evidence of being offline (stale cloud
     // last_seen) and no token-free LAN answer. Fails open on unknown last_seen.

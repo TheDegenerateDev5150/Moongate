@@ -30,6 +30,12 @@ class PrinterConfig {
   /// Format: `http://192.168.1.157:80`. Null until first successful poll.
   final String? lanUrl;
 
+  /// LAN-only / cloudless printer: added from a `moongate://lan` QR (or manual
+  /// LAN entry) against a Pi installed with `--lan-only`. There is no Supabase
+  /// row and no tunnel; the status/control services poll the plugin over the
+  /// LAN with no cloud token (the Pi trusts the LAN). See PrinterStatusService.
+  final bool lanOnly;
+
   /// Cached webcam display-transform settings, populated from the Moongate
   /// /status response after each successful poll. Persisted so the tile
   /// renders correctly on the very first frame after a cold launch.
@@ -97,6 +103,7 @@ class PrinterConfig {
     required this.id,
     required this.name,
     this.lanUrl,
+    this.lanOnly         = false,
     this.webcamFlipH     = false,
     this.webcamFlipV     = false,
     this.webcamRotation  = 0,
@@ -119,6 +126,7 @@ class PrinterConfig {
   PrinterConfig copyWith({
     String? name,
     Object? lanUrl = _sentinel, // sentinel so we can copy null in
+    bool?   lanOnly,
     bool?   webcamFlipH,
     bool?   webcamFlipV,
     int?    webcamRotation,
@@ -141,6 +149,7 @@ class PrinterConfig {
         id:              id,
         name:            name            ?? this.name,
         lanUrl:          identical(lanUrl, _sentinel) ? this.lanUrl : lanUrl as String?,
+        lanOnly:         lanOnly         ?? this.lanOnly,
         webcamFlipH:     webcamFlipH     ?? this.webcamFlipH,
         webcamFlipV:     webcamFlipV     ?? this.webcamFlipV,
         webcamRotation:  webcamRotation  ?? this.webcamRotation,
@@ -237,6 +246,7 @@ class PrinterConfig {
         'id':              id,
         'name':            name,
         if (lanUrl != null) 'lanUrl': lanUrl,
+        if (lanOnly) 'lanOnly': lanOnly,
         'webcamFlipH':     webcamFlipH,
         'webcamFlipV':     webcamFlipV,
         'webcamRotation':  webcamRotation,
@@ -265,6 +275,7 @@ class PrinterConfig {
       id:              j['id']   as String,
       name:            j['name'] as String,
       lanUrl:          j['lanUrl']          as String?,
+      lanOnly:         j['lanOnly']         as bool? ?? false,
       webcamFlipH:     j['webcamFlipH']     as bool? ?? false,
       webcamFlipV:     j['webcamFlipV']     as bool? ?? false,
       webcamRotation:  j['webcamRotation']  as int?  ?? 0,

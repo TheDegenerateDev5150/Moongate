@@ -22,7 +22,24 @@ class PrintControlService {
   /// Send a print control action.
   /// [action]: `pause` | `resume` | `cancel` | `firmware_restart` | `emergency_stop`
   /// Returns `true` if the Pi accepted the command.
+  /// Freshest LAN base for this printer: what the status service last learned
+  /// (registry-live), else the construction-time config. Used by the LAN-only
+  /// (cloudless) path, which has no tunnel to fall back to.
+  String? _liveLanUrl() =>
+      PrinterRegistry.instance.printers
+          .firstWhere((p) => p.id == config.id, orElse: () => config)
+          .lanUrl ??
+      config.lanUrl;
+
   Future<bool> sendAction(String action) async {
+    // Cloudless LAN-only printer: hit the plugin over the LAN with no token
+    // (the lan_only plugin trusts the LAN). No Supabase, no tunnel fallback.
+    if (config.lanOnly) {
+      final lanUrl = _liveLanUrl();
+      if (lanUrl == null) return false;
+      return _send(lanUrl, '', action, timeout: const Duration(seconds: 3));
+    }
+
     if (!SupabaseService.instance.ready) return false;
 
     PrinterAccess access;
@@ -504,14 +521,19 @@ class PrintControlService {
   /// null on failure (logged for diagnosis).
   Future<Uint8List?> fetchThumbnail(GcodeFile file,
       {required String base, required bool isLan}) async {
-    final PrinterAccess access;
-    try {
-      access = await PrinterAccessCache.instance.get(config.id);
-    } catch (_) {
-      return null;
+    // The token is only needed for the tunnel's Bearer header; on LAN Moonraker
+    // trusts the subnet, so skip the Supabase fetch entirely (a LAN-only
+    // printer has no cloud row to fetch, and it saves an Edge call otherwise).
+    Map<String, String>? headers;
+    if (!isLan) {
+      final PrinterAccess access;
+      try {
+        access = await PrinterAccessCache.instance.get(config.id);
+      } catch (_) {
+        return null;
+      }
+      headers = {'Authorization': 'Bearer ${access.accessToken}'};
     }
-    final headers =
-        isLan ? null : {'Authorization': 'Bearer ${access.accessToken}'};
     final where = isLan ? 'lan' : 'tunnel';
     try {
       final metaUri = Uri.parse('$base/server/files/metadata'
@@ -564,6 +586,12 @@ class PrintControlService {
   /// less) printer still works on LAN and a stale token self-heals.
   Future<T?> _viaLanThenTunnel<T>(
       Future<T?> Function(String base, String token, bool isLan) call) async {
+    // Cloudless LAN-only printer: LAN only, token-free, no Supabase.
+    if (config.lanOnly) {
+      final lanUrl = _liveLanUrl();
+      if (lanUrl == null) return null;
+      return call(lanUrl, '', true);
+    }
     if (!SupabaseService.instance.ready) return null;
 
     PrinterAccess access;

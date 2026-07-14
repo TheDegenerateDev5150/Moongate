@@ -78,7 +78,13 @@ class _PrinterScreenState extends State<PrinterScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _start();
+    // Defer to after the first frame: _start() reads AppLocalizations.of(context)
+    // synchronously, which can throw a null-check in initState before the
+    // localization ancestor is available (seen as an endless spinner + default
+    // "Tunnel" subtitle because _start aborted before loading anything).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _start();
+    });
   }
 
   @override
@@ -131,6 +137,44 @@ class _PrinterScreenState extends State<PrinterScreen>
       _tunnelUrl = warm.tunnelUrl;
       setState(() { _loading = false; _errorMsg = null; });
       _revalidateWarm(warm);
+      _maybeShowCameraHint();
+      return;
+    }
+
+    // Cloudless LAN-only printer: load Mainsail straight from the LAN. No
+    // Supabase access, no EdDSA cookie - the Pi serves nginx/Moonraker on the
+    // LAN directly. We don't pre-probe /server/info here (that check is
+    // unreliable from a routed/off-subnet client, and a failed probe would
+    // wrongly show "not on this network"); we just load the page and let the
+    // WebView's onWebResourceError surface a genuine failure.
+    if (widget.printer.lanOnly) {
+      final lanUrl = widget.printer.lanUrl;
+      if (lanUrl == null) {
+        if (mounted) {
+          setState(() { _loading = false; _errorMsg = l.printerLocalOnlyNoLan; });
+        }
+        return;
+      }
+      if (!mounted) return;
+      // setState so the app-bar subtitle flips to "Local network" immediately,
+      // not just after the first onPageStarted callback.
+      setState(() {
+        _usingLan  = true;
+        _tunnelUrl = null;
+        _loading   = true;
+        _errorMsg  = null;
+      });
+      _initControllerIfNeeded();
+      await _webController!.loadRequest(Uri.parse('$lanUrl/'));
+      PrinterWebViewCache.instance.store(
+        widget.printer.id,
+        LiveWebSession(
+          controller: _webController!,
+          baseUrl:    lanUrl,
+          usingLan:   true,
+          tunnelUrl:  null,
+        ),
+      );
       _maybeShowCameraHint();
       return;
     }

@@ -555,10 +555,13 @@ PLUGIN_CFG_DIR="$HOME/.config/moongate"
 PLUGIN_CFG_FILE="$PLUGIN_CFG_DIR/config.json"
 mkdir -p "$PLUGIN_CFG_DIR"
 
+# In LAN-only mode we also flip the plugin's lan_only flag on; in tunnel mode
+# we flip it OFF, so re-running without --lan-only converts a box back.
+MG_PLUGIN_LAN_ONLY=$([[ -n "$MOONGATE_LAN_ONLY" ]] && echo true || echo false)
 if command -v python3 &>/dev/null; then
-    python3 - "$PLUGIN_CFG_FILE" "$MOONGATE_PORT" << 'PY'
+    python3 - "$PLUGIN_CFG_FILE" "$MOONGATE_PORT" "$MG_PLUGIN_LAN_ONLY" << 'PY'
 import json, sys
-path, port = sys.argv[1], int(sys.argv[2])
+path, port, lan_only = sys.argv[1], int(sys.argv[2]), sys.argv[3] == "true"
 try:
     with open(path) as f:
         data = json.load(f)
@@ -567,6 +570,7 @@ try:
 except (FileNotFoundError, ValueError):
     data = {}
 data["http_port"] = port
+data["lan_only"]  = lan_only
 with open(path, "w") as f:
     json.dump(data, f, indent=2)
 PY
@@ -574,11 +578,12 @@ else
     # Best-effort fallback when python3 isn't on PATH - overwrites other keys
     cat > "$PLUGIN_CFG_FILE" << EOF
 {
-  "http_port": $MOONGATE_PORT
+  "http_port": $MOONGATE_PORT,
+  "lan_only": $MG_PLUGIN_LAN_ONLY
 }
 EOF
 fi
-success "Plugin HTTP port saved to $PLUGIN_CFG_FILE"
+success "Plugin config saved to $PLUGIN_CFG_FILE (lan_only=$MG_PLUGIN_LAN_ONLY)"
 
 # ── 6-7. Remote-access stack: cloudflared + auth proxy + tunnel ──────────────
 # Skipped entirely in LAN-only mode. The `if` guard runs to just before the
