@@ -1,5 +1,14 @@
 [
   {
+    "version": "v0.9.51",
+    "bullets": [
+      "Run it your way: a new Direct (LAN/VPN) mode adds a printer with zero cloud. Install the Pi plugin in LAN-only mode, pick 'Direct (LAN/VPN)' at the top of the Add Printer screen, then scan its QR or type its address - the app talks straight to Moonraker on your network, nothing touches the internet, and it keeps working with no internet at all. Away from home you connect through your own VPN (WireGuard, Tailscale). Honest trade-offs, shown right on the screen: no print notifications in Direct mode, remote access is your VPN's job, your phone's network must be in Moonraker's trusted_clients, and give the Pi a fixed address.",
+      "Switch an existing printer between cloud and Direct any time from its edit dialog (the pencil on the printer page) - no re-pairing, takes effect straight away. And if you later cloud-pair a machine you'd added as Direct, the app absorbs the old tile automatically, keeping its settings.",
+      "Printers now need a real name: the name box starts empty and cycles example names ('Voron 2.4', 'RatRig 300', 'Wilma'...), and adding without one shows a friendly reminder. No more dashboards full of 'My Printer'.",
+      "The plugin update icon has moved to the bottom-left corner of the camera box, next to the power button (it was top-right among the camera controls)."
+    ]
+  },
+  {
     "version": "v0.9.50",
     "bullets": [
       "The dashboard now tells you when a printer's Moongate plugin is out of date: a small amber update icon appears on that machine's camera box (or next to the power button on compact tiles) and stays until the plugin is updated - it disappears by itself the moment the printer reports the new version.",
