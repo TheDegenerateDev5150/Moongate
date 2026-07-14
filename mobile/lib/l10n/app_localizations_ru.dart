@@ -834,7 +834,17 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get pairingDefaultPrinterName => 'Мой принтер';
+  String pairingNameHintCycled(String name) {
+    return 'напр. $name';
+  }
+
+  @override
+  String get pairingNameHintExamples =>
+      'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Printy McPrintface';
+
+  @override
+  String get pairingErrorNoName =>
+      'Сначала дайте принтеру имя - по нему вы будете узнавать его на панели.';
 
   @override
   String get pairingDirectCaveatsTitle => 'Ограничения прямого режима';

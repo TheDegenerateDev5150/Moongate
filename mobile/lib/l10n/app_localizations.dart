@@ -1546,11 +1546,23 @@ abstract class AppLocalizations {
   /// **'LAN printer scanned - {url}'**
   String pairingLanScanned(String url);
 
-  /// Default printer name seeded into the name field and used when the field is left empty.
+  /// Hint inside the empty printer-name field; {name} cycles through pairingNameHintExamples every ~2s.
   ///
   /// In en, this message translates to:
-  /// **'My Printer'**
-  String get pairingDefaultPrinterName;
+  /// **'e.g. {name}'**
+  String pairingNameHintCycled(String name);
+
+  /// Pipe-separated example printer names cycled in the name hint. Mostly printer models (keep as-is); the fun ones may be localised.
+  ///
+  /// In en, this message translates to:
+  /// **'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Printy McPrintface'**
+  String get pairingNameHintExamples;
+
+  /// Error when tapping Pair/Add with an empty printer-name field. Naming is required; there is no default name.
+  ///
+  /// In en, this message translates to:
+  /// **'Give your printer a name first - it\'s how you\'ll spot it on the dashboard.'**
+  String get pairingErrorNoName;
 
   /// Title of the info panel listing what Direct (LAN/VPN) mode cannot do.
   ///

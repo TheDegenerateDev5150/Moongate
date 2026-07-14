@@ -839,7 +839,17 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get pairingDefaultPrinterName => 'Mi impresora';
+  String pairingNameHintCycled(String name) {
+    return 'p. ej. $name';
+  }
+
+  @override
+  String get pairingNameHintExamples =>
+      'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Printy McPrintface';
+
+  @override
+  String get pairingErrorNoName =>
+      'Ponle primero un nombre a tu impresora - así la identificarás en el panel.';
 
   @override
   String get pairingDirectCaveatsTitle => 'Limitaciones del modo directo';

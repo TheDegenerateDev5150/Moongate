@@ -88,22 +88,29 @@ class _PairingScreenState extends State<PairingScreen> {
   // type auto-selects its mode; switching manually clears any staged scan.
   bool    _directMode = false;
 
-  // The name field seeds a localised "My Printer" - impossible at field
-  // construction (no context yet), so it happens on first dependency
-  // resolution instead.
-  bool    _nameSeeded = false;
+  // The name field starts EMPTY and is required: the database filled up with
+  // printers literally called "My Printer" because a pre-seeded default reads
+  // as "already answered". Instead the empty field cycles example names as
+  // its hint (below), and _claim blocks with pairingErrorNoName until the
+  // user types something - so a nameless printer can no longer be created.
+  Timer? _nameHintTimer;
+  int    _nameHintIx = 0;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_nameSeeded) {
-      _nameSeeded = true;
-      _nameController.text = AppLocalizations.of(context).pairingDefaultPrinterName;
-    }
+  void initState() {
+    super.initState();
+    _nameHintTimer = Timer.periodic(const Duration(milliseconds: 2200), (_) {
+      // Only cycle while the hint is visible (field empty); a name in the
+      // field hides the hint, so ticking would just be wasted rebuilds.
+      if (mounted && _nameController.text.isEmpty) {
+        setState(() => _nameHintIx++);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _nameHintTimer?.cancel();
     _barcodeSub?.cancel();
     _scannerController?.dispose();
     _nameController.dispose();
@@ -305,6 +312,12 @@ class _PairingScreenState extends State<PairingScreen> {
         _scannedLanOnly         = true;
         _scannedLanUrl          = lanUrl;
         _scannedLanName         = (name != null && name.isNotEmpty) ? name : null;
+        // The QR carries the Pi's hostname - pre-fill an untouched name field
+        // with it so the required-name gate passes with something real (the
+        // user can still overwrite it).
+        if (_nameController.text.trim().isEmpty && _scannedLanName != null) {
+          _nameController.text = _scannedLanName!;
+        }
         _scannedPubKey          = null;
         _scannedEnrollmentToken = null;
         _error                  = null;
@@ -361,6 +374,17 @@ class _PairingScreenState extends State<PairingScreen> {
   Future<void> _claim() async {
     final l = AppLocalizations.of(context);
 
+    // A real name is required - no more silent "My Printer" fallback (the
+    // cloud filled up with rows literally named that). Inline error + focus
+    // beats a dialog: it sits right under the field the user must now use.
+    if (_nameController.text.trim().isEmpty) {
+      setState(() => _error = l.pairingErrorNoName);
+      _nameFocus.requestFocus();
+      _scrollController.animateTo(0,
+          duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+      return;
+    }
+
     // Direct (LAN/VPN) path: no Supabase claim. Mint a local id from the LAN
     // address (stable, so re-scanning the same Pi dedupes) and add it directly.
     // The status/control services see lanOnly and poll the plugin over the LAN
@@ -376,9 +400,7 @@ class _PairingScreenState extends State<PairingScreen> {
         setState(() => _error = l.pairingErrorNoAddress);
         return;
       }
-      final name = _nameController.text.trim().isEmpty
-          ? (_scannedLanName ?? l.pairingDefaultPrinterName)
-          : _nameController.text.trim();
+      final name = _nameController.text.trim();
       setState(() { _loading = true; _error = null; });
       try {
         final id = 'lan-${effectiveLan.replaceAll(RegExp(r'[^A-Za-z0-9]'), '-')}';
@@ -416,9 +438,7 @@ class _PairingScreenState extends State<PairingScreen> {
     }
     final pk = scannedEt != null ? _scannedPubKey : null;
 
-    final name = _nameController.text.trim().isEmpty
-        ? l.pairingDefaultPrinterName
-        : _nameController.text.trim();
+    final name = _nameController.text.trim();
 
     setState(() { _loading = true; _error = null; });
 
@@ -566,6 +586,15 @@ class _PairingScreenState extends State<PairingScreen> {
     return null;
   }
 
+  /// The current example name shown as the empty name field's hint. The list
+  /// comes from one localised `|`-separated string so translators can swap in
+  /// their own fun names; _nameHintTimer advances the index every ~2s while
+  /// the field is empty.
+  String _cyclingNameHint(AppLocalizations l) {
+    final examples = l.pairingNameHintExamples.split('|');
+    return l.pairingNameHintCycled(examples[_nameHintIx % examples.length]);
+  }
+
   /// The Direct-added (`lan-` id) tile whose address points at the same
   /// machine as [lanUrl], if any. Compares host + effective port via Uri so
   /// `http://x` and `http://x:80` match. Converted cloud tiles (lanOnly but
@@ -654,14 +683,21 @@ class _PairingScreenState extends State<PairingScreen> {
             const SizedBox(height: 20),
 
             // ── Printer name ───────────────────────────────────────────
+            // Starts empty on purpose (see _nameHintTimer) - the hint cycles
+            // through example names so it's obvious this wants a real one.
             TextField(
               controller: _nameController,
               focusNode: _nameFocus,
               enabled: !_loading,
               onTap: () => showKeyboardFor(_nameFocus),
+              // Rebuild on edits so the required-name error clears as soon
+              // as the user starts typing.
+              onChanged: (_) {
+                if (_error != null) setState(() => _error = null);
+              },
               decoration: InputDecoration(
                 labelText: l.pairingNameLabel,
-                hintText: l.pairingNameHint,
+                hintText: _cyclingNameHint(l),
                 border: const OutlineInputBorder(),
                 suffixIcon: _loading ? null : ShowKeyboardButton(_nameFocus),
               ),

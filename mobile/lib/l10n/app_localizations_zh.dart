@@ -791,7 +791,16 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get pairingDefaultPrinterName => '我的打印机';
+  String pairingNameHintCycled(String name) {
+    return '例如：$name';
+  }
+
+  @override
+  String get pairingNameHintExamples =>
+      'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Printy McPrintface';
+
+  @override
+  String get pairingErrorNoName => '请先为打印机命名 - 您将通过这个名字在仪表盘上识别它。';
 
   @override
   String get pairingDirectCaveatsTitle => '直连模式的限制';
