@@ -116,6 +116,13 @@ bash install.sh --lan-only
 
 Re-running with the flag on a box that already has the tunnel stack retires it (disables the tunnel + auth proxy) and converges to LAN-only.
 
+In the app, add a LAN-only printer with **Add printer → Direct (LAN/VPN)** - scan the QR from `MOONGATE_PAIR` or type the printer's address. A LAN-only box can also be paired through the cloud as normal (while it has internet); Direct mode is for the fully cloud-free / internet-isolated case. Two networking notes:
+
+- **`trusted_clients` must cover your phone.** The app talks to Moonraker directly, so the phone's subnet needs to be in Moonraker's `[authorization] trusted_clients`. Home WiFi and WireGuard's usual `10.x` range typically already are; **Tailscale's `100.64.0.0/10` usually is not** - add it or Moonraker answers 401 before Moongate ever runs.
+- **Give the Pi a fixed address.** The app stores the address a Direct printer was added with, so use a DHCP reservation (or static IP) - if the Pi's IP changes you'd have to re-add it.
+
+Direct-mode printers work fully offline, but skip everything cloud-backed: no print notifications, and away from home the app only reaches them through your own VPN.
+
 </details>
 
 ### 2. Install the app

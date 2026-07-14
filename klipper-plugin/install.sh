@@ -96,6 +96,11 @@ MG_CLOCK_MAX_SKEW=30   # seconds; the server's hard cutoff is 60
 # replays. LAN-only has no tunnel, so we skip the check and never stand up the
 # recurring htpdate timer. Guard body left un-indented to keep the htpdate
 # systemd heredocs byte-for-byte identical.
+# NB: print push notifications are also signed calls with a 60s clock window.
+# On a plugin with the lan_only config flag (0.6.17+, written below) the
+# print-event watcher never starts so nothing is lost; on an older converged
+# box the watcher still runs and a badly wrong clock silently loses those
+# sends - re-running this installer writes the flag.
 if [[ -z "$MOONGATE_LAN_ONLY" ]]; then
 info "Checking the system clock (remote auth needs it within 60s of real time)..."
 MG_HTTP_DATE=$(curl -fsSI -k --max-time 10 "$MG_TIME_HOST" 2>/dev/null \
@@ -161,13 +166,17 @@ UNIT
 fi
 fi  # end LAN-only clock-check guard
 
-ARCH=$(uname -m)
-
 # Pick the cloudflared deb that matches the dpkg system architecture.
 # uname -m alone is unreliable: the kernel reports armv7l on a system
 # whose userland is armhf, and dpkg refuses to install an "arm" deb on
 # an "armhf" host. dpkg --print-architecture is what dpkg uses when
 # matching a .deb, so it's the authoritative source here.
+# Skipped in LAN-only mode: CF_ARCH only feeds the cloudflared download in
+# the remote-access section (itself LAN-only-skipped), and the unsupported-
+# architecture die must not kill a LAN-only install that never needs
+# cloudflared. Guard body left un-indented, matching the guards above.
+if [[ -z "$MOONGATE_LAN_ONLY" ]]; then
+ARCH=$(uname -m)
 DPKG_ARCH=""
 if command -v dpkg &>/dev/null; then
     DPKG_ARCH="$(dpkg --print-architecture)"
@@ -193,6 +202,7 @@ else
 fi
 
 info "Architecture: $ARCH (dpkg: ${DPKG_ARCH:-n/a}) → cloudflared: $CF_ARCH"
+fi  # end LAN-only arch guard
 
 # ── 1. Clone or update the Moongate repo ─────────────────────────────────────
 # Cloning to ~/moongate lets Moonraker's update manager track the repo and
