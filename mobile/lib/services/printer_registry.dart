@@ -304,6 +304,20 @@ class PrinterRegistry {
     await _save();
   }
 
+  /// Flip a printer between cloud and Direct (LAN/VPN) mode. Only meaningful
+  /// for cloud-paired printers - a Direct-added `lan-` id has no cloud row to
+  /// go back to (see PrinterConfig.cloudPaired). The status/control services
+  /// read the flag registry-live, so it takes effect on the next poll with no
+  /// restart.
+  Future<void> setLanOnly(String printerId, bool lanOnly) async {
+    final idx = _printers.indexWhere((p) => p.id == printerId);
+    if (idx == -1) return;
+    if (_printers[idx].lanOnly == lanOnly) return;
+    _printers = List.of(_printers)
+      ..[idx] = _printers[idx].copyWith(lanOnly: lanOnly);
+    await _save();
+  }
+
   /// Update the cached LAN URL for a printer after a /status response
   /// surfaces it. Pass null to clear (e.g. when LAN starts failing).
   Future<void> updateLanUrl(String printerId, String? lanUrl) async {

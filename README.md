@@ -13,7 +13,9 @@
 
 <img src="docs/screenshots/generated/hero-ios.png" width="820" alt="Moongate on iPhone and Android - fleet dashboard, the full Mainsail UI in-app, and custom themes"/>
 
-Free, open-source **iPhone and Android** control for your **Klipper 3D printer** - live webcam, print controls, temperatures, and the complete Mainsail/Fluidd UI - over home WiFi and **automatically over the internet** when you're away. No Tailscale, no VPN, no port forwarding, no subscriptions.
+Free, open-source **iPhone and Android** control for your **Klipper 3D printer** - live webcam, print controls, temperatures, and the complete Mainsail/Fluidd UI - over home WiFi and **automatically over the internet** when you're away. Zero setup, no port forwarding, no subscriptions.
+
+**Prefer your own infrastructure? Run it your way.** The cloud-free **Direct (LAN/VPN)** mode talks straight to your printer over your network - or your own **WireGuard / Tailscale VPN** when you're out - and never touches the internet. [See how the two modes compare ›](#run-it-your-way)
 
 <a href="https://apps.apple.com/gb/app/moongate-klipper-control/id6785038887"><img src="https://img.shields.io/badge/Download%20on%20the%20App%20Store-0D96F6?style=for-the-badge&logo=apple&logoColor=white" alt="Download on the App Store"/></a>
 <a href="https://github.com/PEEKYPAUL/Moongate/releases/latest"><img src="https://img.shields.io/badge/%E2%AC%87%20Download%20the%20APK-6C63FF?style=for-the-badge&logo=android&logoColor=white" alt="Download the APK"/></a>
@@ -29,6 +31,7 @@ Free, open-source **iPhone and Android** control for your **Klipper 3D printer**
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Quick start](#quick-start)
+- [Run it your way](#run-it-your-way)
 - [How it works](#how-it-works)
 - [Documentation](#documentation)
 - [Buy me a coffee](#buy-me-a-coffee)
@@ -46,6 +49,7 @@ Free, open-source **iPhone and Android** control for your **Klipper 3D printer**
 - 📂 **Print files on the printer** - tap the folder button on a ready printer to browse the G-code already saved on it, shown with slicer **thumbnails**, newest first. Pick one and **Start print** with a confirm tap - no slicer, no re-upload.
 - 🖥️ **Full Mainsail / Fluidd UI** - tap a tile to open the complete web UI in-app; whichever you run is auto-detected. Every printer's page is **warmed in the background the moment the app starts and then kept loaded, so even the first time you open a printer it's instant** - no "Initializing…" reload, a big difference over the tunnel. A built-in full-screen **camera view** - open it from the top-bar icon, the tile's eye button, or just **press and hold any tile's camera** - runs at the camera's **full frame rate** with pinch-to-zoom, and keeps the feed working when you're away - even for an external camera the embedded page can't load over mobile data.
 - 📡 **Auto local ↔ remote** - tries home WiFi first every poll, falls back to the Cloudflare tunnel within ~2s when you're away, and flips back to "Local" the moment you're home. Printers that are **switched off cost almost nothing in the background** - the dashboard and the print notifications both stop reaching out to them until they're back online - so it's easy on mobile data and battery. Prefer to stay off the internet entirely? An optional **Local only** switch in the top bar (enable its button in the menu) turns remote connections off with one tap - only printers on your own network connect until you tap it again.
+- 🔌 **Run it your way - Direct (LAN/VPN) mode** - a fully **cloud-free** way to run Moongate: install the Pi in LAN-only mode, add the printer by QR or address, and the app talks **straight to Moonraker** on your network - no account, no tunnel, nothing ever leaves your LAN. Away from home you connect over **your own VPN** (WireGuard, Tailscale). Existing printers **switch between cloud and Direct** from their edit dialog, no re-pairing. Honest trade-off: no print notifications in Direct mode, and remote access is your VPN's job. [Details ›](#run-it-your-way)
 - 🔔 **Print notifications** - opt-in live fleet status in your notification shade - per-printer progress, the projected **finish time**, temperatures and heat-up - with start / finish / pause / error alerts and a configurable refresh interval. **Choose which details show and drag them into the order you want**, and the roster follows your dashboard's order (your **Auto-arrange by status** setting). A **pause/play button** in the top bar suspends the background checks with one tap when your printers will be off for a while (saving battery), then resumes them when you tap it again. Off by default.
 - 🔒 **App lock** - optional PIN + biometric (fingerprint/face) on launch, with configurable auto-lock and screenshot protection. Off by default.
 - 🎓 **Guided tour** - an optional in-app walkthrough, offered once you've added your first printer, that points out each part of the app live: the connection bars and what they mean (including the "tunnel still building" marker you see just after pairing), the temperatures and the double-tap emergency stop, the webcam and preheat, and the main options in the menu. Step forward or back, end it any time, and re-run it from the bottom of the menu.
@@ -116,6 +120,13 @@ bash install.sh --lan-only
 
 Re-running with the flag on a box that already has the tunnel stack retires it (disables the tunnel + auth proxy) and converges to LAN-only.
 
+In the app, add a LAN-only printer with **Add printer → Direct (LAN/VPN)** - scan the QR from `MOONGATE_PAIR` or type the printer's address. A LAN-only box can also be paired through the cloud as normal (while it has internet); Direct mode is for the fully cloud-free / internet-isolated case. Two networking notes:
+
+- **`trusted_clients` must cover your phone.** The app talks to Moonraker directly, so the phone's subnet needs to be in Moonraker's `[authorization] trusted_clients`. Home WiFi and WireGuard's usual `10.x` range typically already are; **Tailscale's `100.64.0.0/10` usually is not** - add it or Moonraker answers 401 before Moongate ever runs.
+- **Give the Pi a fixed address.** The app stores the address a Direct printer was added with, so use a DHCP reservation (or static IP) - if the Pi's IP changes you'd have to re-add it.
+
+Direct-mode printers work fully offline, but skip everything cloud-backed: no print notifications, and away from home the app only reaches them through your own VPN.
+
 </details>
 
 ### 2. Install the app
@@ -143,15 +154,34 @@ No working camera? Type the **`GATE-XXXX-XXXX`** code shown in the console inste
 
 ---
 
+## Run it your way
+
+Moongate gives every printer a choice of two connections - and you can mix them freely on one dashboard.
+
+| | ☁️ Moongate cloud (default) | 🔌 Direct (LAN/VPN) |
+|---|---|---|
+| Setup | pair once with the QR / GATE code | install the Pi with `--lan-only`, add by QR or address |
+| Away from home | automatic - secure tunnel, zero config | through **your own VPN** (WireGuard, Tailscale) |
+| Print notifications | ✅ | ❌ (no cloud to send them) |
+| What touches the cloud | pairing, a heartbeat, short-lived tokens | **nothing - zero calls, ever** |
+| Needs internet | to pair and for the tunnel | **never - works fully offline** |
+| Best for | most people - it just works | VPN owners, isolated networks, zero-cloud setups |
+
+Switch an existing printer between modes anytime from its edit dialog - no re-pairing. If you later want a Direct printer on the cloud, re-run the installer normally and pair it; the app absorbs the old tile automatically. Networking notes for Direct mode (Moonraker's `trusted_clients`, give the Pi a fixed address) are in the [LAN-only install section](#quick-start) above.
+
+---
+
 ## How it works
 
 <div align="center">
-<img src="docs/how-it-works.svg" width="820" alt="Moongate infrastructure: the app gets a short-lived signed token from the access broker, then reaches the Raspberry Pi directly over your LAN at home or through Cloudflare's tunnel away; the Pi's auth proxy admits only broker-signed requests, so a leaked tunnel URL returns only 401s.">
+<img src="docs/how-it-works.svg" width="820" alt="Moongate's two connection routes: route 1, Moongate cloud - the app gets a short-lived signed token from the access broker and reaches the Raspberry Pi over the LAN at home or through Cloudflare's tunnel away, with the Pi's auth proxy admitting only broker-signed requests so a leaked tunnel URL returns only 401s; route 2, Direct - the app talks straight to Moonraker over home WiFi or the user's own WireGuard/Tailscale VPN, gated by trusted_clients, with zero cloud involvement.">
 </div>
 
-Your Pi runs Klipper, Moonraker, the Moongate plugin, and an **auth proxy** that gates everything reachable from the internet. A minimal **access broker** handles anonymous sign-in (no email, no password) and tracks the current tunnel URL; the app fetches a fresh signed token before each request and tries home WiFi first, then the tunnel.
+**Route 1 - Moongate cloud.** Your Pi runs Klipper, Moonraker, the Moongate plugin, and an **auth proxy** that gates everything reachable from the internet. A minimal **access broker** handles anonymous sign-in (no email, no password) and tracks the current tunnel URL; the app fetches a fresh signed token before each request and tries home WiFi first, then the tunnel.
 
 **The headline:** leaking the tunnel URL alone gives an attacker nothing - every path through it returns `401` without revealing what's underneath. Full threat model in [SECURITY.md](SECURITY.md); code-level detail in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+**Route 2 - Direct (LAN/VPN).** No broker, no tunnel, no heartbeats: the app talks straight to Moonraker on your network - or across your own VPN - gated by Moonraker's `trusted_clients`, exactly like Mainsail in a desktop browser. The Pi makes **zero outbound calls** and the whole thing works with no internet at all.
 
 ---
 

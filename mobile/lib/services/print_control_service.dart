@@ -31,10 +31,18 @@ class PrintControlService {
           .lanUrl ??
       config.lanUrl;
 
+  /// Live lanOnly flag - the registry copy wins over the construction-time
+  /// config so a Direct-mode toggle takes effect on the next action without
+  /// recreating this service.
+  bool get _liveLanOnly =>
+      PrinterRegistry.instance.printers
+          .firstWhere((p) => p.id == config.id, orElse: () => config)
+          .lanOnly;
+
   Future<bool> sendAction(String action) async {
     // Cloudless LAN-only printer: hit the plugin over the LAN with no token
     // (the lan_only plugin trusts the LAN). No Supabase, no tunnel fallback.
-    if (config.lanOnly) {
+    if (_liveLanOnly) {
       final lanUrl = _liveLanUrl();
       if (lanUrl == null) return false;
       return _send(lanUrl, '', action, timeout: const Duration(seconds: 3));
@@ -587,7 +595,7 @@ class PrintControlService {
   Future<T?> _viaLanThenTunnel<T>(
       Future<T?> Function(String base, String token, bool isLan) call) async {
     // Cloudless LAN-only printer: LAN only, token-free, no Supabase.
-    if (config.lanOnly) {
+    if (_liveLanOnly) {
       final lanUrl = _liveLanUrl();
       if (lanUrl == null) return null;
       return call(lanUrl, '', true);

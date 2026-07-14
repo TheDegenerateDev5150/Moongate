@@ -767,6 +767,52 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairingPairButton => '配对打印机';
 
   @override
+  String get pairingModeCloud => 'Moongate 云';
+
+  @override
+  String get pairingModeDirect => '直连 (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      '通过您的网络或自己的 VPN 直接连接打印机 - 无需云账户，可离线使用。打印机必须以仅局域网模式安装。';
+
+  @override
+  String get pairingDirectScanHint => '扫描 MOONGATE_PAIR 显示的二维码，或在下方输入地址';
+
+  @override
+  String get pairingDirectAddressHelper => '您在网络中打开 Mainsail / Fluidd 所用的地址';
+
+  @override
+  String get pairingAddButton => '添加打印机';
+
+  @override
+  String pairingLanScanned(String url) {
+    return '已扫描局域网打印机 - $url';
+  }
+
+  @override
+  String pairingNameHintCycled(String name) {
+    return '例如：$name';
+  }
+
+  @override
+  String get pairingNameHintExamples =>
+      'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Printy McPrintface';
+
+  @override
+  String get pairingErrorNoName => '请先为打印机命名 - 您将通过这个名字在仪表盘上识别它。';
+
+  @override
+  String get pairingDirectCaveatsTitle => '直连模式的限制';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• 打印通知将不可用\n• 离家时应用只能通过您自己的 VPN 连接\n• 手机所在网络（或 VPN 子网）必须在 Moonraker 的 trusted_clients 中\n• 请为打印机分配固定地址（DHCP 保留）- 应用会保存该地址';
+
+  @override
+  String get pairingErrorNoAddress => '请输入打印机地址，或扫描其二维码。';
+
+  @override
   String get pairingRestoreHint => '正在重新安装？从备份文件恢复您保存的打印机。您仍需重新配对每一台以使其上线。';
 
   @override
@@ -1156,6 +1202,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String printerCouldNotReach(String error) {
     return '无法连接打印机：$error';
   }
+
+  @override
+  String get printerDirectModeToggle => '直连模式 (LAN/VPN)';
+
+  @override
+  String get printerDirectModeSubtitle =>
+      '仅通过您的网络或 VPN 与此打印机通信 - 不使用云。需要打印机地址，且打印机以仅局域网模式安装。';
+
+  @override
+  String get printerDirectModeNeedsAddress => '直连模式需要打印机地址';
+
+  @override
+  String get printerDirectModeOn => '直连模式已开启 - 此打印机现在仅通过您的网络连接';
+
+  @override
+  String get printerDirectModeOff => '直连模式已关闭 - 已恢复云连接';
 
   @override
   String get printerAddressCleared => '已清除自定义地址';

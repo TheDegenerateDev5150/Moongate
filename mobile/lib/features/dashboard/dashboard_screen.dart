@@ -174,7 +174,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Release the Supabase row first so the same Pi can be re-paired
     // without manual cleanup. Fail-open: if Supabase is unreachable we
     // still clear local state and surface a hint so the user isn't trapped.
-    final released = await SupabaseService.instance.releasePrinter(printer.id);
+    // A Direct-added printer never had a row (see cloudPaired) - skip the
+    // cloud call entirely rather than 404 and show a misleading hint.
+    final released = printer.cloudPaired
+        ? await SupabaseService.instance.releasePrinter(printer.id)
+        : true;
     await PrinterRegistry.instance.remove(printer.id);
     PrinterAccessCache.instance.invalidate(printer.id);
     PrinterWebViewCache.instance.invalidate(printer.id);

@@ -36,6 +36,13 @@ class PrinterConfig {
   /// LAN with no cloud token (the Pi trusts the LAN). See PrinterStatusService.
   final bool lanOnly;
 
+  /// True when this printer was added through cloud pairing, so its id is the
+  /// Supabase row's UUID. Direct-added printers mint a local `lan-<address>`
+  /// id instead - there is no cloud row to release on remove, and flipping one
+  /// to cloud mode can never work (nothing to poll). Gates the Direct-mode
+  /// toggle and the release-on-remove call.
+  bool get cloudPaired => !id.startsWith('lan-');
+
   /// Cached webcam display-transform settings, populated from the Moongate
   /// /status response after each successful poll. Persisted so the tile
   /// renders correctly on the very first frame after a cold launch.

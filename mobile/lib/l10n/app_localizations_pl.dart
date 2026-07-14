@@ -809,6 +809,56 @@ class AppLocalizationsPl extends AppLocalizations {
   String get pairingPairButton => 'Sparuj drukarkę';
 
   @override
+  String get pairingModeCloud => 'Chmura Moongate';
+
+  @override
+  String get pairingModeDirect => 'Bezpośredni (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      'Łączy się bezpośrednio z drukarką przez Twoją sieć lub własny VPN - bez konta w chmurze, działa offline. Drukarka musi być zainstalowana w trybie tylko LAN.';
+
+  @override
+  String get pairingDirectScanHint =>
+      'Zeskanuj kod QR z MOONGATE_PAIR lub wpisz adres poniżej';
+
+  @override
+  String get pairingDirectAddressHelper =>
+      'Adres, pod którym otwierasz Mainsail / Fluidd w swojej sieci';
+
+  @override
+  String get pairingAddButton => 'Dodaj drukarkę';
+
+  @override
+  String pairingLanScanned(String url) {
+    return 'Zeskanowano drukarkę LAN - $url';
+  }
+
+  @override
+  String pairingNameHintCycled(String name) {
+    return 'np. $name';
+  }
+
+  @override
+  String get pairingNameHintExamples =>
+      'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Printy McPrintface';
+
+  @override
+  String get pairingErrorNoName =>
+      'Najpierw nadaj drukarce nazwę - po niej rozpoznasz ją na pulpicie.';
+
+  @override
+  String get pairingDirectCaveatsTitle => 'Ograniczenia trybu bezpośredniego';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• Powiadomienia o druku nie będą działać\n• Poza domem aplikacja łączy się tylko przez Twój własny VPN\n• Sieć telefonu (lub podsieć VPN) musi być w trusted_clients Moonrakera\n• Nadaj drukarce stały adres (rezerwacja DHCP) - aplikacja go zapisuje';
+
+  @override
+  String get pairingErrorNoAddress =>
+      'Wpisz adres drukarki lub zeskanuj jej kod QR.';
+
+  @override
   String get pairingRestoreHint =>
       'Ponowna instalacja? Przywróć zapisane drukarki z pliku kopii zapasowej. Każdą z nich trzeba będzie sparować ponownie, aby przywrócić ją online.';
 
@@ -1217,6 +1267,25 @@ class AppLocalizationsPl extends AppLocalizations {
   String printerCouldNotReach(String error) {
     return 'Nie można połączyć z drukarką: $error';
   }
+
+  @override
+  String get printerDirectModeToggle => 'Tryb bezpośredni (LAN/VPN)';
+
+  @override
+  String get printerDirectModeSubtitle =>
+      'Komunikuj się z tą drukarką tylko przez swoją sieć lub VPN - bez chmury. Wymaga adresu drukarki zainstalowanej w trybie tylko LAN.';
+
+  @override
+  String get printerDirectModeNeedsAddress =>
+      'Tryb bezpośredni wymaga adresu drukarki';
+
+  @override
+  String get printerDirectModeOn =>
+      'Tryb bezpośredni włączony - ta drukarka łączy się teraz tylko przez Twoją sieć';
+
+  @override
+  String get printerDirectModeOff =>
+      'Tryb bezpośredni wyłączony - przywrócono połączenie z chmurą';
 
   @override
   String get printerAddressCleared => 'Wyczyszczono niestandardowy adres';

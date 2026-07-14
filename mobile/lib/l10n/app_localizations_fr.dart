@@ -817,6 +817,56 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pairingPairButton => 'Appairer l\'imprimante';
 
   @override
+  String get pairingModeCloud => 'Cloud Moongate';
+
+  @override
+  String get pairingModeDirect => 'Direct (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      'Se connecte directement à l\'imprimante via votre réseau ou votre propre VPN - pas de compte cloud, fonctionne hors ligne. L\'imprimante doit être installée en mode LAN uniquement.';
+
+  @override
+  String get pairingDirectScanHint =>
+      'Scannez le QR de MOONGATE_PAIR ou saisissez l\'adresse ci-dessous';
+
+  @override
+  String get pairingDirectAddressHelper =>
+      'L\'adresse que vous utilisez pour Mainsail / Fluidd sur votre réseau';
+
+  @override
+  String get pairingAddButton => 'Ajouter l\'imprimante';
+
+  @override
+  String pairingLanScanned(String url) {
+    return 'Imprimante LAN scannée - $url';
+  }
+
+  @override
+  String pairingNameHintCycled(String name) {
+    return 'ex. $name';
+  }
+
+  @override
+  String get pairingNameHintExamples =>
+      'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Printy McPrintface';
+
+  @override
+  String get pairingErrorNoName =>
+      'Donnez d\'abord un nom à votre imprimante - c\'est ainsi que vous la repérerez sur le tableau de bord.';
+
+  @override
+  String get pairingDirectCaveatsTitle => 'Limites du mode direct';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• Les notifications d\'impression ne fonctionneront pas\n• Hors de chez vous, l\'app ne se connecte que via votre propre VPN\n• Le réseau de votre téléphone (ou le sous-réseau VPN) doit figurer dans trusted_clients de Moonraker\n• Donnez à l\'imprimante une adresse fixe (réservation DHCP) - l\'app la mémorise';
+
+  @override
+  String get pairingErrorNoAddress =>
+      'Saisissez l\'adresse de l\'imprimante ou scannez son code QR.';
+
+  @override
   String get pairingRestoreHint =>
       'Réinstallation ? Restaurez vos imprimantes enregistrées depuis un fichier de sauvegarde. Vous devrez tout de même réappairer chacune pour la remettre en ligne.';
 
@@ -1230,6 +1280,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String printerCouldNotReach(String error) {
     return 'Imprimante injoignable : $error';
   }
+
+  @override
+  String get printerDirectModeToggle => 'Mode direct (LAN/VPN)';
+
+  @override
+  String get printerDirectModeSubtitle =>
+      'Communique avec cette imprimante uniquement via votre réseau ou VPN - sans cloud. Nécessite l\'adresse de l\'imprimante, installée en mode LAN uniquement.';
+
+  @override
+  String get printerDirectModeNeedsAddress =>
+      'Le mode direct nécessite l\'adresse de l\'imprimante';
+
+  @override
+  String get printerDirectModeOn =>
+      'Mode direct activé - cette imprimante se connecte désormais uniquement via votre réseau';
+
+  @override
+  String get printerDirectModeOff =>
+      'Mode direct désactivé - connexion cloud rétablie';
 
   @override
   String get printerAddressCleared => 'Adresse personnalisée effacée';

@@ -808,6 +808,56 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pairingPairButton => 'Сопрячь принтер';
 
   @override
+  String get pairingModeCloud => 'Облако Moongate';
+
+  @override
+  String get pairingModeDirect => 'Напрямую (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      'Подключается к принтеру напрямую через вашу сеть или собственный VPN - без облачного аккаунта, работает офлайн. Принтер должен быть установлен в режиме только LAN.';
+
+  @override
+  String get pairingDirectScanHint =>
+      'Отсканируйте QR из MOONGATE_PAIR или введите адрес ниже';
+
+  @override
+  String get pairingDirectAddressHelper =>
+      'Адрес, по которому вы открываете Mainsail / Fluidd в своей сети';
+
+  @override
+  String get pairingAddButton => 'Добавить принтер';
+
+  @override
+  String pairingLanScanned(String url) {
+    return 'LAN-принтер отсканирован - $url';
+  }
+
+  @override
+  String pairingNameHintCycled(String name) {
+    return 'напр. $name';
+  }
+
+  @override
+  String get pairingNameHintExamples =>
+      'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Printy McPrintface';
+
+  @override
+  String get pairingErrorNoName =>
+      'Сначала дайте принтеру имя - по нему вы будете узнавать его на панели.';
+
+  @override
+  String get pairingDirectCaveatsTitle => 'Ограничения прямого режима';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• Уведомления о печати работать не будут\n• Вне дома приложение подключается только через ваш собственный VPN\n• Сеть телефона (или подсеть VPN) должна быть в trusted_clients Moonraker\n• Назначьте принтеру постоянный адрес (резервирование DHCP) - приложение его сохраняет';
+
+  @override
+  String get pairingErrorNoAddress =>
+      'Введите адрес принтера или отсканируйте его QR-код.';
+
+  @override
   String get pairingRestoreHint =>
       'Переустанавливаете? Восстановите сохранённые принтеры из файла резервной копии. Каждый из них всё равно потребуется сопрячь заново, чтобы вернуть в сеть.';
 
@@ -1217,6 +1267,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String printerCouldNotReach(String error) {
     return 'Не удалось связаться с принтером: $error';
   }
+
+  @override
+  String get printerDirectModeToggle => 'Прямой режим (LAN/VPN)';
+
+  @override
+  String get printerDirectModeSubtitle =>
+      'Общаться с этим принтером только через вашу сеть или VPN - без облака. Нужен адрес принтера, установленного в режиме только LAN.';
+
+  @override
+  String get printerDirectModeNeedsAddress =>
+      'Для прямого режима нужен адрес принтера';
+
+  @override
+  String get printerDirectModeOn =>
+      'Прямой режим включён - принтер теперь подключается только через вашу сеть';
+
+  @override
+  String get printerDirectModeOff =>
+      'Прямой режим выключен - облачное подключение восстановлено';
 
   @override
   String get printerAddressCleared => 'Свой адрес сброшен';

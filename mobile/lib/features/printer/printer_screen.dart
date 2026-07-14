@@ -147,8 +147,12 @@ class _PrinterScreenState extends State<PrinterScreen>
     // unreliable from a routed/off-subnet client, and a failed probe would
     // wrongly show "not on this network"); we just load the page and let the
     // WebView's onWebResourceError surface a genuine failure.
-    if (widget.printer.lanOnly) {
-      final lanUrl = widget.printer.lanUrl;
+    // Registry-live config, not widget.printer: the edit dialog can flip
+    // Direct mode while this screen is open, and the reload must see it.
+    final live = PrinterRegistry.instance.printers.firstWhere(
+        (p) => p.id == widget.printer.id, orElse: () => widget.printer);
+    if (live.lanOnly) {
+      final lanUrl = live.lanUrl ?? widget.printer.lanUrl;
       if (lanUrl == null) {
         if (mounted) {
           setState(() { _loading = false; _errorMsg = l.printerLocalOnlyNoLan; });
@@ -313,11 +317,19 @@ class _PrinterScreenState extends State<PrinterScreen>
 
   Future<void> _showEditPrinterDialog() async {
     final l = AppLocalizations.of(context);
-    final result = await showDialog<({String name, String? lanUrl})>(
+    // Registry-live config: a previous edit in this same screen session may
+    // already have changed the address or the Direct-mode flag.
+    final live = PrinterRegistry.instance.printers.firstWhere(
+        (p) => p.id == widget.printer.id, orElse: () => widget.printer);
+    final result = await showDialog<({String name, String? lanUrl, bool lanOnly})>(
       context: context,
       builder: (_) => _EditPrinterDialog(
-        initialName:   _displayName,
-        initialLanUrl: widget.printer.lanUrl,
+        initialName:    _displayName,
+        initialLanUrl:  live.lanUrl,
+        initialLanOnly: live.lanOnly,
+        // A Direct-added printer has no cloud row - it can't become a cloud
+        // printer, so it gets no toggle (re-pair through the cloud instead).
+        canToggleLanOnly: live.cloudPaired,
       ),
     );
     if (result == null) return;
@@ -326,21 +338,35 @@ class _PrinterScreenState extends State<PrinterScreen>
       await PrinterRegistry.instance.renamePrinter(widget.printer.id, newName);
       if (mounted) setState(() => _displayName = newName);
     }
-    if (result.lanUrl != widget.printer.lanUrl) {
+    final addressChanged = result.lanUrl != live.lanUrl;
+    if (addressChanged) {
       await PrinterRegistry.instance
           .updateLanUrl(widget.printer.id, result.lanUrl);
-      // The warm session loaded the old address - drop it so a reopen picks up
-      // the new one (the current view stays until the user reopens / refreshes).
+    }
+    final modeChanged = result.lanOnly != live.lanOnly;
+    if (modeChanged) {
+      await PrinterRegistry.instance
+          .setLanOnly(widget.printer.id, result.lanOnly);
+    }
+    if (addressChanged || modeChanged) {
+      // The warm session belongs to the old address/transport - drop it and
+      // reload so the change is visible right away, not on the next open.
       PrinterWebViewCache.instance.invalidate(widget.printer.id);
+      if (modeChanged) PrinterAccessCache.instance.invalidate(widget.printer.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.lanUrl == null
-                ? l.printerAddressCleared
-                : l.printerAddressUpdated),
+            content: Text(modeChanged
+                ? (result.lanOnly
+                    ? l.printerDirectModeOn
+                    : l.printerDirectModeOff)
+                : (result.lanUrl == null
+                    ? l.printerAddressCleared
+                    : l.printerAddressUpdated)),
           ),
         );
       }
+      if (modeChanged) _start();
     }
   }
 
@@ -625,7 +651,16 @@ class _PrinterScreenState extends State<PrinterScreen>
 class _EditPrinterDialog extends StatefulWidget {
   final String  initialName;
   final String? initialLanUrl;
-  const _EditPrinterDialog({required this.initialName, this.initialLanUrl});
+  final bool    initialLanOnly;
+  // Cloud-paired printers can flip Direct (LAN/VPN) mode both ways; a
+  // Direct-added `lan-` printer has no cloud row so it shows no toggle.
+  final bool    canToggleLanOnly;
+  const _EditPrinterDialog({
+    required this.initialName,
+    this.initialLanUrl,
+    this.initialLanOnly   = false,
+    this.canToggleLanOnly = false,
+  });
 
   @override
   State<_EditPrinterDialog> createState() => _EditPrinterDialogState();
@@ -642,6 +677,7 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
   );
   final FocusNode _addressFocus = FocusNode();
   String? _addressError;
+  late bool _lanOnly = widget.initialLanOnly;
 
   @override
   void dispose() {
@@ -661,7 +697,13 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
       setState(() => _addressError = l.printerAddressInvalid);
       return;
     }
-    Navigator.pop(context, (name: name, lanUrl: lanUrl));
+    // Direct mode has no tunnel to fall back to - without an address the
+    // printer would be permanently unreachable, so block that save.
+    if (_lanOnly && lanUrl == null) {
+      setState(() => _addressError = l.printerDirectModeNeedsAddress);
+      return;
+    }
+    Navigator.pop(context, (name: name, lanUrl: lanUrl, lanOnly: _lanOnly));
   }
 
   @override
@@ -706,6 +748,19 @@ class _EditPrinterDialogState extends State<_EditPrinterDialog> {
               if (_addressError != null) setState(() => _addressError = null);
             },
           ),
+          if (widget.canToggleLanOnly) ...[
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _lanOnly,
+              onChanged: (v) => setState(() => _lanOnly = v),
+              title: Text(l.printerDirectModeToggle),
+              subtitle: Text(
+                l.printerDirectModeSubtitle,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
         ],
       ),
       actions: [

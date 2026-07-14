@@ -807,6 +807,56 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pairingPairButton => 'Abbina stampante';
 
   @override
+  String get pairingModeCloud => 'Cloud Moongate';
+
+  @override
+  String get pairingModeDirect => 'Diretto (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      'Si collega direttamente alla stampante tramite la tua rete o la tua VPN - nessun account cloud, funziona offline. La stampante deve essere installata in modalità solo LAN.';
+
+  @override
+  String get pairingDirectScanHint =>
+      'Scansiona il QR di MOONGATE_PAIR o inserisci l\'indirizzo qui sotto';
+
+  @override
+  String get pairingDirectAddressHelper =>
+      'L\'indirizzo che usi per Mainsail / Fluidd sulla tua rete';
+
+  @override
+  String get pairingAddButton => 'Aggiungi stampante';
+
+  @override
+  String pairingLanScanned(String url) {
+    return 'Stampante LAN scansionata - $url';
+  }
+
+  @override
+  String pairingNameHintCycled(String name) {
+    return 'es. $name';
+  }
+
+  @override
+  String get pairingNameHintExamples =>
+      'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Printy McPrintface';
+
+  @override
+  String get pairingErrorNoName =>
+      'Dai prima un nome alla stampante - è così che la riconoscerai nella dashboard.';
+
+  @override
+  String get pairingDirectCaveatsTitle => 'Limitazioni della modalità diretta';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• Le notifiche di stampa non funzioneranno\n• Fuori casa l\'app si collega solo tramite la tua VPN\n• La rete del telefono (o la subnet VPN) deve essere in trusted_clients di Moonraker\n• Assegna alla stampante un indirizzo fisso (prenotazione DHCP) - l\'app lo memorizza';
+
+  @override
+  String get pairingErrorNoAddress =>
+      'Inserisci l\'indirizzo della stampante o scansiona il suo codice QR.';
+
+  @override
   String get pairingRestoreHint =>
       'Stai reinstallando? Ripristina le stampanti salvate da un file di backup. Dovrai comunque riabbinare ognuna per riportarla online.';
 
@@ -1222,6 +1272,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String printerCouldNotReach(String error) {
     return 'Impossibile raggiungere la stampante: $error';
   }
+
+  @override
+  String get printerDirectModeToggle => 'Modalità diretta (LAN/VPN)';
+
+  @override
+  String get printerDirectModeSubtitle =>
+      'Parla con questa stampante solo tramite la tua rete o VPN - niente cloud. Richiede l\'indirizzo della stampante, installata in modalità solo LAN.';
+
+  @override
+  String get printerDirectModeNeedsAddress =>
+      'La modalità diretta richiede l\'indirizzo della stampante';
+
+  @override
+  String get printerDirectModeOn =>
+      'Modalità diretta attiva - questa stampante ora si collega solo tramite la tua rete';
+
+  @override
+  String get printerDirectModeOff =>
+      'Modalità diretta disattivata - connessione cloud ripristinata';
 
   @override
   String get printerAddressCleared => 'Indirizzo personalizzato cancellato';

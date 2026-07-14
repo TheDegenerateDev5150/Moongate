@@ -1504,6 +1504,84 @@ abstract class AppLocalizations {
   /// **'Pair printer'**
   String get pairingPairButton;
 
+  /// Add-printer mode segment: the normal cloud pairing path (GATE code / QR, tunnel + LAN).
+  ///
+  /// In en, this message translates to:
+  /// **'Moongate cloud'**
+  String get pairingModeCloud;
+
+  /// Add-printer mode segment: the cloudless direct-connection path over LAN or the user's own VPN.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct (LAN/VPN)'**
+  String get pairingModeDirect;
+
+  /// Intro text at the top of the pairing screen when Direct (LAN/VPN) mode is selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connects straight to the printer over your network or your own VPN - no cloud account, works offline. The printer must be installed in LAN-only mode.'**
+  String get pairingDirectIntro;
+
+  /// Subtext under the Scan QR button in Direct mode. 'MOONGATE_PAIR' is a literal console command.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR from MOONGATE_PAIR, or enter the address below'**
+  String get pairingDirectScanHint;
+
+  /// Helper text under the Direct-mode address field. Mainsail and Fluidd are product names.
+  ///
+  /// In en, this message translates to:
+  /// **'The address you use for Mainsail / Fluidd on your network'**
+  String get pairingDirectAddressHelper;
+
+  /// Primary button in Direct mode - adds the printer locally, no cloud pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Add printer'**
+  String get pairingAddButton;
+
+  /// Confirmation banner after scanning a Direct-mode (moongate://lan) QR, showing the printer's LAN address.
+  ///
+  /// In en, this message translates to:
+  /// **'LAN printer scanned - {url}'**
+  String pairingLanScanned(String url);
+
+  /// Hint inside the empty printer-name field; {name} cycles through pairingNameHintExamples every ~2s.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. {name}'**
+  String pairingNameHintCycled(String name);
+
+  /// Pipe-separated example printer names cycled in the name hint. Mostly printer models (keep as-is); the fun ones may be localised.
+  ///
+  /// In en, this message translates to:
+  /// **'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Printy McPrintface'**
+  String get pairingNameHintExamples;
+
+  /// Error when tapping Pair/Add with an empty printer-name field. Naming is required; there is no default name.
+  ///
+  /// In en, this message translates to:
+  /// **'Give your printer a name first - it\'s how you\'ll spot it on the dashboard.'**
+  String get pairingErrorNoName;
+
+  /// Title of the info panel listing what Direct (LAN/VPN) mode cannot do.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct mode limitations'**
+  String get pairingDirectCaveatsTitle;
+
+  /// Bullet list of Direct-mode limitations and prerequisites. 'trusted_clients' is a literal Moonraker config key; keep the newline bullets.
+  ///
+  /// In en, this message translates to:
+  /// **'• Print notifications won\'t work\n• Away from home, the app connects only through your own VPN\n• Your phone\'s network (or VPN subnet) must be in Moonraker\'s trusted_clients\n• Give the printer a fixed address (DHCP reservation) - the app stores it'**
+  String get pairingDirectCaveats;
+
+  /// Error when tapping Add in Direct mode with no address typed and no QR scanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the printer\'s address, or scan its QR code.'**
+  String get pairingErrorNoAddress;
+
   /// Helper text above the restore-from-backup button.
   ///
   /// In en, this message translates to:
@@ -2253,6 +2331,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not reach printer: {error}'**
   String printerCouldNotReach(String error);
+
+  /// Switch in the edit-printer dialog that flips a cloud-paired printer to the cloudless direct connection and back.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct (LAN/VPN) mode'**
+  String get printerDirectModeToggle;
+
+  /// Subtitle under the Direct-mode switch explaining what it does and its prerequisites.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk to this printer only over your network or VPN - no cloud. Needs the printer address, and the printer installed in LAN-only mode.'**
+  String get printerDirectModeSubtitle;
+
+  /// Address-field error when saving with Direct mode on but no address set.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct mode needs the printer address'**
+  String get printerDirectModeNeedsAddress;
+
+  /// Snackbar after switching a printer to Direct (LAN/VPN) mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct mode on - this printer now connects over your network only'**
+  String get printerDirectModeOn;
+
+  /// Snackbar after switching a printer back from Direct mode to the cloud connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct mode off - cloud connection restored'**
+  String get printerDirectModeOff;
 
   /// Snackbar confirming the custom printer address override was removed.
   ///

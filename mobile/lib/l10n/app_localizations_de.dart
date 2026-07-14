@@ -808,6 +808,56 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pairingPairButton => 'Drucker koppeln';
 
   @override
+  String get pairingModeCloud => 'Moongate-Cloud';
+
+  @override
+  String get pairingModeDirect => 'Direkt (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      'Verbindet sich direkt über dein Netzwerk oder dein eigenes VPN mit dem Drucker - kein Cloud-Konto, funktioniert offline. Der Drucker muss im LAN-only-Modus installiert sein.';
+
+  @override
+  String get pairingDirectScanHint =>
+      'Scanne den QR-Code von MOONGATE_PAIR oder gib unten die Adresse ein';
+
+  @override
+  String get pairingDirectAddressHelper =>
+      'Die Adresse, unter der du Mainsail / Fluidd in deinem Netzwerk öffnest';
+
+  @override
+  String get pairingAddButton => 'Drucker hinzufügen';
+
+  @override
+  String pairingLanScanned(String url) {
+    return 'LAN-Drucker gescannt - $url';
+  }
+
+  @override
+  String pairingNameHintCycled(String name) {
+    return 'z. B. $name';
+  }
+
+  @override
+  String get pairingNameHintExamples =>
+      'Voron 2.4|RatRig 300|Wilma|2.4 V3309|Drucki McDruckgesicht';
+
+  @override
+  String get pairingErrorNoName =>
+      'Gib deinem Drucker zuerst einen Namen - so erkennst du ihn auf dem Dashboard.';
+
+  @override
+  String get pairingDirectCaveatsTitle => 'Einschränkungen im Direktmodus';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• Druckbenachrichtigungen funktionieren nicht\n• Unterwegs verbindet sich die App nur über dein eigenes VPN\n• Das Netzwerk deines Handys (oder das VPN-Subnetz) muss in Moonrakers trusted_clients stehen\n• Gib dem Drucker eine feste Adresse (DHCP-Reservierung) - die App speichert sie';
+
+  @override
+  String get pairingErrorNoAddress =>
+      'Gib die Adresse des Druckers ein oder scanne seinen QR-Code.';
+
+  @override
   String get pairingRestoreHint =>
       'Neuinstallation? Stelle deine gespeicherten Drucker aus einer Sicherungsdatei wieder her. Du musst trotzdem jeden erneut koppeln, um ihn online zu bringen.';
 
@@ -1219,6 +1269,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String printerCouldNotReach(String error) {
     return 'Drucker nicht erreichbar: $error';
   }
+
+  @override
+  String get printerDirectModeToggle => 'Direktmodus (LAN/VPN)';
+
+  @override
+  String get printerDirectModeSubtitle =>
+      'Mit diesem Drucker nur über dein Netzwerk oder VPN sprechen - keine Cloud. Braucht die Druckeradresse und einen im LAN-only-Modus installierten Drucker.';
+
+  @override
+  String get printerDirectModeNeedsAddress =>
+      'Der Direktmodus braucht die Druckeradresse';
+
+  @override
+  String get printerDirectModeOn =>
+      'Direktmodus an - dieser Drucker verbindet sich jetzt nur über dein Netzwerk';
+
+  @override
+  String get printerDirectModeOff =>
+      'Direktmodus aus - Cloud-Verbindung wiederhergestellt';
 
   @override
   String get printerAddressCleared => 'Benutzerdefinierte Adresse entfernt';
