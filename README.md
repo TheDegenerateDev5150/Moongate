@@ -105,6 +105,17 @@ MOONGATE_PORT=8080 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKY
 
 In the app's pair screen, set the **Port** field to match (leave it blank for 80).
 
+**LAN-only (own VPN, no tunnel)?** If you reach your printer over your own VPN / WireGuard and don't want an outbound Cloudflare tunnel or external exposure, install in LAN-only mode. It keeps Moonraker on the LAN (`0.0.0.0`) and skips cloudflared, the auth proxy, and the tunnel service. The plugin, `MOONGATE_PAIR` macro, and mDNS advertisement are still installed, and re-running without the flag later enables remote access.
+
+```bash
+# piped
+MOONGATE_LAN_ONLY=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh)"
+# or, from a local checkout
+bash install.sh --lan-only
+```
+
+Re-running with the flag on a box that already has the tunnel stack retires it (disables the tunnel + auth proxy) and converges to LAN-only.
+
 </details>
 
 ### 2. Install the app
