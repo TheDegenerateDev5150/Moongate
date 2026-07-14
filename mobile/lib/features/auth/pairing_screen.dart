@@ -10,6 +10,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/printer_config.dart';
 import '../../services/lan_discovery_service.dart';
 import '../../services/printer_registry.dart';
+import '../../services/printer_webview_cache.dart';
 import '../../services/supabase_service.dart';
 import '../../widgets/keyboard_affordance.dart';
 import '../dashboard/feedback_sheet.dart';
@@ -436,9 +437,29 @@ class _PairingScreenState extends State<PairingScreen> {
       // background browse + tunnel path takes over (no regression).
       final lanUrl =
           manualLanUrl ?? _scannedLanUrl ?? await _prewarmLanUrl(printerId);
-      await PrinterRegistry.instance.addClaimed(
-        PrinterConfig(id: printerId, name: name, lanUrl: lanUrl),
-      );
+      // If this same machine was previously added as a Direct (LAN/VPN) tile,
+      // absorb it: same LAN address = same Pi. The new cloud tile inherits
+      // every persisted setting the old tile carried (webcam transforms,
+      // custom camera, UI type - the full toJson round-trip) and, when the
+      // name field was left untouched, its name too; the Direct tile is then
+      // retired, so switching to cloud is one pairing instead of pair +
+      // hunt + delete.
+      final twin = _directTwinFor(lanUrl);
+      var config = PrinterConfig(id: printerId, name: name, lanUrl: lanUrl);
+      if (twin != null) {
+        config = PrinterConfig.fromJson({
+          ...twin.toJson(),
+          'id':      printerId,
+          'name':    _nameController.text.trim().isEmpty ? twin.name : name,
+          'lanUrl':  lanUrl,
+          'lanOnly': false,
+        });
+      }
+      await PrinterRegistry.instance.addClaimed(config);
+      if (twin != null) {
+        await PrinterRegistry.instance.remove(twin.id);
+        PrinterWebViewCache.instance.invalidate(twin.id);
+      }
       if (!mounted) return;
       if (context.canPop()) {
         context.pop();
@@ -541,6 +562,23 @@ class _PairingScreenState extends State<PairingScreen> {
       final url = LanDiscoveryService.instance.lookup(printerId);
       if (url != null) return url;
       await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+    return null;
+  }
+
+  /// The Direct-added (`lan-` id) tile whose address points at the same
+  /// machine as [lanUrl], if any. Compares host + effective port via Uri so
+  /// `http://x` and `http://x:80` match. Converted cloud tiles (lanOnly but
+  /// cloudPaired) are left alone - they carry a valid pairing of their own.
+  PrinterConfig? _directTwinFor(String? lanUrl) {
+    if (lanUrl == null) return null;
+    final target = Uri.tryParse(lanUrl);
+    if (target == null || target.host.isEmpty) return null;
+    for (final p in PrinterRegistry.instance.printers) {
+      if (!p.lanOnly || p.cloudPaired) continue;
+      final u = Uri.tryParse(p.lanUrl ?? '');
+      if (u == null || u.host.isEmpty) continue;
+      if (u.host == target.host && u.port == target.port) return p;
     }
     return null;
   }

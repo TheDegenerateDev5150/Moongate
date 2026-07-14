@@ -656,19 +656,6 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Plugin-update badge (v0.9.50): leads the cluster and
-                        // shows ONLY while this printer reports a Moongate
-                        // plugin older than the one this app shipped with. It
-                        // clears itself the moment a poll reports the new
-                        // version - persistent until then by design.
-                        if (_status.connection != PrinterConnection.offline &&
-                            pluginVersionIsOutdated(_status.pluginVersion)) ...[
-                          _PluginUpdateButton(
-                            printer: widget.printer,
-                            status: _status,
-                          ),
-                          const SizedBox(width: 6),
-                        ],
                         _CameraConfigButton(
                           printer: widget.printer,
                           onApplied: _statusService.pollNow,
@@ -695,16 +682,36 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
                       right: 8,
                       child: _CameraExpandButton(printer: widget.printer),
                     ),
-                  // Power on/off (bottom-left) - shown only when this printer
-                  // has a Moonraker power device. Works even when the printer
-                  // is off (Moonraker stays up), so you can switch it on from
-                  // an idle/offline tile; a tap asks to confirm first.
+                  // Bottom-left cluster: the plugin-update badge, then power.
+                  // The amber update badge takes the corner while this printer
+                  // reports a Moongate plugin older than the one this app
+                  // shipped with (it clears itself the moment a poll reports
+                  // the new version - persistent until then by design; it
+                  // lives bottom-left rather than in the top-right camera
+                  // cluster so it reads as a printer-level nag, not a camera
+                  // control). Power on/off follows - shown only when this
+                  // printer has a Moonraker power device; works even when the
+                  // printer is off (Moonraker stays up), so you can switch it
+                  // on from an idle/offline tile; a tap asks to confirm first.
                   Positioned(
                     bottom: 8,
                     left: 8,
-                    child: _PowerButton(
-                      printer: widget.printer,
-                      status: _status,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_status.connection != PrinterConnection.offline &&
+                            pluginVersionIsOutdated(_status.pluginVersion)) ...[
+                          _PluginUpdateButton(
+                            printer: widget.printer,
+                            status: _status,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        _PowerButton(
+                          printer: widget.printer,
+                          status: _status,
+                        ),
+                      ],
                     ),
                   ),
                 ],
