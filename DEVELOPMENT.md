@@ -183,6 +183,15 @@ cd Moongate/klipper-plugin
 ./install.sh
 ```
 
+To develop against the cloud-free path (v0.9.51's Direct mode), install the box in **LAN-only mode** instead - no cloudflared, no auth proxy, no clock check, and the plugin's `lan_only` config flag set so `/status` + `/control` are token-free on the LAN:
+
+```bash
+./install.sh --lan-only          # or: MOONGATE_LAN_ONLY=1 ./install.sh
+./install.sh                     # re-run without the flag to convert back to tunnel mode
+```
+
+Converging an existing tunnel-mode box with `--lan-only` also retires the running tunnel + proxy units and clears the stale tunnel-URL logs.
+
 Iteration loop:
 
 ```bash

@@ -46,6 +46,8 @@ To reinstall cleanly:
 
 > **Just upgrading the app over the top?** None of this applies - your identity is kept and your printers stay paired.
 
+> **Direct (LAN/VPN) printers** (v0.9.51+) sit outside all of this: they have no cloud identity, so a fresh install plus **Restore config** brings them back **fully working** - the backup carries their address, which is all they need. No `MOONGATE_RESET_OWNER`, no re-pairing. Just keep the Pi on a fixed address (DHCP reservation).
+
 ---
 
 ## Removing Moongate
