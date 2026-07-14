@@ -271,13 +271,14 @@ class _PairingScreenState extends State<PairingScreen> {
     if (uri.host == 'lan') {
       final ip   = uri.queryParameters['ip'];
       final port = uri.queryParameters['port'];
-      if (ip == null || ip.isEmpty) {
+      // Validate the scanned address through the same normaliser as manual
+      // entry so a malformed QR can't create a garbage printer entry.
+      final raw    = (port == null || port.isEmpty) ? (ip ?? '') : '$ip:$port';
+      final lanUrl = PrinterConfig.parseLanUrl(raw);
+      if (lanUrl == null) {
         setState(() => _error = l.pairingErrorNotMoongateQr);
         return;
       }
-      final lanUrl = (port == null || port.isEmpty || port == '80')
-          ? 'http://$ip'
-          : 'http://$ip:$port';
       final name = uri.queryParameters['name'];
       setState(() {
         _scannedLanOnly         = true;
