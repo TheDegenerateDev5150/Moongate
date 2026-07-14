@@ -697,6 +697,11 @@ class _PairingScreenState extends State<PairingScreen> {
               },
               decoration: InputDecoration(
                 labelText: l.pairingNameLabel,
+                // Keep the label floated even while empty+unfocused: with the
+                // default behaviour it sits in the field and HIDES the hint,
+                // and the whole point is that the cycling example names are
+                // visible before the user ever taps the field.
+                floatingLabelBehavior: FloatingLabelBehavior.always,
                 hintText: _cyclingNameHint(l),
                 border: const OutlineInputBorder(),
                 suffixIcon: _loading ? null : ShowKeyboardButton(_nameFocus),
