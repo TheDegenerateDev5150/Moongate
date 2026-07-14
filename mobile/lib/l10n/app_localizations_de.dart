@@ -808,6 +808,46 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pairingPairButton => 'Drucker koppeln';
 
   @override
+  String get pairingModeCloud => 'Moongate-Cloud';
+
+  @override
+  String get pairingModeDirect => 'Direkt (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      'Verbindet sich direkt über dein Netzwerk oder dein eigenes VPN mit dem Drucker - kein Cloud-Konto, funktioniert offline. Der Drucker muss im LAN-only-Modus installiert sein.';
+
+  @override
+  String get pairingDirectScanHint =>
+      'Scanne den QR-Code von MOONGATE_PAIR oder gib unten die Adresse ein';
+
+  @override
+  String get pairingDirectAddressHelper =>
+      'Die Adresse, unter der du Mainsail / Fluidd in deinem Netzwerk öffnest';
+
+  @override
+  String get pairingAddButton => 'Drucker hinzufügen';
+
+  @override
+  String pairingLanScanned(String url) {
+    return 'LAN-Drucker gescannt - $url';
+  }
+
+  @override
+  String get pairingDefaultPrinterName => 'Mein Drucker';
+
+  @override
+  String get pairingDirectCaveatsTitle => 'Einschränkungen im Direktmodus';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• Druckbenachrichtigungen funktionieren nicht\n• Unterwegs verbindet sich die App nur über dein eigenes VPN\n• Das Netzwerk deines Handys (oder das VPN-Subnetz) muss in Moonrakers trusted_clients stehen\n• Gib dem Drucker eine feste Adresse (DHCP-Reservierung) - die App speichert sie';
+
+  @override
+  String get pairingErrorNoAddress =>
+      'Gib die Adresse des Druckers ein oder scanne seinen QR-Code.';
+
+  @override
   String get pairingRestoreHint =>
       'Neuinstallation? Stelle deine gespeicherten Drucker aus einer Sicherungsdatei wieder her. Du musst trotzdem jeden erneut koppeln, um ihn online zu bringen.';
 

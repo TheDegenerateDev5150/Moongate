@@ -808,6 +808,46 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pairingPairButton => 'Сопрячь принтер';
 
   @override
+  String get pairingModeCloud => 'Облако Moongate';
+
+  @override
+  String get pairingModeDirect => 'Напрямую (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      'Подключается к принтеру напрямую через вашу сеть или собственный VPN - без облачного аккаунта, работает офлайн. Принтер должен быть установлен в режиме только LAN.';
+
+  @override
+  String get pairingDirectScanHint =>
+      'Отсканируйте QR из MOONGATE_PAIR или введите адрес ниже';
+
+  @override
+  String get pairingDirectAddressHelper =>
+      'Адрес, по которому вы открываете Mainsail / Fluidd в своей сети';
+
+  @override
+  String get pairingAddButton => 'Добавить принтер';
+
+  @override
+  String pairingLanScanned(String url) {
+    return 'LAN-принтер отсканирован - $url';
+  }
+
+  @override
+  String get pairingDefaultPrinterName => 'Мой принтер';
+
+  @override
+  String get pairingDirectCaveatsTitle => 'Ограничения прямого режима';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• Уведомления о печати работать не будут\n• Вне дома приложение подключается только через ваш собственный VPN\n• Сеть телефона (или подсеть VPN) должна быть в trusted_clients Moonraker\n• Назначьте принтеру постоянный адрес (резервирование DHCP) - приложение его сохраняет';
+
+  @override
+  String get pairingErrorNoAddress =>
+      'Введите адрес принтера или отсканируйте его QR-код.';
+
+  @override
   String get pairingRestoreHint =>
       'Переустанавливаете? Восстановите сохранённые принтеры из файла резервной копии. Каждый из них всё равно потребуется сопрячь заново, чтобы вернуть в сеть.';
 

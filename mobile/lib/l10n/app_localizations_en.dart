@@ -798,6 +798,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairingPairButton => 'Pair printer';
 
   @override
+  String get pairingModeCloud => 'Moongate cloud';
+
+  @override
+  String get pairingModeDirect => 'Direct (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      'Connects straight to the printer over your network or your own VPN - no cloud account, works offline. The printer must be installed in LAN-only mode.';
+
+  @override
+  String get pairingDirectScanHint =>
+      'Scan the QR from MOONGATE_PAIR, or enter the address below';
+
+  @override
+  String get pairingDirectAddressHelper =>
+      'The address you use for Mainsail / Fluidd on your network';
+
+  @override
+  String get pairingAddButton => 'Add printer';
+
+  @override
+  String pairingLanScanned(String url) {
+    return 'LAN printer scanned - $url';
+  }
+
+  @override
+  String get pairingDefaultPrinterName => 'My Printer';
+
+  @override
+  String get pairingDirectCaveatsTitle => 'Direct mode limitations';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• Print notifications won\'t work\n• Away from home, the app connects only through your own VPN\n• Your phone\'s network (or VPN subnet) must be in Moonraker\'s trusted_clients\n• Give the printer a fixed address (DHCP reservation) - the app stores it';
+
+  @override
+  String get pairingErrorNoAddress =>
+      'Enter the printer\'s address, or scan its QR code.';
+
+  @override
   String get pairingRestoreHint =>
       'Reinstalling? Restore your saved printers from a backup file. You\'ll still re-pair each one to bring it online.';
 

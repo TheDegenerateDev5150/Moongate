@@ -767,6 +767,43 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairingPairButton => '配对打印机';
 
   @override
+  String get pairingModeCloud => 'Moongate 云';
+
+  @override
+  String get pairingModeDirect => '直连 (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      '通过您的网络或自己的 VPN 直接连接打印机 - 无需云账户，可离线使用。打印机必须以仅局域网模式安装。';
+
+  @override
+  String get pairingDirectScanHint => '扫描 MOONGATE_PAIR 显示的二维码，或在下方输入地址';
+
+  @override
+  String get pairingDirectAddressHelper => '您在网络中打开 Mainsail / Fluidd 所用的地址';
+
+  @override
+  String get pairingAddButton => '添加打印机';
+
+  @override
+  String pairingLanScanned(String url) {
+    return '已扫描局域网打印机 - $url';
+  }
+
+  @override
+  String get pairingDefaultPrinterName => '我的打印机';
+
+  @override
+  String get pairingDirectCaveatsTitle => '直连模式的限制';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• 打印通知将不可用\n• 离家时应用只能通过您自己的 VPN 连接\n• 手机所在网络（或 VPN 子网）必须在 Moonraker 的 trusted_clients 中\n• 请为打印机分配固定地址（DHCP 保留）- 应用会保存该地址';
+
+  @override
+  String get pairingErrorNoAddress => '请输入打印机地址，或扫描其二维码。';
+
+  @override
   String get pairingRestoreHint => '正在重新安装？从备份文件恢复您保存的打印机。您仍需重新配对每一台以使其上线。';
 
   @override

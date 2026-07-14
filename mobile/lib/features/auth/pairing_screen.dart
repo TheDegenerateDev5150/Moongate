@@ -36,7 +36,7 @@ class PairingScreen extends StatefulWidget {
 }
 
 class _PairingScreenState extends State<PairingScreen> {
-  final _nameController      = TextEditingController(text: 'My Printer');
+  final _nameController      = TextEditingController();
   final _nameFocus           = FocusNode();
 
   // Optional "Advanced - custom network" address. When non-blank it becomes
@@ -81,6 +81,25 @@ class _PairingScreenState extends State<PairingScreen> {
   // printer by its LAN address. `_scannedLanUrl` above holds the address.
   bool    _scannedLanOnly = false;
   String? _scannedLanName;
+
+  // Add-printer mode: false = Moongate cloud (GATE code / QR, tunnel + LAN),
+  // true = Direct (LAN/VPN) - the cloudless lanOnly path. Scanning either QR
+  // type auto-selects its mode; switching manually clears any staged scan.
+  bool    _directMode = false;
+
+  // The name field seeds a localised "My Printer" - impossible at field
+  // construction (no context yet), so it happens on first dependency
+  // resolution instead.
+  bool    _nameSeeded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_nameSeeded) {
+      _nameSeeded = true;
+      _nameController.text = AppLocalizations.of(context).pairingDefaultPrinterName;
+    }
+  }
 
   @override
   void dispose() {
@@ -281,6 +300,7 @@ class _PairingScreenState extends State<PairingScreen> {
       }
       final name = uri.queryParameters['name'];
       setState(() {
+        _directMode             = true; // a LAN QR means Direct mode
         _scannedLanOnly         = true;
         _scannedLanUrl          = lanUrl;
         _scannedLanName         = (name != null && name.isNotEmpty) ? name : null;
@@ -309,9 +329,28 @@ class _PairingScreenState extends State<PairingScreen> {
           : 'http://$ip:$port';
     }
     setState(() {
+      _directMode            = false; // a pairing QR means cloud mode
+      _scannedLanOnly        = false;
+      _scannedLanName        = null;
       _scannedPubKey         = pk;
       _scannedEnrollmentToken = et;
       _scannedLanUrl         = lanUrl;
+      _error                 = null;
+    });
+  }
+
+  /// Segmented-control mode switch. Clears any staged scan (a cloud scan is
+  /// meaningless in Direct mode and vice versa) but keeps the typed name and
+  /// address, which carry over between modes.
+  void _setMode(bool direct) {
+    if (direct == _directMode) return;
+    setState(() {
+      _directMode            = direct;
+      _scannedPubKey         = null;
+      _scannedEnrollmentToken = null;
+      _scannedLanOnly        = false;
+      _scannedLanName        = null;
+      _scannedLanUrl         = null;
       _error                 = null;
     });
   }
@@ -321,11 +360,11 @@ class _PairingScreenState extends State<PairingScreen> {
   Future<void> _claim() async {
     final l = AppLocalizations.of(context);
 
-    // Cloudless LAN-only path: no Supabase claim. Mint a local id from the LAN
+    // Direct (LAN/VPN) path: no Supabase claim. Mint a local id from the LAN
     // address (stable, so re-scanning the same Pi dedupes) and add it directly.
     // The status/control services see lanOnly and poll the plugin over the LAN
-    // with no cloud token.
-    if (_scannedLanOnly) {
+    // with no cloud token. Reached via the mode switch OR a moongate://lan QR.
+    if (_directMode || _scannedLanOnly) {
       final manualLanUrl = PrinterConfig.parseLanUrl(_addressController.text);
       if (_addressController.text.trim().isNotEmpty && manualLanUrl == null) {
         setState(() => _error = l.pairingErrorBadAddress);
@@ -333,11 +372,11 @@ class _PairingScreenState extends State<PairingScreen> {
       }
       final effectiveLan = manualLanUrl ?? _scannedLanUrl;
       if (effectiveLan == null) {
-        setState(() => _error = l.pairingErrorBadAddress);
+        setState(() => _error = l.pairingErrorNoAddress);
         return;
       }
       final name = _nameController.text.trim().isEmpty
-          ? (_scannedLanName ?? 'My Printer')
+          ? (_scannedLanName ?? l.pairingDefaultPrinterName)
           : _nameController.text.trim();
       setState(() { _loading = true; _error = null; });
       try {
@@ -377,7 +416,7 @@ class _PairingScreenState extends State<PairingScreen> {
     final pk = scannedEt != null ? _scannedPubKey : null;
 
     final name = _nameController.text.trim().isEmpty
-        ? 'My Printer'
+        ? l.pairingDefaultPrinterName
         : _nameController.text.trim();
 
     setState(() { _loading = true; _error = null; });
@@ -462,12 +501,17 @@ class _PairingScreenState extends State<PairingScreen> {
   /// state (method, scanned IP, manual address, last error, live mDNS) so a
   /// user who can't pair can report it without ever reaching the dashboard.
   void _reportPairingProblem() {
-    final method = _scannedEnrollmentToken != null
-        ? 'qr'
-        : (_manualEnrollmentToken != null ? 'gate_code' : 'none_yet');
+    final method = _scannedLanOnly
+        ? 'lan_qr'
+        : _directMode
+            ? 'lan_manual'
+            : _scannedEnrollmentToken != null
+                ? 'qr'
+                : (_manualEnrollmentToken != null ? 'gate_code' : 'none_yet');
     final manual = _addressController.text.trim();
     showFeedbackSheet(context, const [], pairingContext: {
       'method': method,
+      'direct_mode': _directMode,
       'scanned_lan_url': _scannedLanUrl,
       'has_scanned_ip': _scannedLanUrl != null,
       'manual_address': manual.isEmpty ? null : manual,
@@ -521,7 +565,10 @@ class _PairingScreenState extends State<PairingScreen> {
     final hasScan    = _scannedPubKey != null && _scannedEnrollmentToken != null;
     final hasLanScan = _scannedLanOnly;
     final hasManual  = !hasScan && !hasLanScan && _manualEnrollmentToken != null;
-    final hasInput   = hasScan || hasLanScan || hasManual;
+    final hasAddress = _addressController.text.trim().isNotEmpty;
+    final hasInput   = _directMode
+        ? (hasLanScan || hasAddress)
+        : (hasScan || hasManual);
 
     return Scaffold(
       appBar: AppBar(
@@ -542,8 +589,28 @@ class _PairingScreenState extends State<PairingScreen> {
           child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // ── Mode: Moongate cloud vs Direct (LAN/VPN) ───────────────
+            SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(
+                  value: false,
+                  label: Text(l.pairingModeCloud),
+                  icon:  const Icon(Icons.cloud_outlined),
+                ),
+                ButtonSegment(
+                  value: true,
+                  label: Text(l.pairingModeDirect),
+                  icon:  const Icon(Icons.lan_outlined),
+                ),
+              ],
+              selected: {_directMode},
+              showSelectedIcon: false,
+              onSelectionChanged:
+                  _loading ? null : (s) => _setMode(s.first),
+            ),
+            const SizedBox(height: 16),
             Text(
-              l.pairingIntro,
+              _directMode ? l.pairingDirectIntro : l.pairingIntro,
               style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6)),
             ),
             const SizedBox(height: 20),
@@ -564,7 +631,7 @@ class _PairingScreenState extends State<PairingScreen> {
             const SizedBox(height: 16),
 
             // ── Scan button / scanned status / manual entry ───────────
-            if (!hasScan && !_scanning) ...[
+            if (!hasScan && !hasLanScan && !_scanning) ...[
               FilledButton.icon(
                 icon: const Icon(Icons.qr_code_scanner),
                 label: Text(l.pairingScanButton),
@@ -572,7 +639,7 @@ class _PairingScreenState extends State<PairingScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                l.pairingScanRecommended,
+                _directMode ? l.pairingDirectScanHint : l.pairingScanRecommended,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
@@ -580,6 +647,10 @@ class _PairingScreenState extends State<PairingScreen> {
                   color: cs.primary,
                 ),
               ),
+            ],
+
+            // ── Cloud mode only: GATE-code manual entry ────────────────
+            if (!_directMode && !hasScan && !_scanning) ...[
               const SizedBox(height: 14),
               Row(children: [
                 Expanded(child: Divider(color: cs.outlineVariant)),
@@ -745,9 +816,8 @@ class _PairingScreenState extends State<PairingScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        // TODO(l10n): add a dedicated LAN-only string.
                         hasLanScan
-                            ? 'LAN printer scanned - ${_scannedLanUrl ?? ''}'
+                            ? l.pairingLanScanned(_scannedLanUrl ?? '')
                             : l.pairingQrScanned(_scannedEnrollmentToken!),
                         style: TextStyle(
                           color: cs.onPrimaryContainer,
@@ -764,8 +834,31 @@ class _PairingScreenState extends State<PairingScreen> {
               ),
             ],
 
+            // ── Direct mode: first-class address entry ─────────────────
+            if (_directMode && !_scanning) ...[
+              const SizedBox(height: 16),
+              TextField(
+                controller: _addressController,
+                focusNode: _addressFocus,
+                enabled: !_loading,
+                keyboardType: TextInputType.url,
+                autocorrect: false,
+                // setState so hasInput (the Add button) tracks the text.
+                onChanged: (_) => setState(() {}),
+                onTap: () => showKeyboardFor(_addressFocus),
+                decoration: InputDecoration(
+                  labelText: l.pairingAddressLabel,
+                  hintText: l.pairingAddressHint,
+                  helperText: l.pairingDirectAddressHelper,
+                  border: const OutlineInputBorder(),
+                  suffixIcon:
+                      _loading ? null : ShowKeyboardButton(_addressFocus),
+                ),
+              ),
+            ],
+
             // ── Advanced: manual address (reverse proxy / Docker) ──────
-            if (!_scanning) ...[
+            if (!_directMode && !_scanning) ...[
               const SizedBox(height: 8),
               Theme(
                 data: Theme.of(context)
@@ -819,7 +912,7 @@ class _PairingScreenState extends State<PairingScreen> {
                         height: 20, width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(l.pairingPairButton),
+                    : Text(_directMode ? l.pairingAddButton : l.pairingPairButton),
               ),
             ],
 
@@ -834,6 +927,47 @@ class _PairingScreenState extends State<PairingScreen> {
                 child: Text(
                   _error!,
                   style: TextStyle(color: cs.onErrorContainer),
+                ),
+              ),
+            ],
+
+            // ── Direct mode: an honest list of what the cloudless path
+            //    can't do, plus its two networking prerequisites ─────────
+            if (_directMode && !_scanning) ...[
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cs.secondaryContainer.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      Icon(Icons.info_outline, size: 18, color: cs.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l.pairingDirectCaveatsTitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface.withValues(alpha: 0.85),
+                          ),
+                        ),
+                      ),
+                    ]),
+                    const SizedBox(height: 8),
+                    Text(
+                      l.pairingDirectCaveats,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.4,
+                        color: cs.onSurface.withValues(alpha: 0.75),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

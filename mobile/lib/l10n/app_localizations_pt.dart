@@ -813,6 +813,46 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pairingPairButton => 'Parear impressora';
 
   @override
+  String get pairingModeCloud => 'Nuvem Moongate';
+
+  @override
+  String get pairingModeDirect => 'Direto (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      'Conecta diretamente à impressora pela sua rede ou pela sua própria VPN - sem conta na nuvem, funciona offline. A impressora deve ser instalada no modo somente LAN.';
+
+  @override
+  String get pairingDirectScanHint =>
+      'Escaneie o QR do MOONGATE_PAIR ou digite o endereço abaixo';
+
+  @override
+  String get pairingDirectAddressHelper =>
+      'O endereço que você usa para o Mainsail / Fluidd na sua rede';
+
+  @override
+  String get pairingAddButton => 'Adicionar impressora';
+
+  @override
+  String pairingLanScanned(String url) {
+    return 'Impressora LAN escaneada - $url';
+  }
+
+  @override
+  String get pairingDefaultPrinterName => 'Minha impressora';
+
+  @override
+  String get pairingDirectCaveatsTitle => 'Limitações do modo direto';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• Notificações de impressão não funcionarão\n• Fora de casa, o app só se conecta pela sua própria VPN\n• A rede do seu celular (ou a sub-rede da VPN) deve estar em trusted_clients do Moonraker\n• Dê à impressora um endereço fixo (reserva DHCP) - o app o armazena';
+
+  @override
+  String get pairingErrorNoAddress =>
+      'Digite o endereço da impressora ou escaneie o código QR dela.';
+
+  @override
   String get pairingRestoreHint =>
       'Reinstalando? Restaure suas impressoras salvas de um arquivo de backup. Você ainda precisará parear cada uma novamente para colocá-la online.';
 

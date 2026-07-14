@@ -809,6 +809,46 @@ class AppLocalizationsPl extends AppLocalizations {
   String get pairingPairButton => 'Sparuj drukarkę';
 
   @override
+  String get pairingModeCloud => 'Chmura Moongate';
+
+  @override
+  String get pairingModeDirect => 'Bezpośredni (LAN/VPN)';
+
+  @override
+  String get pairingDirectIntro =>
+      'Łączy się bezpośrednio z drukarką przez Twoją sieć lub własny VPN - bez konta w chmurze, działa offline. Drukarka musi być zainstalowana w trybie tylko LAN.';
+
+  @override
+  String get pairingDirectScanHint =>
+      'Zeskanuj kod QR z MOONGATE_PAIR lub wpisz adres poniżej';
+
+  @override
+  String get pairingDirectAddressHelper =>
+      'Adres, pod którym otwierasz Mainsail / Fluidd w swojej sieci';
+
+  @override
+  String get pairingAddButton => 'Dodaj drukarkę';
+
+  @override
+  String pairingLanScanned(String url) {
+    return 'Zeskanowano drukarkę LAN - $url';
+  }
+
+  @override
+  String get pairingDefaultPrinterName => 'Moja drukarka';
+
+  @override
+  String get pairingDirectCaveatsTitle => 'Ograniczenia trybu bezpośredniego';
+
+  @override
+  String get pairingDirectCaveats =>
+      '• Powiadomienia o druku nie będą działać\n• Poza domem aplikacja łączy się tylko przez Twój własny VPN\n• Sieć telefonu (lub podsieć VPN) musi być w trusted_clients Moonrakera\n• Nadaj drukarce stały adres (rezerwacja DHCP) - aplikacja go zapisuje';
+
+  @override
+  String get pairingErrorNoAddress =>
+      'Wpisz adres drukarki lub zeskanuj jej kod QR.';
+
+  @override
   String get pairingRestoreHint =>
       'Ponowna instalacja? Przywróć zapisane drukarki z pliku kopii zapasowej. Każdą z nich trzeba będzie sparować ponownie, aby przywrócić ją online.';
 
