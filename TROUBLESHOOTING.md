@@ -153,11 +153,11 @@ A printer added through **Add Printer → Direct (LAN/VPN)** (v0.9.51+) has exac
        192.168.1.0/24
        100.64.0.0/10   # Tailscale
    ```
-3. **The Pi isn't actually in LAN-only mode.** Direct mode needs the plugin installed with `--lan-only` (see the README's LAN-only install section). Against a normal cloud-mode install the plugin still demands a token and answers `401`, so the tile sits offline. Check from any PC on the LAN:
+3. **The Pi isn't actually in LAN-only mode.** Direct mode needs the plugin installed in LAN-only mode - answer **2) Direct (LAN/VPN)** when the installer asks, or pass `--lan-only` (see the README's LAN-only install section). Against a normal cloud-mode install the plugin still demands a token and answers `401`, so the tile sits offline. Check from any PC on the LAN:
    ```bash
    curl -s -o /dev/null -w "%{http_code}\n" "http://<pi-ip>/server/moongate/status?mg_token="
    ```
-   `200` = LAN-only mode; `401` = cloud mode (re-run the installer with `--lan-only`, or pair the printer through the cloud instead).
+   `200` = LAN-only mode; `401` = cloud mode (re-run the installer and pick **Direct (LAN/VPN)**, or pair the printer through the cloud instead).
 4. **The Pi's address changed** (DHCP handed it a new IP). The app stores the address a Direct printer was added with - fix it in the printer's edit dialog (the pencil on its page), and give the Pi a **DHCP reservation / static IP** so it stops moving.
 
 Also by design: Direct printers have **no print notifications** (there's no cloud to send them), so a quiet notification shade for one isn't a fault.
