@@ -109,16 +109,28 @@ MOONGATE_PORT=8080 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKY
 
 In the app's pair screen, set the **Port** field to match (leave it blank for 80).
 
-**LAN-only (own VPN, no tunnel)?** If you reach your printer over your own VPN / WireGuard and don't want an outbound Cloudflare tunnel or external exposure, install in LAN-only mode. It keeps Moonraker on the LAN (`0.0.0.0`) and skips cloudflared, the auth proxy, and the tunnel service. The plugin, `MOONGATE_PAIR` macro, and mDNS advertisement are still installed, and re-running without the flag later enables remote access.
+**LAN-only (own VPN, no tunnel)?** If you reach your printer over your own VPN / WireGuard and don't want an outbound Cloudflare tunnel or external exposure, install in LAN-only mode. It keeps Moonraker on the LAN (`0.0.0.0`) and skips cloudflared, the auth proxy, and the tunnel service. The plugin, `MOONGATE_PAIR` macro, and mDNS advertisement are still installed, and a later cloud re-install enables remote access.
 
-```bash
-# piped
-MOONGATE_LAN_ONLY=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh)"
-# or, from a local checkout
-bash install.sh --lan-only
+**The installer asks.** Run it interactively (the normal `curl | bash` one-liner counts) and it offers the choice - answer `2` for Direct (LAN/VPN):
+
+```
+How will your phone connect to this printer?
+    1) Moongate cloud   - remote access from anywhere (secure tunnel)
+    2) Direct (LAN/VPN) - home network / your own VPN only, no cloud
 ```
 
-Re-running with the flag on a box that already has the tunnel stack retires it (disables the tunnel + auth proxy) and converges to LAN-only.
+On a box that already runs LAN-only the default keeps it LAN-only, so pressing Enter never converts your mode. To preselect an answer and skip the question (scripts, headless installs):
+
+```bash
+# LAN-only, piped
+MOONGATE_LAN_ONLY=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh)"
+# LAN-only, from a local checkout
+bash install.sh --lan-only
+# cloud, never prompt (automation)
+MOONGATE_LAN_ONLY=0 bash -c "$(curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh)"
+```
+
+Choosing LAN-only on a box that already has the tunnel stack retires it (disables the tunnel + auth proxy) and converges to LAN-only.
 
 In the app, add a LAN-only printer with **Add printer → Direct (LAN/VPN)** - scan the QR from `MOONGATE_PAIR` or type the printer's address. A LAN-only box can also be paired through the cloud as normal (while it has internet); Direct mode is for the fully cloud-free / internet-isolated case. Two networking notes:
 
@@ -160,7 +172,7 @@ Moongate gives every printer a choice of two connections - and you can mix them 
 
 | | ☁️ Moongate cloud (default) | 🔌 Direct (LAN/VPN) |
 |---|---|---|
-| Setup | pair once with the QR / GATE code | install the Pi with `--lan-only`, add by QR or address |
+| Setup | pair once with the QR / GATE code | pick **Direct** when the installer asks, add by QR or address |
 | Away from home | automatic - secure tunnel, zero config | through **your own VPN** (WireGuard, Tailscale) |
 | Print notifications | ✅ | ❌ (no cloud to send them) |
 | What touches the cloud | pairing, a heartbeat, short-lived tokens | **nothing - zero calls, ever** |
