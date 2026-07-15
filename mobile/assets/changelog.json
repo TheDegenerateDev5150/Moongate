@@ -1,5 +1,14 @@
 [
   {
+    "version": "v0.9.52",
+    "bullets": [
+      "go2rtc webcams now show up. If your camera runs through go2rtc (a stream.html address in Mainsail's webcam settings, e.g. WebRTC mode), the dashboard tile and the full-screen camera now display it: the app spots the go2rtc address and quietly asks go2rtc for plain snapshots of the same source, so it renders like any other camera - reverse-proxy paths and non-standard ports included. Works whether the camera was auto-detected from Mainsail or pasted into a tile's gear as a custom URL.",
+      "Live video now plays inside the printer page. Mainsail shows go2rtc cameras as an auto-playing video, and phones block auto-playing video by default - so the camera card sat black in the app while working fine on a PC. The app's built-in printer page now allows it, on Android and iPhone.",
+      "Sturdier camera tiles: a camera address that answers with something that isn't a picture (a web page, an error page) no longer paints a broken image over the tile - the placeholder simply stays until real frames arrive.",
+      "Honest limitation: a camera on a public web address still can't ride the Moongate cloud tunnel when you're away - the Pi's camera relay deliberately talks only to devices on your home network (a security guard). On home WiFi, in Direct (LAN/VPN) mode, or over your own VPN it all works."
+    ]
+  },
+  {
     "version": "v0.9.51",
     "bullets": [
       "Run it your way: a new Direct (LAN/VPN) mode adds a printer with zero cloud. Install the Pi plugin in LAN-only mode, pick 'Direct (LAN/VPN)' at the top of the Add Printer screen, then scan its QR or type its address - the app talks straight to Moonraker on your network, nothing touches the internet, and it keeps working with no internet at all. Away from home you connect through your own VPN (WireGuard, Tailscale). Honest trade-offs, shown right on the screen: no print notifications in Direct mode, remote access is your VPN's job, your phone's network must be in Moonraker's trusted_clients, and give the Pi a fixed address.",
