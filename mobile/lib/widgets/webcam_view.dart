@@ -164,7 +164,7 @@ class _WebcamViewState extends ConsumerState<WebcamView>
       final resp =
           await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
       if (!mounted) return;
-      if (resp.statusCode == 200 && resp.bodyBytes.isNotEmpty) {
+      if (resp.statusCode == 200 && _looksLikeImage(resp.bodyBytes)) {
         setState(() => _currentBytes = resp.bodyBytes);
       }
     } catch (_) {
@@ -203,7 +203,7 @@ class _WebcamViewState extends ConsumerState<WebcamView>
       // frame): use whatever bytes we collected if they look usable.
       if (!isMultipart) {
         final bytes = buffer.toBytes();
-        if (bytes.isNotEmpty && mounted) {
+        if (_looksLikeImage(bytes) && mounted) {
           setState(() => _currentBytes = bytes);
         }
       }
@@ -212,6 +212,26 @@ class _WebcamViewState extends ConsumerState<WebcamView>
     } finally {
       client.close(); // aborts an MJPEG stream still in flight
     }
+  }
+
+  /// True when [d] starts like an image the engine can decode (JPEG, PNG,
+  /// GIF, WebP, BMP). A camera URL that answers 200 with something else -
+  /// typically a go2rtc / WebRTC player PAGE, which is HTML - must never be
+  /// stored: Image.memory can't decode it, so it would replace the
+  /// placeholder (or the last good frame) with a broken-image error box.
+  static bool _looksLikeImage(Uint8List d) {
+    if (d.length < 12) return false;
+    if (d[0] == 0xFF && d[1] == 0xD8) return true;                    // JPEG
+    if (d[0] == 0x89 && d[1] == 0x50 && d[2] == 0x4E && d[3] == 0x47) {
+      return true;                                                    // PNG
+    }
+    if (d[0] == 0x47 && d[1] == 0x49 && d[2] == 0x46) return true;    // GIF
+    if (d[0] == 0x52 && d[1] == 0x49 && d[2] == 0x46 && d[3] == 0x46 &&
+        d[8] == 0x57 && d[9] == 0x45 && d[10] == 0x42 && d[11] == 0x50) {
+      return true;                                                    // WebP
+    }
+    if (d[0] == 0x42 && d[1] == 0x4D) return true;                    // BMP
+    return false;
   }
 
   /// Find the first complete JPEG (SOI ff d8 … EOI ff d9) in [d], or null if

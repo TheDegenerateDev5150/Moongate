@@ -436,7 +436,7 @@ class _PrinterScreenState extends State<PrinterScreen>
 
   void _initControllerIfNeeded() {
     if (_webController != null) return;
-    _webController = WebViewController()
+    _webController = createWebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(_navDelegate());
   }
