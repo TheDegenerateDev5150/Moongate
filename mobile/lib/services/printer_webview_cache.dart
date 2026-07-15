@@ -4,11 +4,38 @@ import 'dart:developer' as dev;
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../models/printer_config.dart';
 import 'lan_discovery_service.dart';
 import 'printer_access_cache.dart';
 import 'supabase_service.dart';
+
+/// Build a [WebViewController] with media autoplay enabled - the one factory
+/// behind both the printer screen and the prewarm below, so every Mainsail/
+/// Fluidd WebView behaves the same. Mainsail renders a go2rtc / WebRTC webcam
+/// as a muted autoplaying <video> element; Android's WebView blocks ANY
+/// scripted playback without a user gesture by default and iOS additionally
+/// forces fullscreen-only playback, so those webcam cards sat black in the
+/// app while working fine in a desktop browser.
+WebViewController createWebViewController() {
+  late final PlatformWebViewControllerCreationParams params;
+  if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+    params = WebKitWebViewControllerCreationParams(
+      allowsInlineMediaPlayback:     true,
+      mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
+    );
+  } else {
+    params = const PlatformWebViewControllerCreationParams();
+  }
+  final controller = WebViewController.fromPlatformCreationParams(params);
+  final platform = controller.platform;
+  if (platform is AndroidWebViewController) {
+    platform.setMediaPlaybackRequiresUserGesture(false);
+  }
+  return controller;
+}
 
 /// One warm Mainsail/Fluidd WebView, kept alive between visits to the dashboard
 /// so re-opening a printer is instant. Holds the loaded SPA and its live
@@ -157,7 +184,7 @@ class PrinterWebViewCache with WidgetsBindingObserver {
       // also makes prewarm self-validating: if a headless WebView can't load on
       // this device, the wait times out, nothing is stored, and opening falls
       // back to the normal cold load - no regression.
-      final controller = WebViewController()
+      final controller = createWebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted);
       final loaded = Completer<bool>();
       controller.setNavigationDelegate(NavigationDelegate(

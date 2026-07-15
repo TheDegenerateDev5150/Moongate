@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as dev;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -962,6 +963,27 @@ class PrinterStatusService {
     return null;
   }
 
+  /// go2rtc rewrite: a go2rtc camera configured in Mainsail (or pasted as a
+  /// custom URL) points at the PLAYER PAGE - `.../stream.html?src=NAME` with
+  /// an optional `mode=` - which is HTML, so the snapshot loop can never
+  /// render a frame from it. go2rtc serves a single JPEG of the same source
+  /// at `.../api/frame.jpeg?src=NAME`, so rewrite to that. Path handled
+  /// segment-wise so a reverse-proxy subpath (e.g. `/go2rtc/stream.html`)
+  /// survives. Anything that isn't a go2rtc player URL returns null.
+  @visibleForTesting
+  static String? go2rtcFrameUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme) return null;
+    final segs = uri.pathSegments;
+    if (segs.isEmpty || segs.last.toLowerCase() != 'stream.html') return null;
+    final src = uri.queryParameters['src'];
+    if (src == null || src.isEmpty) return null;
+    return uri.replace(
+      pathSegments:    [...segs.sublist(0, segs.length - 1), 'api', 'frame.jpeg'],
+      queryParameters: {'src': src},
+    ).toString();
+  }
+
   // ── Shared status parser (unchanged from v0.2.x logic) ───────────────────
 
   PrinterStatus _parseStatus({
@@ -1083,13 +1105,20 @@ class PrinterStatusService {
     final customUrl    = _liveCustomCameraUrl?.trim();
     final autoSnapshot = (moongateResult?['webcam_snapshot_external'] as String?)?.trim();
     final autoStream   = (moongateResult?['webcam_stream_external']   as String?)?.trim();
-    final externalUrl = (customUrl != null && customUrl.isNotEmpty)
+    var externalUrl = (customUrl != null && customUrl.isNotEmpty)
         ? customUrl
         : (autoSnapshot != null && autoSnapshot.isNotEmpty)
             ? autoSnapshot
             : (autoStream != null && autoStream.isNotEmpty)
                 ? autoStream
                 : null;
+
+    // A go2rtc player-page URL (from Mainsail's webcam config or pasted as a
+    // custom URL) is HTML, not an image - swap it for go2rtc's single-frame
+    // endpoint so the tile and the full-screen camera actually get frames.
+    if (externalUrl != null) {
+      externalUrl = go2rtcFrameUrl(externalUrl) ?? externalUrl;
+    }
 
     bool webcamIsExternal = false;
     if (externalUrl != null && externalUrl.isNotEmpty) {
