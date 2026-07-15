@@ -89,6 +89,16 @@ If print notifications were on but the ongoing status notification is gone and y
 
 If a printer's chamber temperature doesn't appear on its tile even though it shows in Mainsail, update to **v0.9.32 or newer**. That release made chamber detection robust for combined chamber sensors (`temperature_combined`) and sensors named with capital letters, especially over the remote tunnel.
 
+## No time remaining on a printing tile
+
+Since **v0.9.53** a printing tile shows the time left (or the projected finish time) after its temperatures. If it's missing:
+
+- **The print just started.** The readout appears once the estimate is meaningful - roughly a couple of minutes in (about 2% progress). Too early, the maths would show nonsense, so it's withheld.
+- **The print is paused.** A paused print's estimate can't be trusted (the print clock is frozen), so the readout hides until it resumes.
+- **The switch is off.** Check **menu → Dashboard Layout → Show time remaining** - the same place also switches between **Time left** ("~1h09m") and **Finish time** ("15:27").
+
+The tile and the print notification share the same estimate, so they always agree - but like Mainsail's ETA it's a projection from progress so far, and it settles as the print runs.
+
 ## The light bulb shows the wrong state (on when the light's off)
 
 The bulb's on/off comes from the **Light Status Source** you set for that printer (**menu → Lighting**). If it's blank, the bulb just tracks your taps and assumes the light starts *off* - so it can read backwards. Set it to the light's Klipper object: the `[output_pin …]`, `[led …]` or `[neopixel …]` section name from your `printer.cfg` - e.g. `output_pin caselight` (the object name, **not** a raw pin like `PE3`). The bulb then follows that object's real value and self-corrects on each poll, even when you switch the light from Mainsail.
