@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.53",
+    "bullets": [
+      "See when a print will finish, right on the dashboard (a user request). While a printer is printing, its tile now shows a small time readout after the temperatures: how long is left (~1h09m). It uses the same estimate as the print notification, so the two always agree, and it works on every printer without updating the Pi plugin.",
+      "Prefer a finish time instead? In menu → Dashboard layout you can switch the readout to show the projected finish time (15:27, in your 12/24-hour clock format) rather than the time left - or hide it entirely with the new 'Show time remaining' switch. Your choice is saved and travels in backups.",
+      "The readout appears a couple of minutes into a print (too early, the estimate would be nonsense) and hides while paused, since a paused print's estimate can't be trusted."
+    ]
+  },
+  {
     "version": "v0.9.52",
     "bullets": [
       "go2rtc webcams now show up. If your camera runs through go2rtc (a stream.html address in Mainsail's webcam settings, e.g. WebRTC mode), the dashboard tile and the full-screen camera now display it: the app spots the go2rtc address and quietly asks go2rtc for plain snapshots of the same source, so it renders like any other camera - reverse-proxy paths and non-standard ports included. Works whether the camera was auto-detected from Mainsail or pasted into a tile's gear as a custom URL.",
