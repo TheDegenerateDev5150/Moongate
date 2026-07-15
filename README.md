@@ -92,7 +92,7 @@ SSH into your Pi and run:
 curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh | bash
 ```
 
-This installs the plugin, the `MOONGATE_PAIR` macro, the QR pairing page, the auth proxy, and the Cloudflare tunnel, then restarts Moonraker. Future updates appear in **Mainsail → Software Updates → Moongate**.
+The installer asks how your phone will connect: **1) Moongate cloud** (the default - remote access from anywhere) or **2) Direct (LAN/VPN)** (cloud-free; [see how the two compare](#run-it-your-way)). With the default it installs the plugin, the `MOONGATE_PAIR` macro, the QR pairing page, the auth proxy, and the Cloudflare tunnel, then restarts Moonraker. Future updates appear in **Mainsail → Software Updates → Moongate**.
 
 <details>
 <summary><b>Requirements &amp; custom HTTP port</b></summary>

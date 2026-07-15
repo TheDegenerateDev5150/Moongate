@@ -182,7 +182,7 @@ If you don't want Cloudflare in the picture, point the cloudflared step at any o
 
 ## Direct (LAN/VPN) mode (v0.9.51)
 
-An opt-in, per-printer alternative to everything above: a Pi installed with `install.sh --lan-only` runs **no tunnel, no auth proxy, and makes zero outbound calls** - and the app, in its **Direct (LAN/VPN)** mode, talks straight to Moonraker on the LAN (or across your own WireGuard / Tailscale VPN) with **no cloud account and no tokens**.
+An opt-in, per-printer alternative to everything above: a Pi installed in LAN-only mode (the installer's **Direct (LAN/VPN)** answer, or `install.sh --lan-only`) runs **no tunnel, no auth proxy, and makes zero outbound calls** - and the app, in its **Direct (LAN/VPN)** mode, talks straight to Moonraker on the LAN (or across your own WireGuard / Tailscale VPN) with **no cloud account and no tokens**.
 
 What that changes, stated plainly:
 
@@ -190,7 +190,7 @@ What that changes, stated plainly:
 - **Remote access is your VPN's perimeter.** There is no tunnel to leak and no token to steal; if your WireGuard/Tailscale subnet is in `trusted_clients`, VPN membership is the credential. Choose that subnet deliberately (Tailscale uses `100.64.0.0/10`).
 - **Nothing is stored in the cloud.** A Direct-added printer has no cloud row, sends no heartbeats, and mints no tokens - the middleman never learns it exists.
 - **The tunnel path is unaffected.** The token bypass applies only when the plugin itself runs `lan_only`. On a half-converged box (flag set but the tunnel stack somehow still running) the auth proxy still does its own independent token verification, so the internet-facing promise above - flat 401s without a valid broker-signed token - holds regardless of the plugin's mode.
-- **Switching modes is explicit.** A cloud-paired printer flipped to Direct in the app simply stops using its cloud identity (and can flip back); converting a box's *install* between modes is a deliberate re-run of the installer with or without `--lan-only`.
+- **Switching modes is explicit.** A cloud-paired printer flipped to Direct in the app simply stops using its cloud identity (and can flip back); converting a box's *install* between modes is a deliberate re-run of the installer, answering the mode question the other way (or forcing it with `--lan-only` / `MOONGATE_LAN_ONLY=`). The interactive default always keeps the box's current mode, so a repair re-run can't silently stand up a tunnel on a LAN-only box.
 
 ## What the plugin can see and do
 

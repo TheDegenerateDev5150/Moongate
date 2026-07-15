@@ -26,6 +26,8 @@ Prefer the command line? SSH in and re-run the installer - it pulls the latest a
 curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh | bash
 ```
 
+> The installer asks how your phone connects (cloud or Direct LAN/VPN). On a re-run the default is the mode the box already uses, so just pressing Enter updates without changing anything.
+
 > Some releases note **"re-run the Pi installer"** in the changelog - that means a plugin-side change shipped (e.g. v0.5.1's instant-pairing QR). Update the plugin to get it.
 
 ---
