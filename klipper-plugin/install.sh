@@ -35,6 +35,13 @@ MOONGATE_PORT="${MOONGATE_PORT:-80}"
 #
 #   Locally:  bash install.sh --lan-only
 #   Piped:    MOONGATE_LAN_ONLY=1 bash -c "$(curl -fsSL <url>)"
+#
+# No flag and no env var at all -> the interactive chooser below asks. Any
+# explicit setting (either value, or the flag) skips the question, so
+# automation that wants the tunnel default unchanged sets MOONGATE_LAN_ONLY=0.
+# Set-ness must be captured before the :- default collapses "unset" and
+# "empty" into the same thing.
+MG_LAN_MODE_EXPLICIT="${MOONGATE_LAN_ONLY+x}"
 MOONGATE_LAN_ONLY="${MOONGATE_LAN_ONLY:-}"
 
 # Loopback port the v0.4 auth proxy binds to. cloudflared targets this
@@ -44,7 +51,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --port)      [[ -n "${2-}" ]] || die "--port needs a value"; MOONGATE_PORT="$2"; shift 2;;
         --port=*)    MOONGATE_PORT="${1#*=}"; shift;;
-        --lan-only)  MOONGATE_LAN_ONLY=1; shift;;
+        --lan-only)  MOONGATE_LAN_ONLY=1; MG_LAN_MODE_EXPLICIT=x; shift;;
         *)           shift;;
     esac
 done
@@ -53,6 +60,39 @@ done
 [[ "$MOONGATE_PORT" -ge 1 && "$MOONGATE_PORT" -le 65535 ]] \
     || die "Port out of range (1-65535): $MOONGATE_PORT"
 info "HTTP port: $MOONGATE_PORT"
+
+# ── Connection-mode chooser ──────────────────────────────────────────────────
+# Runs only when the caller expressed no preference (no --lan-only flag,
+# MOONGATE_LAN_ONLY unset) AND a terminal is reachable. The answer is read
+# from /dev/tty, not stdin: under `curl ... | bash` stdin is the script
+# itself, so a plain `read` would swallow script text - /dev/tty still
+# reaches the keyboard. Headless runs (no controlling terminal: CI,
+# provisioning tools) skip the question and get the full cloud install,
+# exactly the pre-chooser behaviour.
+#
+# The default answer keeps an existing install's current mode: this script
+# doubles as the mode CONVERTER (re-running without --lan-only flips a box
+# back to cloud), so a LAN-only user re-running it to repair must not be
+# converted - and handed an internet tunnel - by an idle Enter. Fresh
+# installs default to cloud.
+if [[ -z "$MG_LAN_MODE_EXPLICIT" ]] && ( : </dev/tty ) 2>/dev/null; then
+    MG_MODE_DEFAULT=1
+    # Existing LAN-only box -> keep its mode (§5b writes this file).
+    grep -qs '"lan_only"[[:space:]]*:[[:space:]]*true' "$HOME/.config/moongate/config.json" \
+        && MG_MODE_DEFAULT=2
+    echo
+    info "How will your phone connect to this printer?"
+    echo "    1) Moongate cloud   - remote access from anywhere (secure tunnel)"
+    echo "    2) Direct (LAN/VPN) - home network / your own VPN only, no cloud"
+    while :; do
+        read -r -p "Choose 1 or 2 [default: $MG_MODE_DEFAULT]: " MG_MODE_CHOICE </dev/tty \
+            || MG_MODE_CHOICE=""   # EOF (e.g. ctrl-D) -> take the default
+        MG_MODE_CHOICE="${MG_MODE_CHOICE:-$MG_MODE_DEFAULT}"
+        [[ "$MG_MODE_CHOICE" == "1" || "$MG_MODE_CHOICE" == "2" ]] && break
+        warn "Please answer 1 or 2."
+    done
+    [[ "$MG_MODE_CHOICE" == "2" ]] && MOONGATE_LAN_ONLY=1 || MOONGATE_LAN_ONLY=""
+fi
 
 # Normalise to "1" (on) or "" (off) so MOONGATE_LAN_ONLY=0 opts OUT - matches
 # how uninstall.sh treats MOONGATE_YES. --lan-only above already set it to 1.
