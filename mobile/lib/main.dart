@@ -53,6 +53,8 @@ void main() async {
   await container.read(dashboardBackgroundProvider.notifier).load();
   await container.read(globalPowerButtonProvider.notifier).load();
   await container.read(dashboardButtonsProvider.notifier).load();
+  await container.read(tileEtaProvider.notifier).load();
+  await container.read(tileEtaFormatProvider.notifier).load();
   await container.read(showLocalOnlyButtonProvider.notifier).load();
   await container.read(localOnlyProvider.notifier).load();
 

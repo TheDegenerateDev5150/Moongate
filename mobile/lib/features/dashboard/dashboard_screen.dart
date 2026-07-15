@@ -520,6 +520,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final notifOnlineOnly = ref.watch(notifOnlineOnlyProvider);
     final globalPowerButton = ref.watch(globalPowerButtonProvider);
     final showDashboardButtons = ref.watch(dashboardButtonsProvider);
+    final showTileEta   = ref.watch(tileEtaProvider);
+    final tileEtaFormat = ref.watch(tileEtaFormatProvider);
     final showLocalOnlyButton = ref.watch(showLocalOnlyButtonProvider);
 
     return Drawer(
@@ -880,6 +882,44 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       onChanged: (v) =>
                           ref.read(dashboardButtonsProvider.notifier).set(v),
                     ),
+                    // Time chip on printing tiles: show/hide, and whether it
+                    // reads as time left ("~1h09m") or the projected finish
+                    // time ("15:27") - the same estimate the notification
+                    // card shows, so the two always agree.
+                    SwitchListTile(
+                      dense: true,
+                      secondary: const Icon(Icons.schedule_outlined),
+                      title: Text(l.dashboardShowEta),
+                      subtitle: Text(l.dashboardShowEtaSubtitle),
+                      value: showTileEta,
+                      onChanged: (v) =>
+                          ref.read(tileEtaProvider.notifier).set(v),
+                    ),
+                    if (showTileEta)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
+                        child: SegmentedButton<TileEtaFormat>(
+                          showSelectedIcon: false,
+                          style: SegmentedButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          segments: [
+                            ButtonSegment(
+                              value: TileEtaFormat.remaining,
+                              label: Text(l.dashboardEtaFormatRemaining),
+                            ),
+                            ButtonSegment(
+                              value: TileEtaFormat.finish,
+                              label: Text(l.dashboardEtaFormatFinish),
+                            ),
+                          ],
+                          selected: {tileEtaFormat},
+                          onSelectionChanged: (s) => ref
+                              .read(tileEtaFormatProvider.notifier)
+                              .set(s.first),
+                        ),
+                      ),
 
                     const Divider(),
 
@@ -1344,6 +1384,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await ref.read(notifOnlineOnlyProvider.notifier).load();
     await ref.read(globalPowerButtonProvider.notifier).load();
     await ref.read(dashboardButtonsProvider.notifier).load();
+    await ref.read(tileEtaProvider.notifier).load();
+    await ref.read(tileEtaFormatProvider.notifier).load();
     // The local-only MODE isn't in backups, but reload both anyway so the
     // button preference lands and the mode reflects whatever this device had.
     await ref.read(showLocalOnlyButtonProvider.notifier).load();

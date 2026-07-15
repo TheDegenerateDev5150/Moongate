@@ -448,6 +448,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dashboardShowButtonsSubtitle => '在底部显示添加和重新排序按钮。隐藏时可从菜单添加打印机。';
 
   @override
+  String get dashboardShowEta => '显示剩余时间';
+
+  @override
+  String get dashboardShowEtaSubtitle => '打印中的磁贴会在温度旁边显示剩余时间。';
+
+  @override
+  String get dashboardEtaFormatRemaining => '剩余时间';
+
+  @override
+  String get dashboardEtaFormatFinish => '完成时间';
+
+  @override
   String get dashboardReorderHint => '按住并拖动磁贴即可重新排序';
 
   @override

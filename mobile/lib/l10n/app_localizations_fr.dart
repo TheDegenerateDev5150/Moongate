@@ -474,6 +474,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'Affiche les boutons d\'ajout et de réorganisation en bas. Ajoutez des imprimantes depuis le menu lorsqu\'ils sont masqués.';
 
   @override
+  String get dashboardShowEta => 'Afficher le temps restant';
+
+  @override
+  String get dashboardShowEtaSubtitle =>
+      'Les tuiles en cours d\'impression affichent le temps restant à côté des températures.';
+
+  @override
+  String get dashboardEtaFormatRemaining => 'Temps restant';
+
+  @override
+  String get dashboardEtaFormatFinish => 'Heure de fin';
+
+  @override
   String get dashboardReorderHint =>
       'Maintenez et glissez une tuile pour réorganiser';
 

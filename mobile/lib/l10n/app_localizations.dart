@@ -934,6 +934,30 @@ abstract class AppLocalizations {
   /// **'Show the add and reorder buttons at the bottom. Add printers from the menu when hidden.'**
   String get dashboardShowButtonsSubtitle;
 
+  /// Dashboard Layout switch title: show/hide the time chip on printing tiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Show time remaining'**
+  String get dashboardShowEta;
+
+  /// Subtitle under the show-time-remaining switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Printing tiles show the time left next to the temperatures.'**
+  String get dashboardShowEtaSubtitle;
+
+  /// Segmented-button label: the tile time chip shows the remaining duration (e.g. ~1h09m).
+  ///
+  /// In en, this message translates to:
+  /// **'Time left'**
+  String get dashboardEtaFormatRemaining;
+
+  /// Segmented-button label: the tile time chip shows the projected wall-clock finish time (e.g. 15:27).
+  ///
+  /// In en, this message translates to:
+  /// **'Finish time'**
+  String get dashboardEtaFormatFinish;
+
   /// Hint shown above the dashboard grid when manual drag-to-reorder is active.
   ///
   /// In en, this message translates to:

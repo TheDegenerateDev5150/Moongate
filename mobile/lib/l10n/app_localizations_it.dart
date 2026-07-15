@@ -469,6 +469,19 @@ class AppLocalizationsIt extends AppLocalizations {
       'Mostra i pulsanti per aggiungere e riordinare in basso. Aggiungi stampanti dal menu quando sono nascosti.';
 
   @override
+  String get dashboardShowEta => 'Mostra tempo rimanente';
+
+  @override
+  String get dashboardShowEtaSubtitle =>
+      'I riquadri in stampa mostrano il tempo rimanente accanto alle temperature.';
+
+  @override
+  String get dashboardEtaFormatRemaining => 'Tempo rimanente';
+
+  @override
+  String get dashboardEtaFormatFinish => 'Ora di fine';
+
+  @override
   String get dashboardReorderHint =>
       'Tieni premuto e trascina un riquadro per riordinare';
 

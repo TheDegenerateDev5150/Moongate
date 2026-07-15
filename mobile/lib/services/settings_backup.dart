@@ -42,6 +42,8 @@ class SettingsBackup {
     'app_locale':                  _Kind.string,
     'show_camera_config_icons':    _Kind.boolean,
     'show_dashboard_buttons':      _Kind.boolean,
+    'show_print_eta':              _Kind.boolean,
+    'print_eta_format':            _Kind.string,
     // The Local-only BUTTON preference rides backups; the local-only MODE
     // itself (kLocalOnlyKey) deliberately does not - a restore should never
     // silently cut remote access.

@@ -382,6 +382,13 @@ class PrinterStatus {
   ///   'offline'      - all network paths exhausted, Pi unreachable
   final String state;
   final double progress; // 0.0 - 1.0
+
+  /// Klipper's `print_stats.print_duration` - seconds of actual printing on
+  /// the current job (excludes heat-up/pause time). 0 when idle or unknown.
+  /// Feeds the tile's time-remaining chip via [printRemainingSeconds], the
+  /// same elapsed ÷ progress estimate the notification card shows.
+  final double printDurationSec;
+
   final double hotendTemp;
   final double hotendTarget;
   final double bedTemp;
@@ -449,6 +456,7 @@ class PrinterStatus {
   const PrinterStatus({
     required this.state,
     required this.progress,
+    this.printDurationSec = 0,
     required this.hotendTemp,
     required this.hotendTarget,
     required this.bedTemp,
@@ -480,6 +488,7 @@ class PrinterStatus {
   PrinterStatus copyWith({
     String? state,
     double? progress,
+    double? printDurationSec,
     double? hotendTemp,
     double? hotendTarget,
     double? bedTemp,
@@ -504,6 +513,7 @@ class PrinterStatus {
     return PrinterStatus(
       state:            state ?? this.state,
       progress:         progress ?? this.progress,
+      printDurationSec: printDurationSec ?? this.printDurationSec,
       hotendTemp:       hotendTemp ?? this.hotendTemp,
       hotendTarget:     hotendTarget ?? this.hotendTarget,
       bedTemp:          bedTemp ?? this.bedTemp,

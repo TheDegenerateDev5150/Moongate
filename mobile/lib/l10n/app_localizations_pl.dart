@@ -470,6 +470,19 @@ class AppLocalizationsPl extends AppLocalizations {
       'Pokazuje przyciski dodawania i zmiany kolejności na dole. Gdy ukryte, dodawaj drukarki z menu.';
 
   @override
+  String get dashboardShowEta => 'Pokaż pozostały czas';
+
+  @override
+  String get dashboardShowEtaSubtitle =>
+      'Kafelki w trakcie druku pokazują pozostały czas obok temperatur.';
+
+  @override
+  String get dashboardEtaFormatRemaining => 'Pozostały czas';
+
+  @override
+  String get dashboardEtaFormatFinish => 'Czas zakończenia';
+
+  @override
   String get dashboardReorderHint =>
       'Przytrzymaj i przeciągnij kafelek, aby zmienić kolejność';
 

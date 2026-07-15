@@ -466,6 +466,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show the add and reorder buttons at the bottom. Add printers from the menu when hidden.';
 
   @override
+  String get dashboardShowEta => 'Show time remaining';
+
+  @override
+  String get dashboardShowEtaSubtitle =>
+      'Printing tiles show the time left next to the temperatures.';
+
+  @override
+  String get dashboardEtaFormatRemaining => 'Time left';
+
+  @override
+  String get dashboardEtaFormatFinish => 'Finish time';
+
+  @override
   String get dashboardReorderHint => 'Hold and drag a tile to reorder';
 
   @override

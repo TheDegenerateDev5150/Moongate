@@ -468,6 +468,19 @@ class AppLocalizationsRu extends AppLocalizations {
       'Показывает кнопки добавления и изменения порядка внизу. Когда скрыты, добавляйте принтеры из меню.';
 
   @override
+  String get dashboardShowEta => 'Показывать оставшееся время';
+
+  @override
+  String get dashboardShowEtaSubtitle =>
+      'Плитки с идущей печатью показывают оставшееся время рядом с температурами.';
+
+  @override
+  String get dashboardEtaFormatRemaining => 'Осталось';
+
+  @override
+  String get dashboardEtaFormatFinish => 'Время окончания';
+
+  @override
   String get dashboardReorderHint =>
       'Удерживайте и перетащите плитку, чтобы изменить порядок';
 
