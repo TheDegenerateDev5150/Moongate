@@ -6,6 +6,8 @@
 // calculation while the notification used the raw file fraction, and neither
 // matched Mainsail's default. This is the single source of truth.
 
+import 'package:intl/intl.dart';
+
 /// Print progress as a fraction in 0..1, computed to match Mainsail's default
 /// **"file position (relative)"** mode: the printed byte position mapped onto
 /// the slicer's gcode body, between [gcodeStartByte] and [gcodeEndByte], so the
@@ -45,4 +47,48 @@ double computePrintProgress({
     return sdcardProgress.clamp(0.0, 1.0);
   }
   return 0.0;
+}
+
+/// Print time remaining (seconds), estimated from elapsed ÷ progress with no
+/// extra metadata call - the estimate the notification card has always shown,
+/// now shared with the dashboard tile's ETA chip.
+///
+/// Null when there's nothing meaningful to show:
+///   - not actively printing (a paused print's elapsed clock is frozen, so its
+///     estimate silently goes stale - hide rather than mislead);
+///   - too early to extrapolate (progress < 2% or < 30s elapsed - the maths
+///     divides by a near-zero progress and produces garbage like "~43h");
+///   - implausibly long (> 100h - a corrupt duration/progress pair).
+double? printRemainingSeconds({
+  required String state,
+  required double progress,
+  required double printDurationSec,
+}) {
+  if (state != 'printing') return null;
+  if (progress < 0.02 || printDurationSec < 30) return null;
+  final remaining = printDurationSec * (1 - progress) / progress;
+  if (remaining <= 0 || remaining > 100 * 3600) return null;
+  return remaining;
+}
+
+/// "1h05m" / "14m" - how much longer the print has to run.
+String formatRemainingDuration(double seconds) {
+  final d = Duration(seconds: seconds.round());
+  final h = d.inHours;
+  final m = d.inMinutes % 60;
+  return h > 0 ? '${h}h${m.toString().padLeft(2, '0')}m' : '${m}m';
+}
+
+/// Wall-clock time the print is projected to finish ("1:20 AM" / "13:20"),
+/// localised 12/24h via [localeName] - the same "ETA" Klipper and Mainsail
+/// display. Null if the locale's date symbols didn't load, so callers fall
+/// back to the remaining duration.
+String? formatFinishClock(double remainingSeconds, String localeName) {
+  try {
+    final finish =
+        DateTime.now().add(Duration(seconds: remainingSeconds.round()));
+    return DateFormat.jm(localeName).format(finish);
+  } catch (_) {
+    return null;
+  }
 }

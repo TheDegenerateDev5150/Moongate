@@ -471,6 +471,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'Muestra los botones de añadir y reordenar en la parte inferior. Añade impresoras desde el menú cuando están ocultos.';
 
   @override
+  String get dashboardShowEta => 'Mostrar tiempo restante';
+
+  @override
+  String get dashboardShowEtaSubtitle =>
+      'Las casillas que están imprimiendo muestran el tiempo restante junto a las temperaturas.';
+
+  @override
+  String get dashboardEtaFormatRemaining => 'Tiempo restante';
+
+  @override
+  String get dashboardEtaFormatFinish => 'Hora de fin';
+
+  @override
   String get dashboardReorderHint =>
       'Mantén y arrastra una casilla para reordenar';
 

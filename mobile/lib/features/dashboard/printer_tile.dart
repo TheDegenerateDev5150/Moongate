@@ -11,6 +11,7 @@ import '../../models/printer_config.dart';
 import '../../providers/custom_theme_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/print_control_service.dart';
+import '../../services/print_progress.dart';
 import '../../services/printer_registry.dart';
 import '../../services/printer_status_registry.dart';
 import '../../services/printer_status_service.dart';
@@ -448,6 +449,20 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
     );
   }
 
+  /// Seconds left on the running print for the tile's time chip, or null when
+  /// the chip is hidden: the setting is off, nothing is printing, or it's too
+  /// early for the shared elapsed ÷ progress estimate ([printRemainingSeconds],
+  /// the notification card's maths) to be meaningful. Watched providers make
+  /// the chip appear/disappear live when the drawer setting changes.
+  double? get _etaRemaining {
+    if (!ref.watch(tileEtaProvider)) return null;
+    return printRemainingSeconds(
+      state:            _status.state,
+      progress:         _status.progress,
+      printDurationSec: _status.printDurationSec,
+    );
+  }
+
   /// The single-toolhead temperature row: hotend, bed, and (if present) chamber
   /// flowed through [_tempRow]. The [_anchor] calls are no-ops on every tile
   /// except the one the tutorial spotlights.
@@ -483,6 +498,12 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
             target: _status.chamberTarget,
             stack: stack,
           ),
+        ),
+      if (_etaRemaining != null)
+        _EtaChip(
+          remainingSeconds: _etaRemaining!,
+          format: ref.watch(tileEtaFormatProvider),
+          stack: stack,
         ),
     ]);
   }
@@ -524,6 +545,12 @@ class _PrinterTileState extends ConsumerState<PrinterTile>
             target: _status.chamberTarget,
             stack: stack,
           ),
+        ),
+      if (_etaRemaining != null)
+        _EtaChip(
+          remainingSeconds: _etaRemaining!,
+          format: ref.watch(tileEtaFormatProvider),
+          stack: stack,
         ),
     ]);
   }
@@ -1673,6 +1700,66 @@ class _TempChip extends StatelessWidget {
     // row overflow a narrow tile. Past a threshold, stack each chip vertically
     // (icon over value) so the three read as two tidy rows - icons on top,
     // values beneath - instead of running off the edge.
+    final stacked = stack ?? (MediaQuery.textScalerOf(context).scale(1.0) >= 1.15);
+    if (stacked) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [iconWidget, const SizedBox(height: 1), valueWidget],
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [iconWidget, const SizedBox(width: 2), valueWidget],
+    );
+  }
+}
+
+// ── Time chip (printing tiles) ────────────────────────────────────────────────
+//
+// The time readout after the temperatures while a print runs: "~1h09m" left by
+// default, or the projected finish time ("15:27") when the user picks that in
+// Dashboard layout. Follows [_TempChip]'s colour + stacking rules so it wraps
+// and stacks with the temperature chips as one family. Only built while the
+// shared estimate is meaningful (see [printRemainingSeconds]), so it never
+// shows on idle tiles or flashes garbage in a print's first moments.
+
+class _EtaChip extends StatelessWidget {
+  final double remainingSeconds;
+  final TileEtaFormat format;
+
+  /// See [_TempChip.stack] - forces stacked/horizontal, else display-size only.
+  final bool? stack;
+
+  const _EtaChip({
+    required this.remainingSeconds,
+    required this.format,
+    this.stack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const neutral = Colors.blueGrey;
+    final muted   = neutral.withValues(alpha: 0.7);
+
+    // Finish-clock mode falls back to the remaining duration if the locale's
+    // date symbols aren't loadable - the chip never renders empty.
+    String? clock;
+    if (format == TileEtaFormat.finish) {
+      clock = formatFinishClock(
+          remainingSeconds, AppLocalizations.of(context).localeName);
+    }
+    final value = clock ?? '~${formatRemainingDuration(remainingSeconds)}';
+
+    final iconWidget = Icon(
+      clock != null ? Icons.sports_score : Icons.schedule,
+      size: 13,
+      color: muted,
+    );
+    final valueWidget = Text(
+      value,
+      style: const TextStyle(fontSize: 12, color: neutral),
+    );
+
     final stacked = stack ?? (MediaQuery.textScalerOf(context).scale(1.0) >= 1.15);
     if (stacked) {
       return Column(

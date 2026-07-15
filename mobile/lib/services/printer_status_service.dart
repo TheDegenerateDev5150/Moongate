@@ -1179,6 +1179,7 @@ class PrinterStatusService {
     return PrinterStatus(
       state:              state,
       progress:           progress,
+      printDurationSec:   (printStats['print_duration']  as num?)?.toDouble() ?? 0,
       hotendTemp:         (extruder['temperature']       as num?)?.toDouble() ?? 0,
       hotendTarget:       (extruder['target']            as num?)?.toDouble() ?? 0,
       bedTemp:            (heaterBed['temperature']      as num?)?.toDouble() ?? 0,

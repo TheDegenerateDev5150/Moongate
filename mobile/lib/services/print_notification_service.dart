@@ -970,38 +970,22 @@ class _PrintTaskHandler extends TaskHandler {
     }
   }
 
-  /// Print time remaining (seconds), estimated from elapsed/progress with no
-  /// extra metadata call. Null while it's too early - or implausibly long - to
-  /// be meaningful.
-  double? _remainingSeconds(_Poll s) {
-    if (s.state != 'printing') return null;
-    if (s.progress < 0.02 || s.printDurationSec < 30) return null;
-    final remaining = s.printDurationSec * (1 - s.progress) / s.progress;
-    if (remaining <= 0 || remaining > 100 * 3600) return null;
-    return remaining;
-  }
+  /// Print time remaining (seconds) - the shared estimate in
+  /// [printRemainingSeconds], which the dashboard tile's ETA chip uses too so
+  /// the two surfaces always agree.
+  double? _remainingSeconds(_Poll s) => printRemainingSeconds(
+        state:            s.state,
+        progress:         s.progress,
+        printDurationSec: s.printDurationSec,
+      );
 
   /// "1h05m" / "14m" - how much longer the print has to run.
-  String _formatRemaining(double seconds) {
-    final d = Duration(seconds: seconds.round());
-    final h = d.inHours;
-    final m = d.inMinutes % 60;
-    return h > 0 ? '${h}h${m.toString().padLeft(2, '0')}m' : '${m}m';
-  }
+  String _formatRemaining(double seconds) => formatRemainingDuration(seconds);
 
-  /// Wall-clock time the print is projected to finish ("1:20 AM" / "13:20"),
-  /// localised 12/24h via the loaded UI locale - the same "ETA" Klipper and
-  /// Mainsail display. Null if the locale's date symbols didn't load, so the
-  /// line just falls back to showing the remaining duration alone.
-  String? _formatFinishClock(double remainingSeconds) {
-    try {
-      final finish =
-          DateTime.now().add(Duration(seconds: remainingSeconds.round()));
-      return DateFormat.jm(_l.localeName).format(finish);
-    } catch (_) {
-      return null;
-    }
-  }
+  /// Wall-clock finish time ("1:20 AM" / "13:20") via the shared
+  /// [formatFinishClock], localised through the loaded UI locale.
+  String? _formatFinishClock(double remainingSeconds) =>
+      formatFinishClock(remainingSeconds, _l.localeName);
 
   // ── Print-job cards ─────────────────────────────────────────────────────────
   //

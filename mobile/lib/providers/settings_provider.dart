@@ -586,6 +586,64 @@ final dashboardButtonsProvider =
   DashboardButtonsNotifier.new,
 );
 
+/// What the printing tile's time chip shows: how long is left ("~1h09m") or
+/// the projected wall-clock finish time ("15:27") - the same two readouts the
+/// notification card offers, picked once for the whole dashboard.
+enum TileEtaFormat { remaining, finish }
+
+/// Whether printing tiles show a time chip after the temperatures. ON by
+/// default; it only appears mid-print (and once the estimate is meaningful),
+/// so idle dashboards look identical either way. Travels in backups.
+class TileEtaNotifier extends Notifier<bool> {
+  static const _key = 'show_print_eta';
+
+  @override
+  bool build() => true;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_key) ?? true;
+  }
+
+  Future<void> set(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, enabled);
+  }
+}
+
+final tileEtaProvider = NotifierProvider<TileEtaNotifier, bool>(
+  TileEtaNotifier.new,
+);
+
+/// The chip's format - time left by default, finish time for users who think
+/// in "done by 15:27" (what Mainsail labels ETA). Travels in backups.
+class TileEtaFormatNotifier extends Notifier<TileEtaFormat> {
+  static const _key = 'print_eta_format';
+
+  @override
+  TileEtaFormat build() => TileEtaFormat.remaining;
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getString(_key) == 'finish'
+        ? TileEtaFormat.finish
+        : TileEtaFormat.remaining;
+  }
+
+  Future<void> set(TileEtaFormat format) async {
+    state = format;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        _key, format == TileEtaFormat.finish ? 'finish' : 'remaining');
+  }
+}
+
+final tileEtaFormatProvider =
+    NotifierProvider<TileEtaFormatNotifier, TileEtaFormat>(
+  TileEtaFormatNotifier.new,
+);
+
 // ---------------------------------------------------------------------------
 // Print notifications  (opt-in foreground-service progress + state alerts)
 // ---------------------------------------------------------------------------

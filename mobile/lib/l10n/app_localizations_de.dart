@@ -470,6 +470,19 @@ class AppLocalizationsDe extends AppLocalizations {
       'Zeigt die Schaltflächen zum Hinzufügen und Umsortieren unten an. Drucker über das Menü hinzufügen, wenn ausgeblendet.';
 
   @override
+  String get dashboardShowEta => 'Restzeit anzeigen';
+
+  @override
+  String get dashboardShowEtaSubtitle =>
+      'Druckende Kacheln zeigen die verbleibende Zeit neben den Temperaturen.';
+
+  @override
+  String get dashboardEtaFormatRemaining => 'Restzeit';
+
+  @override
+  String get dashboardEtaFormatFinish => 'Fertig um';
+
+  @override
   String get dashboardReorderHint => 'Kachel halten und ziehen zum Umsortieren';
 
   @override

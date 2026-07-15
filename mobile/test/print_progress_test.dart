@@ -82,4 +82,62 @@ void main() {
       expect(computePrintProgress(), 0.0);
     });
   });
+
+  // The elapsed ÷ progress estimate behind the notification card's remaining/
+  // ETA line and (v0.9.53) the dashboard tile's time chip. Locking the gates
+  // here keeps the two surfaces in agreement forever.
+  group('printRemainingSeconds', () {
+    test('38% into a print, 26 min elapsed → ~42 min left', () {
+      // The user-report screenshot: Mainsail showed total 0:26:11 elapsed at
+      // 38%; elapsed × (1-p)/p = 1571 × 0.62/0.38 ≈ 2563s ≈ 42.7 min.
+      final r = printRemainingSeconds(
+        state: 'printing',
+        progress: 0.38,
+        printDurationSec: 1571,
+      );
+      expect(r, isNotNull);
+      expect(r!, closeTo(2563, 1));
+    });
+
+    test('null unless actively printing (paused estimate is frozen)', () {
+      for (final s in ['paused', 'standby', 'complete', 'offline']) {
+        expect(
+          printRemainingSeconds(
+              state: s, progress: 0.5, printDurationSec: 600),
+          isNull,
+        );
+      }
+    });
+
+    test('null while too early to extrapolate', () {
+      expect(
+        printRemainingSeconds(
+            state: 'printing', progress: 0.01, printDurationSec: 600),
+        isNull,
+      );
+      expect(
+        printRemainingSeconds(
+            state: 'printing', progress: 0.5, printDurationSec: 10),
+        isNull,
+      );
+    });
+
+    test('null when implausibly long (> 100h)', () {
+      expect(
+        printRemainingSeconds(
+            state: 'printing', progress: 0.02, printDurationSec: 8000),
+        isNull,
+      );
+    });
+  });
+
+  group('formatRemainingDuration', () {
+    test('pads minutes under an hour boundary', () {
+      expect(formatRemainingDuration(3900), '1h05m');
+    });
+
+    test('minutes only under an hour', () {
+      expect(formatRemainingDuration(840), '14m');
+    });
+  });
 }
