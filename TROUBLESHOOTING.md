@@ -238,6 +238,17 @@ You can point a tile at a camera that isn't connected to Klipper (e.g. an old ph
 - **Auto-detected camera wrong or missing?** Moongate reads the *first* webcam from Mainsail's webcam list. If you have several, set the one you want by hand with the gear, or reorder them in Mainsail.
 - **Gears in the way?** Turn them off under **Menu → Camera config icons** - that hides every tile's gear without affecting the camera feed.
 
+## A go2rtc camera: tiles work, but it's black or freezes inside Mainsail (v0.9.52+)
+
+From v0.9.52 the app understands **go2rtc** cameras (a `stream.html?src=...` address in Mainsail's webcam settings): the dashboard tile and the full-screen camera show them as live stills automatically, whether auto-detected from Mainsail or pasted into a tile's gear.
+
+The **printer page** is different: there you're looking at the real Mainsail, which plays the camera as live video with go2rtc's own player. If that video stays black, says "disconnected", or **plays a few seconds and then freezes** - and does the same in Chrome on your phone or PC while Firefox plays it fine - the cause is your camera's video encoding, not the app: the stream contains **B-frames**, which the WebRTC video protocol can't carry, so every Chrome-based browser (including the app's built-in one) gives up on it. Two fixes, either works:
+
+- **Stop producing B-frames.** If go2rtc encodes the camera itself (an `ffmpeg:` source), remove `#hardware` from the stream line, or keep it and append `#raw=-bf 0`. If the camera encodes its own H.264, look for a B-frames / GOP option in its settings, or pick the "baseline" H.264 profile.
+- **Sidestep the codec entirely** by giving Mainsail go2rtc's MJPEG endpoints instead: service type *MJPEG-Streamer / IP-Camera*, stream `.../api/stream.mjpeg?src=NAME`, snapshot `.../api/frame.jpeg?src=NAME`. Works in every browser; uses more bandwidth than WebRTC.
+
+After **any** webcam config change, tap the **refresh icon** in the top-right of the app's printer page - the app keeps each printer's Mainsail page loaded for instant opening, so without a refresh it can keep showing the old camera setup.
+
 ## A tile shows the logo, or a printer has no camera at all
 
 If a tile shows the **Mainsail/Fluidd logo** instead of a live picture, that feed just isn't loading - the printer is offline or connecting, or it has no camera configured. The full-screen camera view (the eye on a tile, or the camera icon on the printer page) still works whenever there's a feed.
