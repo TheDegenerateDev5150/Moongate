@@ -17,7 +17,7 @@ the box, and remote use through your own VPN (see
 
 | Machine | Firmware | Status |
 |---|---|---|
-| Elegoo Centauri Carbon | [OpenCentauri COSMOS](https://github.com/OpenCentauri/cosmos) | 🧪 in validation with a community tester |
+| Elegoo Centauri Carbon | [OpenCentauri COSMOS](https://github.com/OpenCentauri/cosmos) | ✅ community-validated (2026-07-18) |
 
 Running Moongate on a machine that isn't listed? The
 [generic recipe](#the-generic-recipe) below works on anything with a real
@@ -40,7 +40,11 @@ this table.
 ## The generic recipe
 
 1. Copy `klipper-plugin/moongate_standalone.py` from this repo into
-   Moonraker's components directory as `moongate.py`.
+   Moonraker's components directory as `moongate.py`. (Download to `/tmp`
+   first and check the file is real before moving it, silent download
+   failures are the top trap. If the copy then fails with a read-only
+   filesystem, your machine seals its root, use the bind-mount pattern
+   from the COSMOS section below.)
 2. Add to `moonraker.conf`:
 
    ```ini
@@ -63,41 +67,95 @@ this table.
 
 ## Elegoo Centauri Carbon (OpenCentauri COSMOS)
 
-COSMOS ships a real Moonraker on port 80 with `trusted_clients` preconfigured
-for all private networks, which is exactly what Direct mode expects. The OS is
-BusyBox-based (no bash, git, pip, or systemd) - which is fine, nothing below
-needs them. SSH in as root, then:
+Community-validated on a real Centauri Carbon (2026-07-18). COSMOS ships a
+genuine Moonraker on port 80 with `trusted_clients` preconfigured, so the
+app side just works. The OS is BusyBox-based (no bash, git, pip, or
+systemd), which is fine, nothing below needs them. The twist is the disk:
+the root filesystem, including Moonraker's components folder, is **sealed
+squashfs** (not even remountable). Only `/etc` persists, as an overlay
+backed by the `/data` partition. So the plugin lives on `/etc`, and a small
+boot script bind-mounts a copy of the components folder, carrying
+`moongate.py`, over the sealed original before Moonraker starts.
+
+Measured on a real board: the plugin rides inside Moonraker's existing
+process, and the printer idled around 80 MB used of its 112 MB with
+Moongate loaded. That headroom is also why cloud/tunnel mode is not
+offered on this machine.
+
+SSH in as root, then:
 
 ```sh
-# 1. The plugin file. If wget lacks TLS on your build, scp it from a computer
-#    instead:  scp moongate_standalone.py root@<printer-ip>:/usr/share/moonraker/moonraker/components/moongate.py
-wget -O /usr/share/moonraker/moonraker/components/moongate.py \
-  https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/moongate_standalone.py
-
-# 2. State dir on the writable /etc overlay
+# 1. Master copy of the plugin (on /etc = survives reboots AND updates).
+#    COSMOS's wget skips TLS validation but downloads fine; alternatively
+#    scp the file from a computer to /etc/moongate/moongate.py
 mkdir -p /etc/moongate
+wget -O /etc/moongate/moongate.py \
+  https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/moongate_standalone.py
+grep -m1 'MOONGATE_PLUGIN_VERSION = ' /etc/moongate/moongate.py  # sanity check: prints the version
 
-# 3. Config - append to the WRITABLE conf (not the moonraker-readonly one)
+# 2. Config - append to the WRITABLE conf (not the moonraker-readonly one)
 printf '\n[moongate]\nlan_only: true\ndata_path: /etc/moongate\n' \
   >> /etc/klipper/config/moonraker.conf
 
-# 4. Restart
+# 3. Boot script: rebuilds the components copy and bind-mounts it over the
+#    sealed folder on every boot, just before Moonraker starts (S95 < S96)
+cat > /etc/init.d/moongate-overlay << 'EOF'
+#!/bin/sh
+# Moongate on COSMOS: root is sealed squashfs, so Moonraker's components
+# folder can't take the plugin directly. Rebuild a writable copy on /etc
+# from the sealed originals plus moongate.py, and bind-mount it over the
+# top. Rebuilding EVERY boot means a firmware update's own new components
+# are never masked by a stale copy.
+SEALED=/usr/share/moonraker/moonraker/components
+COPY=/etc/moongate-components
+MASTER=/etc/moongate/moongate.py
+case "${1:-start}" in
+  start)
+    [ -f "$MASTER" ] || exit 0
+    mount | grep -q " on $SEALED type " && exit 0
+    rm -rf "$COPY"
+    mkdir -p "$COPY"
+    cp -a "$SEALED"/. "$COPY"/
+    cp "$MASTER" "$COPY/moongate.py"
+    mount -o bind "$COPY" "$SEALED"
+    ;;
+  stop)
+    umount "$SEALED" 2>/dev/null || true
+    ;;
+  restart)
+    "$0" stop
+    "$0" start
+    ;;
+esac
+exit 0
+EOF
+chmod +x /etc/init.d/moongate-overlay
+for d in /etc/rc2.d /etc/rc3.d /etc/rc4.d /etc/rc5.d; do
+  [ -d "$d" ] && ln -sf ../init.d/moongate-overlay "$d/S95moongate-overlay"
+done
+
+# 4. Activate now
+/etc/init.d/moongate-overlay start
 /etc/init.d/moonraker restart
 ```
 
-Then add the printer in the app as above (plain `http://<printer-ip>`, no
-port suffix - COSMOS serves Moonraker on 80).
+Then add the printer in the app: **Add Printer → Direct (LAN/VPN)**, plain
+`http://<printer-ip>` (COSMOS serves Moonraker on port 80).
 
-Known caveats on COSMOS:
+Verify: the log lives at `/board-resource/moonraker.log` and shows
+`Moongate LAN-only mode: cloud loops disabled` on a good start, and from a
+browser on your LAN `http://<printer-ip>/server/moongate/status` returns a
+wall of JSON including the plugin version.
 
-- If step 1 fails with a read-only filesystem error, remount first
-  (`mount -o remount,rw /`) and re-run it.
-- A COSMOS firmware update replaces the Moonraker directory, taking
-  `moongate.py` with it - re-run step 1 (and 4) after updating. Your config
-  and state on `/etc` survive.
+- **Updating the plugin later:** re-run step 1's `wget`, then
+  `/etc/init.d/moongate-overlay restart` and `/etc/init.d/moonraker restart`.
+- **COSMOS firmware updates:** handled automatically, the boot script
+  rebuilds its copy from the new firmware's own components on the next
+  boot. If an update ever moves Moonraker's install dir, re-check the
+  `SEALED` path in the script.
 - COSMOS is beta firmware on a very RAM-limited board, and its authors warn
-  against piling on plugins. LAN-only Moongate is about as light as they come
-  (no tunnel, no timers, no outbound calls), but temper expectations
+  against piling on plugins. LAN-only Moongate is about as light as they
+  come (no tunnel, no timers, no outbound calls), but temper expectations
   accordingly.
 
 ## Remote access (VPN)

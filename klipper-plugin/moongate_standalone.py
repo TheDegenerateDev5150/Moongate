@@ -1740,8 +1740,11 @@ class MoongatePlugin:
 
         client = AsyncHTTPClient()
         if not self._chamber_key_checked:
-            await self._discover_objects(client)
-            self._chamber_key_checked = True
+            # Only mark done on success: a poll during Moonraker's own boot
+            # (Klippy routes not registered yet) must not burn the one-shot
+            # scan, or a mid-boot poller loses chamber + multi-toolhead
+            # detection until the next Moonraker restart.
+            self._chamber_key_checked = await self._discover_objects(client)
 
         query = "print_stats&heater_bed&extruder"
         if self._chamber_key:
@@ -1768,7 +1771,14 @@ class MoongatePlugin:
         if resp.code != 200:
             raise self.server.error(f"Moonraker query returned HTTP {resp.code}", 502)
 
-        data   = json.loads(resp.body)
+        try:
+            data = json.loads(resp.body)
+        except (ValueError, TypeError):
+            # Startup race, seen on COSMOS 2026-07-18: a file-serving
+            # Moonraker can answer 200 with the web UI's HTML for a moment
+            # before the Klippy API routes register. Retryable, so a clean
+            # 503 instead of an uncaught-exception 500 in the log.
+            raise self.server.error("Moonraker is still starting up", 503)
         result = data.get("result", data)
         result["tunnel_url"] = _get_tunnel_url()
         # Surface the Pi's LAN address so the app can prefer a direct LAN
@@ -1905,8 +1915,9 @@ class MoongatePlugin:
 
     # ── Webcam + chamber discovery (kept from v0.2.x) ─────────────────────────
 
-    @staticmethod
-    async def _get_webcam_info(client: Any) -> dict:
+    async def _get_webcam_info(self, client: Any) -> dict:
+        # Not a staticmethod since v0.6.17: the fetch below needs the
+        # instance's resolved Moonraker port.
         from tornado.httpclient import HTTPRequest
         _default_path = "/webcam/?action=snapshot"
         _default_fps  = 15
@@ -1986,13 +1997,16 @@ class MoongatePlugin:
         except Exception:
             return _defaults
 
-    async def _discover_objects(self, client: Any) -> None:
-        """One-shot scan of Moonraker's object list (per service lifetime) for
-        the chamber sensor, any extra hotends (extruder1, extruder2, ... on an
-        IDEX / tool changer) and whether this is a klipper-toolchanger. The
-        results are folded into the /status query so a multi-toolhead printer's
-        extra hotends + active tool ride the single authenticated /status call,
-        instead of the app having to make its own (transport-fragile) queries."""
+    async def _discover_objects(self, client: Any) -> bool:
+        """One-shot scan of Moonraker's object list for the chamber sensor,
+        any extra hotends (extruder1, extruder2, ... on an IDEX / tool
+        changer) and whether this is a klipper-toolchanger. The results are
+        folded into the /status query so a multi-toolhead printer's extra
+        hotends + active tool ride the single authenticated /status call,
+        instead of the app having to make its own (transport-fragile) queries.
+
+        Returns True when the scan actually ran (the caller then stops
+        re-trying); False when Moonraker/Klippy wasn't ready to answer."""
         from tornado.httpclient import HTTPRequest
         try:
             req = HTTPRequest(
@@ -2001,7 +2015,7 @@ class MoongatePlugin:
             )
             resp = await client.fetch(req, raise_error=False)
             if resp.code != 200:
-                return
+                return False
             objects = json.loads(resp.body).get("result", {}).get("objects", [])
             for obj in objects:
                 if ("temperature_sensor" in obj or "heater_generic" in obj
@@ -2022,5 +2036,6 @@ class MoongatePlugin:
                 logger.info(
                     "Moongate: multi-toolhead detected (extras=%s toolchanger=%s)",
                     extra, self._has_toolchanger)
+            return True
         except Exception:
-            pass
+            return False
