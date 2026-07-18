@@ -1,5 +1,13 @@
 [
   {
+    "version": "v0.9.54",
+    "bullets": [
+      "Moongate now runs on 3rd-party printers. Machines that were never a Raspberry Pi - first up, the Elegoo Centauri Carbon on OpenCentauri COSMOS firmware - can join the dashboard in Direct (LAN/VPN) mode with a one-file install: the Pi plugin no longer needs any extra Python packages in LAN-only mode. A new '3rd-party printer support' guide on GitHub has the steps, validated on a real Centauri.",
+      "Nothing hides under your phone's buttons any more. The dashboard's last tile (its name and temperatures could sit under the Android navigation bar), the bottom of the embedded Mainsail/Fluidd page, the pairing form and the notification settings list all now stay clear of the system bars - on iPhone too.",
+      "A steadier dashboard on flaky WiFi. A sub-second network blip used to blank a tile's webcam and temperatures for a few seconds and could shuffle the tile order (with auto-arrange on). The app now waits for a second failed check before believing a printer has gone offline, so blips are invisible while a genuinely unplugged printer still shows offline within seconds."
+    ]
+  },
+  {
     "version": "v0.9.53",
     "bullets": [
       "See when a print will finish, right on the dashboard (a user request). While a printer is printing, its tile now shows a small time readout after the temperatures: how long is left (~1h09m). It uses the same estimate as the print notification, so the two always agree, and it works on every printer without updating the Pi plugin.",
