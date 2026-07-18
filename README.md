@@ -94,6 +94,8 @@ curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-p
 
 The installer asks how your phone will connect: **1) Moongate cloud** (the default - remote access from anywhere) or **2) Direct (LAN/VPN)** (cloud-free; [see how the two compare](#run-it-your-way)). With the default it installs the plugin, the `MOONGATE_PAIR` macro, the QR pairing page, the auth proxy, and the Cloudflare tunnel, then restarts Moonraker. Future updates appear in **Mainsail → Software Updates → Moongate**.
 
+> **Using a 3rd-party printer instead?** (e.g. an Elegoo Centauri Carbon on OpenCentauri COSMOS) - this installer targets Raspberry-Pi-style machines and won't run on embedded vendor firmware. Follow [3rd-party printer support](docs/third-party-printers.md) instead: a one-file install, no installer needed.
+
 <details>
 <summary><b>Requirements &amp; custom HTTP port</b></summary>
 
