@@ -526,113 +526,121 @@ class _PrinterScreenState extends State<PrinterScreen>
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Camera-discoverability hint - a full-width strip directly under the
-          // app bar (Moongate's own chrome), so it never overlaps the embedded
-          // Mainsail page or the system nav bar. Gated to tunnel + external
-          // camera (see _maybeShowCameraHint). Dismissible, one-time.
-          if (_showCameraHint)
-            Material(
-              color: cs.secondaryContainer,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
-                child: Row(
-                  children: [
-                    Icon(Icons.videocam_outlined,
-                        size: 20, color: cs.onSecondaryContainer),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        l.cameraHintBody,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: cs.onSecondaryContainer),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _openCamera,
-                      child: Text(l.cameraHintOpen),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 18),
-                      color: cs.onSecondaryContainer,
-                      onPressed: _dismissCameraHint,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          Expanded(
-            child: Stack(
-              children: [
-                if (_webController != null)
-                  WebViewWidget(
-                    key: ValueKey(_webController),
-                    controller: _webController!,
-                  ),
-
-                if (_loading && _errorMsg == null)
-                  const Center(child: CircularProgressIndicator()),
-
-                if (_errorMsg != null && !_loading)
-                  Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    color: cs.surface,
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.cloud_off_outlined,
-                            size: 64, color: cs.error),
-                        const SizedBox(height: 20),
-                        Text(
-                          l.printerUnreachable,
+      // SafeArea keeps the embedded web UI clear of the Android button/gesture
+      // bar (and the side bar in landscape) - Mainsail/Fluidd put interactive
+      // rows right at their page bottom, which the system bar was overlapping.
+      // Browsers keep web content above the nav bar too, so this matches what
+      // the same page looks like in Chrome. Top stays with the AppBar.
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            // Camera-discoverability hint - a full-width strip directly under the
+            // app bar (Moongate's own chrome), so it never overlaps the embedded
+            // Mainsail page or the system nav bar. Gated to tunnel + external
+            // camera (see _maybeShowCameraHint). Dismissible, one-time.
+            if (_showCameraHint)
+              Material(
+                color: cs.secondaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.videocam_outlined,
+                          size: 20, color: cs.onSecondaryContainer),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          l.cameraHintBody,
                           style: Theme.of(context)
                               .textTheme
-                              .headlineSmall
-                              ?.copyWith(color: cs.error),
-                          textAlign: TextAlign.center,
+                              .bodySmall
+                              ?.copyWith(color: cs.onSecondaryContainer),
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _errorMsg!,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                  color: cs.onSurface.withValues(alpha: 0.7)),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
-                        FilledButton.icon(
-                          onPressed: () {
-                            PrinterWebViewCache.instance
-                                .invalidate(widget.printer.id);
-                            PrinterAccessCache.instance
-                                .invalidate(widget.printer.id);
-                            _start();
-                          },
-                          icon: const Icon(Icons.refresh),
-                          label: Text(l.commonRetry),
-                        ),
-                        // No tunnel escape hatch in Local-only mode - the
-                        // whole point of the toggle is that remote stays off.
-                        if (_usingLan && _tunnelUrl != null && !_localOnly) ...[
-                          const SizedBox(height: 12),
-                          OutlinedButton.icon(
-                            onPressed: _retryViaTunnel,
-                            icon: const Icon(Icons.cloud_outlined),
-                            label: Text(l.printerUseTunnel),
-                          ),
-                        ],
-                      ],
-                    ),
+                      ),
+                      TextButton(
+                        onPressed: _openCamera,
+                        child: Text(l.cameraHintOpen),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        color: cs.onSecondaryContainer,
+                        onPressed: _dismissCameraHint,
+                      ),
+                    ],
                   ),
-              ],
+                ),
+              ),
+            Expanded(
+              child: Stack(
+                children: [
+                  if (_webController != null)
+                    WebViewWidget(
+                      key: ValueKey(_webController),
+                      controller: _webController!,
+                    ),
+
+                  if (_loading && _errorMsg == null)
+                    const Center(child: CircularProgressIndicator()),
+
+                  if (_errorMsg != null && !_loading)
+                    Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      color: cs.surface,
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.cloud_off_outlined,
+                              size: 64, color: cs.error),
+                          const SizedBox(height: 20),
+                          Text(
+                            l.printerUnreachable,
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(color: cs.error),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _errorMsg!,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                    color: cs.onSurface.withValues(alpha: 0.7)),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 32),
+                          FilledButton.icon(
+                            onPressed: () {
+                              PrinterWebViewCache.instance
+                                  .invalidate(widget.printer.id);
+                              PrinterAccessCache.instance
+                                  .invalidate(widget.printer.id);
+                              _start();
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: Text(l.commonRetry),
+                          ),
+                          // No tunnel escape hatch in Local-only mode - the
+                          // whole point of the toggle is that remote stays off.
+                          if (_usingLan && _tunnelUrl != null && !_localOnly) ...[
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: _retryViaTunnel,
+                              icon: const Icon(Icons.cloud_outlined),
+                              label: Text(l.printerUseTunnel),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

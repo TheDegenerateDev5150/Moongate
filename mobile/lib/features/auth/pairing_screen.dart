@@ -652,7 +652,11 @@ class _PairingScreenState extends State<PairingScreen> {
         thumbVisibility: true,
         child: SingleChildScrollView(
           controller: _scrollController,
-          padding: const EdgeInsets.all(24),
+          // + the system bar inset: a SingleChildScrollView never applies the
+          // safe area itself, so without this the Pair/Add button at the form's
+          // bottom could scroll to a stop under the Android button/gesture bar.
+          padding: EdgeInsets.fromLTRB(
+              24, 24, 24, 24 + MediaQuery.of(context).padding.bottom),
           child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

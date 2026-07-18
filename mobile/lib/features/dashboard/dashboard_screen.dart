@@ -2192,7 +2192,14 @@ class _PrinterGrid extends StatelessWidget {
           ? (columns + 1).clamp(2, 4)
           : columns;
 
-      const padding = EdgeInsets.all(12);
+      // Explicit padding switches OFF a scroll view's automatic safe-area
+      // handling, so fold the obscured edges back in ourselves: the Android
+      // button/gesture bar overlapped the last row's name + temps (Centauri
+      // tester report, 2026-07-18). Bottom in portrait, sides in landscape;
+      // top stays bare 12 - the AppBar already absorbs that inset.
+      final insets  = MediaQuery.of(context).padding;
+      final padding = EdgeInsets.fromLTRB(
+          12 + insets.left, 12, 12 + insets.right, 12 + insets.bottom);
       const spacing = 10.0;
 
       // Keyed by id so a reorder (or a status re-sort) moves a tile and its
