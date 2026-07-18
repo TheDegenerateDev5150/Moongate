@@ -15,15 +15,20 @@ the box, and remote use through your own VPN (see
 
 ## Supported machines
 
-| Machine | Firmware | Status |
-|---|---|---|
-| Elegoo Centauri Carbon | [OpenCentauri COSMOS](https://github.com/OpenCentauri/cosmos) | ✅ community-validated (2026-07-18) |
+**Find your machine here first.** Every supported machine has its own
+complete section below - follow that section start to finish and skip the
+rest of this page.
 
-Running Moongate on a machine that isn't listed? The
-[generic recipe](#the-generic-recipe) below works on anything with a real
-Moonraker. Please [open an issue](https://github.com/PEEKYPAUL/Moongate/issues)
-with your results either way - working reports are how machines get added to
-this table.
+| Machine | Firmware | Install |
+|---|---|---|
+| Elegoo Centauri Carbon | [OpenCentauri COSMOS](https://github.com/OpenCentauri/cosmos) | ✅ community-validated - [follow the Centauri Carbon section](#elegoo-centauri-carbon-opencentauri-cosmos) |
+
+**Machine not listed?** Use the
+[generic recipe](#unlisted-machines-the-generic-recipe) below - it works on
+anything with a real Moonraker. Please
+[open an issue](https://github.com/PEEKYPAUL/Moongate/issues) with your
+results either way - working reports are how machines get added to this
+table, with their own step-by-step section.
 
 ## What the machine needs
 
@@ -37,7 +42,11 @@ this table.
 - The app talks to the same host and port Moonraker serves on, so no extra
   ports, proxies, or firewall holes
 
-## The generic recipe
+## Unlisted machines: the generic recipe
+
+**Skip this section if your machine is in the table above** - its own
+section has everything, adapted to that machine's quirks. This recipe is the
+starting point for machines nobody has tried yet.
 
 1. Copy `klipper-plugin/moongate_standalone.py` from this repo into
    Moonraker's components directory as `moongate.py`. (Download to `/tmp`
@@ -66,6 +75,10 @@ this table.
    the app stores it.
 
 ## Elegoo Centauri Carbon (OpenCentauri COSMOS)
+
+**These are the complete instructions for this machine** - if you're here,
+you don't need the generic recipe above, everything it covers is folded in
+below, adapted to COSMOS.
 
 Community-validated on a real Centauri Carbon (2026-07-18). COSMOS ships a
 genuine Moonraker on port 80 with `trusted_clients` preconfigured, so the
