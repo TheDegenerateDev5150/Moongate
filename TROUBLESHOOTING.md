@@ -176,6 +176,19 @@ Also by design: Direct printers have **no print notifications** (there's no clou
 
 Same checklist as above with the VPN hat on: the VPN must be **connected on the phone**, its subnet must be in Moonraker's `trusted_clients` (point 2 above - this is the usual culprit, especially Tailscale's `100.64.0.0/10`), and the printer's stored address must be reachable *through* the VPN - for router-based WireGuard that's the printer's normal LAN IP; for Tailscale it's the Pi's Tailscale address, which is what you should have entered when adding the printer.
 
+## Mainsail warns: "error detected while loading the moonraker component 'moongate'"
+
+Moonraker tried to load the Moongate plugin and couldn't. The two usual causes:
+
+1. **The plugin file isn't where Moonraker looks** - a `[moongate]` section exists in `moonraker.conf` but `moongate.py` never landed in Moonraker's components folder (a silently failed download is the classic way; on machines with a sealed filesystem the copy itself can fail). Installing on a vendor / embedded printer? Follow [3rd-party printer support](docs/third-party-printers.md) - its per-machine steps avoid exactly these traps.
+2. **A cloud-mode install is missing its Python libraries** (a broken or rebuilt Moonraker environment). From plugin **0.6.17** this no longer stops the plugin loading - it keeps running, and says exactly what's missing in `moonraker.log` and the `MOONGATE_PAIR` console output. On older plugins, reinstall: `curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-plugin/install.sh | bash`
+
+Either way `moonraker.log` has the specific reason - search it for `moongate`.
+
+## Dashboard tiles flicker or swap places every minute or so
+
+Some routers micro-drop the WiFi for a fraction of a second at regular intervals (re-authentication, access-point roaming). Before **v0.9.54** each drop could fail exactly one status check, briefly blanking a tile's webcam and temperatures - and, with **Auto-arrange by status** on, reshuffling the tile order as the printer dipped through "offline" and back. Update the app: from v0.9.54 a single failed check never changes what you see, and a printer only shows offline after two consecutive misses (a few seconds) - genuinely unplugged printers still read offline promptly.
+
 ## Opening a printer shows "the web interface isn't answering yet"
 
 From v0.9.48 this friendly message (with an automatic retry every few seconds) replaces the raw Cloudflare **"Bad gateway / Error 502"** page you used to see when opening a printer whose Pi was still starting up - the tunnel comes up a little before Mainsail does, so the first moments after a Pi boot can answer 502. It normally clears by itself within a minute. If it doesn't: check Mainsail loads in a browser on the printer's own network, and that Moonraker/Klipper are actually running on the Pi - the tunnel being up only proves the Pi is powered, not that the web stack behind it is healthy.
