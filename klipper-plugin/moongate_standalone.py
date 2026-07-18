@@ -51,19 +51,38 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import jwt as pyjwt  # PyJWT
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import (
-    Ed25519PrivateKey,
-    Ed25519PublicKey,
-)
+# v0.6.17: PyJWT + cryptography only power CLOUD mode (pairing, heartbeat
+# signing, token verification). LAN-only installs never touch them, and the
+# embedded hosts in docs/third-party-printers.md (no pip, no prebuilt wheels)
+# can't install them at all - so their absence must not stop the module from
+# loading. _CLOUD_DEPS_ERROR doubles as the "why" surfaced in the log, the
+# MOONGATE_PAIR console output and error responses when a CLOUD-mode box is
+# missing them.
+try:
+    import jwt as pyjwt  # PyJWT
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+        Ed25519PrivateKey,
+        Ed25519PublicKey,
+    )
+    _CLOUD_DEPS_ERROR: Optional[str] = None
+except ImportError as _deps_exc:
+    pyjwt             = None  # type: ignore[assignment]
+    serialization     = None  # type: ignore[assignment]
+    Ed25519PrivateKey = None  # type: ignore[assignment]
+    Ed25519PublicKey  = None  # type: ignore[assignment]
+    _CLOUD_DEPS_ERROR = (
+        f"cloud dependencies unavailable ({_deps_exc}); cloud pairing and "
+        "heartbeats are disabled. Install PyJWT[crypto] + cryptography into "
+        "Moonraker's Python, or run LAN-only (lan_only: true)."
+    )
 
 logger = logging.getLogger("moonraker.moongate")
 
 # Bumped on each release; surfaced in the /status response so the app's bug
 # reports show which plugin a Pi is actually running - the #1 triage blind spot
 # (an old plugin explains most "works on LAN / fails over tunnel" reports).
-MOONGATE_PLUGIN_VERSION = "0.6.16"
+MOONGATE_PLUGIN_VERSION = "0.6.17"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -991,31 +1010,92 @@ class MoongatePlugin:
     def __init__(self, config: Any) -> None:
         self.server = config.get_server()
 
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        self._config   = self._load_config()
-        self.device    = DeviceKey(DEVICE_KEY)
-        self.owner     = OwnerState.load(OWNER_FILE)
-        self.jwks      = JwksCache(
-            self._config["supabase_url"],
-            self._config["supabase_anon_key"],
-            JWKS_CACHE,
-            int(self._config["jwks_ttl_seconds"]),
-        )
-        self.verifier  = AccessTokenVerifier(self.jwks)
-        self.sb        = SupabaseClient(
-            self._config["supabase_url"],
-            self._config["supabase_anon_key"],
-        )
-        self.heartbeat = HeartbeatLoop(
-            self.device, self.sb,
-            int(self._config["heartbeat_interval_seconds"]),
-            on_unpaired_cb=self._on_unpaired,
-            on_dormant_cb=self._on_dormant,
-        )
-        self.watcher   = PrintEventWatcher(
-            self.device, self.sb,
-            is_dormant=lambda: self.heartbeat.dormant,
-        )
+        # ── v0.6.17: optional [moongate] options in moonraker.conf ───────────
+        # Embedded hosts (docs/third-party-printers.md) often can't run
+        # install.sh or write ~/.config, so the knobs that matter there live in
+        # the one file they CAN edit. Everything defaults to the historic
+        # behaviour: config.json keeps working, moonraker.conf wins when set.
+        conf_lan_only  = None
+        conf_data_path = None
+        conf_mr_port   = None
+        try:
+            conf_lan_only  = config.getboolean("lan_only", None)
+            conf_data_path = config.get("data_path", None)
+            conf_mr_port   = config.getint("moonraker_port", None)
+        except Exception:
+            pass  # duck-typed/legacy config objects: historic defaults
+
+        self._data_dir        = (Path(conf_data_path).expanduser()
+                                 if conf_data_path else CONFIG_DIR)
+        self._device_key_file = self._data_dir / "device_ed25519"
+        self._owner_file      = self._data_dir / "owner.json"
+        self._config_file     = self._data_dir / "config.json"
+        self._jwks_cache_file = self._data_dir / "jwks.json"
+        self._avahi_tmp_file  = self._data_dir / "moongate-avahi.service.tmp"
+        try:
+            self._data_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            logger.error(
+                "Moongate: cannot create data dir %s (%s). Set data_path in "
+                "the [moongate] section to a writable location.",
+                self._data_dir, exc)
+            raise
+
+        self._config            = self._load_config()
+        self._lan_only_override = conf_lan_only
+
+        # Where Moonraker itself listens: an explicit moonraker_port wins,
+        # else ask the server (embedded builds bind :80, not :7125), else the
+        # stock default.
+        mr_port = conf_mr_port
+        if not mr_port:
+            try:
+                mr_port = int(self.server.get_host_info().get("port") or 0)
+            except Exception:
+                mr_port = 0
+        self._moonraker_port = mr_port or 7125
+
+        # Cloud machinery only exists when cloud mode is both wanted and
+        # possible. LAN-only skips it wholesale (no Ed25519 keygen, no key
+        # file, zero extra deps); a CLOUD-mode box missing PyJWT/cryptography
+        # still loads (the LAN endpoints keep working) and says exactly what
+        # is wrong in the log and its error responses instead of crashing
+        # Moonraker.
+        self._plugin_error = None if self.lan_only else _CLOUD_DEPS_ERROR
+        cloud_ready        = not self.lan_only and _CLOUD_DEPS_ERROR is None
+
+        self.owner = OwnerState.load(self._owner_file)
+        if cloud_ready:
+            self.device    = DeviceKey(self._device_key_file)
+            self.jwks      = JwksCache(
+                self._config["supabase_url"],
+                self._config["supabase_anon_key"],
+                self._jwks_cache_file,
+                int(self._config["jwks_ttl_seconds"]),
+            )
+            self.verifier  = AccessTokenVerifier(self.jwks)
+            self.sb        = SupabaseClient(
+                self._config["supabase_url"],
+                self._config["supabase_anon_key"],
+            )
+            self.heartbeat = HeartbeatLoop(
+                self.device, self.sb,
+                int(self._config["heartbeat_interval_seconds"]),
+                on_unpaired_cb=self._on_unpaired,
+                on_dormant_cb=self._on_dormant,
+            )
+            self.watcher   = PrintEventWatcher(
+                self.device, self.sb,
+                moonraker_port=self._moonraker_port,
+                is_dormant=lambda: self.heartbeat.dormant,
+            )
+        else:
+            self.device    = None
+            self.jwks      = None
+            self.verifier  = None
+            self.sb        = None
+            self.heartbeat = None
+            self.watcher   = None
 
         self._pending: Optional[PendingPair]   = None
         self._chamber_key: Optional[str]       = None
@@ -1038,12 +1118,14 @@ class MoongatePlugin:
         # Bootstrap JWKS (best effort) and start the heartbeat + print-watch loops.
         # LAN-only mode has no cloud: skip all of it so the plugin makes zero
         # outbound calls (no Supabase JWKS fetch, no heartbeat, no print-event push).
-        if not self.lan_only:
+        if cloud_ready:
             self.jwks.fetch_now()
             self.heartbeat.start()
             self.watcher.start()
-        else:
+        elif self.lan_only:
             logger.info("Moongate LAN-only mode: cloud loops disabled (no tunnel, no Supabase).")
+        else:
+            logger.error("Moongate: %s", self._plugin_error)
 
         owner_str = (
             f"{self.owner.owner_user_id[:8]}.../{self.owner.printer_id[:8]}..."
@@ -1056,16 +1138,20 @@ class MoongatePlugin:
         # is paired but the file isn't there. Covers (a) upgrade from
         # pre-v0.4.4, (b) manual deletion, (c) the file being lost during
         # a system update that wiped /etc/avahi/services/.
-        if self.owner is not None and not AVAHI_SERVICE_FILE.exists():
+        # Cloud mode only: a LAN-only (or deps-missing) box never advertises -
+        # a stale owner.json from an earlier cloud install must not trigger
+        # sudo attempts on hosts that have neither sudo nor avahi.
+        if (self.device is not None and self.owner is not None
+                and not AVAHI_SERVICE_FILE.exists()):
             self._write_avahi_service()
 
     # ── Config ────────────────────────────────────────────────────────────────
 
     def _load_config(self) -> dict:
         cfg = DEFAULT_CONFIG.copy()
-        if CONFIG_FILE.exists():
+        if self._config_file.exists():
             try:
-                user_cfg = json.loads(CONFIG_FILE.read_text())
+                user_cfg = json.loads(self._config_file.read_text())
                 if isinstance(user_cfg, dict):
                     cfg.update(user_cfg)
             except Exception as exc:
@@ -1081,6 +1167,10 @@ class MoongatePlugin:
 
     @property
     def lan_only(self) -> bool:
+        # moonraker.conf's [moongate] lan_only (when present) beats config.json
+        # - the embedded-host path, where config.json may not even exist.
+        if self._lan_only_override is not None:
+            return bool(self._lan_only_override)
         return bool(self._config.get("lan_only", False))
 
     # ── Pairing ───────────────────────────────────────────────────────────────
@@ -1126,6 +1216,11 @@ class MoongatePlugin:
             self._pending = pending
             return pending
 
+        if self.device is None:
+            # Cloud mode without its deps: _plugin_error says how to fix it.
+            logger.error("Moongate pair unavailable: %s", self._plugin_error)
+            return None
+
         raw  = self._generate_enrollment_token()
         hash_b64 = _b64std(hashlib.sha256(raw.encode()).digest())
 
@@ -1167,6 +1262,25 @@ class MoongatePlugin:
         """MOONGATE_PAIR macro entry point."""
         if self.lan_only:
             await self._klipper_pair_lan()
+            return
+
+        if self.device is None:
+            # Cloud mode but the crypto deps are missing (embedded host or a
+            # broken venv): a generic "Supabase unreachable" would send the
+            # user chasing their network, so say the real cause.
+            script = "\n".join([
+                "M118 ============================================",
+                "M118 Moongate: cloud pairing unavailable.",
+                "M118 Python deps missing (PyJWT + cryptography).",
+                "M118 Install them into Moonraker's Python, or",
+                "M118 reinstall Moongate in LAN-only mode.",
+                "M118 ============================================",
+            ])
+            try:
+                klippy_apis: Any = self.server.lookup_component("klippy_apis")
+                await klippy_apis.run_gcode(script)
+            except Exception as exc:
+                logger.error("run_gcode failed: %s", exc)
             return
 
         pending = self._start_pairing()
@@ -1302,6 +1416,11 @@ class MoongatePlugin:
         error / no answer at all"."""
         had_owner = self.owner is not None
         self._wipe_owner()
+        # No cloud machinery (LAN-only or missing deps) - nothing to release.
+        # Also fixes a lan_only wart: 0.6.16 still fired one outbound release
+        # POST here despite the mode's zero-outbound-calls promise.
+        if self.device is None:
+            return had_owner, 0
         # urllib in SupabaseClient is sync; off-load to a thread so the
         # asyncio loop is free for other work (matters because the macro
         # runs inline on Moonraker's loop).
@@ -1339,10 +1458,10 @@ class MoongatePlugin:
     def _wipe_owner(self) -> None:
         self.owner = None
         try:
-            if OWNER_FILE.exists():
-                OWNER_FILE.unlink()
+            if self._owner_file.exists():
+                self._owner_file.unlink()
         except OSError as exc:
-            logger.warning("Failed to delete %s: %s", OWNER_FILE, exc)
+            logger.warning("Failed to delete %s: %s", self._owner_file, exc)
         # v0.4.4: stop advertising on mDNS when we lose owner state - the Pi
         # is no longer paired so it shouldn't be discoverable.
         self._remove_avahi_service()
@@ -1396,14 +1515,14 @@ class MoongatePlugin:
                 printer_id=self.owner.printer_id,
                 http_port=self.http_port,
             )
-            AVAHI_SERVICE_TMP.write_text(content)
+            self._avahi_tmp_file.write_text(content)
             # `sudo -n` fails fast if the sudoers entry isn't in place
             # (e.g. plugin updated from pre-v0.4.4 without re-running
             # install.sh). 5 s timeout because we never want to block
             # pairing on this.
             result = subprocess.run(
                 ["sudo", "-n", "/bin/cp",
-                 str(AVAHI_SERVICE_TMP), str(AVAHI_SERVICE_FILE)],
+                 str(self._avahi_tmp_file), str(AVAHI_SERVICE_FILE)],
                 check=False, capture_output=True, timeout=5,
             )
             if result.returncode == 0:
@@ -1424,7 +1543,7 @@ class MoongatePlugin:
             logger.warning("Failed to write Avahi service file: %s", exc)
         finally:
             try:
-                AVAHI_SERVICE_TMP.unlink(missing_ok=True)
+                self._avahi_tmp_file.unlink(missing_ok=True)
             except OSError:
                 pass
 
@@ -1461,6 +1580,12 @@ class MoongatePlugin:
         # _handle_reset_owner is already token-free by the same reasoning.)
         if self.lan_only:
             return _LAN_ONLY_CLAIMS
+
+        if self.verifier is None:
+            # Cloud mode configured but PyJWT/cryptography are missing: no
+            # token can ever verify, so say why instead of a bare 401.
+            raise self.server.error(
+                f"Moongate cloud mode unavailable: {self._plugin_error}", 503)
 
         args  = webrequest.get_args()
         token = args.get("mg_token", "")
@@ -1502,7 +1627,7 @@ class MoongatePlugin:
                 paired_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             )
             try:
-                self.owner.save(OWNER_FILE)
+                self.owner.save(self._owner_file)
                 logger.info("Owner %s: user=%s..., printer=%s...",
                             "bound" if first_bind else "re-bound",
                             claims.sub[:8], claims.printer_id[:8])
@@ -1559,8 +1684,12 @@ class MoongatePlugin:
     async def _handle_pair(self, webrequest: Any) -> dict:
         pending = self._start_pairing()
         if pending is None:
-            msg = ("Could not determine the Pi's LAN IP" if self.lan_only
-                   else "Supabase /enroll-prepare unreachable")
+            if self.lan_only:
+                msg = "Could not determine the Pi's LAN IP"
+            elif self._plugin_error:
+                msg = f"Moongate cloud mode unavailable: {self._plugin_error}"
+            else:
+                msg = "Supabase /enroll-prepare unreachable"
             raise self.server.error(msg, 502)
         return {
             "code":               pending.raw_token,
@@ -1611,8 +1740,11 @@ class MoongatePlugin:
 
         client = AsyncHTTPClient()
         if not self._chamber_key_checked:
-            await self._discover_objects(client)
-            self._chamber_key_checked = True
+            # Only mark done on success: a poll during Moonraker's own boot
+            # (Klippy routes not registered yet) must not burn the one-shot
+            # scan, or a mid-boot poller loses chamber + multi-toolhead
+            # detection until the next Moonraker restart.
+            self._chamber_key_checked = await self._discover_objects(client)
 
         query = "print_stats&heater_bed&extruder"
         if self._chamber_key:
@@ -1629,7 +1761,7 @@ class MoongatePlugin:
             query += "&toolchanger"
 
         req = HTTPRequest(
-            f"http://127.0.0.1:7125/printer/objects/query?{query}",
+            f"http://127.0.0.1:{self._moonraker_port}/printer/objects/query?{query}",
             method="GET", request_timeout=5.0,
         )
         try:
@@ -1639,7 +1771,14 @@ class MoongatePlugin:
         if resp.code != 200:
             raise self.server.error(f"Moonraker query returned HTTP {resp.code}", 502)
 
-        data   = json.loads(resp.body)
+        try:
+            data = json.loads(resp.body)
+        except (ValueError, TypeError):
+            # Startup race, seen on COSMOS 2026-07-18: a file-serving
+            # Moonraker can answer 200 with the web UI's HTML for a moment
+            # before the Klippy API routes register. Retryable, so a clean
+            # 503 instead of an uncaught-exception 500 in the log.
+            raise self.server.error("Moonraker is still starting up", 503)
         result = data.get("result", data)
         result["tunnel_url"] = _get_tunnel_url()
         # Surface the Pi's LAN address so the app can prefer a direct LAN
@@ -1695,7 +1834,7 @@ class MoongatePlugin:
 
         client = AsyncHTTPClient()
         req    = HTTPRequest(
-            f"http://127.0.0.1:7125{action_map[action]}",
+            f"http://127.0.0.1:{self._moonraker_port}{action_map[action]}",
             method="POST", body="{}",
             headers={"Content-Type": "application/json"},
             request_timeout=10.0,
@@ -1731,7 +1870,7 @@ class MoongatePlugin:
         try:
             client = AsyncHTTPClient()
             resp = await client.fetch(HTTPRequest(
-                "http://127.0.0.1:7125/printer/objects/query?print_stats",
+                f"http://127.0.0.1:{self._moonraker_port}/printer/objects/query?print_stats",
                 method="GET", request_timeout=3.0,
             ), raise_error=False)
             if resp.code == 200:
@@ -1748,7 +1887,7 @@ class MoongatePlugin:
         async def _fire() -> None:
             try:
                 resp = await AsyncHTTPClient().fetch(HTTPRequest(
-                    "http://127.0.0.1:7125/machine/update/client?name=moongate",
+                    f"http://127.0.0.1:{self._moonraker_port}/machine/update/client?name=moongate",
                     method="POST", body=b"", request_timeout=300.0,
                 ), raise_error=False)
                 logger.info("Plugin self-update finished: HTTP %s", resp.code)
@@ -1776,8 +1915,9 @@ class MoongatePlugin:
 
     # ── Webcam + chamber discovery (kept from v0.2.x) ─────────────────────────
 
-    @staticmethod
-    async def _get_webcam_info(client: Any) -> dict:
+    async def _get_webcam_info(self, client: Any) -> dict:
+        # Not a staticmethod since v0.6.17: the fetch below needs the
+        # instance's resolved Moonraker port.
         from tornado.httpclient import HTTPRequest
         _default_path = "/webcam/?action=snapshot"
         _default_fps  = 15
@@ -1809,7 +1949,7 @@ class MoongatePlugin:
 
         try:
             req = HTTPRequest(
-                "http://127.0.0.1:7125/server/webcams/list",
+                f"http://127.0.0.1:{self._moonraker_port}/server/webcams/list",
                 method="GET", request_timeout=2.0,
             )
             resp = await client.fetch(req, raise_error=False)
@@ -1857,22 +1997,25 @@ class MoongatePlugin:
         except Exception:
             return _defaults
 
-    async def _discover_objects(self, client: Any) -> None:
-        """One-shot scan of Moonraker's object list (per service lifetime) for
-        the chamber sensor, any extra hotends (extruder1, extruder2, ... on an
-        IDEX / tool changer) and whether this is a klipper-toolchanger. The
-        results are folded into the /status query so a multi-toolhead printer's
-        extra hotends + active tool ride the single authenticated /status call,
-        instead of the app having to make its own (transport-fragile) queries."""
+    async def _discover_objects(self, client: Any) -> bool:
+        """One-shot scan of Moonraker's object list for the chamber sensor,
+        any extra hotends (extruder1, extruder2, ... on an IDEX / tool
+        changer) and whether this is a klipper-toolchanger. The results are
+        folded into the /status query so a multi-toolhead printer's extra
+        hotends + active tool ride the single authenticated /status call,
+        instead of the app having to make its own (transport-fragile) queries.
+
+        Returns True when the scan actually ran (the caller then stops
+        re-trying); False when Moonraker/Klippy wasn't ready to answer."""
         from tornado.httpclient import HTTPRequest
         try:
             req = HTTPRequest(
-                "http://127.0.0.1:7125/printer/objects/list",
+                f"http://127.0.0.1:{self._moonraker_port}/printer/objects/list",
                 method="GET", request_timeout=2.0,
             )
             resp = await client.fetch(req, raise_error=False)
             if resp.code != 200:
-                return
+                return False
             objects = json.loads(resp.body).get("result", {}).get("objects", [])
             for obj in objects:
                 if ("temperature_sensor" in obj or "heater_generic" in obj
@@ -1893,5 +2036,6 @@ class MoongatePlugin:
                 logger.info(
                     "Moongate: multi-toolhead detected (extras=%s toolchanger=%s)",
                     extra, self._has_toolchanger)
+            return True
         except Exception:
-            pass
+            return False

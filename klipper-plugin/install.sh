@@ -111,8 +111,8 @@ MOONRAKER_CONF="$PRINTER_DATA/config/moonraker.conf"
 COMPONENTS_DIR="$MOONRAKER_DIR/moonraker/components"
 KLIPPER_CFG_DIR="$PRINTER_DATA/config"
 
-[[ -d "$MOONRAKER_DIR" ]]  || die "Moonraker not found at $MOONRAKER_DIR. Set MOONRAKER_DIR= if installed elsewhere."
-[[ -f "$MOONRAKER_CONF" ]] || die "moonraker.conf not found at $MOONRAKER_CONF."
+[[ -d "$MOONRAKER_DIR" ]]  || die "Moonraker not found at $MOONRAKER_DIR. Set MOONRAKER_DIR= if installed elsewhere. On a vendor/embedded printer (e.g. OpenCentauri)? This installer targets Pi-style hosts - follow docs/third-party-printers.md instead."
+[[ -f "$MOONRAKER_CONF" ]] || die "moonraker.conf not found at $MOONRAKER_CONF. On a vendor/embedded printer (e.g. OpenCentauri)? This installer targets Pi-style hosts - follow docs/third-party-printers.md instead."
 
 # ── Clock sanity check ────────────────────────────────────────────────────────
 # Moongate's remote access is cryptographically time-bound: the Pi signs every

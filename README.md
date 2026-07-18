@@ -94,6 +94,8 @@ curl -fsSL https://raw.githubusercontent.com/PEEKYPAUL/Moongate/master/klipper-p
 
 The installer asks how your phone will connect: **1) Moongate cloud** (the default - remote access from anywhere) or **2) Direct (LAN/VPN)** (cloud-free; [see how the two compare](#run-it-your-way)). With the default it installs the plugin, the `MOONGATE_PAIR` macro, the QR pairing page, the auth proxy, and the Cloudflare tunnel, then restarts Moonraker. Future updates appear in **Mainsail → Software Updates → Moongate**.
 
+> **Using a 3rd-party printer instead?** (e.g. an Elegoo Centauri Carbon on OpenCentauri COSMOS) - this installer targets Raspberry-Pi-style machines and won't run on embedded vendor firmware. Follow [3rd-party printer support](docs/third-party-printers.md) instead: a one-file install, no installer needed.
+
 <details>
 <summary><b>Requirements &amp; custom HTTP port</b></summary>
 
@@ -181,6 +183,8 @@ Moongate gives every printer a choice of two connections - and you can mix them 
 
 Switch an existing printer between modes anytime from its edit dialog - no re-pairing. If you later want a Direct printer on the cloud, re-run the installer normally and pair it; the app absorbs the old tile automatically. Networking notes for Direct mode (Moonraker's `trusted_clients`, give the Pi a fixed address) are in the [LAN-only install section](#quick-start) above.
 
+Direct mode isn't picky about the host, either: from plugin 0.6.17 it needs **zero extra Python packages**, so machines that were never a Raspberry Pi - embedded boards, vendor printers on community firmware - can join the dashboard with a one-file install. See [3rd-party printer support](docs/third-party-printers.md).
+
 ---
 
 ## How it works
@@ -202,6 +206,7 @@ Switch an existing printer between modes anytime from its edit dialog - no re-pa
 | Document | What's inside |
 |---|---|
 | [Updating &amp; removing](docs/managing-moongate.md) | Updating the app &amp; plugin, reinstalling / moving to a new phone, full uninstall |
+| [3rd-party printer support](docs/third-party-printers.md) | Direct (LAN/VPN) mode on non-Pi hosts - the one-file install, supported machines, VPN notes |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Building from source, repo layout, debugging, release signing, CI |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Code structure, state management, data-flow walkthroughs, design decisions |
 | [SECURITY.md](SECURITY.md) | Threat model, what the tunnel does and doesn't expose, the empirical verification, vulnerability reporting |
