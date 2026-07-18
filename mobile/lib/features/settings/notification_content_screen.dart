@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -48,8 +50,10 @@ class NotificationContentScreen extends ConsumerWidget {
               // + the system bar inset: explicit padding switches off the
               // list's automatic safe-area handling, and the last row's drag
               // handle was sitting under the Android button/gesture bar.
+              // Android only - iOS has no opaque bar to clear.
               padding: EdgeInsets.only(
-                  bottom: 24 + MediaQuery.of(context).padding.bottom),
+                  bottom: 24 + (Platform.isAndroid
+                      ? MediaQuery.of(context).padding.bottom : 0)),
               // onReorder is current on stable Flutter; only this box's
               // pre-release SDK flags it (the onReorderItem replacement doesn't
               // exist on stable, so switching would break the CI build).

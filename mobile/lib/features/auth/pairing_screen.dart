@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -655,8 +656,11 @@ class _PairingScreenState extends State<PairingScreen> {
           // + the system bar inset: a SingleChildScrollView never applies the
           // safe area itself, so without this the Pair/Add button at the form's
           // bottom could scroll to a stop under the Android button/gesture bar.
+          // Android only - iOS has no opaque bar to clear.
           padding: EdgeInsets.fromLTRB(
-              24, 24, 24, 24 + MediaQuery.of(context).padding.bottom),
+              24, 24, 24,
+              24 + (Platform.isAndroid
+                  ? MediaQuery.of(context).padding.bottom : 0)),
           child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

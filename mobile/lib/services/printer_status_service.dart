@@ -65,7 +65,7 @@ class PrinterStatusService {
     }
     _degradePending = false;
     _lastEmitted    = s;
-    _emit(s);
+    _controller.add(s);
   }
 
   // ── Chamber sensor discovery (kept from v0.2.x - same logic) ─────────────

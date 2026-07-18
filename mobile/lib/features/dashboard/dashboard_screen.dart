@@ -418,7 +418,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
             ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      // iOS: stock centerFloat leaves the home-indicator inset AND its own
+      // margin under the row - a ~50px band that read as misplaced buttons on
+      // iPhone (no opaque bar there). The corner variant cancels the inset,
+      // planting the row the stock 16px from the physical screen edge - the
+      // same corner anchor as Android. The inset is read HERE (widget layer)
+      // because Scaffold's prelayout minInsets.bottom is the keyboard inset,
+      // not the safe area. Android keeps stock centerFloat.
+      floatingActionButtonLocation: Platform.isIOS
+          ? _CornerFloatLocation(MediaQuery.of(context).viewPadding.bottom)
+          : FloatingActionButtonLocation.centerFloat,
     );
     // Full-screen custom background: paint it behind the whole (transparent)
     // Scaffold so it covers the app bar + status-bar area, not just the body.
@@ -2196,8 +2205,11 @@ class _PrinterGrid extends StatelessWidget {
       // handling, so fold the obscured edges back in ourselves: the Android
       // button/gesture bar overlapped the last row's name + temps (Centauri
       // tester report, 2026-07-18). Bottom in portrait, sides in landscape;
-      // top stays bare 12 - the AppBar already absorbs that inset.
-      final insets  = MediaQuery.of(context).padding;
+      // top stays bare 12 - the AppBar already absorbs that inset. Android
+      // only: iPhone has no opaque bar, so padding there just left a stray
+      // gap above the home indicator (v0.9.55).
+      final insets  = Platform.isAndroid ? MediaQuery.of(context).padding
+                                         : EdgeInsets.zero;
       final padding = EdgeInsets.fromLTRB(
           12 + insets.left, 12, 12 + insets.right, 12 + insets.bottom);
       const spacing = 10.0;
@@ -2347,4 +2359,33 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
+}
+
+/// centerFloat anchored to the physical screen corner, for iOS only: stock
+/// centerFloat floats the row above the home-indicator safe inset AND adds
+/// its 16px margin, which on iPhone (no opaque system bar) read as a large
+/// empty band under the buttons. Adding the inset back plants the row the
+/// stock 16px from the actual screen bottom - the corner look the Android
+/// build has. The indicator strip still delivers taps to the app; only the
+/// upward swipe is the system's. Keeps centerFloat's horizontal behaviour
+/// and snackbar/bottom-sheet avoidance. The caller supplies
+/// MediaQuery.viewPadding.bottom (safe inset independent of the keyboard);
+/// == / hashCode keep Scaffold from re-animating the row every rebuild.
+class _CornerFloatLocation extends StandardFabLocation
+    with FabCenterOffsetX, FabFloatOffsetY {
+  const _CornerFloatLocation(this._bottomInset);
+
+  final double _bottomInset;
+
+  @override
+  double getOffsetY(
+          ScaffoldPrelayoutGeometry scaffoldGeometry, double adjustment) =>
+      super.getOffsetY(scaffoldGeometry, adjustment) + _bottomInset;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _CornerFloatLocation && other._bottomInset == _bottomInset;
+
+  @override
+  int get hashCode => _bottomInset.hashCode;
 }
