@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -530,9 +531,14 @@ class _PrinterScreenState extends State<PrinterScreen>
       // bar (and the side bar in landscape) - Mainsail/Fluidd put interactive
       // rows right at their page bottom, which the system bar was overlapping.
       // Browsers keep web content above the nav bar too, so this matches what
-      // the same page looks like in Chrome. Top stays with the AppBar.
+      // the same page looks like in Chrome. Top stays with the AppBar. Android
+      // only: iOS has no opaque bar, so the page keeps its pre-v0.9.54
+      // full-bleed under the translucent home indicator.
       body: SafeArea(
-        top: false,
+        top:    false,
+        bottom: Platform.isAndroid,
+        left:   Platform.isAndroid,
+        right:  Platform.isAndroid,
         child: Column(
           children: [
             // Camera-discoverability hint - a full-width strip directly under the
