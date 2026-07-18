@@ -45,7 +45,11 @@ class NotificationContentScreen extends ConsumerWidget {
             child: ReorderableListView(
               // Drag only from the handle so the row's switch stays tappable.
               buildDefaultDragHandles: false,
-              padding: const EdgeInsets.only(bottom: 24),
+              // + the system bar inset: explicit padding switches off the
+              // list's automatic safe-area handling, and the last row's drag
+              // handle was sitting under the Android button/gesture bar.
+              padding: EdgeInsets.only(
+                  bottom: 24 + MediaQuery.of(context).padding.bottom),
               // onReorder is current on stable Flutter; only this box's
               // pre-release SDK flags it (the onReorderItem replacement doesn't
               // exist on stable, so switching would break the CI build).
