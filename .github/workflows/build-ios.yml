@@ -13,8 +13,17 @@ name: Build iOS
 on:
   push:
     branches: [master]
+    # Docs-only changes don't need an app build (see build-android.yml).
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - 'LICENSE'
   pull_request:
     branches: [master]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - 'LICENSE'
   workflow_dispatch:
 
 jobs:
