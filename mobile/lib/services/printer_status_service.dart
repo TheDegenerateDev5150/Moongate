@@ -37,6 +37,37 @@ class PrinterStatusService {
   bool _disposed = false;
   bool _polling  = false;
 
+  // ── Flap guard (v0.9.54) ─────────────────────────────────────────────────
+  // Some home networks micro-drop the WiFi for well under a second (WPA
+  // re-auth, AP roaming - a Centauri tester's router does it about once a
+  // minute), which fails exactly one poll. The placeholder statuses below
+  // carry no printer data, so letting a single bad poll through blanks a
+  // healthy tile (webcam + temps vanish) AND demotes it a tier in the
+  // auto-arrange sort - two flapping printers then visibly leapfrog each
+  // other. _emit therefore swallows the FIRST placeholder after a real
+  // status; a genuine outage confirms on the next poll (~5-10 s later).
+  PrinterStatus? _lastEmitted;
+  bool _degradePending = false;
+
+  /// 'offline' / 'starting_up' / 'waiting' replace the whole tile content
+  /// rather than updating it - the states worth debouncing.
+  static bool _isPlaceholder(PrinterStatus s) =>
+      s.state == 'offline' || s.state == 'starting_up' || s.state == 'waiting';
+
+  void _emit(PrinterStatus s) {
+    if (_disposed) return;
+    final last = _lastEmitted;
+    if (_isPlaceholder(s) && last != null && !_isPlaceholder(last)) {
+      if (!_degradePending) {
+        _degradePending = true;   // first strike: keep the last good status
+        return;
+      }
+    }
+    _degradePending = false;
+    _lastEmitted    = s;
+    _emit(s);
+  }
+
   // ── Chamber sensor discovery (kept from v0.2.x - same logic) ─────────────
   String? _chamberKey;
   bool    _chamberDiscovered = false;
@@ -272,7 +303,7 @@ class PrinterStatusService {
     _pollDiag = {};
     if (!SupabaseService.instance.ready) {
       // Supabase isn't authenticated yet (cold start, no network).
-      if (!_disposed) _controller.add(PrinterStatus.offline);
+      if (!_disposed) _emit(PrinterStatus.offline);
       return;
     }
 
@@ -307,7 +338,7 @@ class PrinterStatusService {
           LanDiscoveryService.instance.lookup(config.id) ?? _currentLanUrl;
       final lanUp = probeUrl != null && await _lanHeadReachable(probeUrl);
       if (!lanUp) {
-        if (!_disposed) _controller.add(PrinterStatus.offline);
+        if (!_disposed) _emit(PrinterStatus.offline);
         return;
       }
     }
@@ -323,15 +354,15 @@ class PrinterStatusService {
     } on PrinterUnavailableException {
       // Legacy 503 (Pi pre-v0.5 server, or server says wait): nothing we
       // can do without a token. Surface "starting up".
-      if (!_disposed) _controller.add(PrinterStatus.startingUp);
+      if (!_disposed) _emit(PrinterStatus.startingUp);
       return;
     } on PrinterNotFoundException {
       _log('Printer not found in Supabase - emitting offline');
-      if (!_disposed) _controller.add(PrinterStatus.offline);
+      if (!_disposed) _emit(PrinterStatus.offline);
       return;
     } catch (e) {
       _log('Access fetch failed: $e');
-      if (!_disposed) _controller.add(PrinterStatus.offline);
+      if (!_disposed) _emit(PrinterStatus.offline);
       return;
     }
 
@@ -379,7 +410,7 @@ class PrinterStatusService {
         if (discoveredLanUrl != null) 'discovered_url': discoveredLanUrl,
       });
       if (lan != null) {
-        if (!_disposed) _controller.add(lan);
+        if (!_disposed) _emit(lan);
         return;
       }
     }
@@ -394,7 +425,7 @@ class PrinterStatusService {
         'tunnel_status': _lastEndpointReason ?? 'unknown',
       });
       if (tunnelStatus != null) {
-        if (!_disposed) _controller.add(tunnelStatus);
+        if (!_disposed) _emit(tunnelStatus);
         return;
       }
 
@@ -411,7 +442,7 @@ class PrinterStatusService {
         try {
           access = await PrinterAccessCache.instance.get(config.id);
         } catch (_) {
-          if (!_disposed) _controller.add(PrinterStatus.offline);
+          if (!_disposed) _emit(PrinterStatus.offline);
           return;
         }
         if (access.tunnelUrl != null) {
@@ -422,7 +453,7 @@ class PrinterStatusService {
             'tunnel_status': _lastEndpointReason ?? 'unknown',
           });
           if (retry != null) {
-            if (!_disposed) _controller.add(retry);
+            if (!_disposed) _emit(retry);
             return;
           }
         }
@@ -444,11 +475,11 @@ class PrinterStatusService {
     // "Starting up…" indefinitely instead of settling to offline.
     final reachable = await _isPiReachable(access, lanOnly: localOnly);
     if (reachable) {
-      if (!_disposed) _controller.add(PrinterStatus.waiting);
+      if (!_disposed) _emit(PrinterStatus.waiting);
       return;
     }
     if (!_disposed) {
-      _controller.add(
+      _emit(
         (!tunnelReady && _withinStartupGrace)
             ? PrinterStatus.startingUp
             : PrinterStatus.offline,
@@ -467,7 +498,7 @@ class PrinterStatusService {
     _pollDiag = {};
     final lanUrl = _currentLanUrl;
     if (lanUrl == null) {
-      if (!_disposed) _controller.add(PrinterStatus.offline);
+      if (!_disposed) _emit(PrinterStatus.offline);
       return;
     }
     final access = PrinterAccess(
@@ -483,7 +514,7 @@ class PrinterStatusService {
       'lan_url':    lanUrl,
       'lan_status': _lastEndpointReason ?? 'unknown',
     });
-    if (!_disposed) _controller.add(status ?? PrinterStatus.offline);
+    if (!_disposed) _emit(status ?? PrinterStatus.offline);
   }
 
   // ── Reachability probe ───────────────────────────────────────────────────
