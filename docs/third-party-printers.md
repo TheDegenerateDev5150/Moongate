@@ -171,6 +171,39 @@ wall of JSON including the plugin version.
   come (no tunnel, no timers, no outbound calls), but temper expectations
   accordingly.
 
+### Uninstalling
+
+Everything the install put on the machine lives on `/etc` - the sealed root
+was never touched - so removal is a config trim, a few deletes, and a
+restart. SSH in as root, then:
+
+```sh
+# 1. Trim the [moongate] section off the conf. The install appended it at
+#    the end of the file, so this cuts from that line down; if you've added
+#    other sections below it since, edit the file with vi instead.
+sed -i '/^\[moongate\]/,$d' /etc/klipper/config/moonraker.conf
+
+# 2. Unmount the components copy and remove the boot script + its rc links
+/etc/init.d/moongate-overlay stop
+rm -f /etc/init.d/moongate-overlay /etc/rc?.d/S95moongate-overlay
+
+# 3. Confirm the unmount took - NO output means it did. If a line prints
+#    (the mount was busy), reboot the printer instead: the boot script is
+#    gone, so it comes back up unmounted - then continue with step 4.
+mount | grep ' on /usr/share/moonraker/moonraker/components '
+
+# 4. Delete the plugin file, Moongate's state, and the components copy
+rm -rf /etc/moongate /etc/moongate-components
+
+# 5. Restart Moonraker on the stock components folder
+/etc/init.d/moonraker restart
+```
+
+Then remove the printer's tile in the app: **menu → Remove printer**, tap
+the printer. That's everything - all three pieces Moongate added (the
+plugin file and its state, the components copy, the boot script) lived on
+`/etc` and are gone, so the machine is back to stock.
+
 ## Remote access (VPN)
 
 Direct mode away from home rides your own VPN, and the easy path is a
