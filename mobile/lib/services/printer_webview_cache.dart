@@ -10,6 +10,7 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import '../models/printer_config.dart';
 import 'lan_discovery_service.dart';
 import 'printer_access_cache.dart';
+import 'printer_registry.dart';
 import 'supabase_service.dart';
 
 /// Build a [WebViewController] with media autoplay enabled - the one factory
@@ -155,22 +156,49 @@ class PrinterWebViewCache with WidgetsBindingObserver {
     }
   }
 
+  /// True when [printerId] must not touch the cloud: a Direct (LAN/VPN)
+  /// printer, whether Direct-added (synthetic 'lan-…' id, no cloud row ever)
+  /// or a cloud-paired one the user switched to Direct. Registry-live so a
+  /// mode toggle takes effect without recreating anything.
+  bool _isDirectMode(String printerId) {
+    if (printerId.startsWith('lan-')) return true;
+    for (final p in PrinterRegistry.instance.printers) {
+      if (p.id == printerId) return p.lanOnly;
+    }
+    return false;
+  }
+
   Future<void> _prewarmOne(PrinterConfig printer) async {
     try {
-      final access = await PrinterAccessCache.instance.get(printer.id);
-      await setMgTokenCookie(access);
-
-      // Prefer LAN when reachable (Mainsail loads far faster direct), else the
-      // tunnel - the same resolution the printer screen uses on a cold open.
-      final lanUrl =
-          LanDiscoveryService.instance.lookup(printer.id) ?? printer.lanUrl;
       String? useUrl;
       var usingLan = false;
-      if (lanUrl != null && await _isLanReachable(lanUrl)) {
-        useUrl = lanUrl;
+      String? tunnelUrl;
+      if (_isDirectMode(printer.id)) {
+        // Direct (LAN/VPN): no Supabase mint, no mg_token cookie - mirror the
+        // printer screen's Direct branch. LAN only; there is no tunnel to
+        // fall back to. (Minting for a Direct-added id would just 500 the
+        // Edge Function - its synthetic id isn't a cloud row.)
+        final lanUrl =
+            LanDiscoveryService.instance.lookup(printer.id) ?? printer.lanUrl;
+        if (lanUrl == null || !await _isLanReachable(lanUrl)) return;
+        useUrl   = lanUrl;
         usingLan = true;
-      } else if (access.tunnelUrl != null) {
-        useUrl = access.tunnelUrl;
+      } else {
+        final access = await PrinterAccessCache.instance.get(printer.id);
+        await setMgTokenCookie(access);
+        tunnelUrl = access.tunnelUrl;
+
+        // Prefer LAN when reachable (Mainsail loads far faster direct), else
+        // the tunnel - the same resolution the printer screen uses on a cold
+        // open.
+        final lanUrl =
+            LanDiscoveryService.instance.lookup(printer.id) ?? printer.lanUrl;
+        if (lanUrl != null && await _isLanReachable(lanUrl)) {
+          useUrl = lanUrl;
+          usingLan = true;
+        } else if (tunnelUrl != null) {
+          useUrl = tunnelUrl;
+        }
       }
       if (useUrl == null) return; // not reachable yet - the screen cold-loads it
 
@@ -210,7 +238,7 @@ class PrinterWebViewCache with WidgetsBindingObserver {
           controller: controller,
           baseUrl:    useUrl,
           usingLan:   usingLan,
-          tunnelUrl:  access.tunnelUrl,
+          tunnelUrl:  tunnelUrl,
         ),
       );
       _log('prewarmed ${printer.id} (${usingLan ? 'LAN' : 'tunnel'})');
@@ -229,6 +257,12 @@ class PrinterWebViewCache with WidgetsBindingObserver {
     session.cookieRefresh =
         Timer.periodic(const Duration(minutes: 4), (_) async {
       try {
+        // Direct (LAN/VPN) mode has no cloud row and no mg_token cookie to
+        // keep fresh - minting from here only 500s the Edge Function (this
+        // exact timer was one real install's 15 calls/hr, July 2026).
+        // Checked per tick so a mode toggle takes effect while the session
+        // stays warm, in either direction.
+        if (_isDirectMode(printerId)) return;
         final access = await PrinterAccessCache.instance.get(printerId);
         await setMgTokenCookie(access);
         final host = session.tunnelHost;

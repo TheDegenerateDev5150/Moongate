@@ -37,6 +37,13 @@ class PrinterAccessCache {
   /// this hold every 4s dashboard poll minted-and-404'd forever. One such
   /// install was ~⅔ of ALL Edge Function invocations (July 2026 quota blow).
   Future<PrinterAccess> get(String printerId) async {
+    // A Direct-added printer's synthetic id ('lan-…', see
+    // PrinterConfig.cloudPaired) never has a cloud row - it isn't even a
+    // UUID, so the mint can only fail (observed in prod as a 500 every
+    // 4 min from the webview cookie refresh). Fail locally, zero Edge cost,
+    // whatever call site asks.
+    if (printerId.startsWith('lan-')) throw PrinterNotFoundException();
+
     final cached = _cached[printerId];
     if (cached != null && !cached.isStale()) return cached;
 
