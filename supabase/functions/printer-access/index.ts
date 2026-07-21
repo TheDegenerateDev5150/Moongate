@@ -31,7 +31,13 @@
 // Errors:
 //   400 - malformed body
 //   401 - no/invalid JWT
-//   404 - printer doesn't exist OR not owned by caller (constant shape)
+//   404 - printer doesn't exist OR not owned by caller (constant shape).
+//         Also any non-UUID printer_id: a Direct-mode app bug (fixed
+//         app-side alongside this) sent synthetic 'lan-…' ids here, which
+//         threw 22P02 through the RPC as a 500 - and the app only
+//         negative-caches 404 verdicts, so fielded clients retried the
+//         "transient" 500 forever. Answering 404 puts any such client on
+//         the existing back-off.
 //   503 - printer exists but Pi has not sent a heartbeat yet AND the caller
 //         did not set accept_no_tunnel; retry_after seconds
 
@@ -65,6 +71,14 @@ Deno.serve(async (req) => {
   if (typeof printerId !== "string" || printerId.length === 0) {
     return badRequest("printer_id required");
   }
+
+  // printers.id is a uuid column - any other shape (e.g. a Direct-mode
+  // synthetic 'lan-…' id) can never match a row. Answer with the constant
+  // 404 instead of letting Postgres throw 22P02 through the RPC as a 500,
+  // so clients land on their not-found back-off path.
+  const UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(printerId)) return notFound();
 
   // v0.5.0+ apps set this to opt into LAN-first: get the token even when the
   // tunnel URL isn't known yet (tunnel_url comes back null). Older apps omit
